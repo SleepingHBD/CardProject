@@ -1,4 +1,4 @@
-# Claw & Order
+# Project: Prowl
 
 A single-player, cat-themed elemental card game built with HTML, CSS, and JavaScript.
 

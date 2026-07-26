@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Claw & Order — a cozy, cat-themed elemental card duel."
+      content="Project: Prowl — a cozy, cat-themed elemental card duel."
     />
     <meta name="theme-color" content="#4a2870" />
-    <meta property="og:title" content="Claw &amp; Order — Elemental Cat Duels" />
+    <meta property="og:title" content="Project: Prowl — Elemental Cat Duels" />
     <meta property="og:description" content="Outwit Professor Paws in a richly illustrated elemental card duel." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://sleepinghbd.github.io/CardProject/" />
     <meta property="og:image" content="https://sleepinghbd.github.io/CardProject/assets/social/claw-and-order-preview.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Claw &amp; Order — Elemental Cat Duels" />
+    <meta name="twitter:title" content="Project: Prowl — Elemental Cat Duels" />
     <meta name="twitter:description" content="Outwit Professor Paws in a richly illustrated elemental card duel." />
     <meta name="twitter:image" content="https://sleepinghbd.github.io/CardProject/assets/social/claw-and-order-preview.png" />
-    <title>Claw &amp; Order</title>
+    <title>Project: Prowl</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -30,10 +30,10 @@
     <div class="sky-confetti" aria-hidden="true"></div>
 
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Claw and Order home">
-        <span class="brand-mark">C&amp;O</span>
+      <a class="brand" href="#" aria-label="Project Prowl home">
+        <span class="brand-mark">P:P</span>
         <span>
-          <strong>Claw &amp; Order</strong>
+          <strong>Project: Prowl</strong>
           <small>Elemental Cat Duels</small>
         </span>
       </a>
@@ -52,6 +52,15 @@
           Card Archive
         </button>
         <button class="how-button" id="howButton" type="button">Duel Codex</button>
+        <button
+          class="rulebook-button"
+          id="rulebookButton"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="rulebookDialog"
+        >
+          Rulebook
+        </button>
       </div>
     </header>
 
@@ -68,10 +77,7 @@
               <i aria-hidden="true">–</i>
               <span><b id="aiRoundScore">0</b> PAWS</span>
             </div>
-            <div class="round-progress">
-              <span id="roundLabel">ROUND 1</span>
-              <div class="round-pips" id="roundPips" aria-label="Round progress"></div>
-            </div>
+            <span id="roundLabel">ROUND 1</span>
           </div>
         </div>
 
@@ -311,6 +317,176 @@
         <div><span>6</span><p><b>Reshuffle:</b> Non-trophy cards enter the discard pile and return when the draw pile runs out.</p></div>
       </div>
       <button class="primary-button" data-close-dialog type="button">Got it!</button>
+    </dialog>
+
+    <dialog
+      class="game-dialog rulebook-dialog"
+      id="rulebookDialog"
+      aria-labelledby="rulebookTitle"
+      aria-describedby="rulebookIntro"
+    >
+      <button class="dialog-close" data-close-rulebook type="button" aria-label="Close rulebook">×</button>
+      <header class="rulebook-header">
+        <p class="eyebrow">THE WHISKERKEEP RULEBOOK</p>
+        <h2 id="rulebookTitle">How to Play Project: Prowl</h2>
+        <p id="rulebookIntro">
+          The complete laws of an elemental duel, from your opening hand to the final trophy.
+        </p>
+      </header>
+
+      <section class="rulebook-victory" aria-labelledby="victoryAtGlance">
+        <div>
+          <span aria-hidden="true">🏆</span>
+          <div>
+            <h3 id="victoryAtGlance">Victory at a glance</h3>
+            <p>Collect <b>two Ember</b>, <b>two Gust</b>, and <b>two Tide</b> trophies before Professor Paws.</p>
+          </div>
+        </div>
+        <div class="rulebook-trophy-track" aria-label="Required trophies: two Ember, two Gust, and two Tide">
+          <span class="element-ember"><b>🔥</b><i></i><i></i><small>2 Ember</small></span>
+          <span class="element-gust"><b>🍃</b><i></i><i></i><small>2 Gust</small></span>
+          <span class="element-tide"><b>💧</b><i></i><i></i><small>2 Tide</small></span>
+        </div>
+        <p class="rulebook-note">
+          The round score records your victories, but it does not complete the match. Your six elemental trophy slots do.
+        </p>
+      </section>
+
+      <div class="rulebook-sections">
+        <section class="rulebook-section" aria-labelledby="rulebookSetup">
+          <span class="rulebook-number" aria-hidden="true">1</span>
+          <h3 id="rulebookSetup">Match setup</h3>
+          <ul>
+            <li>The shared draw pile starts with 36 cards: two copies of every card in the archive.</li>
+            <li>You and Professor Paws each draw up to six cards.</li>
+            <li>The professor secretly commits one to three cards before you build your formation.</li>
+            <li>His commitment count and Focus bonus are always visible.</li>
+          </ul>
+        </section>
+
+        <section class="rulebook-section" aria-labelledby="rulebookDifficulty">
+          <span class="rulebook-number" aria-hidden="true">2</span>
+          <h3 id="rulebookDifficulty">Difficulty and scouting</h3>
+          <dl class="rulebook-definitions">
+            <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
+            <div><dt>Veiled</dt><dd>Shows either the element or power range of each card.</dd></div>
+            <div><dt>Blind</dt><dd>Seals all individual card clues until the reveal.</dd></div>
+          </dl>
+          <p>Difficulty changes the information you receive, not the scoring rules or Professor Paws' card strength.</p>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookCards">
+          <span class="rulebook-number" aria-hidden="true">3</span>
+          <h3 id="rulebookCards">Reading a card</h3>
+          <div class="rulebook-card-facts">
+            <p><b>Power</b><span>The card's starting clash score.</span></p>
+            <p><b>Element</b><span>Determines whether the card earns Element Edge.</span></p>
+            <p><b>Rarity</b><span>Changes the outer frame, but gives no automatic combat bonus.</span></p>
+            <p><b>Move and lore</b><span>Give the character personality; they do not add hidden effects.</span></p>
+          </div>
+          <div class="element-cycle" aria-label="Element cycle: Ember beats Gust, Gust beats Tide, Tide beats Ember">
+            <span class="element-ember">🔥 Ember</span><i>beats</i>
+            <span class="element-gust">🍃 Gust</span><i>beats</i>
+            <span class="element-tide">💧 Tide</span><i>beats</i>
+            <span class="element-ember">🔥 Ember</span>
+          </div>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookTurn">
+          <span class="rulebook-number" aria-hidden="true">4</span>
+          <h3 id="rulebookTurn">How to play a round</h3>
+          <ol class="rulebook-steps">
+            <li><b>Scout.</b> Read the professor's commitment, Focus, and any clues provided by your difficulty.</li>
+            <li><b>Build.</b> Drag or click one to three cards into your lanes. You may return or reorder them before committing.</li>
+            <li><b>Preview.</b> Check the displayed bonus and forecast for each paired lane.</li>
+            <li><b>Commit.</b> Lock your formation. Every committed card will be spent after the round.</li>
+            <li><b>Clash.</b> Paired cards resolve from Lane 1 to Lane 3. Extra, unpaired cards become Pressure.</li>
+            <li><b>Review.</b> Study every total and trophy result, then press <b>Next Round</b>.</li>
+          </ol>
+        </section>
+
+        <section class="rulebook-section" aria-labelledby="rulebookScoring">
+          <span class="rulebook-number" aria-hidden="true">5</span>
+          <h3 id="rulebookScoring">Clash scoring</h3>
+          <p class="score-formula">Power + Edge + Focus + Chain = Total</p>
+          <ul>
+            <li><b>Element Edge +2:</b> awarded when your element beats the opposing element.</li>
+            <li><b>Focus:</b> +2 per clashing card when committing one card, +1 for two, and +0 for three.</li>
+            <li><b>Chain +1:</b> awarded from Lane 2 onward when that card's element differs from the previous card.</li>
+          </ul>
+          <p>The higher total wins the lane. Equal totals draw that lane. Element Edge is helpful, but never an automatic win.</p>
+        </section>
+
+        <section class="rulebook-section" aria-labelledby="rulebookRoundWinner">
+          <span class="rulebook-number" aria-hidden="true">6</span>
+          <h3 id="rulebookRoundWinner">Winning the round</h3>
+          <ul>
+            <li>Count the lanes won by each side; drawn lanes count for neither player.</li>
+            <li>The side with more lane wins takes the round.</li>
+            <li>If lane wins are tied, the side that committed more cards wins through Pressure.</li>
+            <li>If both lane wins and commitments are tied, the round is a draw and awards no trophy.</li>
+          </ul>
+          <p><b>Pressure cannot overturn a normal loss.</b> A 0–1 result remains a loss even if you committed more cards.</p>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookPressure">
+          <span class="rulebook-number" aria-hidden="true">7</span>
+          <h3 id="rulebookPressure">Understanding Pressure</h3>
+          <p>
+            Pressure is a formation tie-breaker created by committing more cards than your opponent.
+            Only paired cards clash; any card beyond the opponent's formation is an extra Pressure card.
+          </p>
+          <div class="rulebook-card-facts">
+            <p><b>When it activates</b><span>Pressure matters only when both sides win the same number of clashing lanes.</span></p>
+            <p><b>What it rewards</b><span>The larger formation wins the round, and its first extra card becomes the trophy.</span></p>
+            <p><b>What it cannot do</b><span>Pressure cannot reverse an unequal lane score. If you lose the clashes 0–1, you still lose the round.</span></p>
+            <p><b>What it costs</b><span>Every extra card is spent, and committing more cards lowers Focus on all of your clashing cards.</span></p>
+          </div>
+          <p class="score-formula">
+            Example: You commit two cards and Professor Paws commits one. The only clash draws, making the lane score 0–0.
+            Your larger formation wins through Pressure, and your second card becomes the trophy.
+          </p>
+        </section>
+
+        <section class="rulebook-section" aria-labelledby="rulebookTrophies">
+          <span class="rulebook-number" aria-hidden="true">8</span>
+          <h3 id="rulebookTrophies">Trophies and card flow</h3>
+          <ul>
+            <li>On a normal round win, your earliest lane-winning card becomes your trophy.</li>
+            <li>On a Pressure win, your first extra, unpaired card becomes your trophy.</li>
+            <li>A trophy leaves circulation and fills its matching elemental slot.</li>
+            <li>All other committed cards enter the discard pile; unplayed cards remain in hand.</li>
+            <li>Hands refill toward six cards. When the draw pile runs out, the discard pile is shuffled back in.</li>
+          </ul>
+        </section>
+
+        <section class="rulebook-section" aria-labelledby="rulebookWin">
+          <span class="rulebook-number" aria-hidden="true">9</span>
+          <h3 id="rulebookWin">Complete win conditions</h3>
+          <p>You win immediately after a round in which your collection contains at least:</p>
+          <ul>
+            <li>Two Ember trophies</li>
+            <li>Two Gust trophies</li>
+            <li>Two Tide trophies</li>
+          </ul>
+          <p>Extra trophies of one element do not replace a missing element. Professor Paws wins under the same condition.</p>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide strategy-section" aria-labelledby="rulebookStrategy">
+          <span class="rulebook-number" aria-hidden="true">10</span>
+          <h3 id="rulebookStrategy">Subtle strategy</h3>
+          <div class="strategy-grid">
+            <p><b>Plan the trophy.</b><span>Place a needed element in your earliest likely winning lane. For Pressure, make it your first extra card.</span></p>
+            <p><b>Choose commitment carefully.</b><span>One card is strongest through Focus; three cards gain Pressure but sacrifice all Focus.</span></p>
+            <p><b>Order for Chain.</b><span>Alternating elements can add +1, but do not chase Chain if it creates a bad elemental matchup.</span></p>
+            <p><b>Read the range.</b><span>Against a hidden exact power, compare your lowest and highest possible totals before risking a valuable card.</span></p>
+            <p><b>Avoid empty progress.</b><span>A third trophy of one element is allowed, but it does not fill one of your remaining elemental slots.</span></p>
+            <p><b>Spend Pressure deliberately.</b><span>Overcommit only when a tied lane score is plausible and the extra trophy would meaningfully advance your set.</span></p>
+          </div>
+        </section>
+      </div>
+
+      <button class="primary-button rulebook-finish" data-close-rulebook type="button">Return to the duel</button>
     </dialog>
 
     <dialog class="game-dialog result-dialog" id="resultDialog">

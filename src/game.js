@@ -100,7 +100,6 @@ const ui = {
   playSelectedButton: document.querySelector("#playSelectedButton"),
   nextRoundButton: document.querySelector("#nextRoundButton"),
   roundLabel: document.querySelector("#roundLabel"),
-  roundPips: document.querySelector("#roundPips"),
   roundScore: document.querySelector("#roundScore"),
   playerRoundScore: document.querySelector("#playerRoundScore"),
   aiRoundScore: document.querySelector("#aiRoundScore"),
@@ -108,6 +107,7 @@ const ui = {
   deckStatusText: document.querySelector("#deckStatusText"),
   versusBadge: document.querySelector("#versusBadge"),
   howDialog: document.querySelector("#howDialog"),
+  rulebookDialog: document.querySelector("#rulebookDialog"),
   galleryDialog: document.querySelector("#galleryDialog"),
   galleryButton: document.querySelector("#galleryButton"),
   cardGallery: document.querySelector("#cardGallery"),
@@ -782,11 +782,6 @@ function renderRound() {
     ui.deckStatusText.innerHTML = `<strong id="deckCount">${state.deck.length}</strong> cards in draw pile${discardCopy}`;
     ui.deckCount = document.querySelector("#deckCount");
   }
-  const pipCount = Math.min(7, Math.max(5, state.round));
-  ui.roundPips.innerHTML = Array.from(
-    { length: pipCount },
-    (_, index) => `<i class="${index === Math.min(state.round - 1, pipCount - 1) ? "active" : ""}"></i>`,
-  ).join("");
 }
 
 function renderRoundScore() {
@@ -1140,6 +1135,10 @@ function startGame() {
 document.querySelector("#howButton").addEventListener("click", () => ui.howDialog.showModal());
 document.querySelectorAll("[data-close-dialog]").forEach((button) => {
   button.addEventListener("click", () => ui.howDialog.close());
+});
+document.querySelector("#rulebookButton").addEventListener("click", () => ui.rulebookDialog.showModal());
+document.querySelectorAll("[data-close-rulebook]").forEach((button) => {
+  button.addEventListener("click", () => ui.rulebookDialog.close());
 });
 ui.galleryButton.addEventListener("click", () => {
   if (ui.galleryDialog.open) {

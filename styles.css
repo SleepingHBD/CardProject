@@ -121,7 +121,8 @@ button:focus-visible,
 
 .icon-button,
 .archive-button,
-.how-button {
+.how-button,
+.rulebook-button {
   height: 40px;
   color: #f5e7bd;
   background: linear-gradient(#4e3f35, #2d241f);
@@ -136,13 +137,15 @@ button:focus-visible,
   width: 42px;
 }
 
-.how-button {
+.how-button,
+.rulebook-button {
   padding: 0 17px;
 }
 
 .icon-button:hover,
 .archive-button:hover,
-.how-button:hover {
+.how-button:hover,
+.rulebook-button:hover {
   background: linear-gradient(#654d3b, #352821);
 }
 
@@ -217,8 +220,7 @@ h1 {
   letter-spacing: .13em;
 }
 
-.round-score,
-.round-progress {
+.round-score {
   display: flex;
   align-items: center;
 }
@@ -252,30 +254,6 @@ h1 {
 .round-score i {
   color: #c9a761;
   font-style: normal;
-}
-
-.round-progress {
-  gap: 9px;
-}
-
-.round-pips {
-  display: flex;
-  gap: 5px;
-}
-
-.round-pips i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #a58b65;
-  border: 1px solid #5f452e;
-  border-radius: 2px;
-  transform: rotate(45deg);
-}
-
-.round-pips i.active {
-  background: #9a3e32;
-  box-shadow: 0 0 0 2px #e0bb6a;
 }
 
 .arena {
@@ -2088,6 +2066,351 @@ footer {
   font-size: 25px;
 }
 
+.rulebook-dialog {
+  width: min(940px, calc(100vw - 28px));
+  max-height: 92dvh;
+  padding: 30px 34px 34px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.rulebook-header {
+  max-width: 720px;
+  margin: 0 auto 18px;
+  text-align: center;
+}
+
+.rulebook-dialog .rulebook-header h2 {
+  margin-bottom: 5px;
+  font-size: 30px;
+}
+
+.rulebook-header > p:last-child {
+  margin: 0;
+  color: #654a34;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.rulebook-victory {
+  margin-bottom: 14px;
+  padding: 15px 18px 13px;
+  color: #f1dfac;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(224,187,101,.13), transparent 35%),
+    linear-gradient(135deg, #52382e, #2f211c);
+  border: 3px double #b88a46;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px #1c1411, 0 4px 0 rgba(43,27,20,.22);
+}
+
+.rulebook-victory > div:first-child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.rulebook-victory > div:first-child > span {
+  font-size: 28px;
+}
+
+.rulebook-victory h3 {
+  margin: 0 0 2px;
+  color: #f4dfa6;
+  font-family: "Cinzel", serif;
+  font-size: 17px;
+}
+
+.rulebook-victory p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.rulebook-trophy-track {
+  max-width: 530px;
+  margin: 12px auto 9px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.rulebook-trophy-track > span {
+  --track-color: #b88a46;
+  padding: 7px 9px;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: rgba(18,12,10,.42);
+  border: 1px solid #8f6c3f;
+  border-radius: 3px;
+}
+
+.rulebook-trophy-track > .element-ember { --track-color: #d65636; }
+.rulebook-trophy-track > .element-gust { --track-color: #72a45d; }
+.rulebook-trophy-track > .element-tide { --track-color: #4d8eb4; }
+
+.rulebook-trophy-track b {
+  margin-right: 2px;
+  font-size: 18px;
+}
+
+.rulebook-trophy-track i {
+  width: 17px;
+  height: 11px;
+  display: block;
+  background: var(--track-color);
+  border: 1px solid #f0d58a;
+  border-radius: 50%;
+  box-shadow: 0 0 7px color-mix(in srgb, var(--track-color) 75%, transparent);
+}
+
+.rulebook-trophy-track small {
+  grid-column: 1 / -1;
+  color: #e6cf92;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.rulebook-victory .rulebook-note {
+  color: #d9c79f;
+  font-size: 11px;
+  text-align: center;
+}
+
+.rulebook-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rulebook-section {
+  position: relative;
+  padding: 18px 17px 15px;
+  background:
+    radial-gradient(circle at 7px 8px, rgba(71,47,29,.06) 0 1px, transparent 1px) 0 0 / 19px 21px,
+    rgba(255,247,218,.48);
+  border: 1px solid #987244;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.28);
+}
+
+.rulebook-section-wide {
+  grid-column: 1 / -1;
+}
+
+.rulebook-number {
+  position: absolute;
+  top: 12px;
+  left: 13px;
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  color: #f2dca4;
+  background: #4a2934;
+  border: 1px solid #291912;
+  border-radius: 3px 3px 9px 9px;
+  font-family: "Cinzel", serif;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.rulebook-section h3 {
+  min-height: 29px;
+  margin: 0 0 9px;
+  padding: 4px 0 0 38px;
+  color: #3e2930;
+  font-family: "Cinzel", serif;
+  font-size: 16px;
+}
+
+.rulebook-section p,
+.rulebook-section li,
+.rulebook-section dd {
+  color: #49372b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.rulebook-section p {
+  margin: 8px 0 0;
+}
+
+.rulebook-section ul {
+  margin: 0;
+  padding-left: 19px;
+}
+
+.rulebook-section li + li {
+  margin-top: 4px;
+}
+
+.rulebook-definitions {
+  margin: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.rulebook-definitions > div {
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  gap: 7px;
+}
+
+.rulebook-definitions dt {
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.rulebook-definitions dd {
+  margin: 0;
+}
+
+.rulebook-card-facts,
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.rulebook-card-facts p,
+.strategy-grid p {
+  margin: 0;
+  padding: 9px 10px;
+  background: rgba(222,198,143,.35);
+  border: 1px solid #b09265;
+  border-radius: 2px;
+}
+
+.rulebook-card-facts b,
+.rulebook-card-facts span,
+.strategy-grid b,
+.strategy-grid span {
+  display: block;
+}
+
+.rulebook-card-facts b,
+.strategy-grid b {
+  margin-bottom: 2px;
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+}
+
+.rulebook-card-facts span,
+.strategy-grid span {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.element-cycle {
+  margin-top: 10px;
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  background: #37251e;
+  border: 2px solid #9a7040;
+  border-radius: 3px;
+}
+
+.element-cycle span {
+  padding: 4px 8px;
+  color: #f4e3b5;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.element-cycle .element-ember { color: #f0a189; }
+.element-cycle .element-gust { color: #b6d99a; }
+.element-cycle .element-tide { color: #a8d4ed; }
+
+.element-cycle i {
+  color: #c9ad72;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rulebook-steps {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  list-style: none;
+  counter-reset: round-step;
+}
+
+.rulebook-steps li {
+  position: relative;
+  min-height: 79px;
+  padding: 10px 9px 9px 34px;
+  background: rgba(222,198,143,.35);
+  border: 1px solid #b09265;
+  border-radius: 2px;
+  counter-increment: round-step;
+}
+
+.rulebook-steps li::before {
+  content: counter(round-step);
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  color: #f2dca4;
+  background: #59402f;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.score-formula {
+  padding: 8px 10px;
+  color: #f1dda8 !important;
+  background: #4a2934;
+  border: 2px solid #2c1a20;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-align: center;
+}
+
+.strategy-section {
+  background:
+    linear-gradient(110deg, rgba(81,102,58,.13), transparent 60%),
+    rgba(255,247,218,.54);
+  border-color: #7b7948;
+}
+
+.rulebook-finish {
+  display: block;
+  margin-inline: auto;
+}
+
 .difficulty-dialog {
   width: min(700px, calc(100vw - 30px));
   max-height: 92dvh;
@@ -2406,7 +2729,8 @@ footer {
   .top-actions { gap: 7px; }
   .icon-button,
   .archive-button,
-  .how-button { height: 34px; font-size: 11px; }
+  .how-button,
+  .rulebook-button { height: 34px; font-size: 11px; }
   .icon-button { width: 36px; }
 
   main {
@@ -2447,8 +2771,6 @@ footer {
   .eyebrow { font-size: 8px; }
   h1 { font-size: 20px; }
   .round-status { gap: 8px; font-size: 10px; }
-  .round-pips { gap: 3px; }
-  .round-pips i { width: 7px; height: 7px; }
 
   .arena {
     min-width: 0;
@@ -2714,7 +3036,8 @@ footer {
   .brand small { font-size: 10px; }
   .icon-button,
   .archive-button,
-  .how-button { font-size: 13px; }
+  .how-button,
+  .rulebook-button { font-size: 13px; }
   .round-status { font-size: 12px; }
 
   .arena {
@@ -2882,7 +3205,6 @@ footer {
   .round-status { gap: 8px; }
   .round-score { padding: 3px 6px; font-size: 7px; }
   .round-score b { font-size: 14px; }
-  .round-progress { gap: 6px; }
   .eyebrow { display: none; }
   h1 { font-size: 17px; }
 
@@ -2997,18 +3319,28 @@ footer {
 }
 
 @media (max-width: 640px) {
-  .topbar { height: 68px; padding-inline: 14px; }
-  .brand small, .how-button { display: none; }
-  .brand strong { font-size: 20px; }
+  .topbar { height: 68px; padding-inline: 8px; }
+  .brand > span:last-child { display: none; }
+  .top-actions { gap: 4px; }
+  .icon-button,
+  .archive-button,
+  .how-button,
+  .rulebook-button {
+    height: 36px;
+    padding-inline: 5px;
+    font-size: 9px;
+  }
+  .icon-button { width: 34px; }
   .archive-button {
-    width: 70px;
-    padding-inline: 6px;
+    width: 54px;
     font-size: 0;
   }
   .archive-button::after {
     content: "Cards";
-    font-size: 12px;
+    font-size: 9px;
   }
+  .how-button { width: 58px; }
+  .rulebook-button { width: 64px; }
   main { padding: 12px 8px 0; }
   .game-shell { border-width: 3px; border-radius: 18px; }
   .round-bar { min-height: 60px; padding: 10px 14px; }
@@ -3021,8 +3353,6 @@ footer {
     font-size: 7px;
   }
   .round-score b { font-size: 14px; }
-  .round-progress { justify-content: flex-end; gap: 6px; }
-  .round-pips { justify-content: flex-end; }
   .next-round-button { min-width: min(268px, 100%); }
 
   .arena {
@@ -3197,6 +3527,39 @@ footer {
   .rules-title, .rule-arrow { display: none; }
   .rule-chip { flex: 0 0 auto; }
   .dialog-grid { grid-template-columns: 1fr; }
+  .rulebook-dialog {
+    width: calc(100vw - 16px);
+    max-height: 94dvh;
+    padding: 23px 11px 22px;
+    border-width: 5px;
+  }
+  .rulebook-dialog .rulebook-header h2 { font-size: 21px; }
+  .rulebook-header > p:last-child { font-size: 11px; }
+  .rulebook-victory { padding: 12px 9px 10px; }
+  .rulebook-victory > div:first-child { align-items: flex-start; text-align: left; }
+  .rulebook-victory > div:first-child > span { font-size: 22px; }
+  .rulebook-victory h3 { font-size: 14px; }
+  .rulebook-victory p { font-size: 11px; }
+  .rulebook-trophy-track { gap: 4px; }
+  .rulebook-trophy-track > span { padding-inline: 4px; gap: 3px; }
+  .rulebook-trophy-track b { font-size: 14px; }
+  .rulebook-trophy-track i { width: 12px; height: 8px; }
+  .rulebook-trophy-track small { font-size: 7px; }
+  .rulebook-sections { grid-template-columns: 1fr; gap: 9px; }
+  .rulebook-section-wide { grid-column: auto; }
+  .rulebook-section { padding: 15px 11px 12px; }
+  .rulebook-number { top: 9px; left: 9px; width: 27px; height: 27px; }
+  .rulebook-section h3 { margin-bottom: 7px; padding-left: 34px; font-size: 14px; }
+  .rulebook-section p,
+  .rulebook-section li,
+  .rulebook-section dd { font-size: 11px; }
+  .rulebook-card-facts,
+  .strategy-grid { grid-template-columns: 1fr; }
+  .rulebook-steps { grid-template-columns: 1fr; }
+  .rulebook-steps li { min-height: 0; }
+  .element-cycle { gap: 4px; }
+  .element-cycle span { padding-inline: 5px; font-size: 8px; }
+  .element-cycle i { font-size: 7px; }
   .difficulty-dialog { padding: 22px 13px 18px; }
   .difficulty-dialog h2 { margin-bottom: 6px; font-size: 21px; }
   .difficulty-intro { margin-bottom: 13px; font-size: 12px; }
