@@ -1,11 +1,14 @@
 const {
   ELEMENTS,
+  chooseAiCommitment,
   chooseAiCards,
-  forecastMatchup,
+  getChainBonus,
+  getFocusBonus,
   getFormationReward,
   getPowerTier,
   hasWinningSet,
   resolveClashes,
+  scoreClash,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
 
@@ -71,6 +74,7 @@ const ui = {
   playerCollection: document.querySelector("#playerCollection"),
   aiCollection: document.querySelector("#aiCollection"),
   turnMessage: document.querySelector("#turnMessage"),
+  commitmentHint: document.querySelector("#commitmentHint"),
   opponentTells: document.querySelector("#opponentTells"),
   matchupForecast: document.querySelector("#matchupForecast"),
   selectionCount: document.querySelector("#selectionCount"),
@@ -113,9 +117,14 @@ function drawToHand(hand) {
 }
 
 function prepareAiPlan() {
+  const commitment = chooseAiCommitment(
+    state.aiHand.length,
+    state.playerWins,
+    state.aiWins,
+  );
   state.aiPlan = chooseAiCards(
     state.aiHand,
-    Math.min(MAX_PLAY_SIZE, state.aiHand.length),
+    commitment,
     state.playerWins,
     state.aiWins,
   );
@@ -123,7 +132,9 @@ function prepareAiPlan() {
 }
 
 function renderOpponentTells() {
-  const laneLabels = ["I", "II", "III"];
+  const focus = getFocusBonus(state.aiPlan.length);
+  ui.commitmentHint.textContent = `${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} committed · ${focus ? `Focus +${focus}` : "No Focus"}`;
+  const laneLabels = ["1", "2", "3"];
   ui.opponentTells.innerHTML = laneLabels.map((lane, index) => {
     const card = state.aiPlan[index];
     if (!card) {
@@ -131,7 +142,7 @@ function renderOpponentTells() {
         <div class="opponent-tell empty-tell">
           <span class="tell-lane">LANE ${lane}</span>
           <b>No card</b>
-          <small>Reserve empty</small>
+          <small>Empty</small>
         </div>
       `;
     }
@@ -143,7 +154,7 @@ function renderOpponentTells() {
         <span class="tell-lane">LANE ${lane}</span>
         <span class="tell-element" aria-hidden="true">${element.icon}</span>
         <b>${element.label}</b>
-        <small>${tier.label} <em>${tier.range}</em></small>
+        <small>Power <em>${tier.range}</em></small>
       </div>
     `;
   }).join("");
@@ -153,7 +164,7 @@ function renderMatchupForecast() {
   if (state.locked) {
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction forecast-locked">
-        Formation committed. Watch the numbered lanes resolve.
+        Cards committed. Watch each lane.
       </span>
     `;
     return;
@@ -166,34 +177,75 @@ function renderMatchupForecast() {
   if (!selectedCards.length) {
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction">
-        Select a card to read its lane matchup. Deselect and reselect to change order.
+        Pick a card to preview its matchup.
       </span>
     `;
     return;
   }
 
   const labels = {
-    advantage: { icon: "▲", title: "ELEMENT EDGE" },
-    danger: { icon: "!", title: "EXPOSED" },
-    power: { icon: "◆", title: "POWER DUEL" },
+    favored: { icon: "+", title: "FAVORED", className: "advantage" },
+    close: { icon: "≈", title: "CLOSE", className: "power" },
+    risky: { icon: "!", title: "RISKY", className: "danger" },
   };
+  const playerFocus = getFocusBonus(selectedCards.length);
+  const opponentFocus = getFocusBonus(state.aiPlan.length);
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
     const opponentCard = state.aiPlan[index];
-    if (!opponentCard) return "";
-    const forecast = forecastMatchup(playerCard.element, opponentCard.element);
-    const copy = labels[forecast];
-    const opponentElement = ELEMENTS[opponentCard.element];
-    const detail = forecast === "power"
-      ? `Your ${playerCard.power} vs scouted ${getPowerTier(opponentCard.power).range}`
-      : forecast === "advantage"
-        ? `${ELEMENTS[playerCard.element].label} counters ${opponentElement.label}`
-        : `${opponentElement.label} counters ${ELEMENTS[playerCard.element].label}`;
+    if (!opponentCard) {
+      return `
+        <span class="forecast-chip forecast-pressure">
+          <i>${index + 1}</i>
+          <b>◆ PRESSURE CARD</b>
+          <small>Spent to win tied formations</small>
+        </span>
+      `;
+    }
+    const playerChain = getChainBonus(selectedCards, index);
+    const opponentChain = getChainBonus(state.aiPlan, index);
+    const scoring = scoreClash(
+      playerCard,
+      opponentCard,
+      playerChain,
+      opponentChain,
+      playerFocus,
+      opponentFocus,
+    );
+    const [tierMin, tierMax] = getPowerTier(opponentCard.power).range
+      .split("-")
+      .map(Number);
+    const opponentMin = tierMin
+      + scoring.ai.edge
+      + scoring.ai.chain
+      + scoring.ai.focus;
+    const opponentMax = tierMax
+      + scoring.ai.edge
+      + scoring.ai.chain
+      + scoring.ai.focus;
+    const outlook = scoring.player.total > opponentMax
+      ? "favored"
+      : scoring.player.total < opponentMin
+        ? "risky"
+        : "close";
+    const copy = labels[outlook];
+    const bonuses = [];
+    if (scoring.player.focus) bonuses.push(`Focus +${scoring.player.focus}`);
+    if (scoring.player.edge) bonuses.push(`Edge +${scoring.player.edge}`);
+    if (scoring.player.chain) bonuses.push(`Chain +${scoring.player.chain}`);
+    if (scoring.ai.edge) bonuses.push(`Foe edge +${scoring.ai.edge}`);
+    if (!bonuses.length && scoring.ai.chain) {
+      bonuses.push(`Foe chain +${scoring.ai.chain}`);
+    }
+    if (!bonuses.length && scoring.ai.focus) {
+      bonuses.push(`Foe focus +${scoring.ai.focus}`);
+    }
+    const detail = bonuses.length ? bonuses.join(" · ") : "No bonuses";
 
     return `
-      <span class="forecast-chip forecast-${forecast}">
+      <span class="forecast-chip forecast-${copy.className}">
         <i>${index + 1}</i>
-        <b>${copy.icon} ${copy.title}</b>
+        <b>${copy.icon} ${copy.title} · ${scoring.player.total} vs ${opponentMin}-${opponentMax}</b>
         <small>${detail}</small>
       </span>
     `;
@@ -215,7 +267,6 @@ function cardMarkup(card, interactive = false, selectedIndex = -1) {
         <img src="./assets/cards/${card.art}.webp" alt="" draggable="false" />
         <span class="art-vignette" aria-hidden="true"></span>
         <span class="card-element" aria-hidden="true">${element.icon}</span>
-        <span class="card-rarity">${card.rarity}</span>
         <span class="card-power"><small>POWER</small><b>${card.power}</b></span>
       </span>
       <span class="card-info">
@@ -226,6 +277,7 @@ function cardMarkup(card, interactive = false, selectedIndex = -1) {
         <i aria-hidden="true">✦</i>
         <span><b>${card.move}</b><small>${card.lore}</small></span>
       </span>
+      <span class="card-rarity">${card.rarity}</span>
     </button>
   `;
 }
@@ -247,7 +299,11 @@ function renderHand() {
 
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
-  ui.selectionCount.textContent = `${count} of ${MAX_PLAY_SIZE} selected`;
+  const focus = getFocusBonus(count);
+  const focusLabel = focus ? `Focus +${focus}` : "No Focus";
+  ui.selectionCount.textContent = count
+    ? `${count} of ${MAX_PLAY_SIZE} · ${focusLabel}`
+    : `0 of ${MAX_PLAY_SIZE} selected`;
   ui.playSelectedButton.disabled = state.locked || count === 0;
   ui.playSelectedButton.textContent = count === 1 ? "Commit 1 Card" : `Commit ${count} Cards`;
   renderMatchupForecast();
@@ -276,22 +332,28 @@ function toggleCardSelection(instanceId) {
     const title = count === 0
       ? "Build your formation."
       : `${count} ${count === 1 ? "card" : "cards"} in formation.`;
-    const detail = count === MAX_PLAY_SIZE
-      ? "Formation full. Commit when ready."
-      : "Cards clash from left to right in the numbered order.";
+    const focus = getFocusBonus(count);
+    const focusLabel = focus ? `Focus +${focus}` : "No Focus";
+    const detail = count === 0
+      ? "Fewer cards gain Focus; more cards win formation ties."
+      : count > state.aiPlan.length
+        ? `Pressure advantage: tied formations go to you. ${focusLabel}.`
+        : count < state.aiPlan.length
+          ? `${focusLabel}, but Professor Paws wins tied formations.`
+          : `Equal commitment with ${focusLabel.toLowerCase()}; a tied formation stays a draw.`;
     setMessage(title, detail);
   }
 
   renderHand();
 }
 
-function playedCardsMarkup(cards, side) {
+function playedCardsMarkup(cards, side, clashCount = cards.length) {
   return `
     <div class="played-cards ${side}-formation">
       ${cards.map((card, index) => `
-        <div class="clash-card" data-clash-index="${index}">
+        <div class="clash-card${index >= clashCount ? " result-pressure" : ""}" data-clash-index="${index}">
           ${cardMarkup(card, false, index)}
-          <span class="lane-result" aria-hidden="true"></span>
+          <span class="lane-result" aria-hidden="true">${index >= clashCount ? "PRESSURE" : ""}</span>
         </div>
       `).join("")}
     </div>
@@ -357,13 +419,14 @@ async function animateClashes(playerCards, aiCards) {
 
   for (let index = 0; index < resolution.results.length; index += 1) {
     const winner = resolution.results[index];
+    const laneScore = resolution.lanes[index];
     const playerLane = playerLanes[index];
     const aiLane = aiLanes[index];
     if (!playerLane || !aiLane) continue;
 
     setMessage(
       `Clash ${index + 1} of ${resolution.results.length}!`,
-      `${playerCards[index].name} faces ${aiCards[index].name}.`,
+      `${playerCards[index].name} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
     );
 
     playerLane.classList.add("clashing");
@@ -402,8 +465,8 @@ async function animateClashes(playerCards, aiCards) {
     aiLane.classList.remove("clashing");
     playerLane.classList.add(winner === "player" ? "result-win" : winner === "ai" ? "result-loss" : "result-draw");
     aiLane.classList.add(winner === "ai" ? "result-win" : winner === "player" ? "result-loss" : "result-draw");
-    playerLane.querySelector(".lane-result").textContent = winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW";
-    aiLane.querySelector(".lane-result").textContent = winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW";
+    playerLane.querySelector(".lane-result").textContent = `${winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW"} ${laneScore.player.total}–${laneScore.ai.total}`;
+    aiLane.querySelector(".lane-result").textContent = `${winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW"} ${laneScore.ai.total}–${laneScore.player.total}`;
     impact.classList.add("impact-fade");
     ui.battlefield.classList.remove("is-clashing");
 
@@ -424,18 +487,25 @@ function playRound() {
   state.locked = true;
   state.selectedCardIds = [];
   renderHand();
-  ui.playerPlayZone.innerHTML = playedCardsMarkup(playerCards, "player");
-  ui.aiPlayZone.innerHTML = placeholder(`Revealing ${playerCards.length} ${playerCards.length === 1 ? "card" : "cards"}...`);
+  const clashCount = Math.min(playerCards.length, state.aiPlan.length);
+  ui.playerPlayZone.innerHTML = playedCardsMarkup(
+    playerCards,
+    "player",
+    clashCount,
+  );
+  ui.aiPlayZone.innerHTML = placeholder(`Revealing Professor Paws' ${state.aiPlan.length}-card plan...`);
   setMessage("The sealed formation opens...", "Professor Paws committed this plan before your choice.");
   audio.commit(playerCards.length);
 
   window.setTimeout(async () => {
-    const chosenAiCards = state.aiPlan.slice(0, playerCards.length);
-    const aiCards = chosenAiCards
+    const aiCards = state.aiPlan
       .map((card) => removeCard(state.aiHand, card.instanceId))
       .filter(Boolean);
-    ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai");
-    setMessage("Formations revealed!", "Brace for the first clash.");
+    ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount);
+    setMessage(
+      `${playerCards.length} cards against ${aiCards.length}!`,
+      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; extra cards create Pressure.`,
+    );
     audio.reveal(aiCards.length);
     const resolution = await animateClashes(playerCards, aiCards);
     resolveRound(playerCards, aiCards, resolution);
@@ -443,28 +513,42 @@ function playRound() {
 }
 
 function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCards, aiCards)) {
-  const { results, score } = resolution;
+  const { results, score, winner, decidedBy } = resolution;
   const reward = getFormationReward(playerCards, aiCards, resolution);
   ui.versusBadge.className = "versus-badge";
 
   if (reward.winner === "player" && reward.card) state.playerWins.push(reward.card);
   if (reward.winner === "ai" && reward.card) state.aiWins.push(reward.card);
 
-  const clashWord = playerCards.length === 1 ? "clash" : "clashes";
+  const clashWord = results.length === 1 ? "clash" : "clashes";
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
 
-  if (score.player > score.ai) {
-    setMessage(
-      `You win ${score.player} of ${playerCards.length} ${clashWord}!`,
-      `Lane ${reward.lane + 1}'s ${reward.card.name} becomes your round trophy.`,
-    );
+  if (winner === "player") {
+    if (decidedBy === "pressure") {
+      setMessage(
+        `Your Pressure breaks the ${score.player}–${score.ai} tie!`,
+        `${reward.card.name}, your first extra card, becomes the round trophy.`,
+      );
+    } else {
+      setMessage(
+        `You win ${score.player} of ${results.length} ${clashWord}!`,
+        `Lane ${reward.lane + 1}'s ${reward.card.name} becomes your round trophy.`,
+      );
+    }
     ui.versusBadge.classList.add("win");
     audio.roundResult("win");
-  } else if (score.ai > score.player) {
-    setMessage(
-      `Professor Paws wins ${score.ai} of ${playerCards.length} ${clashWord}.`,
-      `The professor claims ${reward.card.name} from lane ${reward.lane + 1}.`,
-    );
+  } else if (winner === "ai") {
+    if (decidedBy === "pressure") {
+      setMessage(
+        `Professor Paws' Pressure breaks the ${score.ai}–${score.player} tie.`,
+        `${reward.card.name}, the first extra card, becomes the professor's trophy.`,
+      );
+    } else {
+      setMessage(
+        `Professor Paws wins ${score.ai} of ${results.length} ${clashWord}.`,
+        `The professor claims ${reward.card.name} from lane ${reward.lane + 1}.`,
+      );
+    }
     ui.versusBadge.classList.add("lose");
     audio.roundResult("loss");
   } else {
@@ -484,8 +568,8 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     const aiCompletedSet = hasWinningSet(state.aiWins);
 
     if (playerCompletedSet && aiCompletedSet) {
-      if (score.player > score.ai) return endGame("player");
-      if (score.ai > score.player) return endGame("ai");
+      if (winner === "player") return endGame("player");
+      if (winner === "ai") return endGame("ai");
       if (state.playerWins.length > state.aiWins.length) return endGame("player");
       if (state.aiWins.length > state.playerWins.length) return endGame("ai");
     } else if (playerCompletedSet) {

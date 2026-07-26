@@ -507,7 +507,8 @@ h1 {
 
 .clash-card.result-win .lane-result,
 .clash-card.result-loss .lane-result,
-.clash-card.result-draw .lane-result {
+.clash-card.result-draw .lane-result,
+.clash-card.result-pressure .lane-result {
   opacity: 1;
   transform: translateX(-50%) scale(1);
 }
@@ -528,6 +529,17 @@ h1 {
   color: #f0e3be;
   background: #5c574d;
   border-color: #b2a27f;
+}
+
+.clash-card.result-pressure .lane-result {
+  color: #3b291b;
+  background: #e0bd68;
+  border-color: #5c3d24;
+}
+
+.clash-card.result-pressure .game-card {
+  filter: saturate(.78);
+  box-shadow: 0 7px 0 var(--rarity-dark), 0 0 0 3px #d9b45e, 0 12px 20px rgba(30,19,13,.3);
 }
 
 .clash-card.result-win .game-card {
@@ -795,7 +807,7 @@ h1 {
   min-width: 0;
   height: 48px;
   display: grid;
-  grid-template-columns: 35px 1fr;
+  grid-template-columns: 1fr;
   grid-template-rows: 1fr 1fr;
   align-items: center;
   padding: 4px 7px 4px 38px;
@@ -958,6 +970,13 @@ h1 {
   border-color: #a78c4c;
 }
 .forecast-power b { color: #efd488; }
+
+.forecast-pressure {
+  background: linear-gradient(100deg, rgba(128, 91, 42, .58), #29211e);
+  border-color: #c89d51;
+}
+
+.forecast-pressure b { color: #f2d98f; }
 
 .selection-bar {
   margin: 0 auto 10px;
@@ -1223,6 +1242,21 @@ h1 {
   letter-spacing: .12em;
   text-transform: uppercase;
   transform: translateX(-50%);
+}
+
+.hand .card-rarity {
+  top: auto;
+  bottom: 1px;
+  min-width: 58%;
+  padding: 2px 8px 1px;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 4px rgba(24, 13, 10, .28);
+  text-align: center;
+}
+
+.hand .card-ability {
+  padding-bottom: 14px;
 }
 
 .card-info {
@@ -2033,20 +2067,20 @@ footer {
   .control-panel .tactics-board { margin: 0; }
   .control-panel .tactics-heading { padding: 7px 9px; }
   .control-panel .scout-seal { display: grid; width: 34px; height: 34px; flex-basis: 34px; font-size: 17px; }
-  .control-panel .tactics-heading p { font-size: 13px; }
-  .control-panel .tactics-heading small { font-size: 10px; line-height: 1.2; }
+  .control-panel .tactics-heading p { font-size: 15px; }
+  .control-panel .tactics-heading small { font-size: 12px; line-height: 1.2; }
   .control-panel .opponent-tells { padding: 5px 6px 3px; gap: 4px; }
   .control-panel .opponent-tell { height: 52px; padding: 14px 4px 4px 39px; }
   .control-panel .tell-element { left: 5px; top: 13px; width: 29px; height: 29px; font-size: 15px; }
-  .control-panel .tell-lane { top: 2px; right: 4px; font-size: 7px; }
-  .control-panel .opponent-tell b { font-size: 11px; }
-  .control-panel .opponent-tell small { font-size: 9px; }
+  .control-panel .tell-lane { top: 2px; right: 4px; font-size: 9px; }
+  .control-panel .opponent-tell b { font-size: 13px; }
+  .control-panel .opponent-tell small { font-size: 11px; }
   .control-panel .matchup-forecast { min-height: 50px; padding: 4px 6px 6px; gap: 4px; }
-  .control-panel .forecast-instruction { font-size: 11px; }
+  .control-panel .forecast-instruction { font-size: 12px; }
   .control-panel .forecast-chip { padding: 6px 4px 5px 32px; }
   .control-panel .forecast-chip i { left: 5px; width: 21px; height: 21px; font-size: 9px; }
-  .control-panel .forecast-chip b { font-size: 9px; }
-  .control-panel .forecast-chip small { font-size: 8px; }
+  .control-panel .forecast-chip b { font-size: 11px; }
+  .control-panel .forecast-chip small { font-size: 10px; }
 
   .control-panel .selection-bar { margin: 0; }
   .control-panel .selection-count,
@@ -2093,7 +2127,7 @@ footer {
   .hand .card-info { min-height: 42px; padding: 5px 4px 4px; }
   .hand .card-info strong { font-size: 13px; }
   .hand .card-info small { font-size: 8px; letter-spacing: .05em; }
-  .hand .card-ability { height: 48px; padding: 5px 4px; }
+  .hand .card-ability { height: 48px; padding: 4px 4px 14px; }
   .hand .card-ability > i { flex: 0 0 22px; height: 22px; font-size: 11px; }
   .hand .card-ability b { font-size: 11px; }
   .hand .card-ability small { display: block; font-size: 8px; }
@@ -2167,18 +2201,19 @@ footer {
 
   .control-panel .tactics-heading { padding-block: 3px; }
   .control-panel .scout-seal { display: none; }
-  .control-panel .tactics-heading p { font-size: 11px; }
-  .control-panel .tactics-heading small { font-size: 8px; }
+  .control-panel .tactics-heading p { font-size: 13px; }
+  .control-panel .tactics-heading small { font-size: 10px; }
   .control-panel .opponent-tells { padding-block: 2px; }
   .control-panel .opponent-tell { height: 34px; padding-top: 8px; padding-left: 27px; }
   .control-panel .tell-element { top: 7px; width: 21px; height: 21px; font-size: 10px; }
-  .control-panel .opponent-tell b { font-size: 10px; }
-  .control-panel .opponent-tell small { font-size: 8px; }
+  .control-panel .tell-lane { font-size: 8px; }
+  .control-panel .opponent-tell b { font-size: 12px; }
+  .control-panel .opponent-tell small { font-size: 10px; }
   .control-panel .matchup-forecast { min-height: 32px; padding-block: 1px 2px; }
   .control-panel .forecast-chip { padding-block: 2px; }
-  .control-panel .forecast-chip b,
+  .control-panel .forecast-chip b { font-size: 10px; }
   .control-panel .forecast-chip small,
-  .control-panel .forecast-instruction { font-size: 8px; }
+  .control-panel .forecast-instruction { font-size: 9px; }
 
   .selection-bar { margin-bottom: 2px; }
   .selection-count,
@@ -2194,7 +2229,7 @@ footer {
   .hand .card-info { min-height: 35px; padding-block: 4px 3px; }
   .hand .card-info strong { font-size: 12px; }
   .hand .card-info small { font-size: 8px; }
-  .hand .card-ability { height: 55px; padding-block: 5px; }
+  .hand .card-ability { height: 55px; padding: 5px 4px 14px; }
   .hand .card-ability b { font-size: 10px; }
   .hand .card-ability small { font-size: 8px; }
   .hand .selection-order { top: 28px; }
@@ -2374,19 +2409,20 @@ footer {
     border-bottom: 1px solid #795631;
   }
 
-  .tactics-heading small { font-size: 8px; }
+  .tactics-heading p { font-size: 13px; }
+  .tactics-heading small { font-size: 10px; }
   .opponent-tells { padding: 6px 5px 3px; gap: 3px; }
   .opponent-tell {
     height: 45px;
     padding: 12px 3px 3px 29px;
   }
-  .tell-lane { left: 3px; right: auto; font-size: 6px; }
+  .tell-lane { left: 3px; right: auto; font-size: 9px; }
   .tell-element { left: 3px; top: 15px; width: 23px; height: 23px; }
-  .opponent-tell b { font-size: 8px; }
+  .opponent-tell b { font-size: 11px; }
   .opponent-tell small {
     max-width: 100%;
     overflow: hidden;
-    font-size: 6px;
+    font-size: 9px;
     text-overflow: ellipsis;
   }
   .matchup-forecast { min-height: 45px; padding: 3px 5px 6px; gap: 3px; }
@@ -2399,9 +2435,9 @@ footer {
     font-size: 7px;
     transform: none;
   }
-  .forecast-chip b { font-size: 6px; }
-  .forecast-chip small { font-size: 6px; }
-  .forecast-instruction { padding: 6px; font-size: 8px; }
+  .forecast-chip b { font-size: 9px; }
+  .forecast-chip small { font-size: 9px; }
+  .forecast-instruction { padding: 6px; font-size: 10px; }
 
   .selection-bar {
     flex-wrap: wrap;
@@ -2432,7 +2468,7 @@ footer {
   .card-info { min-height: 35px; padding-inline: 4px; }
   .card-info strong { font-size: 12px; }
   .card-info small { font-size: 6px; }
-  .card-ability { height: 40px; padding-inline: 4px; }
+  .card-ability { height: 40px; padding: 3px 4px 12px; }
   .card-ability > i { flex-basis: 20px; height: 20px; }
   .card-ability b { font-size: 9px; }
   .card-ability small { display: block; font-size: 6px; }

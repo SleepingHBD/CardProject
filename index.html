@@ -135,13 +135,13 @@
               <div class="tactics-heading">
                 <span class="scout-seal" aria-hidden="true">&#10022;</span>
                 <div>
-                  <p id="tacticsTitle">Professor's Battle Tells</p>
-                  <small>Win the formation. Your earliest winning lane becomes the trophy.</small>
+                  <p id="tacticsTitle">Professor's Plan</p>
+                  <small id="commitmentHint">Professor commitment revealed.</small>
                 </div>
               </div>
               <div class="opponent-tells" id="opponentTells" aria-label="Professor Paws' planned lanes"></div>
               <div class="matchup-forecast" id="matchupForecast" aria-live="polite">
-                Select a card to read the first lane.
+                Pick a card to preview its matchup.
               </div>
             </section>
             <div class="selection-bar">
@@ -159,13 +159,13 @@
         </section>
       </section>
 
-      <section class="rules-strip" aria-label="Element strengths">
-        <span class="rules-title">ELEMENTS</span>
-        <span class="rule-chip ember"><b>🔥</b> Ember beats Gust</span>
-        <span class="rule-arrow">›</span>
-        <span class="rule-chip gust"><b>🍃</b> Gust beats Tide</span>
-        <span class="rule-arrow">›</span>
-        <span class="rule-chip tide"><b>💧</b> Tide beats Ember</span>
+      <section class="rules-strip" aria-label="Commitment and scoring rules">
+        <span class="rules-title">COMMITMENT</span>
+        <span class="rule-chip ember"><b>1/2</b> Fewer cards gain Focus</span>
+        <span class="rule-arrow">·</span>
+        <span class="rule-chip gust"><b>3</b> More cards win ties</span>
+        <span class="rule-arrow">·</span>
+        <span class="rule-chip tide"><b>+2/+1</b> Edge and Chain bonuses</span>
       </section>
       <footer>
         <p>Sealed beneath the moon by the Guild of Nine Lives.</p>
@@ -197,11 +197,10 @@
       <p class="eyebrow">THE GUILD CODEX</p>
       <h2>Laws of the Duel</h2>
       <div class="dialog-grid">
-        <div><span>1</span><p>Study the professor's three battle tells. Each reveals a lane's element and broad strength tier.</p></div>
-        <div><span>2</span><p>Select one to three cards. Numbered seals set their lane order, and the forecast updates as you choose.</p></div>
-        <div><span>3</span><p>The professor's plan is locked before your choice. Ember beats Gust, Gust beats Tide, and Tide beats Ember.</p></div>
-        <div><span>4</span><p>Matching elements compare power. The formation winner claims their earliest winning card as one trophy.</p></div>
-        <div><span>5</span><p>Collect every element, or three differently colored trophies of one element, to win the match.</p></div>
+        <div><span>1</span><p>Professor Paws independently commits one to three cards. The plan shows how many.</p></div>
+        <div><span>2</span><p>Commit one card for Focus +2, two for Focus +1, or three for no Focus.</p></div>
+        <div><span>3</span><p>The larger formation has Pressure and wins tied clash scores, but every committed card is spent.</p></div>
+        <div><span>4</span><p>Add power, Element Edge +2, Chain +1, and Focus. Win more clashes to claim a trophy.</p></div>
       </div>
       <button class="primary-button" data-close-dialog type="button">Got it!</button>
     </dialog>

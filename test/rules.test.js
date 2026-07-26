@@ -3,29 +3,56 @@ import assert from "node:assert/strict";
 import "../src/rules.js";
 
 const {
+  CHAIN_BONUS,
+  ELEMENT_EDGE_BONUS,
   chooseAiCard,
+  chooseAiCommitment,
   chooseAiCards,
   compareCards,
   forecastMatchup,
+  getChainBonus,
   getFormationReward,
+  getFocusBonus,
   getPowerTier,
   hasWinningSet,
   resolveClashes,
+  scoreClash,
 } = globalThis.ClawRules;
 
 const card = (element, power = 5, color = "red") => ({ element, power, color });
 
-test("element circle resolves correctly", () => {
+test("element advantage adds a two-point edge", () => {
+  assert.equal(ELEMENT_EDGE_BONUS, 2);
   assert.equal(compareCards(card("ember"), card("gust")), "player");
   assert.equal(compareCards(card("gust"), card("tide")), "player");
   assert.equal(compareCards(card("tide"), card("ember")), "player");
   assert.equal(compareCards(card("gust"), card("ember")), "ai");
 });
 
+test("an elemental counter is strong but not an automatic win", () => {
+  assert.equal(compareCards(card("ember", 3), card("gust", 9)), "ai");
+  assert.deepEqual(
+    scoreClash(card("ember", 3), card("gust", 9)),
+    {
+      player: { base: 3, edge: 2, chain: 0, focus: 0, total: 5 },
+      ai: { base: 9, edge: 0, chain: 0, focus: 0, total: 9 },
+    },
+  );
+});
+
 test("same element compares power and can draw", () => {
   assert.equal(compareCards(card("ember", 8), card("ember", 4)), "player");
   assert.equal(compareCards(card("ember", 3), card("ember", 7)), "ai");
   assert.equal(compareCards(card("ember", 6), card("ember", 6)), "draw");
+});
+
+test("changing elements between lanes earns a one-point chain bonus", () => {
+  const formation = [card("ember", 5), card("tide", 5), card("tide", 5)];
+  assert.equal(CHAIN_BONUS, 1);
+  assert.equal(getChainBonus(formation, 0), 0);
+  assert.equal(getChainBonus(formation, 1), 1);
+  assert.equal(getChainBonus(formation, 2), 0);
+  assert.equal(compareCards(card("tide", 5), card("tide", 5), 1, 0), "player");
 });
 
 test("matchup forecasts identify counters and power duels", () => {
@@ -94,6 +121,23 @@ test("AI selection cannot exceed its available hand", () => {
   assert.deepEqual(chooseAiCards([], 3, [], [], () => 0.5), []);
 });
 
+test("AI independently chooses commitments from one to three cards", () => {
+  assert.equal(chooseAiCommitment(6, [], [], () => 0.1), 1);
+  assert.equal(chooseAiCommitment(6, [], [], () => 0.5), 2);
+  assert.equal(chooseAiCommitment(6, [], [], () => 0.9), 3);
+  assert.equal(chooseAiCommitment(1, [], [], () => 0.9), 1);
+});
+
+test("fewer committed cards gain Focus", () => {
+  assert.equal(getFocusBonus(1), 2);
+  assert.equal(getFocusBonus(2), 1);
+  assert.equal(getFocusBonus(3), 0);
+  assert.equal(
+    scoreClash(card("ember", 4), card("ember", 5), 0, 0, 2, 0).player.total,
+    6,
+  );
+});
+
 test("multi-card formations resolve from left to right", () => {
   const playerCards = [
     card("ember", 5),
@@ -107,8 +151,12 @@ test("multi-card formations resolve from left to right", () => {
   ];
   const resolution = resolveClashes(playerCards, aiCards);
 
-  assert.deepEqual(resolution.results, ["player", "ai", "ai"]);
+  assert.deepEqual(resolution.results, ["ai", "ai", "player"]);
   assert.deepEqual(resolution.score, { player: 1, ai: 2, draw: 0 });
+  assert.deepEqual(
+    resolution.lanes.map((lane) => [lane.player.total, lane.ai.total]),
+    [[7, 9], [5, 7], [9, 5]],
+  );
 });
 
 test("formation winner earns only their earliest winning card", () => {
@@ -131,4 +179,42 @@ test("an evenly split formation awards no trophy", () => {
     getFormationReward(playerCards, aiCards, resolution),
     { winner: "draw", card: null, lane: -1 },
   );
+});
+
+test("a smaller focused formation can beat a larger commitment", () => {
+  const playerCards = [card("ember", 5)];
+  const aiCards = [card("gust", 6), card("tide", 8), card("ember", 8)];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.equal(resolution.lanes[0].player.total, 9);
+  assert.equal(resolution.lanes[0].ai.total, 6);
+  assert.equal(resolution.winner, "player");
+  assert.equal(resolution.decidedBy, "clashes");
+});
+
+test("the larger commitment uses Pressure to break a tied clash score", () => {
+  const playerCards = [card("ember", 5), card("gust", 5)];
+  const aiCards = [
+    card("gust", 6),
+    card("ember", 5),
+    card("tide", 7),
+  ];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.deepEqual(resolution.score, { player: 1, ai: 1, draw: 0 });
+  assert.equal(resolution.winner, "ai");
+  assert.equal(resolution.decidedBy, "pressure");
+  assert.deepEqual(
+    getFormationReward(playerCards, aiCards, resolution),
+    { winner: "ai", card: aiCards[2], lane: 2 },
+  );
+});
+
+test("equal commitments still draw when clash scores are tied", () => {
+  const playerCards = [card("ember", 5), card("gust", 5)];
+  const aiCards = [card("gust", 6), card("ember", 5)];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.equal(resolution.winner, "draw");
+  assert.equal(resolution.decidedBy, "draw");
 });
