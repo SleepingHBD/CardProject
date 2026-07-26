@@ -51,7 +51,7 @@
         >
           Card Archive
         </button>
-        <button class="how-button" id="howButton" type="button">Guild Codex</button>
+        <button class="how-button" id="howButton" type="button">Duel Codex</button>
       </div>
     </header>
 
@@ -60,7 +60,7 @@
         <div class="round-bar">
           <div>
             <p class="eyebrow">THE GREAT HALL OF WHISKERKEEP</p>
-            <h1 id="gameTitle">Guild Trial of Elements</h1>
+            <h1 id="gameTitle">Trial of the Elements</h1>
           </div>
           <div class="round-status">
             <div class="round-score" id="roundScore" aria-live="polite" aria-label="Round score: You 0, Professor Paws 0">
@@ -89,7 +89,7 @@
               </div>
               <p>Keeper of the yarn archives</p>
             </div>
-            <div class="collection" id="aiCollection" aria-label="Professor Paws' won cards"></div>
+            <div class="collection" id="aiCollection" aria-label="Professor Paws' elemental trophy progress"></div>
             <blockquote class="character-quip">“A clever paw never plays the obvious card.”</blockquote>
           </div>
 
@@ -125,9 +125,9 @@
                 <h2>You</h2>
                 <span class="you-badge">YOU</span>
               </div>
-              <p>Rookie of the whisker guild</p>
+              <p>Rookie duelist of Whiskerkeep</p>
             </div>
-            <div class="collection" id="playerCollection" aria-label="Your won cards"></div>
+            <div class="collection" id="playerCollection" aria-label="Your elemental trophy progress"></div>
             <blockquote class="character-quip">“Nine lives. One legendary deck.”</blockquote>
           </div>
         </section>
@@ -162,7 +162,7 @@
             </div>
             <div class="deck-status">
               <span class="mini-deck" aria-hidden="true"></span>
-              <span id="deckStatusText"><strong id="deckCount">0</strong> cards left in the draw pile</span>
+              <span id="deckStatusText"><strong id="deckCount">0</strong> cards in draw pile</span>
             </div>
           </div>
           <div class="hand" id="playerHand" aria-label="Your hand of cards"></div>
@@ -178,7 +178,7 @@
         <span class="rule-chip tide"><b>+2/+1</b> Edge and Chain bonuses</span>
       </section>
       <footer>
-        <p>Sealed beneath the moon by the Guild of Nine Lives.</p>
+        <p>Sealed beneath the moon by the Circle of Nine Lives.</p>
       </footer>
     </main>
 
@@ -226,7 +226,7 @@
     <dialog class="game-dialog gallery-dialog" id="galleryDialog">
       <button class="dialog-close" data-close-gallery type="button" aria-label="Close card archive">×</button>
       <p class="eyebrow">THE WHISKERKEEP COLLECTION</p>
-      <h2>Guild Card Archive</h2>
+      <h2>Card Archive</h2>
       <p class="gallery-intro" id="galleryIntro">All cards currently available in the game.</p>
       <div class="archive-toolbar">
         <label class="archive-sort-field" for="archiveSort">
@@ -236,7 +236,6 @@
             <option value="rarity">Rarity: Legendary first</option>
             <option value="power">Power: High to low</option>
             <option value="name">Name: A to Z</option>
-            <option value="guild">Guild color</option>
           </select>
         </label>
         <span class="archive-sort-summary" id="archiveSortSummary" aria-live="polite">
@@ -301,14 +300,15 @@
 
     <dialog class="game-dialog" id="howDialog">
       <button class="dialog-close" data-close-dialog type="button" aria-label="Close">×</button>
-      <p class="eyebrow">THE GUILD CODEX</p>
+      <p class="eyebrow">THE DUEL CODEX</p>
       <h2>Laws of the Duel</h2>
       <div class="dialog-grid">
-        <div><span>1</span><p><b>Power:</b> Add all bonuses to the number on your card. The higher total wins the clash.</p></div>
-        <div><span>2</span><p><b>Focus:</b> Every clashing card gets +2 when you commit one card, +1 for two cards, and no bonus for three.</p></div>
-        <div><span>3</span><p><b>Chain:</b> A card gets +1 when its element differs from your previous card. The first lane cannot Chain.</p></div>
-        <div><span>4</span><p><b>Element Edge:</b> Gain +2 when your element beats the opposing one: Ember beats Gust, Gust beats Tide, and Tide beats Ember.</p></div>
+        <div><span>1</span><p><b>Goal:</b> A round win turns one of your played cards into a trophy. Collect two Ember, two Gust, and two Tide trophies.</p></div>
+        <div><span>2</span><p><b>Power:</b> Add bonuses to your card's power. Element Edge gives +2: Ember beats Gust, Gust beats Tide, and Tide beats Ember.</p></div>
+        <div><span>3</span><p><b>Focus:</b> Each clashing card gets +2 when you commit one card, +1 for two cards, and no bonus for three.</p></div>
+        <div><span>4</span><p><b>Chain:</b> Gain +1 when a card's element differs from the card before it. Lane 1 cannot Chain.</p></div>
         <div><span>5</span><p><b>Pressure:</b> If clash wins are tied, the side that committed more cards wins the round. Every committed card is spent.</p></div>
+        <div><span>6</span><p><b>Reshuffle:</b> Non-trophy cards enter the discard pile and return when the draw pile runs out.</p></div>
       </div>
       <button class="primary-button" data-close-dialog type="button">Got it!</button>
     </dialog>
@@ -320,7 +320,7 @@
       <p id="resultText">You mastered the three elements.</p>
       <div class="result-stats">
         <div><strong id="resultRounds">0</strong><span>Rounds</span></div>
-        <div><strong id="resultCards">0</strong><span>Cards won</span></div>
+        <div><strong id="resultCards">0</strong><span>Trophy slots</span></div>
       </div>
       <button class="primary-button" id="playAgainButton" type="button">Play again</button>
     </dialog>

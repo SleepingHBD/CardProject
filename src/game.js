@@ -7,35 +7,38 @@ const {
   getFocusBonus,
   getFormationReward,
   getPowerTier,
-  hasWinningSet,
+  getElementTrophyCounts,
+  getTrophyProgress,
+  hasCompletedElementSet,
+  reshuffleDiscardPile,
   resolveClashes,
   scoreClash,
+  TROPHIES_PER_ELEMENT,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
 
 const CARD_LIBRARY = [
-  ["ember", "red", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "sizzle-mittens"],
-  ["ember", "orange", 6, "Candle Pounce", "Wax & Whack", "A bright idea with claws.", "rare", "candle-pounce"],
-  ["ember", "gold", 5, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "toastie-toe-beans"],
-  ["ember", "violet", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "comet-claw"],
-  ["ember", "blue", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "cinder-kit"],
-  ["ember", "teal", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "teapot-tabby"],
-  ["gust", "green", 8, "Breeze Biscuit", "Leaf Rider", "No map. Excellent balance.", "epic", "breeze-biscuit"],
-  ["gust", "teal", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "leafy-loaf"],
-  ["gust", "gold", 5, "Whisker Whirl", "Ribbon Twister", "Forecast: fabulous.", "uncommon", "whisker-whirl"],
-  ["gust", "violet", 9, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "legendary", "gale-groomer"],
-  ["gust", "orange", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "kitewhisker"],
-  ["gust", "red", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "dandelion-dash"],
-  ["tide", "blue", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "puddle-pouncer"],
-  ["tide", "teal", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "bubble-bengal"],
-  ["tide", "violet", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "moonpool-mouser"],
-  ["tide", "gold", 9, "Captain Catfish", "Big Catch", "The tale gets bigger each time.", "legendary", "captain-catfish"],
-  ["tide", "green", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "wellwater-wisp"],
-  ["tide", "red", 3, "Drizzle Socks", "Cloud Hop", "Rainy with a chance of zoomies.", "common", "drizzle-socks"],
-].map(([element, color, power, name, move, lore, rarity, art], index) => ({
+  ["ember", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "sizzle-mittens"],
+  ["ember", 6, "Candle Pounce", "Wax & Whack", "A bright idea with claws.", "rare", "candle-pounce"],
+  ["ember", 5, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "toastie-toe-beans"],
+  ["ember", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "comet-claw"],
+  ["ember", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "cinder-kit"],
+  ["ember", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "teapot-tabby"],
+  ["gust", 8, "Breeze Biscuit", "Leaf Rider", "No map. Excellent balance.", "epic", "breeze-biscuit"],
+  ["gust", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "leafy-loaf"],
+  ["gust", 5, "Whisker Whirl", "Ribbon Twister", "Forecast: fabulous.", "uncommon", "whisker-whirl"],
+  ["gust", 9, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "legendary", "gale-groomer"],
+  ["gust", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "kitewhisker"],
+  ["gust", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "dandelion-dash"],
+  ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "puddle-pouncer"],
+  ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "bubble-bengal"],
+  ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "moonpool-mouser"],
+  ["tide", 9, "Captain Catfish", "Big Catch", "The tale gets bigger each time.", "legendary", "captain-catfish"],
+  ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "wellwater-wisp"],
+  ["tide", 3, "Drizzle Socks", "Cloud Hop", "Rainy with a chance of zoomies.", "common", "drizzle-socks"],
+].map(([element, power, name, move, lore, rarity, art], index) => ({
   id: `card-${index}`,
   element,
-  color,
   power,
   name,
   move,
@@ -43,16 +46,6 @@ const CARD_LIBRARY = [
   rarity,
   art,
 }));
-
-const COLOR_MAP = {
-  red: "#f06449",
-  orange: "#ed9347",
-  gold: "#e9b93f",
-  green: "#54ad71",
-  teal: "#43a8a0",
-  blue: "#4387d9",
-  violet: "#8a68bc",
-};
 
 const HAND_SIZE = 6;
 const MAX_PLAY_SIZE = 3;
@@ -63,16 +56,15 @@ const DIFFICULTIES = {
 };
 const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
 const RARITY_SORT_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
-const GUILD_SORT_ORDER = { red: 0, orange: 1, gold: 2, green: 3, teal: 4, blue: 5, violet: 6 };
 const ARCHIVE_SORT_SUMMARIES = {
   element: "Grouped by Ember, Gust, then Tide.",
   rarity: "Legendary cards first, then Epic, Rare, Uncommon, and Common.",
   power: "Highest base power first.",
   name: "Alphabetical from A to Z.",
-  guild: "Grouped by guild frame color.",
 };
 const state = {
   deck: [],
+  discardPile: [],
   playerHand: [],
   aiHand: [],
   playerWins: [],
@@ -148,10 +140,34 @@ function freshDeck() {
   );
 }
 
-function drawToHand(hand) {
-  while (hand.length < HAND_SIZE && state.deck.length) {
-    hand.push(state.deck.pop());
+function drawCard() {
+  const reshuffled = reshuffleDiscardPile(state.deck, state.discardPile);
+  return {
+    card: state.deck.pop() || null,
+    reshuffled,
+  };
+}
+
+function refillHands() {
+  let reshuffled = false;
+  let drewCard = true;
+
+  while (
+    drewCard
+    && (state.playerHand.length < HAND_SIZE || state.aiHand.length < HAND_SIZE)
+  ) {
+    drewCard = false;
+    for (const hand of [state.playerHand, state.aiHand]) {
+      if (hand.length >= HAND_SIZE) continue;
+      const draw = drawCard();
+      reshuffled ||= draw.reshuffled;
+      if (draw.card) {
+        hand.push(draw.card);
+        drewCard = true;
+      }
+    }
   }
+  return reshuffled;
 }
 
 function prepareAiPlan() {
@@ -439,7 +455,7 @@ function cardMarkup(
       </span>
       <span class="card-info">
         <strong>${card.name}</strong>
-        <small>${element.label} · ${card.color} guild</small>
+        <small>${element.label}</small>
       </span>
       <span class="card-ability">
         <i aria-hidden="true">✦</i>
@@ -695,11 +711,6 @@ function renderGallery() {
       || a.name.localeCompare(b.name));
   } else if (state.archiveSort === "name") {
     sortedCards.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (state.archiveSort === "guild") {
-    sortedCards.sort((a, b) =>
-      GUILD_SORT_ORDER[a.color] - GUILD_SORT_ORDER[b.color]
-      || ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]
-      || a.name.localeCompare(b.name));
   } else {
     sortedCards.sort((a, b) =>
       ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]);
@@ -734,23 +745,41 @@ function renderGallery() {
 }
 
 function renderCollection(target, cards) {
-  target.innerHTML = cards
-    .map((card) => {
-      const element = ELEMENTS[card.element];
-      return `<span class="won-token" title="${card.name}: ${element.label}, ${card.color}" style="background:${COLOR_MAP[card.color]}">${element.icon}</span>`;
-    })
-    .join("");
+  const counts = getElementTrophyCounts(cards);
+  const progress = getTrophyProgress(cards);
+  target.setAttribute(
+    "aria-label",
+    `${progress} of 6 trophy slots filled. Ember ${Math.min(counts.ember, TROPHIES_PER_ELEMENT)} of 2, Gust ${Math.min(counts.gust, TROPHIES_PER_ELEMENT)} of 2, Tide ${Math.min(counts.tide, TROPHIES_PER_ELEMENT)} of 2.`,
+  );
+  target.innerHTML = Object.entries(ELEMENTS).map(([elementKey, element]) => {
+    const filledCount = Math.min(counts[elementKey], TROPHIES_PER_ELEMENT);
+    const overflow = Math.max(0, counts[elementKey] - TROPHIES_PER_ELEMENT);
+    return `
+      <span class="trophy-goal element-${elementKey}" title="${element.label}: ${filledCount} of ${TROPHIES_PER_ELEMENT} trophies">
+        <b aria-hidden="true">${element.icon}</b>
+        <span class="trophy-slots" aria-hidden="true">
+          ${Array.from(
+            { length: TROPHIES_PER_ELEMENT },
+            (_, index) => `<i class="${index < filledCount ? "filled" : ""}"></i>`,
+          ).join("")}
+        </span>
+        ${overflow ? `<small aria-label="${overflow} additional ${element.label} trophies">+${overflow}</small>` : ""}
+      </span>
+    `;
+  }).join("");
 }
 
 function renderRound() {
   ui.roundLabel.textContent = `ROUND ${state.round}`;
-  if (state.deck.length === 0 && state.playerHand.length > 0) {
-    const cardWord = state.playerHand.length === 1 ? "card" : "cards";
-    ui.deckStatusText.innerHTML = `<strong>Final hand:</strong> ${state.playerHand.length} ${cardWord} left to play`;
-  } else if (state.deck.length === 0) {
-    ui.deckStatusText.innerHTML = "<strong>No cards remain</strong>";
+  if (state.deck.length === 0 && state.discardPile.length > 0) {
+    ui.deckStatusText.innerHTML = `<strong>${state.discardPile.length}</strong> discarded cards ready to reshuffle`;
+  } else if (state.deck.length === 0 && state.discardPile.length === 0) {
+    ui.deckStatusText.innerHTML = "<strong>All active cards are in play</strong>";
   } else {
-    ui.deckStatusText.innerHTML = `<strong id="deckCount">${state.deck.length}</strong> cards left in the draw pile`;
+    const discardCopy = state.discardPile.length
+      ? ` · ${state.discardPile.length} discarded`
+      : "";
+    ui.deckStatusText.innerHTML = `<strong id="deckCount">${state.deck.length}</strong> cards in draw pile${discardCopy}`;
     ui.deckCount = document.querySelector("#deckCount");
   }
   const pipCount = Math.min(7, Math.max(5, state.round));
@@ -938,13 +967,15 @@ function playRound() {
 }
 
 function getCompletedMatchWinner(roundWinner) {
-  const playerCompletedSet = hasWinningSet(state.playerWins);
-  const aiCompletedSet = hasWinningSet(state.aiWins);
+  const playerCompletedSet = hasCompletedElementSet(state.playerWins);
+  const aiCompletedSet = hasCompletedElementSet(state.aiWins);
 
   if (playerCompletedSet && aiCompletedSet) {
     if (roundWinner === "player" || roundWinner === "ai") return roundWinner;
-    if (state.playerWins.length > state.aiWins.length) return "player";
-    if (state.aiWins.length > state.playerWins.length) return "ai";
+    const playerProgress = getTrophyProgress(state.playerWins);
+    const aiProgress = getTrophyProgress(state.aiWins);
+    if (playerProgress > aiProgress) return "player";
+    if (aiProgress > playerProgress) return "ai";
     return null;
   }
 
@@ -960,6 +991,10 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
 
   if (reward.winner === "player" && reward.card) state.playerWins.push(reward.card);
   if (reward.winner === "ai" && reward.card) state.aiWins.push(reward.card);
+  state.discardPile.push(
+    ...playerCards.filter((card) => card !== reward.card),
+    ...aiCards.filter((card) => card !== reward.card),
+  );
 
   const clashWord = results.length === 1 ? "clash" : "clashes";
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
@@ -1014,11 +1049,14 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
 function nextRound() {
   state.pendingMatchWinner = null;
   setRoundAdvanceControls(false);
-  drawToHand(state.playerHand);
-  drawToHand(state.aiHand);
+  const reshuffled = refillHands();
 
   if (!state.playerHand.length || !state.aiHand.length) {
-    const winner = state.playerWins.length >= state.aiWins.length ? "player" : "ai";
+    const playerProgress = getTrophyProgress(state.playerWins);
+    const aiProgress = getTrophyProgress(state.aiWins);
+    const winner = playerProgress === aiProgress
+      ? (state.playerRoundWins >= state.aiRoundWins ? "player" : "ai")
+      : (playerProgress > aiProgress ? "player" : "ai");
     endGame(winner);
     return;
   }
@@ -1033,7 +1071,12 @@ function nextRound() {
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Build your formation.", "Drag a card into the glowing lane, or click a card to place it.");
+  setMessage(
+    reshuffled ? "The discard pile has been reshuffled!" : "Build your formation.",
+    reshuffled
+      ? "Your spent cards are back in the draw pile. Build your next formation."
+      : "Drag a card into the glowing lane, or click a card to place it.",
+  );
   renderHand();
   renderRound();
   renderRoundScore();
@@ -1048,12 +1091,12 @@ function endGame(winner) {
     ? "A purr-fect victory!"
     : "Professor Paws prevails!";
   const resultSummary = won
-    ? "You mastered the meadow's three elements."
-    : "The professor's whiskers were one step ahead. Fancy a rematch?";
+    ? "You claimed two trophies from every element."
+    : "Professor Paws completed all six elemental trophy slots first.";
   document.querySelector("#resultText").textContent =
     `${resultSummary} Final round score: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
-  document.querySelector("#resultCards").textContent = state.playerWins.length;
+  document.querySelector("#resultCards").textContent = getTrophyProgress(state.playerWins);
   window.setTimeout(() => ui.resultDialog.showModal(), 250);
 }
 
@@ -1064,6 +1107,7 @@ function showDifficultyChooser() {
 
 function startGame() {
   state.deck = freshDeck();
+  state.discardPile = [];
   state.playerHand = [];
   state.aiHand = [];
   state.playerWins = [];
@@ -1079,8 +1123,7 @@ function startGame() {
   setRoundAdvanceControls(false);
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
-  drawToHand(state.playerHand);
-  drawToHand(state.aiHand);
+  refillHands();
   prepareAiPlan();
   ui.playerPlayZone.innerHTML = placeholder("Choose up to 3 cards");
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");

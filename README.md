@@ -15,7 +15,8 @@ npm run dev
 - Gust beats Tide.
 - Tide beats Ember.
 - Matching elements compare power.
-- Win by collecting one card from every element, or three differently colored cards from one element.
+- Win by collecting two Ember trophies, two Gust trophies, and two Tide trophies.
+- Non-trophy cards enter the discard pile and reshuffle into the draw pile when needed.
 
 ## Deploy to GitHub Pages
 

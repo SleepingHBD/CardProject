@@ -429,23 +429,76 @@ h1 {
 }
 
 .collection {
+  width: min(178px, 100%);
   min-height: 35px;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 5px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
 }
 
-.won-token {
-  width: 28px;
-  height: 34px;
+.collection::before {
+  content: "TROPHIES · 2 EACH";
+  grid-column: 1 / -1;
+  color: #6b5038;
+  font-family: "Cinzel", serif;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+}
+
+.trophy-goal {
+  --trophy-color: #b88b52;
+  position: relative;
+  min-width: 0;
+  padding: 3px 4px 4px;
   display: grid;
   place-items: center;
-  color: white;
-  border: 2px solid #e1ca89;
-  border-radius: 3px 3px 10px 10px;
-  box-shadow: inset 0 0 0 1px #35231b, 0 2px 0 rgba(45,33,24,.35);
-  font-size: 14px;
+  gap: 1px;
+  background: linear-gradient(#4b3429, #2e211b);
+  border: 1px solid #9e7645;
+  border-radius: 5px 5px 10px 10px;
+  box-shadow: inset 0 0 0 1px rgba(242,216,135,.16), 0 2px 0 rgba(45,33,24,.35);
+}
+
+.trophy-goal.element-ember { --trophy-color: #d65636; }
+.trophy-goal.element-gust { --trophy-color: #72a45d; }
+.trophy-goal.element-tide { --trophy-color: #4d8eb4; }
+
+.trophy-goal > b {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.trophy-slots {
+  display: flex;
+  gap: 3px;
+}
+
+.trophy-slots i {
+  width: 12px;
+  height: 8px;
+  display: block;
+  background: #17110e;
+  border: 1px solid #8c7048;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.55);
+}
+
+.trophy-slots i.filled {
+  background: var(--trophy-color);
+  border-color: #f0d58a;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--trophy-color) 78%, transparent);
+}
+
+.trophy-goal > small {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  color: #f2d887;
+  font-size: 7px;
+  font-weight: 900;
 }
 
 .character-quip {
@@ -2452,7 +2505,10 @@ footer {
   .you-badge { display: none; }
   .name-row { gap: 2px; }
   .collection { min-height: 28px; gap: 2px; }
-  .won-token { width: 20px; height: 25px; border-width: 1px; font-size: 10px; }
+  .trophy-goal { padding: 2px 1px 3px; }
+  .trophy-goal > b { font-size: 10px; }
+  .trophy-slots { gap: 1px; }
+  .trophy-slots i { width: 7px; height: 6px; }
 
   .battlefield {
     width: 100%;
@@ -3040,7 +3096,8 @@ footer {
   .clash-impact i { width: 36px; height: 36px; font-size: 19px; }
   .clash-impact::after { inset: -19px; }
   .card-placeholder { width: 140px; height: 156px; }
-  .won-token { width: 23px; height: 29px; font-size: 12px; }
+  .trophy-goal > b { font-size: 12px; }
+  .trophy-slots i { width: 10px; height: 7px; }
 
   .hand-section {
     min-height: 480px;

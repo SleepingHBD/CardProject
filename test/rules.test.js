@@ -5,6 +5,7 @@ import "../src/rules.js";
 const {
   CHAIN_BONUS,
   ELEMENT_EDGE_BONUS,
+  TROPHIES_PER_ELEMENT,
   buildTellClues,
   chooseAiCard,
   chooseAiCommitment,
@@ -15,12 +16,15 @@ const {
   getFormationReward,
   getFocusBonus,
   getPowerTier,
-  hasWinningSet,
+  getElementTrophyCounts,
+  getTrophyProgress,
+  hasCompletedElementSet,
+  reshuffleDiscardPile,
   resolveClashes,
   scoreClash,
 } = globalThis.ClawRules;
 
-const card = (element, power = 5, color = "red") => ({ element, power, color });
+const card = (element, power = 5) => ({ element, power });
 
 test("element advantage adds a two-point edge", () => {
   assert.equal(ELEMENT_EDGE_BONUS, 2);
@@ -68,38 +72,83 @@ test("power tiers reveal useful ranges without exposing exact cards", () => {
   assert.equal(getPowerTier(3).key, "low");
 });
 
-test("three unique elements form a winning set", () => {
+test("one trophy from each element is not enough to win", () => {
+  assert.equal(TROPHIES_PER_ELEMENT, 2);
   assert.equal(
-    hasWinningSet([card("ember"), card("gust"), card("tide")]),
-    true,
+    hasCompletedElementSet([card("ember"), card("gust"), card("tide")]),
+    false,
   );
 });
 
-test("three different colors of one element form a winning set", () => {
+test("two trophies from every element complete the match set", () => {
   assert.equal(
-    hasWinningSet([
-      card("tide", 3, "red"),
-      card("tide", 5, "blue"),
-      card("tide", 8, "gold"),
+    hasCompletedElementSet([
+      card("ember"),
+      card("ember"),
+      card("gust"),
+      card("gust"),
+      card("tide"),
+      card("tide"),
     ]),
     true,
   );
 });
 
-test("duplicate colors do not count toward a mono-element win", () => {
+test("extra trophies from one element do not replace missing elements", () => {
   assert.equal(
-    hasWinningSet([
-      card("tide", 3, "blue"),
-      card("tide", 5, "blue"),
-      card("tide", 8, "gold"),
+    hasCompletedElementSet([
+      card("ember"),
+      card("ember"),
+      card("ember"),
+      card("gust"),
+      card("gust"),
+      card("tide"),
     ]),
     false,
   );
 });
 
+test("trophy progress caps each element at two slots", () => {
+  const trophies = [
+    card("ember"),
+    card("ember"),
+    card("ember"),
+    card("gust"),
+    card("tide"),
+  ];
+  assert.deepEqual(
+    getElementTrophyCounts(trophies),
+    { ember: 3, gust: 1, tide: 1 },
+  );
+  assert.equal(getTrophyProgress(trophies), 4);
+});
+
+test("discard pile reshuffles only when the draw pile is empty", () => {
+  const drawPile = [];
+  const discardPile = ["ember", "gust", "tide"];
+  assert.equal(reshuffleDiscardPile(drawPile, discardPile, () => 0), true);
+  assert.equal(discardPile.length, 0);
+  assert.deepEqual([...drawPile].sort(), ["ember", "gust", "tide"]);
+
+  const waitingDiscard = ["another"];
+  assert.equal(reshuffleDiscardPile(drawPile, waitingDiscard, () => 0), false);
+  assert.deepEqual(waitingDiscard, ["another"]);
+});
+
 test("AI returns a valid card from its hand", () => {
   const hand = [card("ember", 2), card("gust", 9), card("tide", 4)];
   assert.ok(hand.includes(chooseAiCard(hand, [], [], () => 0.5)));
+});
+
+test("AI values elements still missing from its two-trophy goal", () => {
+  const ember = card("ember", 9);
+  const tide = card("tide", 3);
+  const aiTrophies = [card("ember"), card("ember"), card("gust")];
+
+  assert.equal(
+    chooseAiCard([ember, tide], [], aiTrophies, () => 0.5),
+    tide,
+  );
 });
 
 test("AI can choose up to three unique cards", () => {

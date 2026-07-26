@@ -8,6 +8,7 @@ const ELEMENTS = {
 const ELEMENT_EDGE_BONUS = 2;
 const CHAIN_BONUS = 1;
 const MAX_COMMITMENT = 3;
+const TROPHIES_PER_ELEMENT = 2;
 const DIFFICULTY_MODES = Object.freeze(["guided", "veiled", "blind"]);
 
 function getFocusBonus(commitmentCount) {
@@ -102,28 +103,59 @@ function getPowerTier(power) {
   return { key: "low", label: "Low strength", range: "3-4" };
 }
 
-function hasWinningSet(cards) {
-  const elements = new Set(cards.map((card) => card.element));
-  if (elements.size === 3) return true;
+function getElementTrophyCounts(cards) {
+  return cards.reduce(
+    (counts, card) => {
+      if (Object.hasOwn(counts, card.element)) counts[card.element] += 1;
+      return counts;
+    },
+    Object.fromEntries(Object.keys(ELEMENTS).map((element) => [element, 0])),
+  );
+}
 
-  return Object.keys(ELEMENTS).some((element) => {
-    const colors = new Set(
-      cards.filter((card) => card.element === element).map((card) => card.color),
-    );
-    return colors.size >= 3;
-  });
+function getTrophyProgress(cards) {
+  const counts = getElementTrophyCounts(cards);
+  return Object.keys(ELEMENTS).reduce(
+    (progress, element) => progress + Math.min(counts[element], TROPHIES_PER_ELEMENT),
+    0,
+  );
+}
+
+function hasCompletedElementSet(cards) {
+  const counts = getElementTrophyCounts(cards);
+  return Object.keys(ELEMENTS).every(
+    (element) => counts[element] >= TROPHIES_PER_ELEMENT,
+  );
+}
+
+function reshuffleDiscardPile(drawPile, discardPile, random = Math.random) {
+  if (drawPile.length || !discardPile.length) return false;
+
+  for (let index = discardPile.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [discardPile[index], discardPile[swapIndex]] = [
+      discardPile[swapIndex],
+      discardPile[index],
+    ];
+  }
+  drawPile.push(...discardPile);
+  discardPile.length = 0;
+  return true;
 }
 
 function chooseAiCard(hand, playerWins, aiWins, random = Math.random, previousCard = null) {
   if (hand.length === 1) return hand[0];
 
+  const aiTrophyCounts = getElementTrophyCounts(aiWins);
   const missingElements = Object.keys(ELEMENTS).filter(
-    (element) => !aiWins.some((card) => card.element === element),
+    (element) => aiTrophyCounts[element] < TROPHIES_PER_ELEMENT,
   );
 
   const scored = hand.map((card) => {
     let score = card.power * 0.35 + random() * 3;
-    if (missingElements.includes(card.element)) score += 3;
+    if (missingElements.includes(card.element)) {
+      score += 2.5 + (TROPHIES_PER_ELEMENT - aiTrophyCounts[card.element]);
+    }
 
     const playerElements = playerWins.map((won) => won.element);
     const likelyPlayerElement = playerElements.at(-1);
@@ -172,7 +204,7 @@ function chooseAiCommitment(
 
   const roll = random();
   let commitment = roll < 0.3 ? 1 : roll < 0.72 ? 2 : 3;
-  const trophyGap = playerWins.length - aiWins.length;
+  const trophyGap = getTrophyProgress(playerWins) - getTrophyProgress(aiWins);
   if (trophyGap >= 2) commitment += 1;
   if (trophyGap <= -2) commitment -= 1;
   return Math.min(maximum, Math.max(1, commitment));
@@ -257,6 +289,7 @@ global.ClawRules = Object.freeze({
   ELEMENT_EDGE_BONUS,
   CHAIN_BONUS,
   MAX_COMMITMENT,
+  TROPHIES_PER_ELEMENT,
   DIFFICULTY_MODES,
   buildTellClues,
   compareCards,
@@ -265,7 +298,10 @@ global.ClawRules = Object.freeze({
   getFocusBonus,
   getPowerTier,
   getFormationReward,
-  hasWinningSet,
+  getElementTrophyCounts,
+  getTrophyProgress,
+  hasCompletedElementSet,
+  reshuffleDiscardPile,
   chooseAiCard,
   chooseAiCards,
   chooseAiCommitment,
