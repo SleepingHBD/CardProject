@@ -2956,6 +2956,14 @@ footer {
   }
 }
 
+.hand .card-rarity {
+  display: none;
+}
+
+.hand .card-ability {
+  padding-bottom: 4px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     scroll-behavior: auto !important;
