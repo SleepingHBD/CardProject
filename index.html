@@ -63,8 +63,15 @@
             <h1 id="gameTitle">Guild Trial of Elements</h1>
           </div>
           <div class="round-status">
-            <span id="roundLabel">ROUND 1</span>
-            <div class="round-pips" id="roundPips" aria-label="Round progress"></div>
+            <div class="round-score" id="roundScore" aria-live="polite" aria-label="Round score: You 0, Professor Paws 0">
+              <span>YOU <b id="playerRoundScore">0</b></span>
+              <i aria-hidden="true">–</i>
+              <span><b id="aiRoundScore">0</b> PAWS</span>
+            </div>
+            <div class="round-progress">
+              <span id="roundLabel">ROUND 1</span>
+              <div class="round-pips" id="roundPips" aria-label="Round progress"></div>
+            </div>
           </div>
         </div>
 
@@ -129,7 +136,7 @@
           <div class="control-panel">
             <div class="turn-message" id="turnMessage" aria-live="polite">
               <strong>Your turn!</strong>
-              <span>Select one to three cards, then commit your play.</span>
+              <span>Drag a card into the glowing lane, or click a card to place it.</span>
             </div>
             <section class="tactics-board" aria-labelledby="tacticsTitle">
               <div class="tactics-heading">
@@ -141,13 +148,16 @@
               </div>
               <div class="opponent-tells" id="opponentTells" aria-label="Professor Paws' planned lanes"></div>
               <div class="matchup-forecast" id="matchupForecast" aria-live="polite">
-                Pick a card to preview its matchup.
+                Place a card to preview its bonuses and total.
               </div>
             </section>
             <div class="selection-bar">
               <span class="selection-count" id="selectionCount" aria-live="polite">0 of 3 selected</span>
               <button class="commit-button" id="playSelectedButton" type="button" disabled>
                 Commit Cards
+              </button>
+              <button class="commit-button next-round-button" id="nextRoundButton" type="button" hidden>
+                Next Round
               </button>
             </div>
             <div class="deck-status">

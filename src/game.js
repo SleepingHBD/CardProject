@@ -68,6 +68,9 @@ const state = {
   aiTellClues: [],
   selectedCardIds: [],
   difficulty: null,
+  playerRoundWins: 0,
+  aiRoundWins: 0,
+  pendingMatchWinner: null,
   round: 1,
   locked: false,
   soundOn: true,
@@ -87,8 +90,12 @@ const ui = {
   matchupForecast: document.querySelector("#matchupForecast"),
   selectionCount: document.querySelector("#selectionCount"),
   playSelectedButton: document.querySelector("#playSelectedButton"),
+  nextRoundButton: document.querySelector("#nextRoundButton"),
   roundLabel: document.querySelector("#roundLabel"),
   roundPips: document.querySelector("#roundPips"),
+  roundScore: document.querySelector("#roundScore"),
+  playerRoundScore: document.querySelector("#playerRoundScore"),
+  aiRoundScore: document.querySelector("#aiRoundScore"),
   deckCount: document.querySelector("#deckCount"),
   deckStatusText: document.querySelector("#deckStatusText"),
   versusBadge: document.querySelector("#versusBadge"),
@@ -100,6 +107,7 @@ const ui = {
   difficultyDialog: document.querySelector("#difficultyDialog"),
   soundButton: document.querySelector("#soundButton"),
 };
+let draggedCardId = null;
 
 function shuffle(items) {
   const copy = [...items];
@@ -196,6 +204,7 @@ function renderOpponentTells() {
 
 function renderMatchupForecast() {
   if (state.locked) {
+    ui.matchupForecast.style.gridTemplateColumns = "";
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction forecast-locked">
         Cards committed. Watch each lane.
@@ -209,9 +218,10 @@ function renderMatchupForecast() {
     .filter(Boolean);
 
   if (!selectedCards.length) {
+    ui.matchupForecast.style.gridTemplateColumns = "";
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction">
-        Pick a card to preview its matchup.
+        Drag a card into Lane 1, or click a card below. Its bonus math will appear here.
       </span>
     `;
     return;
@@ -224,6 +234,7 @@ function renderMatchupForecast() {
   };
   const playerFocus = getFocusBonus(selectedCards.length);
   const opponentFocus = getFocusBonus(state.aiPlan.length);
+  ui.matchupForecast.style.gridTemplateColumns = `repeat(${selectedCards.length}, minmax(0, 1fr))`;
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
     const opponentCard = state.aiPlan[index];
@@ -232,7 +243,8 @@ function renderMatchupForecast() {
         <span class="forecast-chip forecast-pressure">
           <i>${index + 1}</i>
           <b>◆ PRESSURE CARD</b>
-          <small>Spent to win tied formations</small>
+          <span class="forecast-equation"><strong>NO DUEL TOTAL</strong></span>
+          <small>Spent only to win a tied formation</small>
         </span>
       `;
     }
@@ -248,16 +260,23 @@ function renderMatchupForecast() {
       opponentFocus,
     );
     const knownPlayerScore = playerCard.power + playerFocus + playerChain;
+    const knownBonusTotal = playerFocus + playerChain;
     const knownBonuses = [];
     if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
     if (playerChain) knownBonuses.push(`Chain +${playerChain}`);
+    const knownBonusDetail = knownBonuses.length
+      ? knownBonuses.join(" · ")
+      : "No known bonus";
 
     if (clue === "sealed") {
       return `
         <span class="forecast-chip forecast-sealed">
           <i>${index + 1}</i>
-          <b>? SEALED MATCHUP</b>
-          <small>You ${knownPlayerScore} before Element Edge</small>
+          <b>? SEALED · TOTAL ${knownPlayerScore}–${knownPlayerScore + 2}</b>
+          <span class="forecast-equation">
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${knownBonusTotal + 2} BONUS</strong>
+          </span>
+          <small>${knownBonusDetail} · Element Edge hidden</small>
         </span>
       `;
     }
@@ -267,8 +286,11 @@ function renderMatchupForecast() {
       return `
         <span class="forecast-chip forecast-clue">
           <i>${index + 1}</i>
-          <b>◆ POWER ${powerRange} · ELEMENT ?</b>
-          <small>You ${knownPlayerScore} before Element Edge</small>
+          <b>◆ FOE ${powerRange} · YOUR TOTAL ${knownPlayerScore}–${knownPlayerScore + 2}</b>
+          <span class="forecast-equation">
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${knownBonusTotal + 2} BONUS</strong>
+          </span>
+          <small>${knownBonusDetail} · Element Edge hidden</small>
         </span>
       `;
     }
@@ -279,14 +301,16 @@ function renderMatchupForecast() {
         : scoring.ai.edge
           ? { icon: "!", title: "FOE EDGE +2", className: "danger" }
           : { icon: "=", title: "SAME ELEMENT", className: "power" };
-      if (scoring.player.edge) knownBonuses.push(`Edge +${scoring.player.edge}`);
-      const bonusDetail = knownBonuses.length
-        ? knownBonuses.join(" · ")
-        : "No known bonus";
+      if (scoring.player.edge) knownBonuses.push(`Element Edge +${scoring.player.edge}`);
+      const totalBonus = scoring.player.focus + scoring.player.edge + scoring.player.chain;
+      const bonusDetail = knownBonuses.length ? knownBonuses.join(" · ") : "No bonuses";
       return `
         <span class="forecast-chip forecast-${elementRead.className}">
           <i>${index + 1}</i>
-          <b>${elementRead.icon} ${elementRead.title} · YOU ${scoring.player.total}</b>
+          <b>${elementRead.icon} ${elementRead.title} · TOTAL ${scoring.player.total}</b>
+          <span class="forecast-equation">
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${totalBonus} BONUS</strong><span>=</span><strong>${scoring.player.total}</strong>
+          </span>
           <small>${bonusDetail} · Foe power hidden</small>
         </span>
       `;
@@ -309,40 +333,84 @@ function renderMatchupForecast() {
         ? "risky"
         : "close";
     const copy = labels[outlook];
-    const bonuses = [];
-    if (scoring.player.focus) bonuses.push(`Focus +${scoring.player.focus}`);
-    if (scoring.player.edge) bonuses.push(`Edge +${scoring.player.edge}`);
-    if (scoring.player.chain) bonuses.push(`Chain +${scoring.player.chain}`);
-    if (scoring.ai.edge) bonuses.push(`Foe edge +${scoring.ai.edge}`);
-    if (!bonuses.length && scoring.ai.chain) {
-      bonuses.push(`Foe chain +${scoring.ai.chain}`);
-    }
-    if (!bonuses.length && scoring.ai.focus) {
-      bonuses.push(`Foe focus +${scoring.ai.focus}`);
-    }
-    const detail = bonuses.length ? bonuses.join(" · ") : "No bonuses";
+    const playerBonus = getBonusBreakdown(scoring.player);
 
     return `
       <span class="forecast-chip forecast-${copy.className}">
         <i>${index + 1}</i>
-        <b>${copy.icon} ${copy.title} · ${scoring.player.total} vs ${opponentMin}-${opponentMax}</b>
-        <small>${detail}</small>
+        <b>${copy.icon} ${copy.title} · TOTAL ${scoring.player.total} vs ${opponentMin}-${opponentMax}</b>
+        <span class="forecast-equation">
+          <em>${playerCard.power} BASE</em><span>+</span><strong>${playerBonus.total} BONUS</strong><span>=</span><strong>${scoring.player.total}</strong>
+        </span>
+        <small>${playerBonus.label}</small>
       </span>
     `;
   }).join("");
 }
 
-function cardMarkup(card, interactive = false, selectedIndex = -1) {
+function renderAftermathBreakdown(playerCards, resolution) {
+  ui.matchupForecast.style.gridTemplateColumns = `repeat(${Math.max(1, resolution.lanes.length)}, minmax(0, 1fr))`;
+  ui.matchupForecast.innerHTML = resolution.lanes.map((lane, index) => {
+    const bonus = getBonusBreakdown(lane.player);
+    const outcome = lane.winner === "player" ? "WIN" : lane.winner === "ai" ? "LOSS" : "DRAW";
+    const className = lane.winner === "player"
+      ? "advantage"
+      : lane.winner === "ai"
+        ? "danger"
+        : "power";
+    return `
+      <span class="forecast-chip forecast-${className} aftermath-chip">
+        <i>${index + 1}</i>
+        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}</b>
+        <span class="forecast-equation">
+          <em>${playerCards[index].power} BASE</em><span>+</span><strong>${bonus.total} BONUS</strong><span>=</span><strong>${lane.player.total} TOTAL</strong>
+        </span>
+        <small>${bonus.label}</small>
+      </span>
+    `;
+  }).join("");
+}
+
+function cardMarkup(
+  card,
+  interactive = false,
+  selectedIndex = -1,
+  displayMode = "default",
+  formationBonus = null,
+) {
   const element = ELEMENTS[card.element];
   const isSelected = selectedIndex >= 0;
+  const isFormationCard = displayMode === "formation";
+  const isPlayedCard = displayMode === "played";
+  const isPressureCard = displayMode === "pressure";
+  const interactionLabel = isFormationCard
+    ? `Remove ${card.name} from lane ${selectedIndex + 1}`
+    : `Add ${card.name}, ${element.label}, power ${card.power} to the next lane`;
+  const formationBonusBadge = isFormationCard && formationBonus
+    ? `
+      <span class="card-bonus-badge preview-badge${formationBonus.pressure ? " pressure-badge" : ""}" aria-label="${formationBonus.label}">
+        <small>${formationBonus.pressure ? "ROLE" : "BONUS"}</small>
+        <b>${formationBonus.text}</b>
+      </span>
+    `
+    : "";
+  const resolvedBonusBadge = isPlayedCard || isPressureCard
+    ? `
+      <span class="card-bonus-badge${isPressureCard ? " pressure-badge" : ""}" aria-label="${isPressureCard ? "Pressure card; no lane bonus" : "Bonus not yet resolved"}">
+        <small>${isPressureCard ? "ROLE" : "BONUS"}</small>
+        <b>${isPressureCard ? "P" : "+?"}</b>
+      </span>
+    `
+    : "";
   return `
     <button
-      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${isSelected ? " selected" : ""}"
-      ${interactive ? `data-card-id="${card.instanceId}" aria-label="${isSelected ? "Deselect" : "Select"} ${card.name}, ${element.label}, power ${card.power}" aria-pressed="${isSelected}"` : "disabled"}
+      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${isFormationCard ? " selected formation-card" : ""}"
+      ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       style="--card-accent:${COLOR_MAP[card.color]}"
       type="button"
     >
-      ${isSelected ? `<span class="selection-order" aria-hidden="true">${selectedIndex + 1}</span>` : ""}
+      ${formationBonusBadge}
+      ${resolvedBonusBadge}
       <span class="card-art">
         <img src="./assets/cards/${card.art}.webp" alt="" draggable="false" />
         <span class="art-vignette" aria-hidden="true"></span>
@@ -368,13 +436,173 @@ function placeholder(label) {
 
 function renderHand() {
   ui.playerHand.innerHTML = state.playerHand
-    .map((card) => cardMarkup(card, !state.locked, state.selectedCardIds.indexOf(card.instanceId)))
+    .filter((card) => !state.selectedCardIds.includes(card.instanceId))
+    .map((card) => cardMarkup(card, !state.locked))
     .join("");
 
-  ui.playerHand.querySelectorAll("[data-card-id]").forEach((button) => {
-    button.addEventListener("click", () => toggleCardSelection(button.dataset.cardId));
-  });
+  bindCardInteractions(ui.playerHand);
+  ui.playerHand.ondragover = (event) => {
+    if (state.locked || !state.selectedCardIds.includes(draggedCardId)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    ui.playerHand.classList.add("return-drop-target");
+  };
+  ui.playerHand.ondragleave = () => ui.playerHand.classList.remove("return-drop-target");
+  ui.playerHand.ondrop = (event) => {
+    event.preventDefault();
+    ui.playerHand.classList.remove("return-drop-target");
+    const instanceId = event.dataTransfer.getData("text/plain") || draggedCardId;
+    if (state.selectedCardIds.includes(instanceId)) toggleCardSelection(instanceId);
+  };
+  if (!state.locked) renderFormationBuilder();
   updateSelectionControls();
+}
+
+function bindCardInteractions(container) {
+  container.querySelectorAll("[data-card-id]").forEach((button) => {
+    button.addEventListener("click", () => toggleCardSelection(button.dataset.cardId));
+    button.addEventListener("dragstart", (event) => {
+      draggedCardId = button.dataset.cardId;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedCardId);
+      button.classList.add("is-dragging");
+    });
+    button.addEventListener("dragend", () => {
+      draggedCardId = null;
+      button.classList.remove("is-dragging");
+      document.querySelectorAll(".formation-slot.drag-over").forEach((slot) => {
+        slot.classList.remove("drag-over");
+      });
+    });
+  });
+}
+
+function getFormationBonusPreview(selectedCards, index) {
+  const playerCard = selectedCards[index];
+  const opponentCard = state.aiPlan[index];
+  if (!opponentCard) {
+    return {
+      text: "P",
+      label: "Pressure card; it does not receive a lane bonus",
+      pressure: true,
+    };
+  }
+
+  const focus = getFocusBonus(selectedCards.length);
+  const chain = getChainBonus(selectedCards, index);
+  const knownBonus = focus + chain;
+  const clue = state.aiTellClues[index] || "sealed";
+  const edgeKnown = clue === "full" || clue === "element";
+  const edge = edgeKnown && ELEMENTS[playerCard.element].beats === opponentCard.element ? 2 : 0;
+  const knownParts = [];
+  if (focus) knownParts.push(`Focus +${focus}`);
+  if (chain) knownParts.push(`Chain +${chain}`);
+  if (edge) knownParts.push(`Element Edge +${edge}`);
+
+  if (!edgeKnown) {
+    return {
+      text: `+${knownBonus}–${knownBonus + 2}`,
+      label: `Bonus ranges from plus ${knownBonus} to plus ${knownBonus + 2}; Element Edge is hidden`,
+      pressure: false,
+    };
+  }
+
+  const total = knownBonus + edge;
+  return {
+    text: `+${total}`,
+    label: `Total bonus plus ${total}: ${knownParts.length ? knownParts.join(", ") : "No bonuses"}`,
+    pressure: false,
+  };
+}
+
+function renderFormationBuilder() {
+  const selectedCards = state.selectedCardIds
+    .map((instanceId) => state.playerHand.find((card) => card.instanceId === instanceId))
+    .filter(Boolean);
+
+  ui.playerPlayZone.innerHTML = `
+    <div class="formation-builder" aria-label="Your formation lanes">
+      ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => {
+        const card = selectedCards[index];
+        const isNextSlot = index === selectedCards.length;
+        if (card) {
+          const bonusPreview = getFormationBonusPreview(selectedCards, index);
+          return `
+            <div class="formation-slot filled-slot" data-drop-lane="${index}">
+              <span class="filled-lane-label">LANE ${index + 1}</span>
+              ${cardMarkup(card, true, index, "formation", bonusPreview)}
+            </div>
+          `;
+        }
+        return `
+          <div
+            class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}"
+            data-drop-lane="${index}"
+            aria-label="Lane ${index + 1}${isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
+          >
+            <span>LANE ${index + 1}</span>
+            <b>${isNextSlot ? "DROP CARD" : "WAITING"}</b>
+            <small>${isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  bindCardInteractions(ui.playerPlayZone);
+  ui.playerPlayZone.querySelectorAll("[data-drop-lane]").forEach((slot) => {
+    const laneIndex = Number(slot.dataset.dropLane);
+    slot.addEventListener("dragover", (event) => {
+      if (state.locked || laneIndex > state.selectedCardIds.length) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      slot.classList.add("drag-over");
+    });
+    slot.addEventListener("dragleave", (event) => {
+      if (!slot.contains(event.relatedTarget)) slot.classList.remove("drag-over");
+    });
+    slot.addEventListener("drop", (event) => {
+      event.preventDefault();
+      slot.classList.remove("drag-over");
+      const instanceId = event.dataTransfer.getData("text/plain") || draggedCardId;
+      placeCardInLane(instanceId, laneIndex);
+    });
+  });
+}
+
+function placeCardInLane(instanceId, laneIndex) {
+  if (state.locked || !state.playerHand.some((card) => card.instanceId === instanceId)) return;
+  const currentIndex = state.selectedCardIds.indexOf(instanceId);
+  if (currentIndex < 0 && state.selectedCardIds.length >= MAX_PLAY_SIZE) {
+    setMessage("Three-card limit reached.", "Return a card to your hand before adding another.");
+    audio.denied();
+    return;
+  }
+
+  if (currentIndex >= 0) state.selectedCardIds.splice(currentIndex, 1);
+  const targetIndex = Math.min(Math.max(0, laneIndex), state.selectedCardIds.length);
+  state.selectedCardIds.splice(targetIndex, 0, instanceId);
+  draggedCardId = null;
+  audio.cardFlip(true, targetIndex + 1);
+  updateFormationMessage();
+  renderHand();
+}
+
+function updateFormationMessage() {
+  const count = state.selectedCardIds.length;
+  const title = count === 0
+    ? "Build your formation."
+    : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
+  const focus = getFocusBonus(count);
+  const focusLabel = focus ? `Focus +${focus}` : "No Focus";
+  const detail = count === 0
+    ? "Drag a card into the glowing lane, or click a card to place it."
+    : count > state.aiPlan.length
+      ? `Pressure advantage: tied formations go to you. ${focusLabel}.`
+      : count < state.aiPlan.length
+        ? `${focusLabel}, but Professor Paws wins tied formations.`
+        : `Equal commitment with ${focusLabel.toLowerCase()}; a tied formation stays a draw.`;
+  setMessage(title, detail);
 }
 
 function updateSelectionControls() {
@@ -382,8 +610,8 @@ function updateSelectionControls() {
   const focus = getFocusBonus(count);
   const focusLabel = focus ? `Focus +${focus}` : "No Focus";
   ui.selectionCount.textContent = count
-    ? `${count} of ${MAX_PLAY_SIZE} · ${focusLabel}`
-    : `0 of ${MAX_PLAY_SIZE} selected`;
+    ? `${count} of ${MAX_PLAY_SIZE} placed · ${focusLabel}`
+    : `0 of ${MAX_PLAY_SIZE} placed`;
   ui.playSelectedButton.disabled = state.locked || count === 0;
   ui.playSelectedButton.textContent = count === 1 ? "Commit 1 Card" : `Commit ${count} Cards`;
   renderMatchupForecast();
@@ -407,22 +635,7 @@ function toggleCardSelection(instanceId) {
     audio.denied();
   }
 
-  if (changed) {
-    const count = state.selectedCardIds.length;
-    const title = count === 0
-      ? "Build your formation."
-      : `${count} ${count === 1 ? "card" : "cards"} in formation.`;
-    const focus = getFocusBonus(count);
-    const focusLabel = focus ? `Focus +${focus}` : "No Focus";
-    const detail = count === 0
-      ? "Fewer cards gain Focus; more cards win formation ties."
-      : count > state.aiPlan.length
-        ? `Pressure advantage: tied formations go to you. ${focusLabel}.`
-        : count < state.aiPlan.length
-          ? `${focusLabel}, but Professor Paws wins tied formations.`
-          : `Equal commitment with ${focusLabel.toLowerCase()}; a tied formation stays a draw.`;
-    setMessage(title, detail);
-  }
+  if (changed) updateFormationMessage();
 
   renderHand();
 }
@@ -432,8 +645,8 @@ function playedCardsMarkup(cards, side, clashCount = cards.length) {
     <div class="played-cards ${side}-formation">
       ${cards.map((card, index) => `
         <div class="clash-card${index >= clashCount ? " result-pressure" : ""}" data-clash-index="${index}">
-          ${cardMarkup(card, false, index)}
-          <span class="lane-result" aria-hidden="true">${index >= clashCount ? "PRESSURE" : ""}</span>
+          ${cardMarkup(card, false, index, index >= clashCount ? "pressure" : "played")}
+          <span class="lane-result">${index >= clashCount ? "PRESSURE" : ""}</span>
         </div>
       `).join("")}
     </div>
@@ -473,6 +686,23 @@ function renderRound() {
   ).join("");
 }
 
+function renderRoundScore() {
+  ui.playerRoundScore.textContent = state.playerRoundWins;
+  ui.aiRoundScore.textContent = state.aiRoundWins;
+  ui.roundScore.setAttribute(
+    "aria-label",
+    `Round score: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
+  );
+}
+
+function setRoundAdvanceControls(visible, finalMatch = false) {
+  ui.selectionCount.hidden = visible;
+  ui.playSelectedButton.hidden = visible;
+  ui.nextRoundButton.hidden = !visible;
+  ui.nextRoundButton.disabled = !visible;
+  ui.nextRoundButton.textContent = finalMatch ? "View Results" : "Next Round";
+}
+
 function setMessage(title, detail) {
   ui.turnMessage.innerHTML = `<strong>${title}</strong><span>${detail}</span>`;
 }
@@ -484,6 +714,36 @@ function removeCard(hand, instanceId) {
 
 function delay(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+function getBonusBreakdown(scoring) {
+  const parts = [];
+  if (scoring.focus) parts.push(`Focus +${scoring.focus}`);
+  if (scoring.edge) parts.push(`Element Edge +${scoring.edge}`);
+  if (scoring.chain) parts.push(`Chain +${scoring.chain}`);
+  return {
+    total: scoring.focus + scoring.edge + scoring.chain,
+    label: parts.length ? parts.join(", ") : "No bonuses",
+  };
+}
+
+function revealClashScore(lane, scoring, outcome, opposingTotal) {
+  const bonus = getBonusBreakdown(scoring);
+  const badge = lane.querySelector(".card-bonus-badge");
+  const result = lane.querySelector(".lane-result");
+  const explanation = `${scoring.base} base + ${bonus.total} bonus = ${scoring.total}. ${bonus.label}.`;
+
+  if (badge) {
+    badge.innerHTML = `<small>BONUS</small><b>+${bonus.total}</b>`;
+    badge.classList.add("is-resolved");
+    badge.setAttribute("aria-label", `Total bonus plus ${bonus.total}: ${bonus.label}`);
+    badge.title = explanation;
+  }
+  if (result) {
+    result.innerHTML = `<b>${outcome} ${scoring.total}–${opposingTotal}</b><small>BONUS +${bonus.total}</small>`;
+    result.setAttribute("aria-label", `${outcome}. ${explanation} Opponent total ${opposingTotal}.`);
+    result.title = explanation;
+  }
 }
 
 async function animateClashes(playerCards, aiCards) {
@@ -545,8 +805,18 @@ async function animateClashes(playerCards, aiCards) {
     aiLane.classList.remove("clashing");
     playerLane.classList.add(winner === "player" ? "result-win" : winner === "ai" ? "result-loss" : "result-draw");
     aiLane.classList.add(winner === "ai" ? "result-win" : winner === "player" ? "result-loss" : "result-draw");
-    playerLane.querySelector(".lane-result").textContent = `${winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW"} ${laneScore.player.total}–${laneScore.ai.total}`;
-    aiLane.querySelector(".lane-result").textContent = `${winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW"} ${laneScore.ai.total}–${laneScore.player.total}`;
+    revealClashScore(
+      playerLane,
+      laneScore.player,
+      winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW",
+      laneScore.ai.total,
+    );
+    revealClashScore(
+      aiLane,
+      laneScore.ai,
+      winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW",
+      laneScore.player.total,
+    );
     impact.classList.add("impact-fade");
     ui.battlefield.classList.remove("is-clashing");
 
@@ -559,6 +829,7 @@ async function animateClashes(playerCards, aiCards) {
 function playRound() {
   if (state.locked || state.selectedCardIds.length === 0) return;
 
+  setRoundAdvanceControls(false);
   const playerCards = state.selectedCardIds
     .map((instanceId) => removeCard(state.playerHand, instanceId))
     .filter(Boolean);
@@ -592,6 +863,22 @@ function playRound() {
   }, 700);
 }
 
+function getCompletedMatchWinner(roundWinner) {
+  const playerCompletedSet = hasWinningSet(state.playerWins);
+  const aiCompletedSet = hasWinningSet(state.aiWins);
+
+  if (playerCompletedSet && aiCompletedSet) {
+    if (roundWinner === "player" || roundWinner === "ai") return roundWinner;
+    if (state.playerWins.length > state.aiWins.length) return "player";
+    if (state.aiWins.length > state.playerWins.length) return "ai";
+    return null;
+  }
+
+  if (playerCompletedSet) return "player";
+  if (aiCompletedSet) return "ai";
+  return null;
+}
+
 function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCards, aiCards)) {
   const { results, score, winner, decidedBy } = resolution;
   const reward = getFormationReward(playerCards, aiCards, resolution);
@@ -604,6 +891,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
 
   if (winner === "player") {
+    state.playerRoundWins += 1;
     if (decidedBy === "pressure") {
       setMessage(
         `Your Pressure breaks the ${score.player}–${score.ai} tie!`,
@@ -618,6 +906,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     ui.versusBadge.classList.add("win");
     audio.roundResult("win");
   } else if (winner === "ai") {
+    state.aiRoundWins += 1;
     if (decidedBy === "pressure") {
       setMessage(
         `Professor Paws' Pressure breaks the ${score.ai}–${score.player} tie.`,
@@ -642,27 +931,15 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   renderCollection(ui.playerCollection, state.playerWins);
   renderCollection(ui.aiCollection, state.aiWins);
   renderRound();
-
-  window.setTimeout(() => {
-    const playerCompletedSet = hasWinningSet(state.playerWins);
-    const aiCompletedSet = hasWinningSet(state.aiWins);
-
-    if (playerCompletedSet && aiCompletedSet) {
-      if (winner === "player") return endGame("player");
-      if (winner === "ai") return endGame("ai");
-      if (state.playerWins.length > state.aiWins.length) return endGame("player");
-      if (state.aiWins.length > state.playerWins.length) return endGame("ai");
-    } else if (playerCompletedSet) {
-      return endGame("player");
-    } else if (aiCompletedSet) {
-      return endGame("ai");
-    }
-
-    nextRound();
-  }, 1650);
+  renderRoundScore();
+  renderAftermathBreakdown(playerCards, resolution);
+  state.pendingMatchWinner = getCompletedMatchWinner(winner);
+  setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
 }
 
 function nextRound() {
+  state.pendingMatchWinner = null;
+  setRoundAdvanceControls(false);
   drawToHand(state.playerHand);
   drawToHand(state.aiHand);
 
@@ -682,9 +959,10 @@ function nextRound() {
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Build your formation.", "Select one to three cards in the order you want them to clash.");
+  setMessage("Build your formation.", "Drag a card into the glowing lane, or click a card to place it.");
   renderHand();
   renderRound();
+  renderRoundScore();
 }
 
 function endGame(winner) {
@@ -695,9 +973,11 @@ function endGame(winner) {
   document.querySelector("#resultTitle").textContent = won
     ? "A purr-fect victory!"
     : "Professor Paws prevails!";
-  document.querySelector("#resultText").textContent = won
+  const resultSummary = won
     ? "You mastered the meadow's three elements."
     : "The professor's whiskers were one step ahead. Fancy a rematch?";
+  document.querySelector("#resultText").textContent =
+    `${resultSummary} Final round score: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
   document.querySelector("#resultCards").textContent = state.playerWins.length;
   window.setTimeout(() => ui.resultDialog.showModal(), 250);
@@ -717,8 +997,12 @@ function startGame() {
   state.aiPlan = [];
   state.aiTellClues = [];
   state.selectedCardIds = [];
+  state.playerRoundWins = 0;
+  state.aiRoundWins = 0;
+  state.pendingMatchWinner = null;
   state.round = 1;
   state.locked = false;
+  setRoundAdvanceControls(false);
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
   drawToHand(state.playerHand);
@@ -728,11 +1012,12 @@ function startGame() {
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Build your formation.", "Select one to three cards in the order you want them to clash.");
+  setMessage("Build your formation.", "Drag a card into the glowing lane, or click a card to place it.");
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
   renderHand();
   renderRound();
+  renderRoundScore();
 }
 
 document.querySelector("#howButton").addEventListener("click", () => ui.howDialog.showModal());
@@ -755,6 +1040,16 @@ ui.galleryDialog.addEventListener("close", () => {
   ui.galleryButton.setAttribute("aria-expanded", "false");
 });
 ui.playSelectedButton.addEventListener("click", playRound);
+ui.nextRoundButton.addEventListener("click", () => {
+  ui.nextRoundButton.disabled = true;
+  if (state.pendingMatchWinner) {
+    const winner = state.pendingMatchWinner;
+    state.pendingMatchWinner = null;
+    endGame(winner);
+    return;
+  }
+  nextRound();
+});
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
   showDifficultyChooser();
