@@ -227,18 +227,74 @@
       <button class="dialog-close" data-close-gallery type="button" aria-label="Close card archive">×</button>
       <p class="eyebrow">THE WHISKERKEEP COLLECTION</p>
       <h2>Guild Card Archive</h2>
-      <p class="gallery-intro">All fifteen cards currently available in the game.</p>
-      <div class="gallery-legend" aria-label="Card elements">
-        <span><b aria-hidden="true">🔥</b> Ember</span>
-        <span><b aria-hidden="true">🍃</b> Gust</span>
-        <span><b aria-hidden="true">💧</b> Tide</span>
+      <p class="gallery-intro" id="galleryIntro">All cards currently available in the game.</p>
+      <div class="archive-toolbar">
+        <label class="archive-sort-field" for="archiveSort">
+          <span>Sort cards</span>
+          <select id="archiveSort">
+            <option value="element">Element</option>
+            <option value="rarity">Rarity: Legendary first</option>
+            <option value="power">Power: High to low</option>
+            <option value="name">Name: A to Z</option>
+            <option value="guild">Guild color</option>
+          </select>
+        </label>
+        <span class="archive-sort-summary" id="archiveSortSummary" aria-live="polite">
+          Grouped by Ember, Gust, then Tide.
+        </span>
       </div>
-      <div class="rarity-legend" aria-label="Card rarity frame colors">
-        <span class="key-common"><i></i>Common</span>
-        <span class="key-uncommon"><i></i>Uncommon</span>
-        <span class="key-rare"><i></i>Rare</span>
-        <span class="key-epic"><i></i>Epic</span>
-        <span class="key-legendary"><i></i>Legendary</span>
+      <div class="archive-filters" id="archiveFilters">
+        <fieldset class="archive-filter-group">
+          <legend>Elements</legend>
+          <div class="archive-filter-actions">
+            <button type="button" data-filter-kind="element" data-filter-action="all">All</button>
+            <button type="button" data-filter-kind="element" data-filter-action="none">None</button>
+          </div>
+          <div class="archive-filter-options">
+            <label class="archive-filter-chip">
+              <input type="checkbox" data-archive-filter="element" value="ember" checked />
+              <span><b aria-hidden="true">🔥</b> Ember</span>
+            </label>
+            <label class="archive-filter-chip">
+              <input type="checkbox" data-archive-filter="element" value="gust" checked />
+              <span><b aria-hidden="true">🍃</b> Gust</span>
+            </label>
+            <label class="archive-filter-chip">
+              <input type="checkbox" data-archive-filter="element" value="tide" checked />
+              <span><b aria-hidden="true">💧</b> Tide</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="archive-filter-group rarity-filter-group">
+          <legend>Rarities</legend>
+          <div class="archive-filter-actions">
+            <button type="button" data-filter-kind="rarity" data-filter-action="all">All</button>
+            <button type="button" data-filter-kind="rarity" data-filter-action="none">None</button>
+          </div>
+          <div class="archive-filter-options">
+            <label class="archive-filter-chip key-common">
+              <input type="checkbox" data-archive-filter="rarity" value="common" checked />
+              <span><i aria-hidden="true"></i>Common</span>
+            </label>
+            <label class="archive-filter-chip key-uncommon">
+              <input type="checkbox" data-archive-filter="rarity" value="uncommon" checked />
+              <span><i aria-hidden="true"></i>Uncommon</span>
+            </label>
+            <label class="archive-filter-chip key-rare">
+              <input type="checkbox" data-archive-filter="rarity" value="rare" checked />
+              <span><i aria-hidden="true"></i>Rare</span>
+            </label>
+            <label class="archive-filter-chip key-epic">
+              <input type="checkbox" data-archive-filter="rarity" value="epic" checked />
+              <span><i aria-hidden="true"></i>Epic</span>
+            </label>
+            <label class="archive-filter-chip key-legendary">
+              <input type="checkbox" data-archive-filter="rarity" value="legendary" checked />
+              <span><i aria-hidden="true"></i>Legendary</span>
+            </label>
+          </div>
+        </fieldset>
+        <button class="archive-reset-filters" id="archiveResetFilters" type="button">Show all cards</button>
       </div>
       <div class="card-gallery" id="cardGallery" aria-label="All available cards"></div>
     </dialog>

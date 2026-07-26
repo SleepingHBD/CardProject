@@ -18,16 +18,19 @@ const CARD_LIBRARY = [
   ["ember", "orange", 6, "Candle Pounce", "Wax & Whack", "A bright idea with claws.", "rare", "candle-pounce"],
   ["ember", "gold", 4, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "toastie-toe-beans"],
   ["ember", "violet", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "comet-claw"],
+  ["ember", "blue", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "cinder-kit"],
   ["ember", "teal", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "teapot-tabby"],
   ["gust", "green", 8, "Breeze Biscuit", "Leaf Rider", "No map. Excellent balance.", "epic", "breeze-biscuit"],
   ["gust", "teal", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "leafy-loaf"],
   ["gust", "gold", 5, "Whisker Whirl", "Ribbon Twister", "Forecast: fabulous.", "uncommon", "whisker-whirl"],
   ["gust", "violet", 9, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "legendary", "gale-groomer"],
+  ["gust", "orange", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "kitewhisker"],
   ["gust", "red", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "dandelion-dash"],
   ["tide", "blue", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "puddle-pouncer"],
   ["tide", "teal", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "bubble-bengal"],
   ["tide", "violet", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "moonpool-mouser"],
   ["tide", "gold", 9, "Captain Catfish", "Big Catch", "The tale gets bigger each time.", "legendary", "captain-catfish"],
+  ["tide", "green", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "wellwater-wisp"],
   ["tide", "red", 3, "Drizzle Socks", "Cloud Hop", "Rainy with a chance of zoomies.", "common", "drizzle-socks"],
 ].map(([element, color, power, name, move, lore, rarity, art], index) => ({
   id: `card-${index}`,
@@ -58,6 +61,16 @@ const DIFFICULTIES = {
   veiled: { label: "Veiled" },
   blind: { label: "Blind" },
 };
+const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
+const RARITY_SORT_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+const GUILD_SORT_ORDER = { red: 0, orange: 1, gold: 2, green: 3, teal: 4, blue: 5, violet: 6 };
+const ARCHIVE_SORT_SUMMARIES = {
+  element: "Grouped by Ember, Gust, then Tide.",
+  rarity: "Legendary cards first, then Epic, Rare, Uncommon, and Common.",
+  power: "Highest base power first.",
+  name: "Alphabetical from A to Z.",
+  guild: "Grouped by guild frame color.",
+};
 const state = {
   deck: [],
   playerHand: [],
@@ -68,6 +81,9 @@ const state = {
   aiTellClues: [],
   selectedCardIds: [],
   difficulty: null,
+  archiveSort: "element",
+  archiveElements: Object.keys(ELEMENT_SORT_ORDER),
+  archiveRarities: Object.keys(RARITY_SORT_ORDER),
   playerRoundWins: 0,
   aiRoundWins: 0,
   pendingMatchWinner: null,
@@ -103,6 +119,11 @@ const ui = {
   galleryDialog: document.querySelector("#galleryDialog"),
   galleryButton: document.querySelector("#galleryButton"),
   cardGallery: document.querySelector("#cardGallery"),
+  galleryIntro: document.querySelector("#galleryIntro"),
+  archiveSort: document.querySelector("#archiveSort"),
+  archiveSortSummary: document.querySelector("#archiveSortSummary"),
+  archiveFilters: document.querySelector("#archiveFilters"),
+  archiveResetFilters: document.querySelector("#archiveResetFilters"),
   resultDialog: document.querySelector("#resultDialog"),
   difficultyDialog: document.querySelector("#difficultyDialog"),
   soundButton: document.querySelector("#soundButton"),
@@ -654,9 +675,56 @@ function playedCardsMarkup(cards, side, clashCount = cards.length) {
 }
 
 function renderGallery() {
-  ui.cardGallery.innerHTML = CARD_LIBRARY
-    .map((card) => cardMarkup(card))
-    .join("");
+  const sortedCards = CARD_LIBRARY.filter((card) =>
+    state.archiveElements.includes(card.element)
+    && state.archiveRarities.includes(card.rarity));
+  if (state.archiveSort === "rarity") {
+    sortedCards.sort((a, b) =>
+      RARITY_SORT_ORDER[b.rarity] - RARITY_SORT_ORDER[a.rarity]
+      || b.power - a.power
+      || a.name.localeCompare(b.name));
+  } else if (state.archiveSort === "power") {
+    sortedCards.sort((a, b) =>
+      b.power - a.power
+      || a.name.localeCompare(b.name));
+  } else if (state.archiveSort === "name") {
+    sortedCards.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (state.archiveSort === "guild") {
+    sortedCards.sort((a, b) =>
+      GUILD_SORT_ORDER[a.color] - GUILD_SORT_ORDER[b.color]
+      || ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]
+      || a.name.localeCompare(b.name));
+  } else {
+    sortedCards.sort((a, b) =>
+      ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]);
+  }
+
+  ui.galleryIntro.textContent = sortedCards.length === CARD_LIBRARY.length
+    ? `All ${CARD_LIBRARY.length} cards currently available in the game.`
+    : `Showing ${sortedCards.length} of ${CARD_LIBRARY.length} cards.`;
+  ui.archiveSort.value = state.archiveSort;
+  ui.archiveSortSummary.textContent = ARCHIVE_SORT_SUMMARIES[state.archiveSort];
+  ui.archiveFilters.querySelectorAll("[data-archive-filter]").forEach((checkbox) => {
+    const selectedValues = checkbox.dataset.archiveFilter === "element"
+      ? state.archiveElements
+      : state.archiveRarities;
+    checkbox.checked = selectedValues.includes(checkbox.value);
+  });
+  ui.archiveResetFilters.disabled =
+    state.archiveElements.length === Object.keys(ELEMENT_SORT_ORDER).length
+    && state.archiveRarities.length === Object.keys(RARITY_SORT_ORDER).length;
+  ui.cardGallery.setAttribute(
+    "aria-label",
+    `Showing ${sortedCards.length} of ${CARD_LIBRARY.length} available cards. ${ARCHIVE_SORT_SUMMARIES[state.archiveSort]}`,
+  );
+  ui.cardGallery.innerHTML = sortedCards.length
+    ? sortedCards.map((card) => cardMarkup(card)).join("")
+    : `
+      <div class="archive-empty">
+        <b>No cards match these filters.</b>
+        <span>Turn on at least one element and one rarity, or choose “Show all cards.”</span>
+      </div>
+    `;
 }
 
 function renderCollection(target, cards) {
@@ -1038,6 +1106,39 @@ document.querySelector("[data-close-gallery]").addEventListener("click", () => {
 });
 ui.galleryDialog.addEventListener("close", () => {
   ui.galleryButton.setAttribute("aria-expanded", "false");
+});
+ui.archiveSort.addEventListener("change", () => {
+  if (!ARCHIVE_SORT_SUMMARIES[ui.archiveSort.value]) return;
+  state.archiveSort = ui.archiveSort.value;
+  renderGallery();
+});
+ui.archiveFilters.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("[data-archive-filter]");
+  if (!checkbox) return;
+  const stateKey = checkbox.dataset.archiveFilter === "element"
+    ? "archiveElements"
+    : "archiveRarities";
+  state[stateKey] = checkbox.checked
+    ? [...new Set([...state[stateKey], checkbox.value])]
+    : state[stateKey].filter((value) => value !== checkbox.value);
+  renderGallery();
+});
+ui.archiveFilters.addEventListener("click", (event) => {
+  const actionButton = event.target.closest("[data-filter-action]");
+  if (!actionButton) return;
+  const stateKey = actionButton.dataset.filterKind === "element"
+    ? "archiveElements"
+    : "archiveRarities";
+  const allValues = actionButton.dataset.filterKind === "element"
+    ? Object.keys(ELEMENT_SORT_ORDER)
+    : Object.keys(RARITY_SORT_ORDER);
+  state[stateKey] = actionButton.dataset.filterAction === "all" ? allValues : [];
+  renderGallery();
+});
+ui.archiveResetFilters.addEventListener("click", () => {
+  state.archiveElements = Object.keys(ELEMENT_SORT_ORDER);
+  state.archiveRarities = Object.keys(RARITY_SORT_ORDER);
+  renderGallery();
 });
 ui.playSelectedButton.addEventListener("click", playRound);
 ui.nextRoundButton.addEventListener("click", () => {
