@@ -172,6 +172,47 @@
       </footer>
     </main>
 
+    <dialog
+      class="game-dialog difficulty-dialog"
+      id="difficultyDialog"
+      aria-labelledby="difficultyTitle"
+      aria-describedby="difficultyIntro"
+    >
+      <p class="eyebrow">CHOOSE YOUR TRIAL</p>
+      <h2 id="difficultyTitle">How Much Will You Scout?</h2>
+      <p class="difficulty-intro" id="difficultyIntro">
+        Professor Paws' commitment count and Focus bonus are always visible.
+        The difficulty changes which card clues you receive.
+      </p>
+      <div class="difficulty-options">
+        <button class="difficulty-option guided-option" data-difficulty="guided" type="button">
+          <span class="difficulty-icon" aria-hidden="true">✦</span>
+          <span>
+            <strong>Guided</strong>
+            <small>Shows every planned card's <b>element and power range</b>.</small>
+            <em>Best for learning and relaxed matches.</em>
+          </span>
+        </button>
+        <button class="difficulty-option veiled-option" data-difficulty="veiled" type="button">
+          <span class="recommended-ribbon">RECOMMENDED</span>
+          <span class="difficulty-icon" aria-hidden="true">◈</span>
+          <span>
+            <strong>Veiled</strong>
+            <small>Each planned card reveals <b>either its element or power range</b>, never both.</small>
+            <em>Partial information with meaningful risk.</em>
+          </span>
+        </button>
+        <button class="difficulty-option blind-option" data-difficulty="blind" type="button">
+          <span class="difficulty-icon" aria-hidden="true">?</span>
+          <span>
+            <strong>Blind</strong>
+            <small>Shows the commitment count, but <b>seals all card details</b> until the clash.</small>
+            <em>For experienced duelists who enjoy uncertainty.</em>
+          </span>
+        </button>
+      </div>
+    </dialog>
+
     <dialog class="game-dialog gallery-dialog" id="galleryDialog">
       <button class="dialog-close" data-close-gallery type="button" aria-label="Close card archive">×</button>
       <p class="eyebrow">THE WHISKERKEEP COLLECTION</p>
@@ -197,10 +238,11 @@
       <p class="eyebrow">THE GUILD CODEX</p>
       <h2>Laws of the Duel</h2>
       <div class="dialog-grid">
-        <div><span>1</span><p>Professor Paws independently commits one to three cards. The plan shows how many.</p></div>
-        <div><span>2</span><p>Commit one card for Focus +2, two for Focus +1, or three for no Focus.</p></div>
-        <div><span>3</span><p>The larger formation has Pressure and wins tied clash scores, but every committed card is spent.</p></div>
-        <div><span>4</span><p>Add power, Element Edge +2, Chain +1, and Focus. Win more clashes to claim a trophy.</p></div>
+        <div><span>1</span><p><b>Power:</b> Add all bonuses to the number on your card. The higher total wins the clash.</p></div>
+        <div><span>2</span><p><b>Focus:</b> Every clashing card gets +2 when you commit one card, +1 for two cards, and no bonus for three.</p></div>
+        <div><span>3</span><p><b>Chain:</b> A card gets +1 when its element differs from your previous card. The first lane cannot Chain.</p></div>
+        <div><span>4</span><p><b>Element Edge:</b> Gain +2 when your element beats the opposing one: Ember beats Gust, Gust beats Tide, and Tide beats Ember.</p></div>
+        <div><span>5</span><p><b>Pressure:</b> If clash wins are tied, the side that committed more cards wins the round. Every committed card is spent.</p></div>
       </div>
       <button class="primary-button" data-close-dialog type="button">Got it!</button>
     </dialog>

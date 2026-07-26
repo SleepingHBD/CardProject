@@ -1,5 +1,6 @@
 const {
   ELEMENTS,
+  buildTellClues,
   chooseAiCommitment,
   chooseAiCards,
   getChainBonus,
@@ -52,6 +53,11 @@ const COLOR_MAP = {
 
 const HAND_SIZE = 6;
 const MAX_PLAY_SIZE = 3;
+const DIFFICULTIES = {
+  guided: { label: "Guided" },
+  veiled: { label: "Veiled" },
+  blind: { label: "Blind" },
+};
 const state = {
   deck: [],
   playerHand: [],
@@ -59,7 +65,9 @@ const state = {
   playerWins: [],
   aiWins: [],
   aiPlan: [],
+  aiTellClues: [],
   selectedCardIds: [],
+  difficulty: null,
   round: 1,
   locked: false,
   soundOn: true,
@@ -89,6 +97,7 @@ const ui = {
   galleryButton: document.querySelector("#galleryButton"),
   cardGallery: document.querySelector("#cardGallery"),
   resultDialog: document.querySelector("#resultDialog"),
+  difficultyDialog: document.querySelector("#difficultyDialog"),
   soundButton: document.querySelector("#soundButton"),
 };
 
@@ -128,12 +137,17 @@ function prepareAiPlan() {
     state.playerWins,
     state.aiWins,
   );
+  state.aiTellClues = buildTellClues(
+    state.aiPlan.length,
+    state.difficulty,
+  );
   renderOpponentTells();
 }
 
 function renderOpponentTells() {
   const focus = getFocusBonus(state.aiPlan.length);
-  ui.commitmentHint.textContent = `${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} committed · ${focus ? `Focus +${focus}` : "No Focus"}`;
+  const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
+  ui.commitmentHint.textContent = `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${focus ? `Focus +${focus}` : "No Focus"}`;
   const laneLabels = ["1", "2", "3"];
   ui.opponentTells.innerHTML = laneLabels.map((lane, index) => {
     const card = state.aiPlan[index];
@@ -149,12 +163,32 @@ function renderOpponentTells() {
 
     const element = ELEMENTS[card.element];
     const tier = getPowerTier(card.power);
+    const clue = state.aiTellClues[index] || "sealed";
+    const showsElement = clue === "full" || clue === "element";
+    const showsPower = clue === "full" || clue === "power";
+    const title = showsElement
+      ? element.label
+      : clue === "sealed"
+        ? "Sealed card"
+        : "Element hidden";
+    const detail = showsPower
+      ? `Power <em>${tier.range}</em>`
+      : clue === "sealed"
+        ? "No card clues"
+        : "Power hidden";
+    const accessibleClue = clue === "full"
+      ? `${element.label}, power ${tier.range}`
+      : clue === "element"
+        ? `${element.label}, power hidden`
+        : clue === "power"
+          ? `element hidden, power ${tier.range}`
+          : "card details sealed";
     return `
-      <div class="opponent-tell element-${card.element}">
+      <div class="opponent-tell clue-${clue}${showsElement ? ` element-${card.element}` : ""}" aria-label="Lane ${lane}: ${accessibleClue}">
         <span class="tell-lane">LANE ${lane}</span>
-        <span class="tell-element" aria-hidden="true">${element.icon}</span>
-        <b>${element.label}</b>
-        <small>Power <em>${tier.range}</em></small>
+        <span class="tell-element" aria-hidden="true">${showsElement ? element.icon : "?"}</span>
+        <b>${title}</b>
+        <small>${detail}</small>
       </div>
     `;
   }).join("");
@@ -204,6 +238,7 @@ function renderMatchupForecast() {
     }
     const playerChain = getChainBonus(selectedCards, index);
     const opponentChain = getChainBonus(state.aiPlan, index);
+    const clue = state.aiTellClues[index] || "sealed";
     const scoring = scoreClash(
       playerCard,
       opponentCard,
@@ -212,6 +247,51 @@ function renderMatchupForecast() {
       playerFocus,
       opponentFocus,
     );
+    const knownPlayerScore = playerCard.power + playerFocus + playerChain;
+    const knownBonuses = [];
+    if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
+    if (playerChain) knownBonuses.push(`Chain +${playerChain}`);
+
+    if (clue === "sealed") {
+      return `
+        <span class="forecast-chip forecast-sealed">
+          <i>${index + 1}</i>
+          <b>? SEALED MATCHUP</b>
+          <small>You ${knownPlayerScore} before Element Edge</small>
+        </span>
+      `;
+    }
+
+    if (clue === "power") {
+      const powerRange = getPowerTier(opponentCard.power).range;
+      return `
+        <span class="forecast-chip forecast-clue">
+          <i>${index + 1}</i>
+          <b>◆ POWER ${powerRange} · ELEMENT ?</b>
+          <small>You ${knownPlayerScore} before Element Edge</small>
+        </span>
+      `;
+    }
+
+    if (clue === "element") {
+      const elementRead = scoring.player.edge
+        ? { icon: "+", title: "YOUR EDGE +2", className: "advantage" }
+        : scoring.ai.edge
+          ? { icon: "!", title: "FOE EDGE +2", className: "danger" }
+          : { icon: "=", title: "SAME ELEMENT", className: "power" };
+      if (scoring.player.edge) knownBonuses.push(`Edge +${scoring.player.edge}`);
+      const bonusDetail = knownBonuses.length
+        ? knownBonuses.join(" · ")
+        : "No known bonus";
+      return `
+        <span class="forecast-chip forecast-${elementRead.className}">
+          <i>${index + 1}</i>
+          <b>${elementRead.icon} ${elementRead.title} · YOU ${scoring.player.total}</b>
+          <small>${bonusDetail} · Foe power hidden</small>
+        </span>
+      `;
+    }
+
     const [tierMin, tierMax] = getPowerTier(opponentCard.power).range
       .split("-")
       .map(Number);
@@ -623,6 +703,11 @@ function endGame(winner) {
   window.setTimeout(() => ui.resultDialog.showModal(), 250);
 }
 
+function showDifficultyChooser() {
+  state.locked = true;
+  if (!ui.difficultyDialog.open) ui.difficultyDialog.showModal();
+}
+
 function startGame() {
   state.deck = freshDeck();
   state.playerHand = [];
@@ -630,6 +715,7 @@ function startGame() {
   state.playerWins = [];
   state.aiWins = [];
   state.aiPlan = [];
+  state.aiTellClues = [];
   state.selectedCardIds = [];
   state.round = 1;
   state.locked = false;
@@ -671,7 +757,19 @@ ui.galleryDialog.addEventListener("close", () => {
 ui.playSelectedButton.addEventListener("click", playRound);
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
-  startGame();
+  showDifficultyChooser();
+});
+document.querySelectorAll("[data-difficulty]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const difficulty = button.dataset.difficulty;
+    if (!DIFFICULTIES[difficulty]) return;
+    state.difficulty = difficulty;
+    ui.difficultyDialog.close();
+    startGame();
+  });
+});
+ui.difficultyDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
 });
 ui.soundButton.addEventListener("click", () => {
   state.soundOn = !state.soundOn;
@@ -681,4 +779,4 @@ ui.soundButton.addEventListener("click", () => {
 });
 
 renderGallery();
-startGame();
+showDifficultyChooser();

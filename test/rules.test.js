@@ -5,6 +5,7 @@ import "../src/rules.js";
 const {
   CHAIN_BONUS,
   ELEMENT_EDGE_BONUS,
+  buildTellClues,
   chooseAiCard,
   chooseAiCommitment,
   chooseAiCards,
@@ -126,6 +127,28 @@ test("AI independently chooses commitments from one to three cards", () => {
   assert.equal(chooseAiCommitment(6, [], [], () => 0.5), 2);
   assert.equal(chooseAiCommitment(6, [], [], () => 0.9), 3);
   assert.equal(chooseAiCommitment(1, [], [], () => 0.9), 1);
+});
+
+test("Guided tells reveal both clues and preserve empty lanes", () => {
+  assert.deepEqual(
+    buildTellClues(2, "guided", () => 0.9),
+    ["full", "full", "empty"],
+  );
+});
+
+test("Veiled tells reveal exactly one clue per committed card", () => {
+  const rolls = [0.2, 0.8];
+  assert.deepEqual(
+    buildTellClues(2, "veiled", () => rolls.shift()),
+    ["element", "power", "empty"],
+  );
+});
+
+test("Blind tells seal card details but preserve commitment count", () => {
+  assert.deepEqual(
+    buildTellClues(3, "blind", () => 0.2),
+    ["sealed", "sealed", "sealed"],
+  );
 });
 
 test("fewer committed cards gain Focus", () => {

@@ -8,10 +8,29 @@ const ELEMENTS = {
 const ELEMENT_EDGE_BONUS = 2;
 const CHAIN_BONUS = 1;
 const MAX_COMMITMENT = 3;
+const DIFFICULTY_MODES = Object.freeze(["guided", "veiled", "blind"]);
 
 function getFocusBonus(commitmentCount) {
   if (commitmentCount <= 0) return 0;
   return Math.max(0, MAX_COMMITMENT - commitmentCount);
+}
+
+function buildTellClues(
+  cardCount,
+  difficulty = "veiled",
+  random = Math.random,
+) {
+  const safeDifficulty = DIFFICULTY_MODES.includes(difficulty)
+    ? difficulty
+    : "veiled";
+  const safeCount = Math.min(MAX_COMMITMENT, Math.max(0, cardCount));
+
+  return Array.from({ length: MAX_COMMITMENT }, (_, index) => {
+    if (index >= safeCount) return "empty";
+    if (safeDifficulty === "guided") return "full";
+    if (safeDifficulty === "blind") return "sealed";
+    return random() < 0.5 ? "element" : "power";
+  });
 }
 
 function getChainBonus(cards, index) {
@@ -238,6 +257,8 @@ global.ClawRules = Object.freeze({
   ELEMENT_EDGE_BONUS,
   CHAIN_BONUS,
   MAX_COMMITMENT,
+  DIFFICULTY_MODES,
+  buildTellClues,
   compareCards,
   forecastMatchup,
   getChainBonus,
