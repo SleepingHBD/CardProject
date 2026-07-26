@@ -179,7 +179,7 @@ main {
 .eyebrow {
   margin: 0 0 1px;
   color: #765033;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
   letter-spacing: .18em;
 }
@@ -191,7 +191,7 @@ h1, h2, p {
 h1 {
   margin-bottom: 0;
   font-family: "Cinzel", serif;
-  font-size: 23px;
+  font-size: 27px;
   letter-spacing: .025em;
   line-height: 1;
 }
@@ -201,7 +201,7 @@ h1 {
   align-items: center;
   gap: 12px;
   color: #674a34;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: .13em;
 }
@@ -328,7 +328,7 @@ h1 {
   border: 2px solid #ad8140;
   border-radius: 3px;
   box-shadow: 0 3px 0 rgba(49,33,63,.22);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 900;
   letter-spacing: .12em;
   white-space: nowrap;
@@ -338,14 +338,14 @@ h1 {
 .player-copy h2 {
   margin-bottom: 0;
   font-family: "Cinzel", serif;
-  font-size: 16px;
+  font-size: 19px;
   line-height: 1.2;
 }
 
 .player-copy p {
   margin: 2px 0 12px;
   color: #3f352f;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -359,7 +359,7 @@ h1 {
 .ai-badge,
 .you-badge {
   padding: 2px 6px;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   border-radius: 6px;
 }
@@ -409,7 +409,7 @@ h1 {
   border-radius: 3px;
   box-shadow: 0 3px 0 rgba(54,36,25,.18);
   font-family: "Cinzel", serif;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -429,15 +429,15 @@ h1 {
 
 .battlefield {
   position: relative;
-  height: 474px;
+  height: 532px;
   display: grid;
   justify-items: center;
   align-content: space-between;
 }
 
 .play-zone {
-  width: 158px;
-  height: 218px;
+  width: 178px;
+  height: 248px;
 }
 
 .card-placeholder {
@@ -462,6 +462,7 @@ h1 {
 }
 
 .card-placeholder small {
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -493,7 +494,7 @@ h1 {
   left: calc(50% + 76px);
   color: #3f342e;
   font-family: "Cinzel", serif;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: .15em;
 }
@@ -503,7 +504,7 @@ h1 {
 
 .hand-section {
   position: relative;
-  min-height: 332px;
+  min-height: 370px;
   padding: 14px 20px 16px;
   background:
     linear-gradient(90deg, transparent 0 49%, rgba(40,21,14,.1) 50%, transparent 51%) 0 0 / 180px 100%,
@@ -529,18 +530,18 @@ h1 {
 .turn-message strong {
   display: block;
   font-family: "Cinzel", serif;
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.1;
 }
 
 .turn-message span {
   color: #5f4936;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .hand {
-  min-height: 224px;
+  min-height: 256px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -551,8 +552,8 @@ h1 {
   --card-accent: var(--ember);
   position: relative;
   isolation: isolate;
-  width: 158px;
-  height: 218px;
+  width: 178px;
+  height: 248px;
   padding: 5px;
   overflow: hidden;
   color: var(--ink);
@@ -594,7 +595,7 @@ h1 {
 
 .hand .game-card:hover:not(:disabled) {
   z-index: 10;
-  transform: translateY(-17px) rotate(-1deg) scale(1.025);
+  transform: translateY(-18px);
   box-shadow: 0 13px 0 rgba(42,25,18,.28), 0 20px 26px rgba(31,19,14,.3);
 }
 
@@ -604,7 +605,7 @@ h1 {
 
 .card-art {
   position: relative;
-  height: 123px;
+  height: 142px;
   display: block;
   overflow: hidden;
   background: #d8c395;
@@ -619,7 +620,6 @@ h1 {
   display: block;
   object-fit: cover;
   object-position: center;
-  transform: scale(1.02);
   filter: saturate(.82) contrast(1.06);
 }
 
@@ -652,12 +652,12 @@ h1 {
 .card-power small {
   margin-bottom: -4px;
   font-family: "Nunito", sans-serif;
-  font-size: 5px;
+  font-size: 6px;
   letter-spacing: .08em;
 }
 
 .card-power b {
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -666,15 +666,15 @@ h1 {
   z-index: 5;
   left: 5px;
   top: 5px;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   background: #32231d;
   border: 2px solid #d0a958;
   border-radius: 3px 3px 10px 10px;
   box-shadow: 0 2px 0 rgba(31,17,14,.4);
-  font-size: 18px;
+  font-size: 21px;
 }
 
 .card-rarity {
@@ -687,7 +687,7 @@ h1 {
   background: #37231c;
   border: 1px solid #b98b43;
   border-radius: 2px;
-  font-size: 5px;
+  font-size: 7px;
   font-weight: 900;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -697,7 +697,7 @@ h1 {
 .card-info {
   position: relative;
   display: block;
-  min-height: 37px;
+  min-height: 42px;
   margin-top: 2px;
   padding: 4px 7px 3px;
   text-align: center;
@@ -711,7 +711,7 @@ h1 {
   display: block;
   overflow: hidden;
   font-family: "Cinzel", serif;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.1;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -721,14 +721,14 @@ h1 {
   display: block;
   margin-top: 1px;
   color: #72563a;
-  font-size: 6px;
+  font-size: 8px;
   font-weight: 900;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
 
 .card-ability {
-  height: 38px;
+  height: 44px;
   padding: 4px 6px 3px;
   display: flex;
   align-items: center;
@@ -743,8 +743,8 @@ h1 {
 }
 
 .card-ability > i {
-  flex: 0 0 22px;
-  height: 22px;
+  flex: 0 0 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   color: #f2dfae;
@@ -752,7 +752,7 @@ h1 {
   border: 1px solid #3b271d;
   border-radius: 3px 3px 8px 8px;
   font-style: normal;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .card-ability span,
@@ -765,7 +765,7 @@ h1 {
 .card-ability b {
   overflow: hidden;
   font-family: "Cinzel", serif;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -775,7 +775,7 @@ h1 {
   margin-top: 2px;
   overflow: hidden;
   color: #654b35;
-  font-size: 6px;
+  font-size: 8px;
   font-weight: 800;
   line-height: 1.15;
   white-space: nowrap;
@@ -783,12 +783,12 @@ h1 {
 }
 
 .play-zone .game-card {
-  width: 158px;
-  height: 218px;
+  width: 178px;
+  height: 248px;
   animation: card-drop .35s cubic-bezier(.2,.8,.3,1.25);
 }
 
-.play-zone .card-art { height: 123px; }
+.play-zone .card-art { height: 142px; }
 
 .deck-status {
   margin-top: 10px;
@@ -797,7 +797,7 @@ h1 {
   align-items: center;
   gap: 8px;
   color: #e2c78d;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .mini-deck {
@@ -824,18 +824,18 @@ h1 {
   border: 3px solid #39251b;
   border-radius: 4px;
   box-shadow: 0 5px 0 rgba(28,18,13,.34);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .rules-title {
   color: #6e4a31;
   font-family: "Cinzel", serif;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .16em;
 }
 
-.rule-chip b { font-size: 16px; }
+.rule-chip b { font-size: 19px; }
 .rule-arrow { color: #8a6236; font-size: 22px; }
 
 footer {
@@ -843,7 +843,7 @@ footer {
   text-align: center;
   color: #d1bd8e;
   font-family: "Cinzel", serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -997,17 +997,20 @@ footer {
     height: 108px;
   }
 
-  .battlefield { height: 402px; }
+  .battlefield { height: 438px; }
   .play-zone,
-  .play-zone .game-card { width: 130px; height: 184px; }
+  .play-zone .game-card { width: 138px; height: 202px; }
   .play-zone .card-art,
-  .card-art { height: 98px; }
-  .game-card { width: 130px; height: 184px; padding: 4px; }
-  .card-info { min-height: 34px; }
-  .card-info strong { font-size: 12px; }
-  .card-ability { height: 36px; }
-  .card-power { width: 34px; height: 37px; }
-  .card-power b { font-size: 18px; }
+  .card-art { height: 107px; }
+  .game-card { width: 138px; height: 202px; padding: 4px; }
+  .card-info { min-height: 36px; }
+  .card-info strong { font-size: 13px; }
+  .card-info small { font-size: 7px; }
+  .card-ability { height: 41px; }
+  .card-ability b { font-size: 10px; }
+  .card-ability small { font-size: 7px; }
+  .card-power { width: 36px; height: 39px; }
+  .card-power b { font-size: 20px; }
   .score-label { display: none; }
   .hand { gap: 6px; }
 }
@@ -1019,12 +1022,12 @@ footer {
   main { padding: 12px 8px 0; }
   .game-shell { border-width: 3px; border-radius: 18px; }
   .round-bar { min-height: 60px; padding: 10px 14px; }
-  h1 { font-size: 20px; }
+  h1 { font-size: 22px; }
   .round-status { display: block; text-align: right; }
   .round-pips { margin-top: 5px; justify-content: flex-end; }
 
   .arena {
-    min-height: 396px;
+    min-height: 452px;
     grid-template-columns: 82px 1fr 82px;
     padding: 16px 6px;
   }
@@ -1039,24 +1042,25 @@ footer {
 
   .avatar img { border-width: 1px; }
   .portrait-rank { top: -8px; width: 23px; height: 23px; border-width: 2px; font-size: 10px; }
-  .avatar-level { bottom: -9px; padding: 2px 5px; border-width: 1px; font-size: 5px; }
-  .player-copy h2 { font-size: 14px; }
+  .avatar-level { bottom: -9px; padding: 2px 5px; border-width: 1px; font-size: 7px; }
+  .player-copy h2 { font-size: 15px; }
   .player-copy p { display: none; }
   .character-quip { display: none; }
   .ai-badge, .you-badge { display: none; }
-  .battlefield { height: 370px; }
+  .battlefield { height: 418px; }
   .play-zone,
-  .play-zone .game-card { width: 112px; height: 170px; }
+  .play-zone .game-card { width: 126px; height: 192px; }
   .play-zone .card-art,
-  .card-art { height: 89px; }
+  .card-art { height: 100px; }
   .won-token { width: 23px; height: 29px; font-size: 12px; }
 
   .hand-section {
-    min-height: 244px;
+    min-height: 278px;
     padding-inline: 4px;
   }
 
   .hand {
+    min-height: 206px;
     justify-content: flex-start;
     overflow-x: auto;
     padding: 12px 12px 14px;
@@ -1064,25 +1068,25 @@ footer {
   }
 
   .hand .game-card {
-    flex: 0 0 112px;
-    width: 112px;
-    height: 170px;
+    flex: 0 0 126px;
+    width: 126px;
+    height: 192px;
     scroll-snap-align: center;
   }
 
   .game-card { padding: 3px; }
-  .card-info { min-height: 32px; padding-inline: 4px; }
-  .card-info strong { font-size: 11px; }
-  .card-info small { font-size: 5px; }
-  .card-ability { height: 34px; padding-inline: 4px; }
-  .card-ability > i { flex-basis: 18px; height: 18px; }
-  .card-ability b { font-size: 8px; }
-  .card-ability small { display: none; }
-  .card-element { width: 28px; height: 28px; font-size: 14px; }
-  .card-rarity { display: none; }
-  .card-power { width: 31px; height: 34px; }
+  .card-info { min-height: 35px; padding-inline: 4px; }
+  .card-info strong { font-size: 12px; }
+  .card-info small { font-size: 6px; }
+  .card-ability { height: 40px; padding-inline: 4px; }
+  .card-ability > i { flex-basis: 20px; height: 20px; }
+  .card-ability b { font-size: 9px; }
+  .card-ability small { display: block; font-size: 6px; }
+  .card-element { width: 30px; height: 30px; font-size: 16px; }
+  .card-rarity { display: block; font-size: 5px; }
+  .card-power { width: 33px; height: 36px; }
   .card-power small { display: none; }
-  .card-power b { font-size: 18px; }
+  .card-power b { font-size: 20px; }
   .rules-strip { margin: 12px auto 18px; overflow-x: auto; justify-content: flex-start; border-radius: 15px; }
   .rules-title, .rule-arrow { display: none; }
   .rule-chip { flex: 0 0 auto; }
