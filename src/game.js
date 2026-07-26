@@ -16,7 +16,7 @@ const audio = globalThis.ClawAudio;
 const CARD_LIBRARY = [
   ["ember", "red", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "sizzle-mittens"],
   ["ember", "orange", 6, "Candle Pounce", "Wax & Whack", "A bright idea with claws.", "rare", "candle-pounce"],
-  ["ember", "gold", 4, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "toastie-toe-beans"],
+  ["ember", "gold", 5, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "toastie-toe-beans"],
   ["ember", "violet", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "comet-claw"],
   ["ember", "blue", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "cinder-kit"],
   ["ember", "teal", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "teapot-tabby"],
