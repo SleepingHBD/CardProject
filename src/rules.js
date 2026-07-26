@@ -14,6 +14,17 @@ function compareCards(playerCard, aiCard) {
   return ELEMENTS[playerCard.element].beats === aiCard.element ? "player" : "ai";
 }
 
+function forecastMatchup(playerElement, opponentElement) {
+  if (playerElement === opponentElement) return "power";
+  return ELEMENTS[playerElement].beats === opponentElement ? "advantage" : "danger";
+}
+
+function getPowerTier(power) {
+  if (power >= 8) return { key: "high", label: "High strength", range: "8-9" };
+  if (power >= 5) return { key: "steady", label: "Steady strength", range: "5-6" };
+  return { key: "low", label: "Low strength", range: "3-4" };
+}
+
 function hasWinningSet(cards) {
   const elements = new Set(cards.map((card) => card.element));
   if (elements.size === 3) return true;
@@ -80,9 +91,25 @@ function resolveClashes(playerCards, aiCards) {
   return { results, score };
 }
 
+function getFormationReward(playerCards, aiCards, resolution) {
+  const { results, score } = resolution;
+  if (score.player > score.ai) {
+    const rewardIndex = results.indexOf("player");
+    return { winner: "player", card: playerCards[rewardIndex] || null, lane: rewardIndex };
+  }
+  if (score.ai > score.player) {
+    const rewardIndex = results.indexOf("ai");
+    return { winner: "ai", card: aiCards[rewardIndex] || null, lane: rewardIndex };
+  }
+  return { winner: "draw", card: null, lane: -1 };
+}
+
 global.ClawRules = Object.freeze({
   ELEMENTS,
   compareCards,
+  forecastMatchup,
+  getPowerTier,
+  getFormationReward,
   hasWinningSet,
   chooseAiCard,
   chooseAiCards,

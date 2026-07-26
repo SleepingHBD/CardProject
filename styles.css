@@ -677,7 +677,7 @@ h1 {
 
 .hand-section {
   position: relative;
-  min-height: 420px;
+  min-height: 540px;
   padding: 14px 20px 16px;
   background:
     linear-gradient(90deg, transparent 0 49%, rgba(40,21,14,.1) 50%, transparent 51%) 0 0 / 180px 100%,
@@ -685,6 +685,10 @@ h1 {
     linear-gradient(#68412a, #45291d);
   border-top: 2px solid #b17b3c;
   box-shadow: inset 0 12px 24px rgba(24,14,10,.28);
+}
+
+.control-panel {
+  display: contents;
 }
 
 .turn-message {
@@ -712,6 +716,248 @@ h1 {
   font-size: 13px;
   font-weight: 700;
 }
+
+.tactics-board {
+  width: min(860px, 100%);
+  min-height: 116px;
+  margin: 0 auto 10px;
+  display: grid;
+  grid-template-columns: 226px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  overflow: hidden;
+  color: #efe0b6;
+  background:
+    linear-gradient(90deg, rgba(220,178,91,.08), transparent 26%),
+    linear-gradient(#33271f, #241b17);
+  border: 2px solid #1c120e;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px #8f693b,
+    inset 0 0 22px rgba(0,0,0,.28),
+    0 3px 0 rgba(27,16,11,.4);
+}
+
+.tactics-heading {
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, rgba(177,126,57,.2), transparent),
+    rgba(20,14,12,.28);
+  border-right: 1px solid #795631;
+}
+
+.scout-seal {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: #2c1c15;
+  background: #d9b45e;
+  border: 2px solid #160f0c;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #f4dda1;
+  font-size: 20px;
+}
+
+.tactics-heading p {
+  margin: 0;
+  color: #f3d98e;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.tactics-heading small {
+  display: block;
+  margin-top: 3px;
+  color: #bdaa88;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.opponent-tells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  padding: 7px 7px 4px;
+}
+
+.opponent-tell {
+  --tell-color: #b79558;
+  position: relative;
+  min-width: 0;
+  height: 48px;
+  display: grid;
+  grid-template-columns: 35px 1fr;
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+  padding: 4px 7px 4px 38px;
+  overflow: hidden;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--tell-color) 28%, #241b17), #2c221d 66%);
+  border: 1px solid color-mix(in srgb, var(--tell-color) 65%, #1b120e);
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(239,220,173,.08);
+}
+
+.opponent-tell.element-ember { --tell-color: #d55d3c; }
+.opponent-tell.element-gust { --tell-color: #79a95d; }
+.opponent-tell.element-tide { --tell-color: #5795ba; }
+
+.tell-lane {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  color: rgba(238,221,181,.58);
+  font-family: "Cinzel", serif;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.tell-element {
+  position: absolute;
+  left: 7px;
+  top: 9px;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  background: #ead8a8;
+  border: 2px solid #17100d;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--tell-color);
+  font-size: 14px;
+}
+
+.opponent-tell b {
+  align-self: end;
+  color: #f6e8c2;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.opponent-tell small {
+  align-self: start;
+  color: #c6b695;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.opponent-tell em {
+  color: #f0cf7b;
+  font-style: normal;
+}
+
+.empty-tell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-left: 10px;
+  opacity: .6;
+}
+
+.matchup-forecast {
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
+  gap: 5px;
+  padding: 4px 7px 7px;
+}
+
+.forecast-instruction {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  color: #c8b99a;
+  border: 1px dashed rgba(209,180,116,.3);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.forecast-locked {
+  color: #e3ca8b;
+}
+
+.forecast-chip {
+  position: relative;
+  min-width: 0;
+  padding: 5px 6px 4px 31px;
+  background: #2d241f;
+  border: 1px solid #70573b;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+}
+
+.forecast-chip i {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  color: #251813;
+  background: #dbc17d;
+  border: 1px solid #130d0a;
+  border-radius: 50%;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  transform: translateY(-50%);
+}
+
+.forecast-chip b,
+.forecast-chip small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forecast-chip b {
+  color: #e7d2a3;
+  font-family: "Cinzel", serif;
+  font-size: 8px;
+  letter-spacing: .04em;
+}
+
+.forecast-chip small {
+  margin-top: 1px;
+  color: #aa9a7f;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.forecast-advantage {
+  background: linear-gradient(100deg, rgba(79,117,61,.45), #29231e);
+  border-color: #809b55;
+}
+
+.forecast-advantage b { color: #d9e8a6; }
+.forecast-danger {
+  background: linear-gradient(100deg, rgba(122,58,49,.5), #29211e);
+  border-color: #a06455;
+}
+.forecast-danger b { color: #efb3a2; }
+.forecast-power {
+  background: linear-gradient(100deg, rgba(105,85,48,.48), #29231e);
+  border-color: #a78c4c;
+}
+.forecast-power b { color: #efd488; }
 
 .selection-bar {
   margin: 0 auto 10px;
@@ -1279,6 +1525,10 @@ footer {
   border-radius: 2px;
 }
 
+.dialog-grid div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .dialog-grid span {
   flex: 0 0 27px;
   height: 27px;
@@ -1410,6 +1660,555 @@ footer {
   to { opacity: 0; transform: translate(-50%, -50%) scale(1.25); }
 }
 
+@media (min-width: 900px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 64px;
+    padding-inline: 16px;
+    border-bottom-width: 4px;
+  }
+
+  .brand { gap: 8px; }
+  .brand-mark { width: 38px; height: 44px; font-size: 10px; }
+  .brand strong { font-size: 17px; }
+  .brand small { font-size: 8px; }
+  .top-actions { gap: 7px; }
+  .icon-button,
+  .archive-button,
+  .how-button { height: 34px; font-size: 11px; }
+  .icon-button { width: 36px; }
+
+  main {
+    height: calc(100dvh - 64px);
+    padding: 8px 12px 6px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) 36px;
+    gap: 6px 10px;
+    overflow: hidden;
+  }
+
+  .game-shell {
+    width: min(1600px, 100%);
+    max-width: none;
+    height: 100%;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(480px, 1.2fr) minmax(350px, .8fr);
+    grid-template-rows: 56px minmax(0, 1fr);
+    border-width: 5px;
+    border-radius: 9px;
+    outline-width: 2px;
+    box-shadow:
+      inset 0 0 0 2px #a87839,
+      0 5px 0 #241712,
+      0 10px 24px rgba(19,12,10,.45);
+  }
+
+  .round-bar {
+    min-height: 0;
+    height: 56px;
+    grid-column: 1 / -1;
+    padding: 7px 15px;
+    border-bottom-width: 3px;
+  }
+
+  .eyebrow { font-size: 8px; }
+  h1 { font-size: 20px; }
+  .round-status { gap: 8px; font-size: 10px; }
+  .round-pips { gap: 3px; }
+  .round-pips i { width: 7px; height: 7px; }
+
+  .arena {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 8px;
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: 76px minmax(316px, 1fr) 76px;
+    border-right: 4px solid #39251c;
+    border-bottom: 0;
+  }
+
+  .arena::before,
+  .arena::after {
+    width: 38px;
+    height: 92px;
+    opacity: .35;
+  }
+
+  .arena::before { left: 4px; }
+  .arena::after { right: 4px; }
+
+  .avatar,
+  .avatar-player {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 12px;
+    padding: 3px;
+    border-width: 2px;
+    transform: none;
+  }
+
+  .portrait-rank {
+    top: -8px;
+    width: 22px;
+    height: 22px;
+    border-width: 2px;
+    font-size: 9px;
+  }
+
+  .avatar-level {
+    bottom: -8px;
+    padding: 2px 4px;
+    border-width: 1px;
+    font-size: 5px;
+    letter-spacing: .04em;
+  }
+
+  .player-copy h2 { font-size: 10px; }
+  .player-copy p,
+  .character-quip,
+  .ai-badge,
+  .you-badge { display: none; }
+  .name-row { gap: 2px; }
+  .collection { min-height: 28px; gap: 2px; }
+  .won-token { width: 20px; height: 25px; border-width: 1px; font-size: 10px; }
+
+  .battlefield {
+    width: 100%;
+    height: min(100%, 520px);
+    align-self: center;
+  }
+
+  .play-zone {
+    width: min(100%, 322px);
+    height: 158px;
+  }
+
+  .played-cards { gap: 5px; }
+  .clash-card {
+    width: 104px;
+    height: 158px;
+    flex-basis: 104px;
+  }
+
+  .play-zone .game-card {
+    width: 104px;
+    height: 158px;
+    padding: 3px;
+    border-width: 3px;
+  }
+
+  .play-zone .card-art { height: 79px; }
+  .play-zone .card-info { min-height: 30px; padding-inline: 3px; }
+  .play-zone .card-info strong { font-size: 9px; }
+  .play-zone .card-info small { font-size: 5px; }
+  .play-zone .card-ability { height: 33px; padding: 3px; }
+  .play-zone .card-ability > i { flex: 0 0 17px; height: 17px; font-size: 9px; }
+  .play-zone .card-ability b { font-size: 7px; }
+  .play-zone .card-ability small { display: none; }
+  .play-zone .card-element { width: 25px; height: 25px; font-size: 13px; }
+  .play-zone .card-rarity { display: none; }
+  .play-zone .card-power { width: 28px; height: 31px; }
+  .play-zone .card-power small { display: none; }
+  .play-zone .card-power b { font-size: 17px; }
+  .play-zone .selection-order { top: 31px; right: 3px; width: 20px; height: 20px; font-size: 10px; }
+  .card-placeholder { width: 120px; height: 158px; }
+  .score-label {
+    left: 50%;
+    width: 100%;
+    font-size: 8px;
+    text-align: center;
+    transform: translateX(-50%);
+  }
+  .score-ai { top: 3px; }
+  .score-player { bottom: 3px; }
+  .versus-badge { width: 38px; height: 38px; border-width: 3px; font-size: 13px; }
+
+  .hand-section {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 7px 9px 6px;
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    overflow: hidden;
+    border-top: 0;
+  }
+
+  .turn-message {
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 auto 5px;
+    padding: 4px 12px 5px;
+  }
+
+  .turn-message strong { font-size: 13px; }
+  .turn-message span { display: block; font-size: 9px; line-height: 1.1; }
+
+  .tactics-board {
+    width: 100%;
+    min-height: 0;
+    margin: 0 0 5px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .tactics-heading {
+    grid-row: auto;
+    padding: 4px 7px;
+    border-right: 0;
+    border-bottom: 1px solid #795631;
+  }
+
+  .scout-seal { width: 25px; height: 25px; flex-basis: 25px; font-size: 12px; }
+  .tactics-heading p { font-size: 9px; }
+  .tactics-heading small { margin-top: 1px; font-size: 7px; line-height: 1.1; }
+  .opponent-tells { gap: 3px; padding: 3px 4px 2px; }
+  .opponent-tell {
+    height: 40px;
+    padding: 9px 3px 2px 30px;
+  }
+  .tell-lane { top: 1px; right: 2px; font-size: 5px; }
+  .tell-element { left: 3px; top: 9px; width: 23px; height: 23px; font-size: 11px; }
+  .opponent-tell b { font-size: 8px; }
+  .opponent-tell small { max-width: 100%; overflow: hidden; font-size: 6px; text-overflow: ellipsis; }
+  .matchup-forecast { min-height: 38px; gap: 3px; padding: 2px 4px 4px; }
+  .forecast-instruction { font-size: 7px; }
+  .forecast-chip { padding: 4px 3px 3px 24px; }
+  .forecast-chip i { left: 3px; width: 16px; height: 16px; font-size: 7px; }
+  .forecast-chip b { font-size: 6px; }
+  .forecast-chip small { font-size: 6px; }
+
+  .selection-bar {
+    margin: 0 auto 4px;
+    gap: 6px;
+  }
+  .selection-count,
+  .commit-button {
+    min-width: 112px;
+    padding: 5px 7px;
+    font-size: 8px;
+  }
+
+  .hand {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 124px));
+    grid-template-rows: repeat(2, 162px);
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    gap: 5px 6px;
+    overflow: visible;
+  }
+
+  .hand .game-card {
+    width: 100%;
+    height: 157px;
+    padding: 3px;
+    border-width: 3px;
+  }
+
+  .hand .card-art { height: 78px; }
+  .hand .card-info { min-height: 30px; padding-inline: 3px; }
+  .hand .card-info strong { font-size: clamp(8px, .72vw, 10px); }
+  .hand .card-info small { font-size: 5px; }
+  .hand .card-ability { height: 33px; padding: 3px; }
+  .hand .card-ability > i { flex: 0 0 16px; height: 16px; font-size: 8px; }
+  .hand .card-ability b { font-size: 7px; }
+  .hand .card-ability small { display: none; }
+  .hand .card-element { width: 24px; height: 24px; font-size: 12px; }
+  .hand .card-rarity { font-size: 5px; }
+  .hand .card-power { width: 27px; height: 30px; }
+  .hand .card-power small { display: none; }
+  .hand .card-power b { font-size: 16px; }
+  .hand .selection-order { top: 30px; right: 3px; width: 20px; height: 20px; font-size: 10px; }
+  .hand .game-card:hover:not(:disabled) { transform: translateY(-4px); }
+  .hand .game-card.selected,
+  .hand .game-card.selected:hover { transform: translateY(-3px); }
+
+  .deck-status { margin-top: 2px; font-size: 9px; }
+  .mini-deck { width: 13px; height: 17px; border-width: 1px; }
+
+  .rules-strip {
+    width: 100%;
+    max-width: none;
+    height: 36px;
+    margin: 0;
+    padding: 3px 9px;
+    grid-column: 1;
+    grid-row: 2;
+    gap: 6px;
+    border-width: 2px;
+    box-shadow: 0 2px 0 rgba(28,18,13,.34);
+    font-size: 10px;
+  }
+
+  .rules-title { font-size: 8px; }
+  .rule-chip b { font-size: 14px; }
+  .rule-arrow { font-size: 15px; }
+
+  footer {
+    height: 36px;
+    padding: 0 8px;
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    color: #d1bd8e;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+
+  footer p { margin: 0; }
+}
+
+@media (min-width: 900px) {
+  .game-shell {
+    grid-template-columns: minmax(480px, 1.15fr) minmax(350px, .85fr);
+    grid-template-rows: 56px minmax(0, 1fr) 218px;
+  }
+
+  .brand strong { font-size: 19px; }
+  .brand small { font-size: 10px; }
+  .icon-button,
+  .archive-button,
+  .how-button { font-size: 13px; }
+  .round-status { font-size: 12px; }
+
+  .arena {
+    grid-column: 1;
+    grid-row: 2;
+    border-right: 4px solid #39251c;
+    border-bottom: 4px solid #39251c;
+  }
+
+  .player-copy h2 { font-size: 12px; }
+  .avatar-level { font-size: 7px; }
+  .score-label { font-size: 10px; }
+  .play-zone .card-info strong { font-size: 10px; }
+  .play-zone .card-info small { font-size: 6px; }
+  .play-zone .card-ability b { font-size: 8px; }
+
+  .hand-section {
+    display: contents;
+  }
+
+  .control-panel {
+    min-width: 0;
+    min-height: 0;
+    padding: 8px 10px;
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    align-content: center;
+    gap: 6px;
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, transparent 0 49%, rgba(40,21,14,.1) 50%, transparent 51%) 0 0 / 180px 100%,
+      repeating-linear-gradient(3deg, rgba(255,255,255,.025) 0 2px, transparent 2px 9px),
+      linear-gradient(#68412a, #45291d);
+    border-bottom: 4px solid #39251c;
+    box-shadow: inset 0 12px 24px rgba(24,14,10,.28);
+  }
+
+  .control-panel .turn-message {
+    margin: 0 auto;
+    padding: 5px 16px 6px;
+  }
+  .control-panel .turn-message strong { font-size: 18px; }
+  .control-panel .turn-message span { font-size: 12px; line-height: 1.25; }
+
+  .control-panel .tactics-board { margin: 0; }
+  .control-panel .tactics-heading { padding: 7px 9px; }
+  .control-panel .scout-seal { display: grid; width: 34px; height: 34px; flex-basis: 34px; font-size: 17px; }
+  .control-panel .tactics-heading p { font-size: 13px; }
+  .control-panel .tactics-heading small { font-size: 10px; line-height: 1.2; }
+  .control-panel .opponent-tells { padding: 5px 6px 3px; gap: 4px; }
+  .control-panel .opponent-tell { height: 52px; padding: 14px 4px 4px 39px; }
+  .control-panel .tell-element { left: 5px; top: 13px; width: 29px; height: 29px; font-size: 15px; }
+  .control-panel .tell-lane { top: 2px; right: 4px; font-size: 7px; }
+  .control-panel .opponent-tell b { font-size: 11px; }
+  .control-panel .opponent-tell small { font-size: 9px; }
+  .control-panel .matchup-forecast { min-height: 50px; padding: 4px 6px 6px; gap: 4px; }
+  .control-panel .forecast-instruction { font-size: 11px; }
+  .control-panel .forecast-chip { padding: 6px 4px 5px 32px; }
+  .control-panel .forecast-chip i { left: 5px; width: 21px; height: 21px; font-size: 9px; }
+  .control-panel .forecast-chip b { font-size: 9px; }
+  .control-panel .forecast-chip small { font-size: 8px; }
+
+  .control-panel .selection-bar { margin: 0; }
+  .control-panel .selection-count,
+  .control-panel .commit-button {
+    min-width: 132px;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .control-panel .deck-status {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .hand {
+    min-height: 0;
+    padding: 7px 16px 10px;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    overflow: visible;
+    background:
+      linear-gradient(90deg, transparent 0 49%, rgba(40,21,14,.1) 50%, transparent 51%) 0 0 / 180px 100%,
+      repeating-linear-gradient(3deg, rgba(255,255,255,.025) 0 2px, transparent 2px 9px),
+      linear-gradient(#68412a, #45291d);
+    border-top: 2px solid #b17b3c;
+    box-shadow: inset 0 12px 24px rgba(24,14,10,.28);
+  }
+
+  .hand .game-card {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    max-width: 150px;
+    height: 198px;
+    padding: 4px;
+    border-width: 3px;
+  }
+
+  .hand .card-art { height: 92px; }
+  .hand .card-info { min-height: 42px; padding: 5px 4px 4px; }
+  .hand .card-info strong { font-size: 13px; }
+  .hand .card-info small { font-size: 8px; letter-spacing: .05em; }
+  .hand .card-ability { height: 48px; padding: 5px 4px; }
+  .hand .card-ability > i { flex: 0 0 22px; height: 22px; font-size: 11px; }
+  .hand .card-ability b { font-size: 11px; }
+  .hand .card-ability small { display: block; font-size: 8px; }
+  .hand .card-element { width: 29px; height: 29px; font-size: 15px; }
+  .hand .card-rarity { font-size: 7px; }
+  .hand .card-power { width: 32px; height: 35px; }
+  .hand .card-power b { font-size: 21px; }
+  .hand .selection-order { top: 40px; right: 5px; width: 24px; height: 24px; font-size: 12px; }
+
+  .rules-strip { font-size: 12px; }
+  .rules-title { font-size: 10px; }
+  footer { font-size: 9px; }
+}
+
+@media (min-width: 1024px) {
+  .play-zone {
+    width: min(100%, 376px);
+    height: 168px;
+  }
+
+  .clash-card {
+    width: 122px;
+    height: 168px;
+    flex-basis: 122px;
+  }
+
+  .play-zone .game-card {
+    width: 122px;
+    height: 168px;
+  }
+
+  .play-zone .card-art { height: 82px; }
+  .play-zone .card-info { min-height: 32px; }
+  .play-zone .card-info strong { font-size: 11px; }
+  .play-zone .card-info small { font-size: 7px; }
+  .play-zone .card-ability { height: 38px; }
+  .play-zone .card-ability b { font-size: 9px; }
+}
+
+@media (min-width: 900px) and (max-height: 700px) {
+  .topbar { height: 56px; }
+  .brand-mark { width: 34px; height: 38px; }
+  .brand small { display: none; }
+
+  main {
+    height: calc(100dvh - 56px);
+    padding-block: 6px 4px;
+    grid-template-rows: minmax(0, 1fr) 30px;
+    gap-block: 4px;
+  }
+
+  .game-shell { grid-template-rows: 46px minmax(0, 1fr) 166px; }
+  .round-bar { height: 46px; padding-block: 4px; }
+  .eyebrow { display: none; }
+  h1 { font-size: 17px; }
+
+  .arena { padding-block: 5px; }
+  .battlefield { height: min(100%, 430px); }
+  .play-zone { height: 138px; }
+  .clash-card { height: 138px; }
+  .play-zone .game-card { height: 138px; }
+  .play-zone .card-art { height: 66px; }
+  .play-zone .card-info { min-height: 26px; }
+  .play-zone .card-ability { height: 31px; }
+  .card-placeholder { height: 138px; }
+
+  .control-panel { padding-block: 4px; gap: 3px; }
+  .control-panel .turn-message { padding-block: 3px; }
+  .control-panel .turn-message strong { font-size: 14px; }
+  .control-panel .turn-message span { font-size: 10px; }
+
+  .control-panel .tactics-heading { padding-block: 3px; }
+  .control-panel .scout-seal { display: none; }
+  .control-panel .tactics-heading p { font-size: 11px; }
+  .control-panel .tactics-heading small { font-size: 8px; }
+  .control-panel .opponent-tells { padding-block: 2px; }
+  .control-panel .opponent-tell { height: 34px; padding-top: 8px; padding-left: 27px; }
+  .control-panel .tell-element { top: 7px; width: 21px; height: 21px; font-size: 10px; }
+  .control-panel .opponent-tell b { font-size: 10px; }
+  .control-panel .opponent-tell small { font-size: 8px; }
+  .control-panel .matchup-forecast { min-height: 32px; padding-block: 1px 2px; }
+  .control-panel .forecast-chip { padding-block: 2px; }
+  .control-panel .forecast-chip b,
+  .control-panel .forecast-chip small,
+  .control-panel .forecast-instruction { font-size: 8px; }
+
+  .selection-bar { margin-bottom: 2px; }
+  .selection-count,
+  .commit-button { padding-block: 3px; }
+
+  .hand {
+    padding: 5px 12px 8px;
+    gap: 7px;
+  }
+
+  .hand .game-card { height: 156px; }
+  .hand .card-art { height: 50px; }
+  .hand .card-info { min-height: 35px; padding-block: 4px 3px; }
+  .hand .card-info strong { font-size: 12px; }
+  .hand .card-info small { font-size: 8px; }
+  .hand .card-ability { height: 55px; padding-block: 5px; }
+  .hand .card-ability b { font-size: 10px; }
+  .hand .card-ability small { font-size: 8px; }
+  .hand .selection-order { top: 28px; }
+  .hand .card-element { width: 24px; height: 24px; font-size: 12px; }
+  .hand .card-power { width: 27px; height: 30px; }
+  .hand .card-power b { font-size: 18px; }
+  .deck-status { font-size: 8px; }
+
+  .rules-strip,
+  footer { height: 30px; }
+  .rules-strip { font-size: 11px; }
+  footer { font-size: 9px; }
+}
+
 @media (max-width: 1100px) {
   .card-gallery {
     grid-template-columns: repeat(4, 178px);
@@ -1443,6 +2242,15 @@ footer {
   .card-power b { font-size: 20px; }
   .score-label { display: none; }
   .hand { gap: 6px; }
+  .tactics-board { grid-template-columns: 190px minmax(0, 1fr); }
+  .tactics-heading { padding: 10px; }
+  .scout-seal { display: none; }
+  .opponent-tell { padding-left: 33px; }
+  .tell-element { left: 4px; width: 25px; height: 25px; font-size: 12px; }
+  .opponent-tell b { font-size: 9px; }
+  .opponent-tell small { font-size: 7px; }
+  .forecast-chip { padding-left: 27px; }
+  .forecast-chip i { left: 4px; }
 
   .card-gallery {
     grid-template-columns: repeat(3, 138px);
@@ -1543,9 +2351,57 @@ footer {
   .won-token { width: 23px; height: 29px; font-size: 12px; }
 
   .hand-section {
-    min-height: 340px;
+    min-height: 480px;
     padding-inline: 4px;
   }
+
+  .turn-message {
+    max-width: calc(100% - 12px);
+    min-width: 0;
+    padding-inline: 12px;
+  }
+
+  .tactics-board {
+    width: calc(100% - 8px);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .tactics-heading {
+    grid-row: auto;
+    padding: 7px 10px;
+    border-right: 0;
+    border-bottom: 1px solid #795631;
+  }
+
+  .tactics-heading small { font-size: 8px; }
+  .opponent-tells { padding: 6px 5px 3px; gap: 3px; }
+  .opponent-tell {
+    height: 45px;
+    padding: 12px 3px 3px 29px;
+  }
+  .tell-lane { left: 3px; right: auto; font-size: 6px; }
+  .tell-element { left: 3px; top: 15px; width: 23px; height: 23px; }
+  .opponent-tell b { font-size: 8px; }
+  .opponent-tell small {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 6px;
+    text-overflow: ellipsis;
+  }
+  .matchup-forecast { min-height: 45px; padding: 3px 5px 6px; gap: 3px; }
+  .forecast-chip { padding: 15px 3px 3px; text-align: center; }
+  .forecast-chip i {
+    top: 3px;
+    left: 4px;
+    width: 15px;
+    height: 15px;
+    font-size: 7px;
+    transform: none;
+  }
+  .forecast-chip b { font-size: 6px; }
+  .forecast-chip small { font-size: 6px; }
+  .forecast-instruction { padding: 6px; font-size: 8px; }
 
   .selection-bar {
     flex-wrap: wrap;

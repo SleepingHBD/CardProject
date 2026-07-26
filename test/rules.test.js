@@ -6,6 +6,9 @@ const {
   chooseAiCard,
   chooseAiCards,
   compareCards,
+  forecastMatchup,
+  getFormationReward,
+  getPowerTier,
   hasWinningSet,
   resolveClashes,
 } = globalThis.ClawRules;
@@ -23,6 +26,18 @@ test("same element compares power and can draw", () => {
   assert.equal(compareCards(card("ember", 8), card("ember", 4)), "player");
   assert.equal(compareCards(card("ember", 3), card("ember", 7)), "ai");
   assert.equal(compareCards(card("ember", 6), card("ember", 6)), "draw");
+});
+
+test("matchup forecasts identify counters and power duels", () => {
+  assert.equal(forecastMatchup("ember", "gust"), "advantage");
+  assert.equal(forecastMatchup("ember", "tide"), "danger");
+  assert.equal(forecastMatchup("ember", "ember"), "power");
+});
+
+test("power tiers reveal useful ranges without exposing exact cards", () => {
+  assert.deepEqual(getPowerTier(9), { key: "high", label: "High strength", range: "8-9" });
+  assert.equal(getPowerTier(6).key, "steady");
+  assert.equal(getPowerTier(3).key, "low");
 });
 
 test("three unique elements form a winning set", () => {
@@ -94,4 +109,26 @@ test("multi-card formations resolve from left to right", () => {
 
   assert.deepEqual(resolution.results, ["player", "ai", "ai"]);
   assert.deepEqual(resolution.score, { player: 1, ai: 2, draw: 0 });
+});
+
+test("formation winner earns only their earliest winning card", () => {
+  const playerCards = [card("ember"), card("gust"), card("tide")];
+  const aiCards = [card("gust"), card("tide"), card("ember")];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.deepEqual(
+    getFormationReward(playerCards, aiCards, resolution),
+    { winner: "player", card: playerCards[0], lane: 0 },
+  );
+});
+
+test("an evenly split formation awards no trophy", () => {
+  const playerCards = [card("ember", 5), card("gust", 5)];
+  const aiCards = [card("gust", 5), card("ember", 5)];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.deepEqual(
+    getFormationReward(playerCards, aiCards, resolution),
+    { winner: "draw", card: null, lane: -1 },
+  );
 });
