@@ -479,7 +479,14 @@ function renderHand() {
 }
 
 function bindCardInteractions(container) {
+  const isPlayerHand = container === ui.playerHand;
+
   container.querySelectorAll("[data-card-id]").forEach((button) => {
+    if (isPlayerHand) {
+      button.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "touch") audio.cardHover();
+      });
+    }
     button.addEventListener("click", () => toggleCardSelection(button.dataset.cardId));
     button.addEventListener("dragstart", (event) => {
       draggedCardId = button.dataset.cardId;
@@ -1148,6 +1155,7 @@ ui.nextRoundButton.addEventListener("click", () => {
     endGame(winner);
     return;
   }
+  audio.roundAdvance();
   nextRound();
 });
 document.querySelector("#playAgainButton").addEventListener("click", () => {

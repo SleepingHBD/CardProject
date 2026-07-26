@@ -155,6 +155,61 @@
     });
   }
 
+  function cardHover() {
+    if (!createContext()) return;
+
+    noise({
+      duration: 0.045,
+      volume: 0.035,
+      frequency: 1800,
+      endFrequency: 4200,
+      filterType: "bandpass",
+      q: 0.8,
+      pan: -0.03,
+      attack: 0.002,
+    });
+    oscillator({
+      when: 0.018,
+      duration: 0.045,
+      volume: 0.022,
+      frequency: 540,
+      endFrequency: 720,
+      type: "triangle",
+      pan: 0.03,
+    });
+  }
+
+  function roundAdvance() {
+    if (!createContext()) return;
+
+    noise({
+      duration: 0.085,
+      volume: 0.065,
+      frequency: 3600,
+      endFrequency: 1100,
+      filterType: "bandpass",
+      q: 0.7,
+      pan: -0.08,
+    });
+    oscillator({
+      when: 0.035,
+      duration: 0.13,
+      volume: 0.055,
+      frequency: 330,
+      endFrequency: 495,
+      type: "triangle",
+      pan: 0.08,
+    });
+    noise({
+      when: 0.075,
+      duration: 0.055,
+      volume: 0.05,
+      frequency: 620,
+      endFrequency: 240,
+      filterType: "lowpass",
+    });
+  }
+
   function denied() {
     oscillator({ duration: 0.09, volume: 0.09, frequency: 170, endFrequency: 125, type: "square" });
     oscillator({ when: 0.09, duration: 0.1, volume: 0.07, frequency: 145, endFrequency: 105, type: "square" });
@@ -422,6 +477,8 @@
 
   global.ClawAudio = Object.freeze({
     cardFlip,
+    cardHover,
+    roundAdvance,
     denied,
     commit,
     reveal,
