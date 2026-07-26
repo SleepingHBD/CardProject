@@ -63,6 +63,9 @@ const ui = {
   deckStatusText: document.querySelector("#deckStatusText"),
   versusBadge: document.querySelector("#versusBadge"),
   howDialog: document.querySelector("#howDialog"),
+  galleryDialog: document.querySelector("#galleryDialog"),
+  galleryButton: document.querySelector("#galleryButton"),
+  cardGallery: document.querySelector("#cardGallery"),
   resultDialog: document.querySelector("#resultDialog"),
   soundButton: document.querySelector("#soundButton"),
 };
@@ -95,7 +98,7 @@ function cardMarkup(card, interactive = false) {
   const element = ELEMENTS[card.element];
   return `
     <button
-      class="game-card element-${card.element} rarity-${card.rarity}"
+      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}"
       ${interactive ? `data-card-id="${card.instanceId}" aria-label="Play ${card.name}, ${element.label}, power ${card.power}"` : "disabled"}
       style="--card-accent:${COLOR_MAP[card.color]}"
       type="button"
@@ -131,6 +134,12 @@ function renderHand() {
   ui.playerHand.querySelectorAll("[data-card-id]").forEach((button) => {
     button.addEventListener("click", () => playRound(button.dataset.cardId));
   });
+}
+
+function renderGallery() {
+  ui.cardGallery.innerHTML = CARD_LIBRARY
+    .map((card) => cardMarkup(card))
+    .join("");
 }
 
 function renderCollection(target, cards) {
@@ -305,6 +314,21 @@ document.querySelector("#howButton").addEventListener("click", () => ui.howDialo
 document.querySelectorAll("[data-close-dialog]").forEach((button) => {
   button.addEventListener("click", () => ui.howDialog.close());
 });
+ui.galleryButton.addEventListener("click", () => {
+  if (ui.galleryDialog.open) {
+    ui.galleryDialog.close();
+    ui.galleryButton.setAttribute("aria-expanded", "false");
+  } else {
+    ui.galleryDialog.showModal();
+    ui.galleryButton.setAttribute("aria-expanded", "true");
+  }
+});
+document.querySelector("[data-close-gallery]").addEventListener("click", () => {
+  ui.galleryDialog.close();
+});
+ui.galleryDialog.addEventListener("close", () => {
+  ui.galleryButton.setAttribute("aria-expanded", "false");
+});
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
   startGame();
@@ -315,4 +339,5 @@ ui.soundButton.addEventListener("click", () => {
   ui.soundButton.setAttribute("aria-label", state.soundOn ? "Mute sound" : "Unmute sound");
 });
 
+renderGallery();
 startGame();

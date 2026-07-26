@@ -41,6 +41,16 @@
         <button class="icon-button" id="soundButton" type="button" aria-label="Mute sound" title="Sound">
           <span aria-hidden="true">♪</span>
         </button>
+        <button
+          class="archive-button"
+          id="galleryButton"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="galleryDialog"
+          aria-expanded="false"
+        >
+          Card Archive
+        </button>
         <button class="how-button" id="howButton" type="button">Guild Codex</button>
       </div>
     </header>
@@ -136,6 +146,19 @@
         <span class="rule-chip tide"><b>💧</b> Tide beats Ember</span>
       </section>
     </main>
+
+    <dialog class="game-dialog gallery-dialog" id="galleryDialog">
+      <button class="dialog-close" data-close-gallery type="button" aria-label="Close card archive">×</button>
+      <p class="eyebrow">THE WHISKERKEEP COLLECTION</p>
+      <h2>Guild Card Archive</h2>
+      <p class="gallery-intro">All fifteen cards currently available in the game.</p>
+      <div class="gallery-legend" aria-label="Card elements">
+        <span><b aria-hidden="true">🔥</b> Ember</span>
+        <span><b aria-hidden="true">🍃</b> Gust</span>
+        <span><b aria-hidden="true">💧</b> Tide</span>
+      </div>
+      <div class="card-gallery" id="cardGallery" aria-label="All available cards"></div>
+    </dialog>
 
     <dialog class="game-dialog" id="howDialog">
       <button class="dialog-close" data-close-dialog type="button" aria-label="Close">×</button>
