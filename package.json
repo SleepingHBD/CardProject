@@ -1,0 +1,16 @@
+{
+  "name": "claw-and-order",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A cat-themed elemental card game for GitHub Pages.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=./ && node scripts/copy-static.js",
+    "preview": "vite preview",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}
