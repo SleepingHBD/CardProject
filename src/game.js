@@ -427,7 +427,6 @@ function cardMarkup(
     <button
       class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${isFormationCard ? " selected formation-card" : ""}"
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
-      style="--card-accent:${COLOR_MAP[card.color]}"
       type="button"
     >
       ${formationBonusBadge}

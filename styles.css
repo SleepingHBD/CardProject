@@ -1417,6 +1417,7 @@ h1 {
   --rarity-dark: #684318;
 }
 
+.game-card.element-ember { --card-accent: var(--ember); }
 .game-card.element-gust { --card-accent: var(--gust); }
 .game-card.element-tide { --card-accent: var(--tide); }
 
