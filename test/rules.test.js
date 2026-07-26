@@ -2,7 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "../src/rules.js";
 
-const { chooseAiCard, compareCards, hasWinningSet } = globalThis.ClawRules;
+const {
+  chooseAiCard,
+  chooseAiCards,
+  compareCards,
+  hasWinningSet,
+  resolveClashes,
+} = globalThis.ClawRules;
 
 const card = (element, power = 5, color = "red") => ({ element, power, color });
 
@@ -51,4 +57,41 @@ test("duplicate colors do not count toward a mono-element win", () => {
 test("AI returns a valid card from its hand", () => {
   const hand = [card("ember", 2), card("gust", 9), card("tide", 4)];
   assert.ok(hand.includes(chooseAiCard(hand, [], [], () => 0.5)));
+});
+
+test("AI can choose up to three unique cards", () => {
+  const hand = [
+    card("ember", 2),
+    card("gust", 9),
+    card("tide", 4),
+    card("ember", 7),
+  ];
+  const chosen = chooseAiCards(hand, 3, [], [], () => 0.5);
+
+  assert.equal(chosen.length, 3);
+  assert.equal(new Set(chosen).size, 3);
+  assert.ok(chosen.every((selected) => hand.includes(selected)));
+});
+
+test("AI selection cannot exceed its available hand", () => {
+  const hand = [card("ember", 2), card("gust", 9)];
+  assert.equal(chooseAiCards(hand, 3, [], [], () => 0.5).length, 2);
+  assert.deepEqual(chooseAiCards([], 3, [], [], () => 0.5), []);
+});
+
+test("multi-card formations resolve from left to right", () => {
+  const playerCards = [
+    card("ember", 5),
+    card("tide", 4),
+    card("gust", 8),
+  ];
+  const aiCards = [
+    card("gust", 9),
+    card("tide", 6),
+    card("ember", 2),
+  ];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.deepEqual(resolution.results, ["player", "ai", "ai"]);
+  assert.deepEqual(resolution.score, { player: 1, ai: 2, draw: 0 });
 });

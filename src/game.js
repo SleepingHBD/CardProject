@@ -1,4 +1,4 @@
-const { ELEMENTS, chooseAiCard, compareCards, hasWinningSet } = globalThis.ClawRules;
+const { ELEMENTS, chooseAiCards, hasWinningSet, resolveClashes } = globalThis.ClawRules;
 
 const CARD_LIBRARY = [
   ["ember", "red", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "sizzle-mittens"],
@@ -38,13 +38,15 @@ const COLOR_MAP = {
   violet: "#8a68bc",
 };
 
-const HAND_SIZE = 5;
+const HAND_SIZE = 6;
+const MAX_PLAY_SIZE = 3;
 const state = {
   deck: [],
   playerHand: [],
   aiHand: [],
   playerWins: [],
   aiWins: [],
+  selectedCardIds: [],
   round: 1,
   locked: false,
   soundOn: true,
@@ -54,9 +56,13 @@ const ui = {
   playerHand: document.querySelector("#playerHand"),
   playerPlayZone: document.querySelector("#playerPlayZone"),
   aiPlayZone: document.querySelector("#aiPlayZone"),
+  battlefield: document.querySelector(".battlefield"),
+  clashEffects: document.querySelector("#clashEffects"),
   playerCollection: document.querySelector("#playerCollection"),
   aiCollection: document.querySelector("#aiCollection"),
   turnMessage: document.querySelector("#turnMessage"),
+  selectionCount: document.querySelector("#selectionCount"),
+  playSelectedButton: document.querySelector("#playSelectedButton"),
   roundLabel: document.querySelector("#roundLabel"),
   roundPips: document.querySelector("#roundPips"),
   deckCount: document.querySelector("#deckCount"),
@@ -94,15 +100,17 @@ function drawToHand(hand) {
   }
 }
 
-function cardMarkup(card, interactive = false) {
+function cardMarkup(card, interactive = false, selectedIndex = -1) {
   const element = ELEMENTS[card.element];
+  const isSelected = selectedIndex >= 0;
   return `
     <button
-      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}"
-      ${interactive ? `data-card-id="${card.instanceId}" aria-label="Play ${card.name}, ${element.label}, power ${card.power}"` : "disabled"}
+      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${isSelected ? " selected" : ""}"
+      ${interactive ? `data-card-id="${card.instanceId}" aria-label="${isSelected ? "Deselect" : "Select"} ${card.name}, ${element.label}, power ${card.power}" aria-pressed="${isSelected}"` : "disabled"}
       style="--card-accent:${COLOR_MAP[card.color]}"
       type="button"
     >
+      ${isSelected ? `<span class="selection-order" aria-hidden="true">${selectedIndex + 1}</span>` : ""}
       <span class="card-art">
         <img src="./assets/cards/${card.art}.webp" alt="" draggable="false" />
         <span class="art-vignette" aria-hidden="true"></span>
@@ -128,12 +136,65 @@ function placeholder(label) {
 
 function renderHand() {
   ui.playerHand.innerHTML = state.playerHand
-    .map((card) => cardMarkup(card, !state.locked))
+    .map((card) => cardMarkup(card, !state.locked, state.selectedCardIds.indexOf(card.instanceId)))
     .join("");
 
   ui.playerHand.querySelectorAll("[data-card-id]").forEach((button) => {
-    button.addEventListener("click", () => playRound(button.dataset.cardId));
+    button.addEventListener("click", () => toggleCardSelection(button.dataset.cardId));
   });
+  updateSelectionControls();
+}
+
+function updateSelectionControls() {
+  const count = state.selectedCardIds.length;
+  ui.selectionCount.textContent = `${count} of ${MAX_PLAY_SIZE} selected`;
+  ui.playSelectedButton.disabled = state.locked || count === 0;
+  ui.playSelectedButton.textContent = count === 1 ? "Commit 1 Card" : `Commit ${count} Cards`;
+}
+
+function toggleCardSelection(instanceId) {
+  if (state.locked) return;
+  const selectedIndex = state.selectedCardIds.indexOf(instanceId);
+  let changed = false;
+
+  if (selectedIndex >= 0) {
+    state.selectedCardIds.splice(selectedIndex, 1);
+    changed = true;
+    tone(320);
+  } else if (state.selectedCardIds.length < MAX_PLAY_SIZE) {
+    state.selectedCardIds.push(instanceId);
+    changed = true;
+    tone(440 + state.selectedCardIds.length * 70);
+  } else {
+    setMessage("Three-card limit reached.", "Deselect a card before choosing another.");
+    tone(210);
+  }
+
+  if (changed) {
+    const count = state.selectedCardIds.length;
+    const title = count === 0
+      ? "Build your formation."
+      : `${count} ${count === 1 ? "card" : "cards"} in formation.`;
+    const detail = count === MAX_PLAY_SIZE
+      ? "Formation full. Commit when ready."
+      : "Cards clash from left to right in the numbered order.";
+    setMessage(title, detail);
+  }
+
+  renderHand();
+}
+
+function playedCardsMarkup(cards, side) {
+  return `
+    <div class="played-cards ${side}-formation">
+      ${cards.map((card, index) => `
+        <div class="clash-card" data-clash-index="${index}">
+          ${cardMarkup(card, false, index)}
+          <span class="lane-result" aria-hidden="true"></span>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderGallery() {
@@ -196,49 +257,136 @@ function removeCard(hand, instanceId) {
   return index >= 0 ? hand.splice(index, 1)[0] : null;
 }
 
-function playRound(instanceId) {
-  if (state.locked) return;
-  const playerCard = removeCard(state.playerHand, instanceId);
-  if (!playerCard) return;
+function delay(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function animateClashes(playerCards, aiCards) {
+  const resolution = resolveClashes(playerCards, aiCards);
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const strikeDuration = reducedMotion ? 80 : 540;
+  const pauseDuration = reducedMotion ? 30 : 180;
+  const playerLanes = [...ui.playerPlayZone.querySelectorAll(".clash-card")];
+  const aiLanes = [...ui.aiPlayZone.querySelectorAll(".clash-card")];
+
+  await delay(reducedMotion ? 30 : 220);
+
+  for (let index = 0; index < resolution.results.length; index += 1) {
+    const winner = resolution.results[index];
+    const playerLane = playerLanes[index];
+    const aiLane = aiLanes[index];
+    if (!playerLane || !aiLane) continue;
+
+    setMessage(
+      `Clash ${index + 1} of ${resolution.results.length}!`,
+      `${playerCards[index].name} faces ${aiCards[index].name}.`,
+    );
+
+    const winningCard = winner === "player"
+      ? playerCards[index]
+      : winner === "ai"
+        ? aiCards[index]
+        : playerCards[index];
+    const impact = document.createElement("span");
+    const playerRect = playerLane.getBoundingClientRect();
+    const aiRect = aiLane.getBoundingClientRect();
+    const battlefieldRect = ui.battlefield.getBoundingClientRect();
+    const impactX = (
+      (playerRect.left + playerRect.width / 2)
+      + (aiRect.left + aiRect.width / 2)
+    ) / 2 - battlefieldRect.left;
+
+    impact.className = `clash-impact element-${winningCard.element}${winner === "draw" ? " draw-impact" : ""}`;
+    impact.style.left = `${impactX}px`;
+    impact.innerHTML = `<i>${winner === "draw" ? "✦" : ELEMENTS[winningCard.element].icon}</i>`;
+    ui.clashEffects.append(impact);
+
+    playerLane.classList.add("clashing");
+    aiLane.classList.add("clashing");
+    ui.battlefield.classList.remove("is-clashing");
+    void ui.battlefield.offsetWidth;
+    ui.battlefield.classList.add("is-clashing");
+    tone(winner === "draw" ? 390 : winner === "player" ? 690 : 250, 0.18);
+
+    await delay(strikeDuration);
+
+    playerLane.classList.remove("clashing");
+    aiLane.classList.remove("clashing");
+    playerLane.classList.add(winner === "player" ? "result-win" : winner === "ai" ? "result-loss" : "result-draw");
+    aiLane.classList.add(winner === "ai" ? "result-win" : winner === "player" ? "result-loss" : "result-draw");
+    playerLane.querySelector(".lane-result").textContent = winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW";
+    aiLane.querySelector(".lane-result").textContent = winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW";
+    impact.classList.add("impact-fade");
+    ui.battlefield.classList.remove("is-clashing");
+
+    await delay(pauseDuration);
+  }
+
+  return resolution;
+}
+
+function playRound() {
+  if (state.locked || state.selectedCardIds.length === 0) return;
+
+  const playerCards = state.selectedCardIds
+    .map((instanceId) => removeCard(state.playerHand, instanceId))
+    .filter(Boolean);
+  if (!playerCards.length) return;
 
   state.locked = true;
+  state.selectedCardIds = [];
   renderHand();
-  ui.playerPlayZone.innerHTML = cardMarkup(playerCard);
-  ui.aiPlayZone.innerHTML = placeholder("Professor is thinking...");
-  setMessage("Professor Paws is pondering...", "A tactical tail twitch is underway.");
+  ui.playerPlayZone.innerHTML = playedCardsMarkup(playerCards, "player");
+  ui.aiPlayZone.innerHTML = placeholder(`Choosing ${playerCards.length} ${playerCards.length === 1 ? "card" : "cards"}...`);
+  setMessage("Professor Paws is arranging a counterplay...", "Cards will clash from left to right.");
   tone(440);
 
-  window.setTimeout(() => {
-    const chosenAiCard = chooseAiCard(
+  window.setTimeout(async () => {
+    const chosenAiCards = chooseAiCards(
       state.aiHand,
+      playerCards.length,
       state.playerWins,
       state.aiWins,
     );
-    const aiCard = removeCard(state.aiHand, chosenAiCard.instanceId);
-    ui.aiPlayZone.innerHTML = cardMarkup(aiCard);
-    resolveRound(playerCard, aiCard);
-  }, 650);
+    const aiCards = chosenAiCards
+      .map((card) => removeCard(state.aiHand, card.instanceId))
+      .filter(Boolean);
+    ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai");
+    setMessage("Formations revealed!", "Brace for the first clash.");
+    const resolution = await animateClashes(playerCards, aiCards);
+    resolveRound(playerCards, aiCards, resolution);
+  }, 700);
 }
 
-function resolveRound(playerCard, aiCard) {
-  const winner = compareCards(playerCard, aiCard);
+function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCards, aiCards)) {
+  const { results, score } = resolution;
   ui.versusBadge.className = "versus-badge";
 
-  if (winner === "player") {
-    state.playerWins.push(playerCard);
-    setMessage("You take the trick!", `${ELEMENTS[playerCard.element].label} carries the round.`);
-    ui.versusBadge.textContent = "WIN";
+  playerCards.forEach((playerCard, index) => {
+    const aiCard = aiCards[index];
+    if (!aiCard) return;
+    const winner = results[index];
+
+    if (winner === "player") state.playerWins.push(playerCard);
+    if (winner === "ai") state.aiWins.push(aiCard);
+  });
+
+  const clashWord = playerCards.length === 1 ? "clash" : "clashes";
+  ui.versusBadge.textContent = `${score.player}–${score.ai}`;
+
+  if (score.player > score.ai) {
+    setMessage(`You win ${score.player} of ${playerCards.length} ${clashWord}!`, "Your formation earns the stronger round.");
     ui.versusBadge.classList.add("win");
     tone(660, 0.14);
-  } else if (winner === "ai") {
-    state.aiWins.push(aiCard);
-    setMessage("Professor Paws wins this one.", "Shake it off — every great cat lands on their feet.");
-    ui.versusBadge.textContent = "PAW";
+  } else if (score.ai > score.player) {
+    setMessage(`Professor Paws wins ${score.ai} of ${playerCards.length} ${clashWord}.`, "Reorder your next formation and counter the professor.");
     ui.versusBadge.classList.add("lose");
     tone(240, 0.16);
   } else {
-    setMessage("A whisker-close draw!", "Same element, same power. No card is claimed.");
-    ui.versusBadge.textContent = "TIE";
+    const drawDetail = score.draw
+      ? `${score.draw} ${score.draw === 1 ? "lane ends" : "lanes end"} in a draw.`
+      : "The formation is evenly matched.";
+    setMessage("The round is evenly split!", drawDetail);
     tone(380, 0.12);
   }
 
@@ -247,10 +395,22 @@ function resolveRound(playerCard, aiCard) {
   renderRound();
 
   window.setTimeout(() => {
-    if (hasWinningSet(state.playerWins)) return endGame("player");
-    if (hasWinningSet(state.aiWins)) return endGame("ai");
+    const playerCompletedSet = hasWinningSet(state.playerWins);
+    const aiCompletedSet = hasWinningSet(state.aiWins);
+
+    if (playerCompletedSet && aiCompletedSet) {
+      if (score.player > score.ai) return endGame("player");
+      if (score.ai > score.player) return endGame("ai");
+      if (state.playerWins.length > state.aiWins.length) return endGame("player");
+      if (state.aiWins.length > state.playerWins.length) return endGame("ai");
+    } else if (playerCompletedSet) {
+      return endGame("player");
+    } else if (aiCompletedSet) {
+      return endGame("ai");
+    }
+
     nextRound();
-  }, 1350);
+  }, 1650);
 }
 
 function nextRound() {
@@ -265,11 +425,14 @@ function nextRound() {
 
   state.round += 1;
   state.locked = false;
-  ui.playerPlayZone.innerHTML = placeholder("Choose a card");
+  state.selectedCardIds = [];
+  ui.clashEffects.innerHTML = "";
+  ui.battlefield.classList.remove("is-clashing");
+  ui.playerPlayZone.innerHTML = placeholder("Choose up to 3 cards");
   ui.aiPlayZone.innerHTML = placeholder("Waiting...");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Your turn!", "Pick a card to outsmart Professor Paws.");
+  setMessage("Build your formation.", "Select one to three cards in the order you want them to clash.");
   renderHand();
   renderRound();
 }
@@ -295,15 +458,18 @@ function startGame() {
   state.aiHand = [];
   state.playerWins = [];
   state.aiWins = [];
+  state.selectedCardIds = [];
   state.round = 1;
   state.locked = false;
+  ui.clashEffects.innerHTML = "";
+  ui.battlefield.classList.remove("is-clashing");
   drawToHand(state.playerHand);
   drawToHand(state.aiHand);
-  ui.playerPlayZone.innerHTML = placeholder("Choose a card");
+  ui.playerPlayZone.innerHTML = placeholder("Choose up to 3 cards");
   ui.aiPlayZone.innerHTML = placeholder("Waiting...");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Your turn!", "Pick a card to outsmart Professor Paws.");
+  setMessage("Build your formation.", "Select one to three cards in the order you want them to clash.");
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
   renderHand();
@@ -329,6 +495,7 @@ document.querySelector("[data-close-gallery]").addEventListener("click", () => {
 ui.galleryDialog.addEventListener("close", () => {
   ui.galleryButton.setAttribute("aria-expanded", "false");
 });
+ui.playSelectedButton.addEventListener("click", playRound);
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
   startGame();

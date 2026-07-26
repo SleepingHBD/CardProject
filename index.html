@@ -96,11 +96,12 @@
             </div>
 
             <div class="versus-badge" id="versusBadge" aria-live="polite">VS</div>
+            <div class="clash-effects" id="clashEffects" aria-hidden="true"></div>
 
             <div class="play-zone player-zone" id="playerPlayZone">
               <div class="card-placeholder">
                 <span class="paw">◆</span>
-                <small>Choose a card</small>
+                <small>Choose up to 3 cards</small>
               </div>
             </div>
             <div class="score-label score-player">YOUR PLAY</div>
@@ -127,7 +128,13 @@
         <section class="hand-section">
           <div class="turn-message" id="turnMessage" aria-live="polite">
             <strong>Your turn!</strong>
-            <span>Pick a card to outsmart Professor Paws.</span>
+            <span>Select one to three cards, then commit your play.</span>
+          </div>
+          <div class="selection-bar">
+            <span class="selection-count" id="selectionCount" aria-live="polite">0 of 3 selected</span>
+            <button class="commit-button" id="playSelectedButton" type="button" disabled>
+              Commit Cards
+            </button>
           </div>
           <div class="hand" id="playerHand" aria-label="Your hand of cards"></div>
           <div class="deck-status">
@@ -172,10 +179,10 @@
       <p class="eyebrow">THE GUILD CODEX</p>
       <h2>Laws of the Duel</h2>
       <div class="dialog-grid">
-        <div><span>1</span><p>Choose one card from your paw each round.</p></div>
-        <div><span>2</span><p>Elements win in a circle: Ember, Gust, then Tide.</p></div>
-        <div><span>3</span><p>Matching elements compare power. The higher card wins.</p></div>
-        <div><span>4</span><p>Win with one of every element, or three cards of one element in different colors.</p></div>
+        <div><span>1</span><p>Select one to three cards. The numbered seals show their play order.</p></div>
+        <div><span>2</span><p>Professor Paws answers with the same number. Each position becomes a separate clash.</p></div>
+        <div><span>3</span><p>Ember beats Gust, Gust beats Tide, and Tide beats Ember. Matching elements compare power.</p></div>
+        <div><span>4</span><p>Collect one of every element, or three differently colored cards of one element, to win.</p></div>
       </div>
       <button class="primary-button" data-close-dialog type="button">Got it!</button>
     </dialog>

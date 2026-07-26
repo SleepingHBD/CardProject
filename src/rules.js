@@ -50,10 +50,42 @@ function chooseAiCard(hand, playerWins, aiWins, random = Math.random) {
   return scored[0].card;
 }
 
+function chooseAiCards(hand, count, playerWins, aiWins, random = Math.random) {
+  const available = [...hand];
+  const chosen = [];
+  const safeCount = Math.min(Math.max(1, count), available.length, 3);
+
+  while (chosen.length < safeCount) {
+    const card = chooseAiCard(available, playerWins, aiWins, random);
+    chosen.push(card);
+    available.splice(available.indexOf(card), 1);
+  }
+
+  return chosen;
+}
+
+function resolveClashes(playerCards, aiCards) {
+  const results = playerCards.slice(0, 3).map((playerCard, index) => {
+    const aiCard = aiCards[index];
+    return aiCard ? compareCards(playerCard, aiCard) : "draw";
+  });
+  const score = results.reduce(
+    (totals, winner) => {
+      totals[winner] += 1;
+      return totals;
+    },
+    { player: 0, ai: 0, draw: 0 },
+  );
+
+  return { results, score };
+}
+
 global.ClawRules = Object.freeze({
   ELEMENTS,
   compareCards,
   hasWinningSet,
   chooseAiCard,
+  chooseAiCards,
+  resolveClashes,
 });
 })(globalThis);
