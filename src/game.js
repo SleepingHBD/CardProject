@@ -1,4 +1,5 @@
 const { ELEMENTS, chooseAiCards, hasWinningSet, resolveClashes } = globalThis.ClawRules;
+const audio = globalThis.ClawAudio;
 
 const CARD_LIBRARY = [
   ["ember", "red", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "sizzle-mittens"],
@@ -160,14 +161,14 @@ function toggleCardSelection(instanceId) {
   if (selectedIndex >= 0) {
     state.selectedCardIds.splice(selectedIndex, 1);
     changed = true;
-    tone(320);
+    audio.cardFlip(false, selectedIndex + 1);
   } else if (state.selectedCardIds.length < MAX_PLAY_SIZE) {
     state.selectedCardIds.push(instanceId);
     changed = true;
-    tone(440 + state.selectedCardIds.length * 70);
+    audio.cardFlip(true, state.selectedCardIds.length);
   } else {
     setMessage("Three-card limit reached.", "Deselect a card before choosing another.");
-    tone(210);
+    audio.denied();
   }
 
   if (changed) {
@@ -234,24 +235,6 @@ function setMessage(title, detail) {
   ui.turnMessage.innerHTML = `<strong>${title}</strong><span>${detail}</span>`;
 }
 
-function tone(frequency, duration = 0.08) {
-  if (!state.soundOn) return;
-  try {
-    const context = new AudioContext();
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.frequency.value = frequency;
-    oscillator.type = "sine";
-    gain.gain.setValueAtTime(0.06, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + duration);
-  } catch {
-    // Sound is optional; browsers may decline audio contexts.
-  }
-}
-
 function removeCard(hand, instanceId) {
   const index = hand.findIndex((card) => card.instanceId === instanceId);
   return index >= 0 ? hand.splice(index, 1)[0] : null;
@@ -265,6 +248,7 @@ async function animateClashes(playerCards, aiCards) {
   const resolution = resolveClashes(playerCards, aiCards);
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const strikeDuration = reducedMotion ? 80 : 540;
+  const collisionDelay = reducedMotion ? 20 : 225;
   const pauseDuration = reducedMotion ? 30 : 180;
   const playerLanes = [...ui.playerPlayZone.querySelectorAll(".clash-card")];
   const aiLanes = [...ui.aiPlayZone.querySelectorAll(".clash-card")];
@@ -281,6 +265,12 @@ async function animateClashes(playerCards, aiCards) {
       `Clash ${index + 1} of ${resolution.results.length}!`,
       `${playerCards[index].name} faces ${aiCards[index].name}.`,
     );
+
+    playerLane.classList.add("clashing");
+    aiLane.classList.add("clashing");
+    audio.clashApproach(playerCards[index].element, aiCards[index].element);
+
+    await delay(collisionDelay);
 
     const winningCard = winner === "player"
       ? playerCards[index]
@@ -301,14 +291,12 @@ async function animateClashes(playerCards, aiCards) {
     impact.innerHTML = `<i>${winner === "draw" ? "✦" : ELEMENTS[winningCard.element].icon}</i>`;
     ui.clashEffects.append(impact);
 
-    playerLane.classList.add("clashing");
-    aiLane.classList.add("clashing");
     ui.battlefield.classList.remove("is-clashing");
     void ui.battlefield.offsetWidth;
     ui.battlefield.classList.add("is-clashing");
-    tone(winner === "draw" ? 390 : winner === "player" ? 690 : 250, 0.18);
+    audio.clashImpact(playerCards[index].element, aiCards[index].element, winner);
 
-    await delay(strikeDuration);
+    await delay(strikeDuration - collisionDelay);
 
     playerLane.classList.remove("clashing");
     aiLane.classList.remove("clashing");
@@ -339,7 +327,7 @@ function playRound() {
   ui.playerPlayZone.innerHTML = playedCardsMarkup(playerCards, "player");
   ui.aiPlayZone.innerHTML = placeholder(`Choosing ${playerCards.length} ${playerCards.length === 1 ? "card" : "cards"}...`);
   setMessage("Professor Paws is arranging a counterplay...", "Cards will clash from left to right.");
-  tone(440);
+  audio.commit(playerCards.length);
 
   window.setTimeout(async () => {
     const chosenAiCards = chooseAiCards(
@@ -353,6 +341,7 @@ function playRound() {
       .filter(Boolean);
     ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai");
     setMessage("Formations revealed!", "Brace for the first clash.");
+    audio.reveal(aiCards.length);
     const resolution = await animateClashes(playerCards, aiCards);
     resolveRound(playerCards, aiCards, resolution);
   }, 700);
@@ -377,17 +366,17 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   if (score.player > score.ai) {
     setMessage(`You win ${score.player} of ${playerCards.length} ${clashWord}!`, "Your formation earns the stronger round.");
     ui.versusBadge.classList.add("win");
-    tone(660, 0.14);
+    audio.roundResult("win");
   } else if (score.ai > score.player) {
     setMessage(`Professor Paws wins ${score.ai} of ${playerCards.length} ${clashWord}.`, "Reorder your next formation and counter the professor.");
     ui.versusBadge.classList.add("lose");
-    tone(240, 0.16);
+    audio.roundResult("loss");
   } else {
     const drawDetail = score.draw
       ? `${score.draw} ${score.draw === 1 ? "lane ends" : "lanes end"} in a draw.`
       : "The formation is evenly matched.";
     setMessage("The round is evenly split!", drawDetail);
-    tone(380, 0.12);
+    audio.roundResult("draw");
   }
 
   renderCollection(ui.playerCollection, state.playerWins);
@@ -440,6 +429,7 @@ function nextRound() {
 function endGame(winner) {
   state.locked = true;
   const won = winner === "player";
+  audio.matchResult(won);
   document.querySelector("#resultEyebrow").textContent = won ? "MATCH COMPLETE" : "A NOBLE DUEL";
   document.querySelector("#resultTitle").textContent = won
     ? "A purr-fect victory!"
@@ -502,6 +492,7 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
 });
 ui.soundButton.addEventListener("click", () => {
   state.soundOn = !state.soundOn;
+  audio.setEnabled(state.soundOn);
   ui.soundButton.innerHTML = `<span aria-hidden="true">${state.soundOn ? "♪" : "×"}</span>`;
   ui.soundButton.setAttribute("aria-label", state.soundOn ? "Mute sound" : "Unmute sound");
 });
