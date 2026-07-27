@@ -1608,6 +1608,10 @@ h1 {
   object-position: center 15%;
 }
 
+.art-wellwater-wisp .card-art img {
+  object-position: center 35%;
+}
+
 .art-vignette {
   position: absolute;
   inset: 0;
