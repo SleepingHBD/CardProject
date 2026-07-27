@@ -11,10 +11,12 @@ SHEETS = {
     ),
     "gust": (
         GENERATED / "call_fh4tkGgefCO7eKz3rlW2Y2Pd.png",
+        # This legacy source sheet still contains the retired Breeze Biscuit art.
         ["breeze-biscuit", "leafy-loaf", "whisker-whirl", "gale-groomer", "dandelion-dash"],
     ),
     "tide": (
         GENERATED / "call_cKRoMfgCR7xOnlRiZ8YdH885.png",
+        # This legacy source sheet still contains the retired Drizzle Socks art.
         ["puddle-pouncer", "bubble-bengal", "moonpool-mouser", "captain-catfish", "drizzle-socks"],
     ),
 }

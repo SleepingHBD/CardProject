@@ -1599,7 +1599,9 @@ h1 {
 }
 
 .art-bubble-bengal .card-art img {
-  object-position: center 25%;
+  object-position: center;
+  transform: scale(1.14);
+  transform-origin: center;
 }
 
 .art-captain-catfish .card-art img {
