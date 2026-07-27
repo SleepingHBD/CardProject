@@ -44,6 +44,10 @@ body::before {
   z-index: -1;
 }
 
+body.main-menu-active {
+  overflow: hidden;
+}
+
 button {
   font: inherit;
 }
@@ -126,6 +130,11 @@ button:focus-visible,
 .archive-button[aria-expanded="true"] {
   color: #2f2018;
   background: #d0aa5a;
+}
+
+.menu-button:disabled {
+  opacity: .48;
+  cursor: wait;
 }
 
 main {
@@ -1732,6 +1741,190 @@ footer {
   text-align: center;
 }
 
+.main-menu-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  min-height: 100dvh;
+  padding: clamp(42px, 8vh, 76px) clamp(24px, 6vw, 72px);
+  display: grid;
+  place-content: center;
+  color: #f3dfac;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(210, 163, 74, .2), transparent 31%),
+    linear-gradient(90deg, transparent 49.7%, rgba(222, 180, 91, .09) 50%, transparent 50.3%),
+    repeating-linear-gradient(100deg, rgba(255,255,255,.018) 0 2px, transparent 2px 9px),
+    linear-gradient(145deg, #4f3028, #28171c 54%, #21151a);
+  border: 0;
+  box-shadow:
+    inset 0 0 0 8px #211311,
+    inset 0 0 0 12px #9d7337,
+    inset 0 0 0 14px #2a1715,
+    inset 0 0 70px rgba(0,0,0,.58),
+    0 28px 70px rgba(12,8,8,.62);
+  text-align: center;
+}
+
+.main-menu-screen[hidden] {
+  display: none;
+}
+
+.main-menu-screen::before,
+.main-menu-screen::after {
+  content: "";
+  position: absolute;
+  inset: clamp(22px, 4vw, 56px);
+  pointer-events: none;
+  border: 1px solid rgba(219, 176, 87, .54);
+  clip-path: polygon(0 0, 30% 0, 30% 2px, 70% 2px, 70% 0, 100% 0, 100% 100%, 70% 100%, 70% calc(100% - 2px), 30% calc(100% - 2px), 30% 100%, 0 100%);
+}
+
+.main-menu-screen::after {
+  inset: clamp(32px, 5vw, 72px);
+  border-color: rgba(219, 176, 87, .2);
+}
+
+.main-menu-logo {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(590px, 94%);
+  height: auto;
+  margin: 18px auto 0;
+  filter:
+    drop-shadow(0 5px 0 rgba(24, 12, 12, .8))
+    drop-shadow(0 12px 18px rgba(0,0,0,.45));
+}
+
+.main-menu-subtitle {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 0;
+  color: #e5c77f;
+  font-family: "Cinzel", serif;
+  font-size: clamp(12px, 2vw, 17px);
+  font-weight: 800;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.main-menu-ornament {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #d6ad58;
+  font-family: "Cinzel", serif;
+}
+
+.main-menu-ornament i {
+  width: min(90px, 13vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c89a49);
+}
+
+.main-menu-ornament i:nth-of-type(2) {
+  background: linear-gradient(90deg, #c89a49, transparent);
+}
+
+.main-menu-ornament b {
+  font-size: 25px;
+}
+
+.main-menu-play-button {
+  position: relative;
+  z-index: 1;
+  width: min(280px, 82%);
+  min-height: 60px;
+  margin: clamp(44px, 8vh, 76px) auto 0;
+  color: #281916;
+  background:
+    linear-gradient(rgba(255,255,255,.18), transparent 45%),
+    linear-gradient(#e0bd6d, #af7a30);
+  border-color: #241510;
+  box-shadow:
+    inset 0 0 0 2px #f3d98f,
+    0 5px 0 #241610,
+    0 12px 25px rgba(0,0,0,.35);
+  font-size: 22px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.main-menu-play-button:hover,
+.main-menu-play-button:focus-visible {
+  background:
+    linear-gradient(rgba(255,255,255,.28), transparent 45%),
+    linear-gradient(#edcf80, #c18b39);
+  transform: translateY(-2px);
+}
+
+.game-menu-dialog {
+  width: min(500px, calc(100vw - 30px));
+  padding: 34px;
+}
+
+.game-menu-dialog h2 {
+  margin-bottom: 8px;
+}
+
+.game-menu-note {
+  max-width: 390px;
+  margin: 0 auto;
+  color: #654a34;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.game-menu-actions {
+  width: min(330px, 100%);
+  margin: 8px auto 0;
+  display: grid;
+  gap: 11px;
+}
+
+.game-menu-actions .primary-button {
+  width: 100%;
+  margin-top: 0;
+}
+
+.menu-option-button {
+  min-height: 46px;
+  padding: 9px 18px;
+  color: #4b3024;
+  background: rgba(255, 247, 218, .62);
+  border: 2px solid #765333;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 3px 0 rgba(54,33,23,.25);
+  font-family: "Cinzel", serif;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.menu-option-button:hover,
+.menu-option-button:focus-visible {
+  background: #f7e8bd;
+  transform: translateY(-1px);
+}
+
+.return-menu-button {
+  color: #f1dba6;
+  background: linear-gradient(#6a3a37, #442522);
+  border-color: #2b1916;
+  box-shadow: inset 0 0 0 1px #a97450, 0 3px 0 rgba(43,25,22,.45);
+}
+
+.return-menu-button:hover,
+.return-menu-button:focus-visible {
+  background: linear-gradient(#7a4540, #512c29);
+}
+
 .gallery-dialog {
   width: min(1120px, calc(100vw - 28px));
   max-height: 90dvh;
@@ -3292,27 +3485,38 @@ footer {
 
 @media (max-width: 640px) {
   .topbar { height: 68px; padding-inline: 8px; }
-  .brand-logo { width: 118px; }
-  .top-actions { gap: 4px; }
+  .brand-logo { width: 104px; }
+  .top-actions { gap: 3px; }
   .icon-button,
   .archive-button,
   .how-button,
-  .rulebook-button {
+  .rulebook-button,
+  .menu-button {
     height: 36px;
     padding-inline: 5px;
     font-size: 9px;
   }
-  .icon-button { width: 34px; }
+  .icon-button { width: 32px; }
   .archive-button {
-    width: 54px;
+    width: 48px;
     font-size: 0;
   }
   .archive-button::after {
     content: "Cards";
     font-size: 9px;
   }
-  .how-button { width: 58px; }
-  .rulebook-button { width: 64px; }
+  .how-button { width: 50px; }
+  .rulebook-button { width: 55px; }
+  .menu-button {
+    width: 36px;
+    padding-inline: 2px;
+    font-size: 0;
+  }
+  .menu-button::after {
+    content: "☰";
+    font-size: 16px;
+    line-height: 1;
+  }
   main { padding: 12px 8px 0; }
   .game-shell { border-width: 3px; border-radius: 18px; }
   .round-bar { min-height: 60px; padding: 10px 14px; }
@@ -3546,6 +3750,21 @@ footer {
   .difficulty-option small { font-size: 11px; }
   .difficulty-option em { font-size: 9px; }
   .recommended-ribbon { top: 4px; right: 5px; font-size: 6px; }
+  .main-menu-screen {
+    min-height: 100dvh;
+    padding: 38px 18px;
+  }
+  .main-menu-screen::before { inset: 18px; }
+  .main-menu-screen::after { inset: 26px; }
+  .main-menu-logo { width: min(470px, 96%); }
+  .main-menu-subtitle { letter-spacing: .17em; }
+  .main-menu-play-button {
+    min-height: 54px;
+    margin-top: 42px;
+    font-size: 18px;
+  }
+  .game-menu-dialog { padding: 28px 18px 24px; }
+  .game-menu-note { font-size: 12px; }
   .gallery-dialog { padding: 24px 12px 18px; }
   .gallery-intro { font-size: 12px; }
   .archive-toolbar {
@@ -3597,19 +3816,23 @@ footer {
 }
 
 @media (max-width: 360px) {
-  .brand-logo { width: 96px; }
-  .icon-button { width: 32px; }
-  .archive-button { width: 50px; }
-  .how-button { width: 54px; }
-  .rulebook-button { width: 58px; }
+  .brand-logo { width: 80px; }
+  .top-actions { gap: 3px; }
+  .icon-button { width: 30px; }
+  .archive-button { width: 44px; }
+  .how-button { width: 48px; }
+  .rulebook-button { width: 52px; }
+  .menu-button { width: 32px; }
   .icon-button,
   .archive-button,
   .how-button,
-  .rulebook-button {
+  .rulebook-button,
+  .menu-button {
     padding-inline: 3px;
     font-size: 8px;
   }
   .archive-button::after { font-size: 8px; }
+  .menu-button::after { font-size: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

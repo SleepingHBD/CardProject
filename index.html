@@ -67,6 +67,17 @@
         >
           Rulebook
         </button>
+        <button
+          class="how-button menu-button"
+          id="menuButton"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="gameMenuDialog"
+          aria-expanded="false"
+          hidden
+        >
+          Menu
+        </button>
       </div>
     </header>
 
@@ -193,6 +204,50 @@
         <p>Sealed beneath the moon by the Circle of Nine Lives.</p>
       </footer>
     </main>
+
+    <section
+      class="main-menu-screen"
+      id="mainMenuScreen"
+      aria-labelledby="mainMenuTitle"
+    >
+      <div class="main-menu-ornament" aria-hidden="true">
+        <span>◆</span><i></i><b>♜</b><i></i><span>◆</span>
+      </div>
+      <img
+        class="main-menu-logo"
+        src="./assets/brand/project-prowl-logo.png"
+        alt="Project: Prowl"
+        width="1696"
+        height="473"
+      />
+      <p class="main-menu-subtitle" id="mainMenuTitle">Elemental Cat Duels</p>
+      <button class="primary-button main-menu-play-button" id="mainMenuPlayButton" type="button" autofocus>
+        Play
+      </button>
+    </section>
+
+    <dialog
+      class="game-dialog game-menu-dialog"
+      id="gameMenuDialog"
+      aria-labelledby="gameMenuTitle"
+      aria-describedby="gameMenuNote"
+    >
+      <p class="eyebrow">DUEL MENU</p>
+      <h2 id="gameMenuTitle">The duel is paused</h2>
+      <p class="game-menu-note" id="gameMenuNote">
+        Restarting, changing difficulty, or returning to the main menu will end this duel.
+      </p>
+      <div class="game-menu-actions">
+        <button class="primary-button" id="resumeGameButton" type="button">Resume Duel</button>
+        <button class="primary-button" id="restartGameButton" type="button">Restart Duel</button>
+        <button class="primary-button" id="changeDifficultyButton" type="button">
+          Change Difficulty
+        </button>
+        <button class="menu-option-button return-menu-button" id="returnMainMenuButton" type="button">
+          Return to Main Menu
+        </button>
+      </div>
+    </dialog>
 
     <dialog
       class="game-dialog difficulty-dialog"

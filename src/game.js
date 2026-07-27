@@ -118,6 +118,14 @@ const ui = {
   archiveResetFilters: document.querySelector("#archiveResetFilters"),
   resultDialog: document.querySelector("#resultDialog"),
   difficultyDialog: document.querySelector("#difficultyDialog"),
+  mainMenuScreen: document.querySelector("#mainMenuScreen"),
+  mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
+  gameMenuDialog: document.querySelector("#gameMenuDialog"),
+  menuButton: document.querySelector("#menuButton"),
+  resumeGameButton: document.querySelector("#resumeGameButton"),
+  restartGameButton: document.querySelector("#restartGameButton"),
+  changeDifficultyButton: document.querySelector("#changeDifficultyButton"),
+  returnMainMenuButton: document.querySelector("#returnMainMenuButton"),
   soundButton: document.querySelector("#soundButton"),
 };
 let draggedCardId = null;
@@ -928,10 +936,14 @@ function playRound() {
   if (state.locked || state.selectedCardIds.length === 0) return;
 
   setRoundAdvanceControls(false);
+  ui.menuButton.disabled = true;
   const playerCards = state.selectedCardIds
     .map((instanceId) => removeCard(state.playerHand, instanceId))
     .filter(Boolean);
-  if (!playerCards.length) return;
+  if (!playerCards.length) {
+    ui.menuButton.disabled = false;
+    return;
+  }
 
   state.locked = true;
   state.selectedCardIds = [];
@@ -1039,6 +1051,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   renderAftermathBreakdown(playerCards, resolution);
   state.pendingMatchWinner = getCompletedMatchWinner(winner);
   setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
+  ui.menuButton.disabled = false;
 }
 
 function nextRound() {
@@ -1058,6 +1071,7 @@ function nextRound() {
 
   state.round += 1;
   state.locked = false;
+  ui.menuButton.disabled = false;
   state.selectedCardIds = [];
   prepareAiPlan();
   ui.clashEffects.innerHTML = "";
@@ -1079,6 +1093,7 @@ function nextRound() {
 
 function endGame(winner) {
   state.locked = true;
+  ui.menuButton.disabled = true;
   const won = winner === "player";
   audio.matchResult(won);
   document.querySelector("#resultEyebrow").textContent = won ? "MATCH COMPLETE" : "A NOBLE DUEL";
@@ -1095,8 +1110,30 @@ function endGame(winner) {
   window.setTimeout(() => ui.resultDialog.showModal(), 250);
 }
 
+function setGameMenuVisibility(inGame) {
+  ui.menuButton.hidden = !inGame;
+}
+
+function closeDialog(dialog) {
+  if (dialog.open) dialog.close();
+}
+
+function showMainMenu() {
+  state.locked = true;
+  closeDialog(ui.gameMenuDialog);
+  closeDialog(ui.difficultyDialog);
+  closeDialog(ui.resultDialog);
+  setGameMenuVisibility(false);
+  ui.mainMenuScreen.hidden = false;
+  document.body.classList.add("main-menu-active");
+}
+
 function showDifficultyChooser() {
   state.locked = true;
+  ui.mainMenuScreen.hidden = true;
+  document.body.classList.remove("main-menu-active");
+  closeDialog(ui.gameMenuDialog);
+  setGameMenuVisibility(false);
   if (!ui.difficultyDialog.open) ui.difficultyDialog.showModal();
 }
 
@@ -1115,6 +1152,8 @@ function startGame() {
   state.pendingMatchWinner = null;
   state.round = 1;
   state.locked = false;
+  setGameMenuVisibility(true);
+  ui.menuButton.disabled = false;
   setRoundAdvanceControls(false);
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
@@ -1204,6 +1243,27 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
   showDifficultyChooser();
 });
+ui.mainMenuPlayButton.addEventListener("click", showDifficultyChooser);
+ui.menuButton.addEventListener("click", () => {
+  if (!ui.menuButton.disabled && !ui.gameMenuDialog.open) {
+    ui.gameMenuDialog.showModal();
+    ui.menuButton.setAttribute("aria-expanded", "true");
+  }
+});
+ui.resumeGameButton.addEventListener("click", () => ui.gameMenuDialog.close());
+ui.restartGameButton.addEventListener("click", () => {
+  ui.gameMenuDialog.close();
+  startGame();
+});
+ui.changeDifficultyButton.addEventListener("click", showDifficultyChooser);
+ui.returnMainMenuButton.addEventListener("click", showMainMenu);
+ui.gameMenuDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  ui.gameMenuDialog.close();
+});
+ui.gameMenuDialog.addEventListener("close", () => {
+  ui.menuButton.setAttribute("aria-expanded", "false");
+});
 document.querySelectorAll("[data-difficulty]").forEach((button) => {
   button.addEventListener("click", () => {
     const difficulty = button.dataset.difficulty;
@@ -1223,5 +1283,11 @@ ui.soundButton.addEventListener("click", () => {
   ui.soundButton.setAttribute("aria-label", state.soundOn ? "Mute sound" : "Unmute sound");
 });
 
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("button");
+  if (!button || button.disabled || button.classList.contains("game-card")) return;
+  audio.buttonPress();
+}, { capture: true });
+
 renderGallery();
-showDifficultyChooser();
+showMainMenu();
