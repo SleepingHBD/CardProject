@@ -3100,11 +3100,12 @@ footer {
   }
 
   .hand .game-card {
-    flex: 1 1 0;
-    width: auto;
-    min-width: 0;
+    flex: 0 1 150px;
+    width: 150px;
+    min-width: 118px;
     max-width: 150px;
     height: 198px;
+    aspect-ratio: 25 / 33;
     padding: 4px;
     border-width: 3px;
   }
@@ -3213,14 +3214,21 @@ footer {
     gap: 7px;
   }
 
-  .hand .game-card { height: 156px; }
-  .hand .card-art { height: 50px; }
-  .hand .card-info { min-height: 35px; padding-block: 4px 3px; }
-  .hand .card-info strong { font-size: 12px; }
-  .hand .card-info small { font-size: 8px; }
-  .hand .card-ability { height: 55px; padding: 5px 4px 14px; }
-  .hand .card-ability b { font-size: 10px; }
-  .hand .card-ability small { font-size: 8px; }
+  .hand .game-card {
+    flex: 0 0 118px;
+    width: 118px;
+    min-width: 118px;
+    max-width: 118px;
+    height: 156px;
+  }
+  .hand .card-art { height: 72px; }
+  .hand .card-info { min-height: 32px; padding: 4px 3px 3px; }
+  .hand .card-info strong { font-size: 10px; }
+  .hand .card-info small { font-size: 7px; }
+  .hand .card-ability { height: 40px; padding: 4px 3px; }
+  .hand .card-ability > i { flex-basis: 18px; height: 18px; font-size: 9px; }
+  .hand .card-ability b { font-size: 8px; }
+  .hand .card-ability small { font-size: 7px; }
   .hand .selection-order { top: 28px; }
   .hand .card-element { width: 24px; height: 24px; font-size: 12px; }
   .hand .card-power { width: 27px; height: 30px; }
