@@ -243,6 +243,58 @@
     });
   }
 
+  function deckShuffle(closing = false) {
+    if (!createContext()) return;
+
+    for (let index = 0; index < 7; index += 1) {
+      const fromLeft = index % 2 === 0;
+      noise({
+        when: index * 0.075,
+        duration: 0.085,
+        volume: closing ? 0.06 : 0.075,
+        frequency: fromLeft ? 3300 : 2700,
+        endFrequency: fromLeft ? 950 : 1250,
+        filterType: "bandpass",
+        q: 0.75,
+        pan: fromLeft ? -0.24 : 0.24,
+        attack: 0.002,
+      });
+    }
+    oscillator({
+      when: 0.5,
+      duration: 0.16,
+      volume: 0.055,
+      frequency: closing ? 260 : 320,
+      endFrequency: closing ? 120 : 180,
+      type: "triangle",
+    });
+  }
+
+  function cardDeal(order = 0) {
+    if (!createContext()) return;
+    const pan = Math.max(-0.45, Math.min(0.45, (order - 2.5) * 0.16));
+
+    noise({
+      duration: 0.055,
+      volume: 0.055,
+      frequency: 2400,
+      endFrequency: 760,
+      filterType: "bandpass",
+      q: 0.7,
+      pan,
+      attack: 0.001,
+    });
+    oscillator({
+      when: 0.026,
+      duration: 0.055,
+      volume: 0.03,
+      frequency: 390 + order * 18,
+      endFrequency: 240 + order * 12,
+      type: "triangle",
+      pan,
+    });
+  }
+
   function denied() {
     oscillator({ duration: 0.09, volume: 0.09, frequency: 170, endFrequency: 125, type: "square" });
     oscillator({ when: 0.09, duration: 0.1, volume: 0.07, frequency: 145, endFrequency: 105, type: "square" });
@@ -512,6 +564,8 @@
     cardFlip,
     cardHover,
     buttonPress,
+    deckShuffle,
+    cardDeal,
     roundAdvance,
     denied,
     commit,

@@ -81,10 +81,12 @@ const state = {
   pendingMatchWinner: null,
   round: 1,
   locked: false,
+  dealing: false,
   soundOn: true,
 };
 
 const ui = {
+  gameShell: document.querySelector(".game-shell"),
   playerHand: document.querySelector("#playerHand"),
   playerPlayZone: document.querySelector("#playerPlayZone"),
   aiPlayZone: document.querySelector("#aiPlayZone"),
@@ -126,6 +128,8 @@ const ui = {
   restartGameButton: document.querySelector("#restartGameButton"),
   changeDifficultyButton: document.querySelector("#changeDifficultyButton"),
   returnMainMenuButton: document.querySelector("#returnMainMenuButton"),
+  deckTransition: document.querySelector("#deckTransition"),
+  deckTransitionLabel: document.querySelector("#deckTransitionLabel"),
   soundButton: document.querySelector("#soundButton"),
 };
 let draggedCardId = null;
@@ -252,7 +256,7 @@ function renderMatchupForecast() {
     ui.matchupForecast.style.gridTemplateColumns = "";
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction forecast-locked">
-        Cards committed. Watch each lane.
+        ${state.dealing ? "New cards are being dealt." : "Cards committed. Watch each lane."}
       </span>
     `;
     return;
@@ -822,6 +826,50 @@ function delay(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
+async function playDeckTransition(phase) {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const isEnding = phase === "ending";
+  const duration = reducedMotion ? 100 : isEnding ? 1350 : 1200;
+
+  ui.deckTransitionLabel.textContent = isEnding
+    ? "Collecting and shuffling..."
+    : "Shuffling the deck...";
+  ui.deckTransition.className = `deck-transition ${isEnding ? "is-ending" : "is-opening"}`;
+  ui.deckTransition.hidden = false;
+  ui.gameShell.classList.toggle("cards-gathering", isEnding);
+  void ui.deckTransition.offsetWidth;
+  ui.deckTransition.classList.add("is-active");
+  audio.deckShuffle(isEnding);
+
+  await delay(duration);
+
+  ui.deckTransition.classList.remove("is-active");
+  ui.gameShell.classList.remove("cards-gathering");
+  ui.deckTransition.hidden = true;
+}
+
+async function animateHandDraw(drawCount, openingHand = false) {
+  if (drawCount <= 0) {
+    ui.playerHand.classList.remove("waiting-for-deal");
+    return;
+  }
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const handCards = [...ui.playerHand.querySelectorAll(".game-card")];
+  const cardsToAnimate = openingHand ? handCards : handCards.slice(-drawCount);
+  const stagger = reducedMotion ? 0 : 90;
+  const animationDuration = reducedMotion ? 80 : 620;
+
+  cardsToAnimate.forEach((card, index) => {
+    card.style.setProperty("--deal-index", index);
+    card.classList.add("hand-draw-card");
+    window.setTimeout(() => audio.cardDeal(index), index * stagger);
+  });
+  ui.playerHand.classList.remove("waiting-for-deal");
+
+  await delay(animationDuration + Math.max(0, cardsToAnimate.length - 1) * stagger);
+}
+
 function getBonusBreakdown(scoring) {
   const parts = [];
   if (scoring.focus) parts.push(`Focus +${scoring.focus}`);
@@ -1054,10 +1102,12 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   ui.menuButton.disabled = false;
 }
 
-function nextRound() {
+async function nextRound() {
   state.pendingMatchWinner = null;
   setRoundAdvanceControls(false);
+  const previousHandSize = state.playerHand.length;
   const reshuffled = refillHands();
+  const drawnCardCount = Math.max(0, state.playerHand.length - previousHandSize);
 
   if (!state.playerHand.length || !state.aiHand.length) {
     const playerProgress = getTrophyProgress(state.playerWins);
@@ -1070,8 +1120,9 @@ function nextRound() {
   }
 
   state.round += 1;
-  state.locked = false;
-  ui.menuButton.disabled = false;
+  state.locked = true;
+  state.dealing = true;
+  ui.menuButton.disabled = true;
   state.selectedCardIds = [];
   prepareAiPlan();
   ui.clashEffects.innerHTML = "";
@@ -1081,21 +1132,31 @@ function nextRound() {
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
   setMessage(
+    reshuffled ? "The discard pile has been reshuffled!" : "Drawing your next hand...",
+    reshuffled
+      ? "Your spent cards are back in the draw pile. New cards are being dealt."
+      : `${drawnCardCount} ${drawnCardCount === 1 ? "card is" : "cards are"} joining your hand.`,
+  );
+  renderHand();
+  renderRound();
+  renderRoundScore();
+  await animateHandDraw(drawnCardCount);
+  state.locked = false;
+  state.dealing = false;
+  ui.menuButton.disabled = false;
+  setMessage(
     reshuffled ? "The discard pile has been reshuffled!" : "Build your formation.",
     reshuffled
       ? "Your spent cards are back in the draw pile. Build your next formation."
       : "Drag a card into the glowing lane, or click a card to place it.",
   );
   renderHand();
-  renderRound();
-  renderRoundScore();
 }
 
-function endGame(winner) {
+async function endGame(winner) {
   state.locked = true;
   ui.menuButton.disabled = true;
   const won = winner === "player";
-  audio.matchResult(won);
   document.querySelector("#resultEyebrow").textContent = won ? "MATCH COMPLETE" : "A NOBLE DUEL";
   document.querySelector("#resultTitle").textContent = won
     ? "A purr-fect victory!"
@@ -1107,7 +1168,9 @@ function endGame(winner) {
     `${resultSummary} Final round score: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
   document.querySelector("#resultCards").textContent = getTrophyProgress(state.playerWins);
-  window.setTimeout(() => ui.resultDialog.showModal(), 250);
+  await playDeckTransition("ending");
+  audio.matchResult(won);
+  if (!ui.resultDialog.open) ui.resultDialog.showModal();
 }
 
 function setGameMenuVisibility(inGame) {
@@ -1137,7 +1200,7 @@ function showDifficultyChooser() {
   if (!ui.difficultyDialog.open) ui.difficultyDialog.showModal();
 }
 
-function startGame() {
+async function startGame() {
   state.deck = freshDeck();
   state.discardPile = [];
   state.playerHand = [];
@@ -1151,9 +1214,10 @@ function startGame() {
   state.aiRoundWins = 0;
   state.pendingMatchWinner = null;
   state.round = 1;
-  state.locked = false;
+  state.locked = true;
+  state.dealing = true;
   setGameMenuVisibility(true);
-  ui.menuButton.disabled = false;
+  ui.menuButton.disabled = true;
   setRoundAdvanceControls(false);
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
@@ -1163,12 +1227,21 @@ function startGame() {
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Build your formation.", "Drag a card into the glowing lane, or click a card to place it.");
+  setMessage("The deck is shuffling...", "Professor Paws is preparing the opening deal.");
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
   renderHand();
+  ui.playerHand.classList.add("waiting-for-deal");
   renderRound();
   renderRoundScore();
+  await playDeckTransition("opening");
+  setMessage("Drawing your opening hand...", "Six cards are being dealt for the first round.");
+  await animateHandDraw(state.playerHand.length, true);
+  state.locked = false;
+  state.dealing = false;
+  ui.menuButton.disabled = false;
+  setMessage("Build your formation.", "Drag a card into the glowing lane, or click a card to place it.");
+  renderHand();
 }
 
 document.querySelector("#howButton").addEventListener("click", () => ui.howDialog.showModal());

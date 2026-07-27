@@ -156,6 +156,134 @@ main {
     0 22px 45px rgba(19,12,10,.52);
 }
 
+.deck-transition {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-content: center;
+  gap: 24px;
+  color: #f3dd9f;
+  background:
+    radial-gradient(circle at center, rgba(134, 87, 47, .28), transparent 32%),
+    rgba(32, 18, 18, .86);
+  text-align: center;
+  pointer-events: none;
+}
+
+.deck-transition[hidden] {
+  display: none;
+}
+
+.deck-transition strong {
+  color: #f0d995;
+  font-family: "Cinzel", serif;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: .15em;
+  text-shadow: 0 3px 0 #24140f;
+  text-transform: uppercase;
+}
+
+.deck-shuffle-scene {
+  position: relative;
+  width: 230px;
+  height: 156px;
+  margin: 0 auto;
+  perspective: 700px;
+}
+
+.shuffle-card {
+  position: absolute;
+  top: 4px;
+  left: 69px;
+  width: 92px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  color: #d6ae5d;
+  background:
+    linear-gradient(45deg, transparent 46%, rgba(213,172,91,.18) 47% 53%, transparent 54%) 0 0 / 20px 20px,
+    linear-gradient(-45deg, transparent 46%, rgba(213,172,91,.12) 47% 53%, transparent 54%) 0 0 / 20px 20px,
+    linear-gradient(145deg, #5c3440, #2e1b25);
+  border: 4px solid #1f1412;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 0 0 2px #bc8d42,
+    inset 0 0 0 5px #39221f,
+    0 8px 0 #1e1311,
+    0 14px 22px rgba(0,0,0,.38);
+  transform-origin: center bottom;
+}
+
+.shuffle-card::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(225, 191, 113, .66);
+  border-radius: 2px;
+}
+
+.shuffle-card i {
+  width: 42px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  background: #372029;
+  border: 2px solid #b8873e;
+  border-radius: 7px 7px 17px 17px;
+  box-shadow: inset 0 0 0 2px #211316;
+  font-size: 21px;
+  font-style: normal;
+}
+
+.deck-transition.is-opening.is-active .shuffle-card-one {
+  animation: deck-shuffle-left 1.05s ease-in-out both;
+}
+
+.deck-transition.is-opening.is-active .shuffle-card-two {
+  animation: deck-shuffle-right 1.05s .06s ease-in-out both;
+}
+
+.deck-transition.is-opening.is-active .shuffle-card-three {
+  animation: deck-shuffle-left 1.05s .12s ease-in-out reverse both;
+}
+
+.deck-transition.is-opening.is-active .shuffle-card-four {
+  animation: deck-shuffle-right 1.05s .18s ease-in-out reverse both;
+}
+
+.deck-transition.is-ending.is-active .shuffle-card-one {
+  animation: deck-gather-one 1.2s ease-out both;
+}
+
+.deck-transition.is-ending.is-active .shuffle-card-two {
+  animation: deck-gather-two 1.2s .04s ease-out both;
+}
+
+.deck-transition.is-ending.is-active .shuffle-card-three {
+  animation: deck-gather-three 1.2s .08s ease-out both;
+}
+
+.deck-transition.is-ending.is-active .shuffle-card-four {
+  animation: deck-gather-four 1.2s .12s ease-out both;
+}
+
+.hand.waiting-for-deal {
+  visibility: hidden;
+}
+
+.hand .game-card.hand-draw-card {
+  pointer-events: none;
+  animation: hand-card-draw .62s cubic-bezier(.2, .8, .2, 1.12)
+    calc(var(--deal-index, 0) * 90ms) both;
+}
+
+.game-shell.cards-gathering .game-card {
+  pointer-events: none;
+  animation: duel-card-gather .72s cubic-bezier(.55, 0, .85, .35) both;
+}
+
 .round-bar {
   min-height: 72px;
   padding: 12px 24px;
@@ -2806,6 +2934,74 @@ footer {
   font-weight: 900;
   letter-spacing: .1em;
   text-transform: uppercase;
+}
+
+@keyframes deck-shuffle-left {
+  0% { z-index: 1; transform: translateX(0) rotate(0); }
+  28% { z-index: 1; transform: translateX(-84px) rotate(-12deg) translateZ(-18px); }
+  48% { z-index: 5; transform: translateX(-92px) rotate(-7deg) translateZ(28px); }
+  72% { z-index: 5; transform: translateX(18px) rotate(4deg) translateZ(28px); }
+  100% { z-index: 4; transform: translateX(-4px) rotate(-1deg); }
+}
+
+@keyframes deck-shuffle-right {
+  0% { z-index: 2; transform: translateX(0) rotate(0); }
+  28% { z-index: 2; transform: translateX(84px) rotate(12deg) translateZ(-12px); }
+  48% { z-index: 6; transform: translateX(92px) rotate(7deg) translateZ(34px); }
+  72% { z-index: 6; transform: translateX(-18px) rotate(-4deg) translateZ(34px); }
+  100% { z-index: 3; transform: translateX(4px) rotate(1deg); }
+}
+
+@keyframes deck-gather-one {
+  0% { opacity: 0; transform: translate(-190px, -80px) rotate(-24deg) scale(.72); }
+  54% { opacity: 1; transform: translate(-6px, 0) rotate(-2deg) scale(1); }
+  76% { transform: translate(-48px, 0) rotate(-7deg); }
+  100% { transform: translate(-3px, 0) rotate(-1deg); }
+}
+
+@keyframes deck-gather-two {
+  0% { opacity: 0; transform: translate(190px, -68px) rotate(25deg) scale(.72); }
+  54% { opacity: 1; transform: translate(6px, 0) rotate(2deg) scale(1); }
+  76% { transform: translate(48px, 0) rotate(7deg); }
+  100% { transform: translate(3px, 0) rotate(1deg); }
+}
+
+@keyframes deck-gather-three {
+  0% { opacity: 0; transform: translate(-155px, 105px) rotate(-18deg) scale(.7); }
+  58% { opacity: 1; transform: translate(-4px, 0) rotate(-1deg) scale(1); }
+  78% { transform: translate(-38px, 0) rotate(-6deg); }
+  100% { transform: translate(-2px, 0) rotate(0); }
+}
+
+@keyframes deck-gather-four {
+  0% { opacity: 0; transform: translate(165px, 112px) rotate(19deg) scale(.7); }
+  58% { opacity: 1; transform: translate(4px, 0) rotate(1deg) scale(1); }
+  78% { transform: translate(38px, 0) rotate(6deg); }
+  100% { transform: translate(2px, 0) rotate(0); }
+}
+
+@keyframes hand-card-draw {
+  0% {
+    opacity: 0;
+    filter: brightness(1.2);
+    transform: translate(170px, -85px) rotate(13deg) scale(.68);
+  }
+  62% {
+    opacity: 1;
+    filter: brightness(1.08);
+    transform: translate(-7px, -12px) rotate(-2deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+}
+
+@keyframes duel-card-gather {
+  0% { opacity: 1; filter: brightness(1); transform: translateY(0) rotate(0) scale(1); }
+  45% { opacity: .8; filter: brightness(.82); transform: translateY(-24px) rotate(-3deg) scale(.82); }
+  100% { opacity: 0; filter: brightness(.65); transform: translateY(-110px) rotate(8deg) scale(.34); }
 }
 
 @keyframes card-drop {
