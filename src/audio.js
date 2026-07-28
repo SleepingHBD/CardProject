@@ -3,6 +3,19 @@
   let master = null;
   let noiseBuffer = null;
   let enabled = true;
+  const destructionBuffers = new Map();
+  const destructionByteLoads = new Map();
+  const destructionLoads = new Map();
+  const destructionSources = Object.freeze({
+    ember: "./assets/audio/clash/ember-destroy.wav",
+    tide: "./assets/audio/clash/tide-destroy.wav",
+    gust: "./assets/audio/clash/gust-destroy.wav",
+  });
+  const destructionGains = Object.freeze({
+    ember: 0.62,
+    tide: 0.36,
+    gust: 0.4,
+  });
 
   function createContext() {
     if (!enabled) return null;
@@ -21,10 +34,48 @@
       master = context.createGain();
       master.gain.value = 0.72;
       master.connect(compressor).connect(context.destination);
+      preloadDestructionSounds(context);
     }
 
     if (context.state === "suspended") context.resume().catch(() => {});
     return context;
+  }
+
+  function requestDestructionBytes() {
+    if (typeof global.fetch !== "function") return;
+    Object.entries(destructionSources).forEach(([element, sourcePath]) => {
+      if (destructionByteLoads.has(element)) return;
+      const load = global.fetch(sourcePath)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+          return response.arrayBuffer();
+        })
+        .catch(() => null);
+      destructionByteLoads.set(element, load);
+    });
+  }
+
+  function preloadDestructionSounds(audioContext) {
+    requestDestructionBytes();
+    Object.keys(destructionSources).forEach((element) => {
+      if (destructionBuffers.has(element) || destructionLoads.has(element)) return;
+      const byteLoad = destructionByteLoads.get(element);
+      if (!byteLoad) return;
+      const load = byteLoad
+        .then((bytes) => bytes ? audioContext.decodeAudioData(bytes.slice(0)) : null)
+        .then((buffer) => {
+          if (buffer) {
+            destructionBuffers.set(element, buffer);
+            global.document?.documentElement?.setAttribute(
+              `data-${element}-destruction-audio`,
+              "ready",
+            );
+          }
+          return buffer;
+        })
+        .catch(() => null);
+      destructionLoads.set(element, load);
+    });
   }
 
   function getNoiseBuffer(audioContext) {
@@ -508,13 +559,59 @@
     });
   }
 
-  function clashImpact(playerElement, aiElement, winner) {
+  function clashImpact(playerElement, aiElement, winner, cinematic = false) {
     if (!createContext()) return;
     impactCrunch();
     const playerIntensity = winner === "player" ? 1 : winner === "draw" ? 0.78 : 0.58;
     const aiIntensity = winner === "ai" ? 1 : winner === "draw" ? 0.78 : 0.58;
-    elementalSound(playerElement, 0.012, -0.34, playerIntensity);
-    elementalSound(aiElement, 0.012, 0.34, aiIntensity);
+    const customPlayerDestruction = (
+      cinematic
+      && winner === "player"
+      && Object.hasOwn(destructionSources, playerElement)
+    );
+    const customAiDestruction = (
+      cinematic
+      && winner === "ai"
+      && Object.hasOwn(destructionSources, aiElement)
+    );
+    if (!customPlayerDestruction) {
+      elementalSound(playerElement, 0.012, -0.34, playerIntensity);
+    }
+    if (!customAiDestruction) {
+      elementalSound(aiElement, 0.012, 0.34, aiIntensity);
+    }
+  }
+
+  function cardDestruction(element, pan = 0) {
+    const audioContext = createContext();
+    if (!audioContext) return;
+    const buffer = destructionBuffers.get(element);
+
+    if (!buffer) {
+      global.document?.documentElement?.setAttribute(
+        "data-last-destruction-audio",
+        `${element}-fallback`,
+      );
+      elementalSound(element, 0, pan, 0.78);
+      return;
+    }
+
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    const output = outputFor(audioContext, pan);
+    source.buffer = buffer;
+    gain.gain.value = destructionGains[element] ?? 0.62;
+    source.connect(gain).connect(output);
+    source.addEventListener("ended", () => {
+      source.disconnect();
+      gain.disconnect();
+      if (output !== master) output.disconnect();
+    }, { once: true });
+    global.document?.documentElement?.setAttribute(
+      "data-last-destruction-audio",
+      `${element}-file`,
+    );
+    source.start();
   }
 
   function roundResult(result) {
@@ -560,6 +657,8 @@
     }
   }
 
+  requestDestructionBytes();
+
   global.ClawAudio = Object.freeze({
     cardFlip,
     cardHover,
@@ -572,6 +671,7 @@
     reveal,
     clashApproach,
     clashImpact,
+    cardDestruction,
     roundResult,
     matchResult,
     setEnabled,

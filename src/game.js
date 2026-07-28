@@ -1019,7 +1019,7 @@ async function enterCinematicStage() {
 }
 
 async function leaveCinematicStage() {
-  await delay(280);
+  await delay(120);
   ui.battlefield.classList.remove("cinematic-focus", "is-clashing");
 }
 
@@ -1089,7 +1089,12 @@ async function animateClashes(playerCards, aiCards) {
       ui.battlefield.classList.remove("is-clashing");
       void ui.battlefield.offsetWidth;
       ui.battlefield.classList.add("is-clashing");
-      audio.clashImpact(playerCards[index].element, aiCards[index].element, winner);
+      audio.clashImpact(
+        playerCards[index].element,
+        aiCards[index].element,
+        winner,
+        cinematic,
+      );
 
       await delay(strikeDuration - collisionDelay);
 
@@ -1123,6 +1128,15 @@ async function animateClashes(playerCards, aiCards) {
           `${winningCard.name} ${defeatCopy}`,
         );
         createDefeatEffect(losingLane, winningCard.element);
+        const losingLaneRect = losingLane.getBoundingClientRect();
+        const destructionPan = Math.max(
+          -0.6,
+          Math.min(
+            0.6,
+            ((losingLaneRect.left + losingLaneRect.width / 2) / window.innerWidth) * 1.2 - 0.6,
+          ),
+        );
+        audio.cardDestruction(winningCard.element, destructionPan);
       } else if (cinematic) {
         setMessage(
           `Lane ${index + 1} holds in a draw!`,
@@ -1135,7 +1149,7 @@ async function animateClashes(playerCards, aiCards) {
       await delay(cinematic && winner === "draw" ? 720 : pauseDuration);
     }
 
-    if (cinematic) await delay(560);
+    if (cinematic) await delay(220);
   } finally {
     if (cinematic) await leaveCinematicStage();
   }
