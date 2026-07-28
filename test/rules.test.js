@@ -10,6 +10,7 @@ const {
   chooseAiCard,
   chooseAiCommitment,
   chooseAiCards,
+  createAiTraits,
   compareCards,
   forecastMatchup,
   getChainBonus,
@@ -197,6 +198,155 @@ test("Blind tells seal card details but preserve commitment count", () => {
   assert.deepEqual(
     buildTellClues(3, "blind", () => 0.2),
     ["sealed", "sealed", "sealed"],
+  );
+});
+
+test("Instinct tells conceal card details and commitment count", () => {
+  assert.deepEqual(
+    buildTellClues(2, "instinct", () => 0.2),
+    ["sealed", "sealed", "sealed"],
+  );
+});
+
+test("Instinct creates one motive, formation, and commitment habit", () => {
+  const rolls = [0, 0.99, 0.99];
+  const traits = createAiTraits(() => rolls.shift());
+
+  assert.equal(traits.length, 3);
+  assert.deepEqual(
+    traits.map((trait) => trait.category),
+    ["motive", "formation", "commitment"],
+  );
+  assert.deepEqual(
+    traits.map((trait) => trait.id),
+    ["trophy-hunter", "late-striker", "restless-dealer"],
+  );
+});
+
+test("an element loyalist visibly favors its known element", () => {
+  const ember = card("ember", 5);
+  const gust = card("gust", 5);
+  const traits = [{
+    id: "element-loyalist",
+    category: "motive",
+    element: "gust",
+  }];
+
+  assert.equal(
+    chooseAiCard([ember, gust], [], [], () => 0.5, null, traits),
+    gust,
+  );
+});
+
+test("formation habits influence where the strongest chosen card appears", () => {
+  const hand = [card("ember", 4), card("gust", 9), card("tide", 6)];
+  const lateStriker = [{ id: "late-striker", category: "formation" }];
+  const chosen = chooseAiCards(hand, 3, [], [], () => 0.5, lateStriker);
+
+  assert.equal(chosen.at(-1).power, 9);
+});
+
+test("Trophy Denier favors counters to elements the player nearly completes", () => {
+  const gust = card("gust", 5);
+  const tide = card("tide", 5);
+  const traits = [{ id: "trophy-denier", category: "motive" }];
+
+  assert.equal(
+    chooseAiCard(
+      [gust, tide],
+      [card("ember")],
+      [],
+      () => 0.5,
+      null,
+      traits,
+    ),
+    tide,
+  );
+});
+
+test("Momentum Rider favors the element of the professor's latest trophy", () => {
+  const ember = card("ember", 5);
+  const gust = card("gust", 5);
+  const traits = [{ id: "momentum-rider", category: "motive" }];
+
+  assert.equal(
+    chooseAiCard(
+      [ember, gust],
+      [],
+      [card("gust")],
+      () => 0.5,
+      null,
+      traits,
+    ),
+    gust,
+  );
+});
+
+test("commitment habits create distinct Focus and Pressure tendencies", () => {
+  const focusKeeper = [{ id: "focus-keeper", category: "commitment" }];
+  const measuredPlanner = [{ id: "measured-planner", category: "commitment" }];
+  const pressureGambler = [{ id: "pressure-gambler", category: "commitment" }];
+
+  assert.equal(
+    chooseAiCommitment(6, [], [], () => 0.5, focusKeeper),
+    1,
+  );
+  assert.equal(
+    chooseAiCommitment(6, [], [], () => 0.5, measuredPlanner),
+    2,
+  );
+  assert.equal(
+    chooseAiCommitment(6, [], [], () => 0.5, pressureGambler),
+    3,
+  );
+});
+
+test("Score Reader adjusts commitment to the public trophy score", () => {
+  const scoreReader = [{ id: "score-reader", category: "commitment" }];
+
+  assert.equal(
+    chooseAiCommitment(6, [card("ember")], [], () => 0.5, scoreReader),
+    3,
+  );
+  assert.equal(
+    chooseAiCommitment(6, [], [card("ember")], () => 0.5, scoreReader),
+    1,
+  );
+  assert.equal(
+    chooseAiCommitment(6, [], [], () => 0.5, scoreReader),
+    2,
+  );
+});
+
+test("Echo Tactician often mirrors the player's previous commitment", () => {
+  const echoTactician = [{ id: "echo-tactician", category: "commitment" }];
+
+  assert.equal(
+    chooseAiCommitment(
+      6,
+      [],
+      [],
+      () => 0.5,
+      echoTactician,
+      { player: 3, ai: 1 },
+    ),
+    3,
+  );
+});
+
+test("Restless Dealer usually changes its previous commitment", () => {
+  const restlessDealer = [{ id: "restless-dealer", category: "commitment" }];
+
+  assert.notEqual(
+    chooseAiCommitment(
+      6,
+      [],
+      [],
+      () => 0.2,
+      restlessDealer,
+      { player: 1, ai: 2 },
+    ),
+    2,
   );
 });
 

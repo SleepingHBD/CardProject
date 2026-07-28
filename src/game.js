@@ -3,6 +3,7 @@ const {
   buildTellClues,
   chooseAiCommitment,
   chooseAiCards,
+  createAiTraits,
   getChainBonus,
   getFocusBonus,
   getFormationReward,
@@ -52,6 +53,7 @@ const MAX_PLAY_SIZE = 3;
 const DIFFICULTIES = {
   guided: { label: "Guided" },
   veiled: { label: "Veiled" },
+  instinct: { label: "Instinct" },
   blind: { label: "Blind" },
 };
 const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
@@ -83,6 +85,9 @@ const state = {
   aiWins: [],
   aiPlan: [],
   aiTellClues: [],
+  aiTraits: [],
+  previousPlayerCommitment: null,
+  previousAiCommitment: null,
   selectedCardIds: [],
   difficulty: null,
   archiveSort: "element",
@@ -109,6 +114,7 @@ const ui = {
   aiCollection: document.querySelector("#aiCollection"),
   turnMessage: document.querySelector("#turnMessage"),
   commitmentHint: document.querySelector("#commitmentHint"),
+  opponentHabits: document.querySelector("#opponentHabits"),
   opponentTells: document.querySelector("#opponentTells"),
   matchupForecast: document.querySelector("#matchupForecast"),
   selectionCount: document.querySelector("#selectionCount"),
@@ -205,12 +211,20 @@ function prepareAiPlan() {
     state.aiHand.length,
     state.playerWins,
     state.aiWins,
+    Math.random,
+    state.aiTraits,
+    {
+      player: state.previousPlayerCommitment,
+      ai: state.previousAiCommitment,
+    },
   );
   state.aiPlan = chooseAiCards(
     state.aiHand,
     commitment,
     state.playerWins,
     state.aiWins,
+    Math.random,
+    state.aiTraits,
   );
   state.aiTellClues = buildTellClues(
     state.aiPlan.length,
@@ -222,9 +236,32 @@ function prepareAiPlan() {
 function renderOpponentTells() {
   const focus = getFocusBonus(state.aiPlan.length);
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
-  ui.commitmentHint.textContent = `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${focus ? `Focus +${focus}` : "No Focus"}`;
+  const concealsCommitment = state.difficulty === "instinct";
+  ui.commitmentHint.textContent = concealsCommitment
+    ? "Instinct · Commitment and Focus concealed"
+    : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${focus ? `Focus +${focus}` : "No Focus"}`;
+  const showsHabits = state.difficulty === "instinct" && state.aiTraits.length;
+  ui.opponentHabits.hidden = !showsHabits;
+  ui.opponentHabits.innerHTML = showsHabits
+    ? state.aiTraits.map((trait) => `
+        <div class="opponent-habit">
+          <b>${trait.label}</b>
+          <span>${trait.description}</span>
+        </div>
+      `).join("")
+    : "";
   const laneLabels = ["1", "2", "3"];
   ui.opponentTells.innerHTML = laneLabels.map((lane, index) => {
+    if (concealsCommitment) {
+      return `
+        <div class="opponent-tell clue-sealed possible-tell" aria-label="Lane ${lane}: occupancy and card details concealed">
+          <span class="tell-lane">LANE ${lane}</span>
+          <span class="tell-element" aria-hidden="true">?</span>
+          <b>Possible card</b>
+          <small>Occupancy hidden</small>
+        </div>
+      `;
+    }
     const card = state.aiPlan[index];
     if (!card) {
       return `
@@ -301,10 +338,34 @@ function renderMatchupForecast() {
   };
   const playerFocus = getFocusBonus(selectedCards.length);
   const opponentFocus = getFocusBonus(state.aiPlan.length);
+  const concealsCommitment = state.difficulty === "instinct";
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${selectedCards.length}, minmax(0, 1fr))`;
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
     const opponentCard = state.aiPlan[index];
+    const playerChain = getChainBonus(selectedCards, index);
+    const knownPlayerScore = playerCard.power + playerFocus + playerChain;
+    const knownBonusTotal = playerFocus + playerChain;
+    const knownBonuses = [];
+    if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
+    if (playerChain) knownBonuses.push(`Chain +${playerChain}`);
+    const knownBonusDetail = knownBonuses.length
+      ? knownBonuses.join(" · ")
+      : "No known bonus";
+
+    if (concealsCommitment) {
+      return `
+        <span class="forecast-chip forecast-sealed">
+          <i>${index + 1}</i>
+          <b>? POSSIBLE CLASH · ${knownPlayerScore}–${knownPlayerScore + 2}</b>
+          <span class="forecast-equation">
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${knownBonusTotal + 2} IF PAIRED</strong>
+          </span>
+          <small>${knownBonusDetail} · Foe presence and Element Edge hidden</small>
+        </span>
+      `;
+    }
+
     if (!opponentCard) {
       return `
         <span class="forecast-chip forecast-pressure">
@@ -315,7 +376,6 @@ function renderMatchupForecast() {
         </span>
       `;
     }
-    const playerChain = getChainBonus(selectedCards, index);
     const opponentChain = getChainBonus(state.aiPlan, index);
     const clue = state.aiTellClues[index] || "sealed";
     const scoring = scoreClash(
@@ -326,15 +386,6 @@ function renderMatchupForecast() {
       playerFocus,
       opponentFocus,
     );
-    const knownPlayerScore = playerCard.power + playerFocus + playerChain;
-    const knownBonusTotal = playerFocus + playerChain;
-    const knownBonuses = [];
-    if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
-    if (playerChain) knownBonuses.push(`Chain +${playerChain}`);
-    const knownBonusDetail = knownBonuses.length
-      ? knownBonuses.join(" · ")
-      : "No known bonus";
-
     if (clue === "sealed") {
       return `
         <span class="forecast-chip forecast-sealed">
@@ -552,6 +603,17 @@ function bindCardInteractions(container) {
 
 function getFormationBonusPreview(selectedCards, index) {
   const playerCard = selectedCards[index];
+  const focus = getFocusBonus(selectedCards.length);
+  const chain = getChainBonus(selectedCards, index);
+  const knownBonus = focus + chain;
+  if (state.difficulty === "instinct") {
+    return {
+      text: `+${knownBonus}–${knownBonus + 2}`,
+      label: `If paired, bonus ranges from plus ${knownBonus} to plus ${knownBonus + 2}; opposing card presence and Element Edge are hidden`,
+      pressure: false,
+    };
+  }
+
   const opponentCard = state.aiPlan[index];
   if (!opponentCard) {
     return {
@@ -561,9 +623,6 @@ function getFormationBonusPreview(selectedCards, index) {
     };
   }
 
-  const focus = getFocusBonus(selectedCards.length);
-  const chain = getChainBonus(selectedCards, index);
-  const knownBonus = focus + chain;
   const clue = state.aiTellClues[index] || "sealed";
   const edgeKnown = clue === "full" || clue === "element";
   const edge = edgeKnown && ELEMENTS[playerCard.element].beats === opponentCard.element ? 2 : 0;
@@ -670,6 +729,8 @@ function updateFormationMessage() {
   const focusLabel = focus ? `Focus +${focus}` : "No Focus";
   const detail = count === 0
     ? "Drag a card into the glowing lane, or click a card to place it."
+    : state.difficulty === "instinct"
+      ? `${focusLabel}. Professor Paws' commitment stays concealed until the reveal.`
     : count > state.aiPlan.length
       ? `Pressure advantage: tied formations go to you. ${focusLabel}.`
       : count < state.aiPlan.length
@@ -1187,6 +1248,8 @@ function playRound() {
     const aiCards = state.aiPlan
       .map((card) => removeCard(state.aiHand, card.instanceId))
       .filter(Boolean);
+    state.previousPlayerCommitment = playerCards.length;
+    state.previousAiCommitment = aiCards.length;
     ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount);
     setMessage(
       `${playerCards.length} cards against ${aiCards.length}!`,
@@ -1415,6 +1478,9 @@ async function startGame() {
   state.aiWins = [];
   state.aiPlan = [];
   state.aiTellClues = [];
+  state.aiTraits = state.difficulty === "instinct" ? createAiTraits() : [];
+  state.previousPlayerCommitment = null;
+  state.previousAiCommitment = null;
   state.selectedCardIds = [];
   state.playerRoundWins = 0;
   state.aiRoundWins = 0;

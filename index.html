@@ -177,6 +177,7 @@
                 <div>
                   <p id="tacticsTitle">Professor's Plan</p>
                   <small id="commitmentHint">Professor commitment revealed.</small>
+                  <div class="opponent-habits" id="opponentHabits" aria-label="Professor Paws' known habits" aria-live="polite" hidden></div>
                 </div>
               </div>
               <div class="opponent-tells" id="opponentTells" aria-label="Professor Paws' planned lanes"></div>
@@ -327,8 +328,8 @@
       <p class="eyebrow">CHOOSE YOUR TRIAL</p>
       <h2 id="difficultyTitle">How Much Will You Scout?</h2>
       <p class="difficulty-intro" id="difficultyIntro">
-        Professor Paws' commitment count and Focus bonus are always visible.
-        The difficulty changes which card clues you receive.
+        Guided, Veiled, and Blind show the professor's commitment and Focus.
+        Instinct conceals both and replaces them with behavioral knowledge.
       </p>
       <div class="difficulty-options">
         <button class="difficulty-option guided-option" data-difficulty="guided" type="button">
@@ -354,6 +355,14 @@
             <strong>Blind</strong>
             <small>Shows the commitment count, but <b>seals all card details</b> until the clash.</small>
             <em>For experienced duelists who enjoy uncertainty.</em>
+          </span>
+        </button>
+        <button class="difficulty-option instinct-option" data-difficulty="instinct" type="button">
+          <span class="difficulty-icon" aria-hidden="true">♞</span>
+          <span>
+            <strong>Instinct</strong>
+            <small>Hides every card, the commitment count, and Focus—but reveals <b>three persistent habits</b>.</small>
+            <em>Read motives, formation patterns, and commitment behavior.</em>
           </span>
         </button>
       </div>
@@ -490,7 +499,7 @@
             <li>The shared draw pile starts with 36 cards: two copies of every card in the archive.</li>
             <li>You and Professor Paws each draw up to six cards.</li>
             <li>The professor secretly commits one to three cards before you build your formation.</li>
-            <li>His commitment count and Focus bonus are always visible.</li>
+            <li>His commitment count and Focus bonus are visible in Guided, Veiled, and Blind, but concealed in Instinct.</li>
           </ul>
         </section>
 
@@ -500,7 +509,8 @@
           <dl class="rulebook-definitions">
             <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
             <div><dt>Veiled</dt><dd>Shows either the element or power range of each card.</dd></div>
-            <div><dt>Blind</dt><dd>Seals all individual card clues until the reveal.</dd></div>
+            <div><dt>Blind</dt><dd>Seals all individual card clues but still shows the commitment count and Focus.</dd></div>
+            <div><dt>Instinct</dt><dd>Also conceals commitment and Focus, but reveals one motive, one formation habit, and one commitment habit. Habits persist for the duel and are tendencies, not guarantees.</dd></div>
           </dl>
           <p>Difficulty changes the information you receive, not the scoring rules or Professor Paws' card strength.</p>
         </section>
@@ -526,7 +536,7 @@
           <span class="rulebook-number" aria-hidden="true">4</span>
           <h3 id="rulebookTurn">How to play a round</h3>
           <ol class="rulebook-steps">
-            <li><b>Scout.</b> Read the professor's commitment, Focus, and any clues provided by your difficulty.</li>
+            <li><b>Scout.</b> Read the professor's commitment, Focus, and card clues—or, in Instinct, use the three known habits instead.</li>
             <li><b>Build.</b> Drag or click one to three cards into your lanes. You may return or reorder them before committing.</li>
             <li><b>Preview.</b> Check the displayed bonus and forecast for each paired lane.</li>
             <li><b>Commit.</b> Lock your formation. Every committed card will be spent after the round.</li>

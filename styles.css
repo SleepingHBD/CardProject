@@ -1092,6 +1092,43 @@ h1 {
   line-height: 1.25;
 }
 
+.opponent-habits {
+  margin-top: 5px;
+  display: grid;
+  gap: 4px;
+}
+
+.opponent-habits[hidden] {
+  display: none;
+}
+
+.opponent-habit {
+  padding: 4px 6px;
+  background: rgba(107, 81, 122, .24);
+  border: 1px solid rgba(190, 163, 204, .42);
+  border-radius: 3px;
+  line-height: 1.18;
+}
+
+.opponent-habit b,
+.opponent-habit span {
+  display: block;
+}
+
+.opponent-habit b {
+  color: #e7c9ef;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+
+.opponent-habit span {
+  margin-top: 2px;
+  color: #c8b7ce;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .opponent-tells {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2817,6 +2854,17 @@ footer {
   box-shadow: inset 0 0 0 2px rgba(95, 61, 89, .22);
 }
 
+.instinct-option {
+  border-color: #526a5b;
+  box-shadow: inset 0 0 0 2px rgba(71, 106, 84, .2);
+}
+
+.instinct-option .difficulty-icon {
+  color: #e6edc4;
+  background: #384d42;
+  box-shadow: inset 0 0 0 2px #91a96f;
+}
+
 .recommended-ribbon {
   position: absolute;
   top: 6px;
@@ -3446,16 +3494,18 @@ footer {
 
   .control-panel .tactics-board { margin: 0; }
   .control-panel .tactics-heading { padding: 7px 9px; }
+  .control-panel .tactics-heading > div { flex: 1; min-width: 0; }
   .control-panel .scout-seal { display: grid; width: 34px; height: 34px; flex-basis: 34px; font-size: 17px; }
   .control-panel .tactics-heading p { font-size: 15px; }
   .control-panel .tactics-heading small { font-size: 12px; line-height: 1.2; }
+  .control-panel .opponent-habits { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .control-panel .opponent-tells { padding: 5px 6px 3px; gap: 4px; }
-  .control-panel .opponent-tell { height: 52px; padding: 14px 4px 4px 39px; }
-  .control-panel .tell-element { left: 5px; top: 13px; width: 29px; height: 29px; font-size: 15px; }
+  .control-panel .opponent-tell { height: 48px; padding: 12px 4px 3px 37px; }
+  .control-panel .tell-element { left: 5px; top: 11px; width: 27px; height: 27px; font-size: 14px; }
   .control-panel .tell-lane { top: 2px; right: 4px; font-size: 9px; }
   .control-panel .opponent-tell b { font-size: 13px; }
   .control-panel .opponent-tell small { font-size: 11px; }
-  .control-panel .matchup-forecast { min-height: 50px; padding: 4px 6px 6px; gap: 4px; }
+  .control-panel .matchup-forecast { min-height: 48px; padding: 3px 6px 5px; gap: 4px; }
   .control-panel .forecast-instruction { font-size: 12px; }
   .control-panel .forecast-chip { padding: 6px 4px 5px 32px; }
   .control-panel .forecast-chip i { left: 5px; width: 21px; height: 21px; font-size: 9px; }
