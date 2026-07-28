@@ -2384,10 +2384,14 @@ footer {
   justify-content: center;
   gap: 22px;
   padding: 15px 8px 18px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .card-gallery .game-card {
   cursor: default;
+  transition: none;
 }
 
 .game-dialog::backdrop {
