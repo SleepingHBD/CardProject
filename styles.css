@@ -1887,10 +1887,10 @@ footer {
   color: #f3dfac;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 35%, rgba(210, 163, 74, .2), transparent 31%),
-    linear-gradient(90deg, transparent 49.7%, rgba(222, 180, 91, .09) 50%, transparent 50.3%),
-    repeating-linear-gradient(100deg, rgba(255,255,255,.018) 0 2px, transparent 2px 9px),
-    linear-gradient(145deg, #4f3028, #28171c 54%, #21151a);
+    radial-gradient(ellipse at 50% 43%, rgba(13, 12, 27, .38), transparent 42%),
+    linear-gradient(180deg, rgba(7, 9, 22, .08), rgba(18, 10, 18, .13) 54%, rgba(12, 8, 13, .38)),
+    url("./assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png?v=6") center center / cover no-repeat,
+    #21151a;
   border: 0;
   box-shadow:
     inset 0 0 0 8px #211311,
