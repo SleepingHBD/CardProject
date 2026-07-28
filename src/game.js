@@ -62,6 +62,18 @@ const ARCHIVE_SORT_SUMMARIES = {
   power: "Highest base power first.",
   name: "Alphabetical from A to Z.",
 };
+const CLASH_STYLES = Object.freeze(["cinematic", "classic"]);
+const CLASH_STYLE_STORAGE_KEY = "projectProwl.clashStyle";
+
+function readSavedClashStyle() {
+  try {
+    const savedStyle = window.localStorage.getItem(CLASH_STYLE_STORAGE_KEY);
+    return CLASH_STYLES.includes(savedStyle) ? savedStyle : "cinematic";
+  } catch {
+    return "cinematic";
+  }
+}
+
 const state = {
   deck: [],
   discardPile: [],
@@ -83,6 +95,7 @@ const state = {
   locked: false,
   dealing: false,
   soundOn: true,
+  clashStyle: readSavedClashStyle(),
 };
 
 const ui = {
@@ -122,17 +135,22 @@ const ui = {
   difficultyDialog: document.querySelector("#difficultyDialog"),
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
+  mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
   gameMenuDialog: document.querySelector("#gameMenuDialog"),
+  settingsDialog: document.querySelector("#settingsDialog"),
+  settingsStatus: document.querySelector("#settingsStatus"),
   menuButton: document.querySelector("#menuButton"),
   resumeGameButton: document.querySelector("#resumeGameButton"),
   restartGameButton: document.querySelector("#restartGameButton"),
   changeDifficultyButton: document.querySelector("#changeDifficultyButton"),
+  gameSettingsButton: document.querySelector("#gameSettingsButton"),
   returnMainMenuButton: document.querySelector("#returnMainMenuButton"),
   deckTransition: document.querySelector("#deckTransition"),
   deckTransitionLabel: document.querySelector("#deckTransitionLabel"),
   soundButton: document.querySelector("#soundButton"),
 };
 let draggedCardId = null;
+let settingsReturnTarget = "main";
 
 function shuffle(items) {
   const copy = [...items];
@@ -900,81 +918,226 @@ function revealClashScore(lane, scoring, outcome, opposingTotal) {
   }
 }
 
+function createCinematicCardCopy(card, className) {
+  const copy = card.cloneNode(true);
+  copy.classList.add("cinematic-card-copy", ...className.split(/\s+/));
+  copy.removeAttribute("data-card-id");
+  copy.removeAttribute("aria-label");
+  copy.removeAttribute("aria-pressed");
+  copy.setAttribute("aria-hidden", "true");
+  copy.setAttribute("tabindex", "-1");
+  copy.disabled = true;
+  return copy;
+}
+
+function createDefeatEffect(lane, winningElement, { aftermath = false } = {}) {
+  const card = lane.querySelector(".game-card");
+  if (!card) return null;
+
+  const effect = document.createElement("span");
+  effect.className = `defeat-effect defeat-${winningElement}`;
+  if (aftermath) effect.classList.add("aftermath-remains");
+  effect.setAttribute("aria-hidden", "true");
+
+  if (winningElement === "ember") {
+    effect.append(
+      createCinematicCardCopy(card, "ember-burning-card"),
+      createCinematicCardCopy(card, "ember-charred-remains"),
+    );
+    const heatWave = document.createElement("span");
+    heatWave.className = "ember-heat-wave";
+    effect.append(heatWave);
+  } else if (winningElement === "gust") {
+    const vortex = document.createElement("span");
+    vortex.className = "tornado-vortex";
+    effect.append(vortex);
+    for (let index = 1; index <= 6; index += 1) {
+      effect.append(createCinematicCardCopy(card, `tornado-fragment fragment-${index}`));
+    }
+  } else {
+    effect.append(
+      createCinematicCardCopy(card, "tide-soaking-card"),
+      createCinematicCardCopy(card, "tide-pulp-remains"),
+    );
+    const waterSheet = document.createElement("span");
+    waterSheet.className = "tide-water-sheet";
+    const inkBleed = document.createElement("span");
+    inkBleed.className = "tide-ink-bleed";
+    effect.append(waterSheet, inkBleed);
+  }
+
+  const particleCount = winningElement === "tide" ? 12 : winningElement === "gust" ? 14 : 16;
+  const particles = document.createElement("span");
+  particles.className = "defeat-particles";
+  for (let index = 0; index < particleCount; index += 1) {
+    const particle = document.createElement("i");
+    particle.style.setProperty("--particle-index", index);
+    particle.style.setProperty(
+      "--particle-left",
+      `${8 + index * (84 / Math.max(1, particleCount - 1))}%`,
+    );
+    particles.append(particle);
+  }
+  effect.append(particles);
+  lane.classList.add("cinematic-defeat", `defeated-by-${winningElement}`);
+  lane.append(effect);
+  return effect;
+}
+
+function restoreCinematicAftermathRemains(playerCards, aiCards, resolution) {
+  if (
+    state.clashStyle !== "cinematic"
+    || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) return;
+
+  ui.battlefield.querySelectorAll(".defeat-effect").forEach((effect) => effect.remove());
+  ui.battlefield.querySelectorAll(".cinematic-defeat").forEach((lane) => {
+    lane.classList.remove(
+      "cinematic-defeat",
+      "defeated-by-ember",
+      "defeated-by-gust",
+      "defeated-by-tide",
+    );
+  });
+
+  const playerLanes = [...ui.playerPlayZone.querySelectorAll(".clash-card")];
+  const aiLanes = [...ui.aiPlayZone.querySelectorAll(".clash-card")];
+
+  resolution.results.forEach((winner, index) => {
+    if (winner === "draw") return;
+    const winningCard = winner === "player" ? playerCards[index] : aiCards[index];
+    const losingLane = winner === "player" ? aiLanes[index] : playerLanes[index];
+    if (winningCard && losingLane) {
+      createDefeatEffect(losingLane, winningCard.element, { aftermath: true });
+    }
+  });
+}
+
+async function enterCinematicStage() {
+  ui.battlefield.classList.add("cinematic-focus");
+  await delay(260);
+}
+
+async function leaveCinematicStage() {
+  await delay(280);
+  ui.battlefield.classList.remove("cinematic-focus", "is-clashing");
+}
+
+function clearCinematicRemains() {
+  ui.battlefield.querySelectorAll(".defeat-effect").forEach((effect) => effect.remove());
+  ui.battlefield.querySelectorAll(".cinematic-defeat").forEach((lane) => {
+    lane.classList.remove(
+      "cinematic-defeat",
+      "defeated-by-ember",
+      "defeated-by-gust",
+      "defeated-by-tide",
+    );
+  });
+}
+
 async function animateClashes(playerCards, aiCards) {
   const resolution = resolveClashes(playerCards, aiCards);
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const strikeDuration = reducedMotion ? 80 : 540;
-  const collisionDelay = reducedMotion ? 20 : 225;
-  const pauseDuration = reducedMotion ? 30 : 180;
+  const cinematic = state.clashStyle === "cinematic" && !reducedMotion;
+  const strikeDuration = reducedMotion ? 80 : cinematic ? 820 : 540;
+  const collisionDelay = reducedMotion ? 20 : cinematic ? 340 : 225;
+  const pauseDuration = reducedMotion ? 30 : cinematic ? 1450 : 180;
   const playerLanes = [...ui.playerPlayZone.querySelectorAll(".clash-card")];
   const aiLanes = [...ui.aiPlayZone.querySelectorAll(".clash-card")];
 
   await delay(reducedMotion ? 30 : 220);
+  if (cinematic) await enterCinematicStage();
 
-  for (let index = 0; index < resolution.results.length; index += 1) {
-    const winner = resolution.results[index];
-    const laneScore = resolution.lanes[index];
-    const playerLane = playerLanes[index];
-    const aiLane = aiLanes[index];
-    if (!playerLane || !aiLane) continue;
+  try {
+    for (let index = 0; index < resolution.results.length; index += 1) {
+      const winner = resolution.results[index];
+      const laneScore = resolution.lanes[index];
+      const playerLane = playerLanes[index];
+      const aiLane = aiLanes[index];
+      if (!playerLane || !aiLane) continue;
 
-    setMessage(
-      `Clash ${index + 1} of ${resolution.results.length}!`,
-      `${playerCards[index].name} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
-    );
+      setMessage(
+        `Clash ${index + 1} of ${resolution.results.length}!`,
+        `${playerCards[index].name} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
+      );
 
-    playerLane.classList.add("clashing");
-    aiLane.classList.add("clashing");
-    audio.clashApproach(playerCards[index].element, aiCards[index].element);
+      playerLane.classList.add("clashing");
+      aiLane.classList.add("clashing");
+      audio.clashApproach(playerCards[index].element, aiCards[index].element);
 
-    await delay(collisionDelay);
+      await delay(collisionDelay);
 
-    const winningCard = winner === "player"
-      ? playerCards[index]
-      : winner === "ai"
-        ? aiCards[index]
-        : playerCards[index];
-    const impact = document.createElement("span");
-    const playerRect = playerLane.getBoundingClientRect();
-    const aiRect = aiLane.getBoundingClientRect();
-    const battlefieldRect = ui.battlefield.getBoundingClientRect();
-    const impactX = (
-      (playerRect.left + playerRect.width / 2)
-      + (aiRect.left + aiRect.width / 2)
-    ) / 2 - battlefieldRect.left;
+      const winningCard = winner === "player"
+        ? playerCards[index]
+        : winner === "ai"
+          ? aiCards[index]
+          : playerCards[index];
+      const impact = document.createElement("span");
+      const playerRect = playerLane.getBoundingClientRect();
+      const aiRect = aiLane.getBoundingClientRect();
+      const battlefieldRect = ui.battlefield.getBoundingClientRect();
+      const impactX = (
+        (playerRect.left + playerRect.width / 2)
+        + (aiRect.left + aiRect.width / 2)
+      ) / 2 - battlefieldRect.left;
 
-    impact.className = `clash-impact element-${winningCard.element}${winner === "draw" ? " draw-impact" : ""}`;
-    impact.style.left = `${impactX}px`;
-    impact.innerHTML = `<i>${winner === "draw" ? "✦" : ELEMENTS[winningCard.element].icon}</i>`;
-    ui.clashEffects.append(impact);
+      impact.className = `clash-impact element-${winningCard.element}${winner === "draw" ? " draw-impact" : ""}`;
+      impact.style.left = `${impactX}px`;
+      impact.innerHTML = `<i>${winner === "draw" ? "✦" : ELEMENTS[winningCard.element].icon}</i>`;
+      ui.clashEffects.append(impact);
 
-    ui.battlefield.classList.remove("is-clashing");
-    void ui.battlefield.offsetWidth;
-    ui.battlefield.classList.add("is-clashing");
-    audio.clashImpact(playerCards[index].element, aiCards[index].element, winner);
+      ui.battlefield.classList.remove("is-clashing");
+      void ui.battlefield.offsetWidth;
+      ui.battlefield.classList.add("is-clashing");
+      audio.clashImpact(playerCards[index].element, aiCards[index].element, winner);
 
-    await delay(strikeDuration - collisionDelay);
+      await delay(strikeDuration - collisionDelay);
 
-    playerLane.classList.remove("clashing");
-    aiLane.classList.remove("clashing");
-    playerLane.classList.add(winner === "player" ? "result-win" : winner === "ai" ? "result-loss" : "result-draw");
-    aiLane.classList.add(winner === "ai" ? "result-win" : winner === "player" ? "result-loss" : "result-draw");
-    revealClashScore(
-      playerLane,
-      laneScore.player,
-      winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW",
-      laneScore.ai.total,
-    );
-    revealClashScore(
-      aiLane,
-      laneScore.ai,
-      winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW",
-      laneScore.player.total,
-    );
-    impact.classList.add("impact-fade");
-    ui.battlefield.classList.remove("is-clashing");
+      playerLane.classList.remove("clashing");
+      aiLane.classList.remove("clashing");
+      playerLane.classList.add(winner === "player" ? "result-win" : winner === "ai" ? "result-loss" : "result-draw");
+      aiLane.classList.add(winner === "ai" ? "result-win" : winner === "player" ? "result-loss" : "result-draw");
+      revealClashScore(
+        playerLane,
+        laneScore.player,
+        winner === "player" ? "WIN" : winner === "ai" ? "LOSS" : "DRAW",
+        laneScore.ai.total,
+      );
+      revealClashScore(
+        aiLane,
+        laneScore.ai,
+        winner === "ai" ? "WIN" : winner === "player" ? "LOSS" : "DRAW",
+        laneScore.player.total,
+      );
 
-    await delay(pauseDuration);
+      if (cinematic && winner !== "draw") {
+        const losingLane = winner === "player" ? aiLane : playerLane;
+        const element = ELEMENTS[winningCard.element];
+        const defeatCopy = {
+          ember: "sears the opposing card down to a blackened husk.",
+          gust: "whips the opposing card through a tearing tornado.",
+          tide: "soaks the opposing card until its ink runs into pulp.",
+        }[winningCard.element];
+        setMessage(
+          `${element.label} claims Lane ${index + 1}!`,
+          `${winningCard.name} ${defeatCopy}`,
+        );
+        createDefeatEffect(losingLane, winningCard.element);
+      } else if (cinematic) {
+        setMessage(
+          `Lane ${index + 1} holds in a draw!`,
+          "The cards recoil from an evenly matched impact.",
+        );
+      }
+
+      impact.classList.add("impact-fade");
+      ui.battlefield.classList.remove("is-clashing");
+      await delay(cinematic && winner === "draw" ? 720 : pauseDuration);
+    }
+
+    if (cinematic) await delay(560);
+  } finally {
+    if (cinematic) await leaveCinematicStage();
   }
 
   return resolution;
@@ -1097,12 +1260,14 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   renderRound();
   renderRoundScore();
   renderAftermathBreakdown(playerCards, resolution);
+  restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
   state.pendingMatchWinner = getCompletedMatchWinner(winner);
   setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
   ui.menuButton.disabled = false;
 }
 
 async function nextRound() {
+  clearCinematicRemains();
   state.pendingMatchWinner = null;
   setRoundAdvanceControls(false);
   const previousHandSize = state.playerHand.length;
@@ -1181,6 +1346,32 @@ function closeDialog(dialog) {
   if (dialog.open) dialog.close();
 }
 
+function saveClashStyle(clashStyle) {
+  try {
+    window.localStorage.setItem(CLASH_STYLE_STORAGE_KEY, clashStyle);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function renderSettings(saved = true) {
+  document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
+    option.checked = option.value === state.clashStyle;
+  });
+  const styleLabel = state.clashStyle === "cinematic" ? "Cinematic" : "Classic";
+  ui.settingsStatus.textContent = saved
+    ? `${styleLabel} clashes are selected and saved for this browser.`
+    : `${styleLabel} clashes are selected for this session. Browser storage is unavailable.`;
+}
+
+function openSettings(returnTarget) {
+  settingsReturnTarget = returnTarget;
+  if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
+  renderSettings();
+  if (!ui.settingsDialog.open) ui.settingsDialog.showModal();
+}
+
 function showMainMenu() {
   state.locked = true;
   closeDialog(ui.gameMenuDialog);
@@ -1201,6 +1392,7 @@ function showDifficultyChooser() {
 }
 
 async function startGame() {
+  clearCinematicRemains();
   state.deck = freshDeck();
   state.discardPile = [];
   state.playerHand = [];
@@ -1306,6 +1498,7 @@ ui.nextRoundButton.addEventListener("click", () => {
   if (state.pendingMatchWinner) {
     const winner = state.pendingMatchWinner;
     state.pendingMatchWinner = null;
+    clearCinematicRemains();
     endGame(winner);
     return;
   }
@@ -1317,6 +1510,7 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
   showDifficultyChooser();
 });
 ui.mainMenuPlayButton.addEventListener("click", showDifficultyChooser);
+ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
 ui.menuButton.addEventListener("click", () => {
   if (!ui.menuButton.disabled && !ui.gameMenuDialog.open) {
     ui.gameMenuDialog.showModal();
@@ -1329,6 +1523,7 @@ ui.restartGameButton.addEventListener("click", () => {
   startGame();
 });
 ui.changeDifficultyButton.addEventListener("click", showDifficultyChooser);
+ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
 ui.gameMenuDialog.addEventListener("cancel", (event) => {
   event.preventDefault();
@@ -1336,6 +1531,29 @@ ui.gameMenuDialog.addEventListener("cancel", (event) => {
 });
 ui.gameMenuDialog.addEventListener("close", () => {
   ui.menuButton.setAttribute("aria-expanded", "false");
+});
+document.querySelectorAll("[data-close-settings]").forEach((button) => {
+  button.addEventListener("click", () => ui.settingsDialog.close());
+});
+document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
+  option.addEventListener("change", () => {
+    if (!option.checked || !CLASH_STYLES.includes(option.value)) return;
+    state.clashStyle = option.value;
+    renderSettings(saveClashStyle(state.clashStyle));
+  });
+});
+ui.settingsDialog.addEventListener("close", () => {
+  const returnTarget = settingsReturnTarget;
+  settingsReturnTarget = null;
+  if (
+    returnTarget === "game"
+    && !ui.menuButton.hidden
+    && !ui.gameMenuDialog.open
+    && !ui.resultDialog.open
+  ) {
+    ui.gameMenuDialog.showModal();
+    ui.menuButton.setAttribute("aria-expanded", "true");
+  }
 });
 document.querySelectorAll("[data-difficulty]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -1363,4 +1581,5 @@ document.addEventListener("click", (event) => {
 }, { capture: true });
 
 renderGallery();
+renderSettings(saveClashStyle(state.clashStyle));
 showMainMenu();
