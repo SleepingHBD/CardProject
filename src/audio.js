@@ -30,9 +30,9 @@
     "./assets/audio/clash/card-impact-3.wav",
   ]);
   const CLASH_HIT_GAIN = 0.64;
-  const CARD_HOVER_SOUND_ENABLED = false;
+  const CARD_HOVER_SOUND_ENABLED = true;
   const cardSoundSources = Object.freeze({
-    hover: Object.freeze(["./assets/audio/cards/hover-1.wav?v=foley-1"]),
+    hover: Object.freeze(["./assets/audio/cards/hover-1.wav?v=foley-2"]),
     select: Object.freeze([
       "./assets/audio/cards/select-1.wav?v=foley-1",
       "./assets/audio/cards/select-2.wav?v=foley-1",
@@ -56,7 +56,7 @@
     reveal3: Object.freeze(["./assets/audio/cards/reveal-3.wav?v=foley-1"]),
   });
   const cardSoundGains = Object.freeze({
-    hover: 0.22,
+    hover: 0.12,
     select: 0.5,
     remove: 0.46,
     deal: 0.52,
