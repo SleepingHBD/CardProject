@@ -6,6 +6,14 @@
   const destructionBuffers = new Map();
   const destructionByteLoads = new Map();
   const destructionLoads = new Map();
+  const clashHitBuffers = new Map();
+  const clashHitByteLoads = new Map();
+  const clashHitLoads = new Map();
+  const cardSoundBuffers = new Map();
+  const cardSoundByteLoads = new Map();
+  const cardSoundLoads = new Map();
+  const nextCardSample = new Map();
+  let nextClashHit = 0;
   const destructionSources = Object.freeze({
     ember: "./assets/audio/clash/ember-destroy.wav",
     tide: "./assets/audio/clash/tide-destroy.wav",
@@ -16,6 +24,53 @@
     tide: 0.36,
     gust: 0.4,
   });
+  const clashHitSources = Object.freeze([
+    "./assets/audio/clash/card-impact-1.wav",
+    "./assets/audio/clash/card-impact-2.wav",
+    "./assets/audio/clash/card-impact-3.wav",
+  ]);
+  const CLASH_HIT_GAIN = 0.64;
+  const CARD_HOVER_SOUND_ENABLED = false;
+  const cardSoundSources = Object.freeze({
+    hover: Object.freeze(["./assets/audio/cards/hover-1.wav?v=foley-1"]),
+    select: Object.freeze([
+      "./assets/audio/cards/select-1.wav?v=foley-1",
+      "./assets/audio/cards/select-2.wav?v=foley-1",
+    ]),
+    remove: Object.freeze([
+      "./assets/audio/cards/remove-1.wav?v=foley-1",
+      "./assets/audio/cards/remove-2.wav?v=foley-1",
+    ]),
+    deal: Object.freeze([
+      "./assets/audio/cards/deal-1.wav?v=foley-1",
+      "./assets/audio/cards/deal-2.wav?v=foley-1",
+      "./assets/audio/cards/deal-3.wav?v=foley-1",
+    ]),
+    shuffleOpen: Object.freeze(["./assets/audio/cards/shuffle-open.wav?v=foley-1"]),
+    shuffleClose: Object.freeze(["./assets/audio/cards/shuffle-close.wav?v=foley-1"]),
+    commit1: Object.freeze(["./assets/audio/cards/commit-1.wav?v=foley-1"]),
+    commit2: Object.freeze(["./assets/audio/cards/commit-2.wav?v=foley-1"]),
+    commit3: Object.freeze(["./assets/audio/cards/commit-3.wav?v=foley-1"]),
+    reveal1: Object.freeze(["./assets/audio/cards/reveal-1.wav?v=foley-1"]),
+    reveal2: Object.freeze(["./assets/audio/cards/reveal-2.wav?v=foley-1"]),
+    reveal3: Object.freeze(["./assets/audio/cards/reveal-3.wav?v=foley-1"]),
+  });
+  const cardSoundGains = Object.freeze({
+    hover: 0.22,
+    select: 0.5,
+    remove: 0.46,
+    deal: 0.52,
+    shuffleOpen: 0.6,
+    shuffleClose: 0.58,
+    commit1: 0.62,
+    commit2: 0.62,
+    commit3: 0.62,
+    reveal1: 0.54,
+    reveal2: 0.54,
+    reveal3: 0.54,
+  });
+  const cardSoundCount = Object.values(cardSoundSources)
+    .reduce((total, sources) => total + sources.length, 0);
 
   function createContext() {
     if (!enabled) return null;
@@ -35,6 +90,8 @@
       master.gain.value = 0.72;
       master.connect(compressor).connect(context.destination);
       preloadDestructionSounds(context);
+      preloadClashHitSounds(context);
+      preloadCardSounds(context);
     }
 
     if (context.state === "suspended") context.resume().catch(() => {});
@@ -78,6 +135,90 @@
     });
   }
 
+  function requestClashHitBytes() {
+    if (typeof global.fetch !== "function") return;
+    clashHitSources.forEach((sourcePath, index) => {
+      if (clashHitByteLoads.has(index)) return;
+      const load = global.fetch(sourcePath)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+          return response.arrayBuffer();
+        })
+        .catch(() => null);
+      clashHitByteLoads.set(index, load);
+    });
+  }
+
+  function preloadClashHitSounds(audioContext) {
+    requestClashHitBytes();
+    clashHitSources.forEach((sourcePath, index) => {
+      if (clashHitBuffers.has(index) || clashHitLoads.has(index)) return;
+      const byteLoad = clashHitByteLoads.get(index);
+      if (!byteLoad) return;
+      const load = byteLoad
+        .then((bytes) => bytes ? audioContext.decodeAudioData(bytes.slice(0)) : null)
+        .then((buffer) => {
+          if (buffer) {
+            clashHitBuffers.set(index, buffer);
+            if (clashHitBuffers.size === clashHitSources.length) {
+              global.document?.documentElement?.setAttribute(
+                "data-clash-impact-audio",
+                "ready",
+              );
+            }
+          }
+          return buffer;
+        })
+        .catch(() => null);
+      clashHitLoads.set(index, load);
+    });
+  }
+
+  function requestCardSoundBytes() {
+    if (typeof global.fetch !== "function") return;
+    Object.entries(cardSoundSources).forEach(([bank, sources]) => {
+      sources.forEach((sourcePath, index) => {
+        const key = `${bank}:${index}`;
+        if (cardSoundByteLoads.has(key)) return;
+        const load = global.fetch(sourcePath)
+          .then((response) => {
+            if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+            return response.arrayBuffer();
+          })
+          .catch(() => null);
+        cardSoundByteLoads.set(key, load);
+      });
+    });
+  }
+
+  function preloadCardSounds(audioContext) {
+    requestCardSoundBytes();
+    Object.entries(cardSoundSources).forEach(([bank, sources]) => {
+      sources.forEach((sourcePath, index) => {
+        const key = `${bank}:${index}`;
+        if (cardSoundBuffers.has(key) || cardSoundLoads.has(key)) return;
+        const byteLoad = cardSoundByteLoads.get(key);
+        if (!byteLoad) return;
+        const load = byteLoad
+          .then((bytes) => bytes ? audioContext.decodeAudioData(bytes.slice(0)) : null)
+          .then((buffer) => {
+            if (buffer) {
+              cardSoundBuffers.set(key, buffer);
+              if (cardSoundBuffers.size === cardSoundCount) {
+                global.document?.documentElement?.setAttribute(
+                  "data-card-audio",
+                  "ready",
+                );
+              }
+            }
+            return buffer;
+          })
+          .catch(() => null);
+        cardSoundLoads.set(key, load);
+      });
+    });
+  }
+
   function getNoiseBuffer(audioContext) {
     if (noiseBuffer) return noiseBuffer;
     const length = audioContext.sampleRate;
@@ -99,6 +240,43 @@
     panner.pan.value = Math.max(-1, Math.min(1, pan));
     panner.connect(master);
     return panner;
+  }
+
+  function playCardSample(bank, pan = 0) {
+    const audioContext = createContext();
+    const sources = cardSoundSources[bank];
+    if (!audioContext || !sources?.length) return false;
+
+    const preferredIndex = (nextCardSample.get(bank) || 0) % sources.length;
+    const readyIndices = sources
+      .map((sourcePath, index) => index)
+      .filter((index) => cardSoundBuffers.has(`${bank}:${index}`));
+    if (readyIndices.length === 0) return false;
+
+    const selectedIndex = readyIndices.includes(preferredIndex)
+      ? preferredIndex
+      : readyIndices[0];
+    const buffer = cardSoundBuffers.get(`${bank}:${selectedIndex}`);
+    if (!buffer) return false;
+
+    nextCardSample.set(bank, (selectedIndex + 1) % sources.length);
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    const output = outputFor(audioContext, pan);
+    source.buffer = buffer;
+    gain.gain.value = cardSoundGains[bank] ?? 0.5;
+    source.connect(gain).connect(output);
+    source.addEventListener("ended", () => {
+      source.disconnect();
+      gain.disconnect();
+      if (output !== master) output.disconnect();
+    }, { once: true });
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      `${bank}-file-${selectedIndex + 1}`,
+    );
+    source.start();
+    return true;
   }
 
   function noise({
@@ -176,6 +354,12 @@
 
   function cardFlip(selected = true, order = 1) {
     if (!createContext()) return;
+    const cardBank = selected ? "select" : "remove";
+    if (playCardSample(cardBank)) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      `${cardBank}-fallback`,
+    );
     const pitchLift = Math.max(0, order - 1) * 90;
 
     noise({
@@ -207,7 +391,13 @@
   }
 
   function cardHover() {
+    if (!CARD_HOVER_SOUND_ENABLED) return;
     if (!createContext()) return;
+    if (playCardSample("hover")) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      "hover-fallback",
+    );
 
     noise({
       duration: 0.045,
@@ -296,6 +486,12 @@
 
   function deckShuffle(closing = false) {
     if (!createContext()) return;
+    const cardBank = closing ? "shuffleClose" : "shuffleOpen";
+    if (playCardSample(cardBank)) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      `${cardBank}-fallback`,
+    );
 
     for (let index = 0; index < 7; index += 1) {
       const fromLeft = index % 2 === 0;
@@ -324,6 +520,11 @@
   function cardDeal(order = 0) {
     if (!createContext()) return;
     const pan = Math.max(-0.45, Math.min(0.45, (order - 2.5) * 0.16));
+    if (playCardSample("deal", pan)) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      "deal-fallback",
+    );
 
     noise({
       duration: 0.055,
@@ -353,6 +554,15 @@
   }
 
   function commit(cardCount = 1) {
+    if (!createContext()) return;
+    const boundedCardCount = Math.max(1, Math.min(3, cardCount));
+    const cardBank = `commit${boundedCardCount}`;
+    if (playCardSample(cardBank)) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      `${cardBank}-fallback`,
+    );
+
     for (let index = 0; index < cardCount; index += 1) {
       noise({
         when: index * 0.035,
@@ -384,6 +594,15 @@
   }
 
   function reveal(cardCount = 1) {
+    if (!createContext()) return;
+    const boundedCardCount = Math.max(1, Math.min(3, cardCount));
+    const cardBank = `reveal${boundedCardCount}`;
+    if (playCardSample(cardBank)) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-card-audio",
+      `${cardBank}-fallback`,
+    );
+
     for (let index = 0; index < cardCount; index += 1) {
       const when = index * 0.055;
       noise({
@@ -559,9 +778,44 @@
     });
   }
 
+  function clashHit() {
+    const audioContext = createContext();
+    if (!audioContext || clashHitBuffers.size === 0) return false;
+
+    let selectedIndex = nextClashHit % clashHitSources.length;
+    if (!clashHitBuffers.has(selectedIndex)) {
+      selectedIndex = [...clashHitBuffers.keys()][0];
+    }
+    const buffer = clashHitBuffers.get(selectedIndex);
+    if (!buffer) return false;
+
+    nextClashHit = (selectedIndex + 1) % clashHitSources.length;
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    source.buffer = buffer;
+    gain.gain.value = CLASH_HIT_GAIN;
+    source.connect(gain).connect(master);
+    source.addEventListener("ended", () => {
+      source.disconnect();
+      gain.disconnect();
+    }, { once: true });
+    global.document?.documentElement?.setAttribute(
+      "data-last-clash-impact-audio",
+      `file-${selectedIndex + 1}`,
+    );
+    source.start();
+    return true;
+  }
+
   function clashImpact(playerElement, aiElement, winner, cinematic = false) {
     if (!createContext()) return;
-    impactCrunch();
+    if (!clashHit()) {
+      global.document?.documentElement?.setAttribute(
+        "data-last-clash-impact-audio",
+        "fallback",
+      );
+      impactCrunch();
+    }
     const playerIntensity = winner === "player" ? 1 : winner === "draw" ? 0.78 : 0.58;
     const aiIntensity = winner === "ai" ? 1 : winner === "draw" ? 0.78 : 0.58;
     const customPlayerDestruction = (
@@ -658,6 +912,8 @@
   }
 
   requestDestructionBytes();
+  requestClashHitBytes();
+  requestCardSoundBytes();
 
   global.ClawAudio = Object.freeze({
     cardFlip,
