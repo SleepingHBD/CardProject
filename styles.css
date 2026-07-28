@@ -2100,6 +2100,7 @@ footer {
   width: min(1120px, calc(100vw - 28px));
   max-height: 90dvh;
   overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
 }
 
 .gallery-dialog h2 {
