@@ -11,11 +11,44 @@ packaged as WebP assets for the game.
 - Thinner, purposeful interior lines.
 - Flat matte color fills with one hard-edged cel-shadow shape per major form.
 - Large eyes, simple muzzle construction, readable brows, and expressive ears.
-- Four grouped digits on each visible paw; coherent limbs and prop contact.
+- Simple grouped paw shapes with no extra toe bumps; coherent limbs and prop
+  contact.
 - A distinct action silhouette for every character.
 - One large graphic background shape plus a few element-specific accents.
 - Faces and important props stay readable in the upper-central shallow crop used
   by cards in the player's hand.
+
+## Fixed rendering standard
+
+Every card uses the same production ceiling, regardless of rarity:
+
+- Outer contours are warm-black, bold, and visually consistent with
+  `sizzle-mittens.webp`; interior lines are approximately half that weight.
+- Each material receives one flat base color, no more than one hard-edged shadow
+  tone, and no more than one small flat highlight tone.
+- Fur is described with silhouette tufts and a few deliberate interior shapes,
+  never strand-by-strand rendering or soft modeled volume.
+- Metal, water, cloth, stone, and wood remain graphic shapes. Do not add
+  realistic reflections, grain overlays, soft gradients, bloom, or airbrushed
+  lighting.
+- Fine details must remain legible in a 180-pixel-wide card. If a bead, seam,
+  scale, stone, or pattern disappears at that size, simplify or remove it.
+- Legendary and epic cards earn spectacle through pose, silhouette, props, and
+  elemental effects—not through a different rendering style or extra polish.
+
+## Approved background formats
+
+Cards may use either format; both belong to the same collection:
+
+1. **Graphic emblem:** one large flat circle or simple heraldic shape plus a few
+   element-specific accents.
+2. **Simplified scene:** one shallow medieval location built from broad flat
+   shapes, with no more than three supporting environmental motifs.
+
+Both formats use the element palette, the fixed rendering standard above, and
+minimal depth. Do not use painterly scenery, realistic surface texture,
+atmospheric perspective, detailed masonry, or shadows that compete with the
+character. Background variety is allowed; rendering-pipeline variety is not.
 
 ## What to avoid
 
@@ -76,7 +109,7 @@ Use the current `sizzle-mittens.webp` as the card style reference and
 > outer contour, thinner purposeful inner lines, completely flat matte fills,
 > and one hard-edged cel-shadow shape per major form. Keep the face and both eyes
 > large in the upper-center, safe for a shallow landscape crop. Use coherent
-> feline anatomy and four grouped digits per visible paw. Create a distinct
+> feline anatomy and simple grouped paws with no extra toe bumps. Create a distinct
 > asymmetric action silhouette and a sparse, flat elemental background. No
 > texture, grain, distress, hatching, engraved lines, individual fur strands,
 > airbrush, gradients, glow, painterly rendering, tiny clutter, random
@@ -107,21 +140,24 @@ Append the card-specific action and prop brief below.
   large ribbon spiral.
 - Gale Groomer: fluffy white epic airship captain pointing from a wooden prow.
 - Kitewhisker: orange kitten bracing against one kite's pull on a rampart.
-- Dandelion Dash: compact scruffy brown herald-courier in a low three-point
-  starting crouch, wearing a plain quartered tabard and bycocket cap and
-  carrying one wax-sealed dispatch.
+- Dandelion Dash: compact warm-brown tabby herald-courier sprinting low in a
+  green-and-cream courier tunic, simple green cap, belt, and side satchel while
+  clutching one wax-sealed dispatch. Use only the cream badge, dandelion plants,
+  and airborne seeds as broad flat supporting shapes, with no castle or detailed
+  ground texture.
 - Puddle Pouncer: calico kitten leaping into one bold graphic splash.
 - Bubble Bengal: compact Bengal court bubble-seer perched low on broad haunches
   in a sleeveless blue surcoat, holding one bubble wand and one open pearl shell.
 - Moonpool Mouser: hooded navy cat crouched beside a circular moon pool.
 - Empress Ebb: compact, broad-pawed silver-blue Nebelung maritime sovereign with
-  an oversized feline head, wearing a coral-and-pearl crown, broad pearl collar,
-  and Byzantine-inspired navy-and-teal lamellar armour fitted to her short cat
-  stature. She plants one ceremonial trident, points her decree with the other
-  paw, and commands one stylized wave with a knowing one-fanged grin, raised
-  brow, cocked ear, and lively tail. Keep her pose diagonal and asymmetrical,
-  against a clean, uniform navy circle with no dark shadow markings, patterns,
-  or creature silhouettes.
+  an oversized feline head, wearing a simplified three-branch coral-and-pearl
+  crown, three-pearl collar, and broad-scale navy-and-teal lamellar surcoat
+  fitted to her short cat stature. She plants one ceremonial trident, points
+  her decree with the other paw, and commands one stylized wave with a knowing
+  one-fanged grin, raised brow, cocked ear, and lively tail. Keep her pose
+  diagonal and asymmetrical against a clean, uniform navy circle with no dark
+  shadow markings, patterns, or creature silhouettes. Her legendary status
+  comes from her silhouette and action, not extra rendering detail.
 - Wellwater Wisp: calico well-keeper in a sleeveless teal wool kirtle and rope
   belt, pulling one bucket with both bare forelegs visible.
 - Mizzle Motley: slender slate-blue castle fool and water-juggler in a

@@ -48,8 +48,18 @@ def crop_grid(source: Path, names: list[str]) -> None:
 for _, (sheet, card_names) in SHEETS.items():
     crop_grid(sheet, card_names)
 
+dandelion_dash = Image.open(
+    GENERATED / "call_oP6u5ybyO5Z1BTsr5ai2KlPz.png"
+).convert("RGB")
+dandelion_dash.resize((768, 768), Image.Resampling.LANCZOS).save(
+    OUTPUT / "cards" / "dandelion-dash.webp",
+    "WEBP",
+    quality=91,
+    method=6,
+)
+
 empress_ebb = Image.open(
-    GENERATED / "call_mv9R2O8Q5i2XvlTm7ctl3RXD.png"
+    GENERATED / "call_t9NcLcjys8bruCare3ARX6Kg.png"
 ).convert("RGB")
 empress_ebb.resize((768, 768), Image.Resampling.LANCZOS).save(
     OUTPUT / "cards" / "empress-ebb.webp",
