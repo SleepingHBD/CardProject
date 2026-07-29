@@ -306,25 +306,25 @@
       <div class="settings-tabs" role="tablist" aria-label="Settings sections">
         <button
           class="settings-tab is-active"
-          id="clashSettingsTab"
-          data-settings-panel="clash"
-          type="button"
-          role="tab"
-          aria-selected="true"
-          aria-controls="clashSettingsPanel"
-        >
-          Clash Presentation
-        </button>
-        <button
-          class="settings-tab"
           id="audioSettingsTab"
           data-settings-panel="audio"
           type="button"
           role="tab"
-          aria-selected="false"
+          aria-selected="true"
           aria-controls="audioSettingsPanel"
         >
           Audio
+        </button>
+        <button
+          class="settings-tab"
+          id="clashSettingsTab"
+          data-settings-panel="clash"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="clashSettingsPanel"
+        >
+          Clash Presentation
         </button>
       </div>
       <section
@@ -332,6 +332,7 @@
         id="clashSettingsPanel"
         role="tabpanel"
         aria-labelledby="clashSettingsTab"
+        hidden
       >
         <fieldset class="clash-style-options">
           <legend>Clash style</legend>
@@ -363,7 +364,6 @@
         id="audioSettingsPanel"
         role="tabpanel"
         aria-labelledby="audioSettingsTab"
-        hidden
       >
         <p class="audio-settings-intro">
           Balance the complete mix, menu and duel music, and card or clash effects independently.

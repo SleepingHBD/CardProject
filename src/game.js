@@ -1514,7 +1514,7 @@ function openSettings(returnTarget) {
   settingsReturnTarget = returnTarget;
   if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
   renderSettings();
-  showSettingsPanel("clash");
+  showSettingsPanel("audio");
   if (!ui.settingsDialog.open) ui.settingsDialog.showModal();
 }
 
