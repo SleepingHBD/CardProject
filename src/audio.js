@@ -1,8 +1,13 @@
 (function exposeClawAudio(global) {
   let context = null;
   let master = null;
+  let effectsBus = null;
   let noiseBuffer = null;
   let enabled = true;
+  const musicTracks = new Map();
+  let requestedMusicTrack = null;
+  let activeMusicTrack = null;
+  let musicTransition = 0;
   const destructionBuffers = new Map();
   const destructionByteLoads = new Map();
   const destructionLoads = new Map();
@@ -14,6 +19,21 @@
   const cardSoundLoads = new Map();
   const nextCardSample = new Map();
   let nextClashHit = 0;
+  const musicSources = Object.freeze({
+    menu: Object.freeze({
+      source: "./assets/audio/music/nature-nurture.mp3",
+      trim: 0.82,
+    }),
+    duel: Object.freeze({
+      source: "./assets/audio/music/video-game-soldiers.mp3",
+      trim: 1,
+    }),
+  });
+  const volumeLevels = {
+    master: 0.72,
+    music: 0.12,
+    effects: 1,
+  };
   const destructionSources = Object.freeze({
     ember: "./assets/audio/clash/ember-destroy.wav",
     tide: "./assets/audio/clash/tide-destroy.wav",
@@ -87,15 +107,182 @@
       compressor.release.value = 0.18;
 
       master = context.createGain();
-      master.gain.value = 0.72;
+      master.gain.value = volumeLevels.master;
       master.connect(compressor).connect(context.destination);
+
+      effectsBus = context.createGain();
+      effectsBus.gain.value = volumeLevels.effects;
+      effectsBus.connect(master);
       preloadDestructionSounds(context);
       preloadClashHitSounds(context);
       preloadCardSounds(context);
     }
 
-    if (context.state === "suspended") context.resume().catch(() => {});
+    if (context.state === "suspended") {
+      context.resume()
+        .then(() => resumeRequestedMusic())
+        .catch(() => {});
+    }
     return context;
+  }
+
+  function clampVolume(value, fallback) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return fallback;
+    return Math.max(0, Math.min(1, numericValue));
+  }
+
+  function updateGain(gainNode, value) {
+    if (!gainNode) return;
+    if (!context || context.state === "closed") {
+      gainNode.gain.value = value;
+      return;
+    }
+
+    const now = context.currentTime;
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setTargetAtTime(value, now, 0.025);
+  }
+
+  function setVolumes(nextVolumes = {}) {
+    volumeLevels.master = clampVolume(nextVolumes.master, volumeLevels.master);
+    volumeLevels.music = clampVolume(nextVolumes.music, volumeLevels.music);
+    volumeLevels.effects = clampVolume(nextVolumes.effects, volumeLevels.effects);
+    updateGain(master, volumeLevels.master);
+    updateGain(effectsBus, volumeLevels.effects);
+    const activeTrack = musicTracks.get(activeMusicTrack);
+    if (activeTrack) {
+      updateGain(
+        activeTrack.gain,
+        volumeLevels.music * musicSources[activeMusicTrack].trim,
+      );
+    }
+    return { ...volumeLevels };
+  }
+
+  function getVolumes() {
+    return { ...volumeLevels };
+  }
+
+  function setMusicStatus(trackName, status) {
+    const root = global.document?.documentElement;
+    root?.setAttribute("data-music-track", trackName || "none");
+    root?.setAttribute("data-music-state", status);
+    if (trackName === "duel") root?.setAttribute("data-duel-music", status);
+  }
+
+  function ensureMusicTrack(audioContext, trackName) {
+    const existingTrack = musicTracks.get(trackName);
+    if (existingTrack) return existingTrack;
+    const trackConfig = musicSources[trackName];
+    if (!trackConfig) return null;
+    const element = global.document?.createElement("audio");
+    if (!element || typeof audioContext.createMediaElementSource !== "function") {
+      return null;
+    }
+
+    element.src = trackConfig.source;
+    element.loop = true;
+    element.preload = "auto";
+    element.setAttribute("playsinline", "");
+
+    const source = audioContext.createMediaElementSource(element);
+    const gain = audioContext.createGain();
+    gain.gain.value = 0.0001;
+    source.connect(gain).connect(master);
+    const track = { element, source, gain };
+    musicTracks.set(trackName, track);
+
+    element.addEventListener("playing", () => {
+      if (requestedMusicTrack === trackName) setMusicStatus(trackName, "playing");
+    });
+    element.addEventListener("waiting", () => {
+      if (requestedMusicTrack === trackName) setMusicStatus(trackName, "loading");
+    });
+    element.addEventListener("error", () => {
+      if (requestedMusicTrack === trackName) setMusicStatus(trackName, "error");
+    });
+
+    return track;
+  }
+
+  function startMusic(trackName) {
+    if (!musicSources[trackName]) return;
+    requestedMusicTrack = trackName;
+    const transition = ++musicTransition;
+    const audioContext = createContext();
+    if (!audioContext) return;
+    const nextTrack = ensureMusicTrack(audioContext, trackName);
+    if (!nextTrack) return;
+
+    const previousTrackName = activeMusicTrack;
+    const previousTrack = previousTrackName
+      ? musicTracks.get(previousTrackName)
+      : null;
+    activeMusicTrack = trackName;
+
+    const now = audioContext.currentTime;
+    nextTrack.gain.gain.cancelScheduledValues(now);
+    nextTrack.gain.gain.setValueAtTime(
+      Math.max(0.0001, nextTrack.gain.gain.value),
+      now,
+    );
+    nextTrack.gain.gain.exponentialRampToValueAtTime(
+      Math.max(0.0001, volumeLevels.music * musicSources[trackName].trim),
+      now + (previousTrackName && previousTrackName !== trackName ? 0.8 : 1.2),
+    );
+    setMusicStatus(trackName, "loading");
+    nextTrack.element.play().catch(() => {
+      if (requestedMusicTrack === trackName) setMusicStatus(trackName, "blocked");
+    });
+
+    if (!previousTrack || previousTrackName === trackName) return;
+    previousTrack.gain.gain.cancelScheduledValues(now);
+    previousTrack.gain.gain.setValueAtTime(
+      Math.max(0.0001, previousTrack.gain.gain.value),
+      now,
+    );
+    previousTrack.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+    global.setTimeout(() => {
+      if (transition !== musicTransition || activeMusicTrack === previousTrackName) {
+        return;
+      }
+      previousTrack.element.pause();
+      previousTrack.element.currentTime = 0;
+      previousTrack.gain.gain.value = 0.0001;
+    }, 700);
+  }
+
+  function resumeRequestedMusic() {
+    if (!enabled || !requestedMusicTrack || !context) return;
+    const track = ensureMusicTrack(context, requestedMusicTrack);
+    if (!track) return;
+    const targetGain = volumeLevels.music * musicSources[requestedMusicTrack].trim;
+    updateGain(track.gain, targetGain);
+    track.element.play().catch(() => {
+      setMusicStatus(requestedMusicTrack, "blocked");
+    });
+  }
+
+  function startMainMenuMusic() {
+    startMusic("menu");
+  }
+
+  function startDuelMusic() {
+    startMusic("duel");
+  }
+
+  function stopDuelMusic() {
+    if (requestedMusicTrack !== "duel") return;
+    requestedMusicTrack = null;
+    activeMusicTrack = null;
+    musicTransition += 1;
+    musicTracks.forEach((track) => {
+      track.element.pause();
+      track.element.currentTime = 0;
+      track.gain.gain.value = 0.0001;
+    });
+    setMusicStatus(null, "stopped");
   }
 
   function requestDestructionBytes() {
@@ -235,10 +422,10 @@
   }
 
   function outputFor(audioContext, pan = 0) {
-    if (typeof audioContext.createStereoPanner !== "function") return master;
+    if (typeof audioContext.createStereoPanner !== "function") return effectsBus;
     const panner = audioContext.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    panner.connect(master);
+    panner.connect(effectsBus);
     return panner;
   }
 
@@ -269,7 +456,7 @@
     source.addEventListener("ended", () => {
       source.disconnect();
       gain.disconnect();
-      if (output !== master) output.disconnect();
+      if (output !== effectsBus) output.disconnect();
     }, { once: true });
     global.document?.documentElement?.setAttribute(
       "data-last-card-audio",
@@ -312,7 +499,7 @@
       source.disconnect();
       filter.disconnect();
       gain.disconnect();
-      if (output !== master) output.disconnect();
+      if (output !== effectsBus) output.disconnect();
     }, { once: true });
     source.start(start);
     source.stop(start + duration + 0.02);
@@ -346,7 +533,7 @@
     source.addEventListener("ended", () => {
       source.disconnect();
       gain.disconnect();
-      if (output !== master) output.disconnect();
+      if (output !== effectsBus) output.disconnect();
     }, { once: true });
     source.start(start);
     source.stop(start + duration + 0.02);
@@ -794,7 +981,7 @@
     const gain = audioContext.createGain();
     source.buffer = buffer;
     gain.gain.value = CLASH_HIT_GAIN;
-    source.connect(gain).connect(master);
+    source.connect(gain).connect(effectsBus);
     source.addEventListener("ended", () => {
       source.disconnect();
       gain.disconnect();
@@ -859,7 +1046,7 @@
     source.addEventListener("ended", () => {
       source.disconnect();
       gain.disconnect();
-      if (output !== master) output.disconnect();
+      if (output !== effectsBus) output.disconnect();
     }, { once: true });
     global.document?.documentElement?.setAttribute(
       "data-last-destruction-audio",
@@ -905,6 +1092,7 @@
   function setEnabled(nextEnabled) {
     enabled = Boolean(nextEnabled);
     if (enabled) {
+      resumeRequestedMusic();
       cardFlip(true, 1);
     } else if (context?.state === "running") {
       context.suspend().catch(() => {});
@@ -930,6 +1118,11 @@
     cardDestruction,
     roundResult,
     matchResult,
+    startMainMenuMusic,
+    startDuelMusic,
+    stopDuelMusic,
+    setVolumes,
+    getVolumes,
     setEnabled,
   });
 })(globalThis);

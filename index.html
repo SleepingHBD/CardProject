@@ -246,6 +246,17 @@
           Settings
         </button>
       </div>
+      <p class="main-menu-music-credit">
+        Menu:
+        <a href="https://www.quincasmoreira.com/music-and-sound-libraries" target="_blank" rel="noopener noreferrer">
+          “Nature Nurture” by Quincas Moreira
+        </a>
+        · Duel:
+        <a href="https://www.twinmusicom.org/song/295/video-game-soldiers" target="_blank" rel="noopener noreferrer">
+          “Video Game Soldiers” by Twin Musicom
+        </a>
+        (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)
+      </p>
     </section>
 
     <dialog
@@ -288,34 +299,96 @@
     >
       <button class="dialog-close" data-close-settings type="button" aria-label="Close settings">×</button>
       <p class="eyebrow">DUEL SETTINGS</p>
-      <h2 id="settingsTitle">Clash Presentation</h2>
+      <h2 id="settingsTitle">Settings</h2>
       <p class="settings-intro" id="settingsIntro">
-        Choose how much detail each clash receives. Both styles play directly on the board without changing the surrounding interface. Scoring and gameplay remain identical.
+        Adjust the duel’s presentation and audio. These choices are saved for this browser.
       </p>
-      <fieldset class="clash-style-options">
-        <legend>Clash style</legend>
-        <label class="clash-style-option">
-          <input type="radio" name="clashStyle" value="cinematic" />
-          <span class="clash-style-seal cinematic-seal" aria-hidden="true">✦</span>
-          <span>
-            <strong>Cinematic</strong>
-            <small>Plays a longer elemental defeat sequence: Ember chars, Gust tears, and Tide soaks the losing card.</small>
-            <em>Detailed effects · Longer presentation</em>
-          </span>
-        </label>
-        <label class="clash-style-option">
-          <input type="radio" name="clashStyle" value="classic" />
-          <span class="clash-style-seal" aria-hidden="true">◆</span>
-          <span>
-            <strong>Classic</strong>
-            <small>Uses a quick card strike and impact burst, then shows the result immediately.</small>
-            <em>Faster · Original presentation</em>
-          </span>
-        </label>
-      </fieldset>
-      <p class="settings-status" id="settingsStatus" aria-live="polite">
-        Cinematic clashes are currently selected.
-      </p>
+      <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button
+          class="settings-tab is-active"
+          id="clashSettingsTab"
+          data-settings-panel="clash"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="clashSettingsPanel"
+        >
+          Clash Presentation
+        </button>
+        <button
+          class="settings-tab"
+          id="audioSettingsTab"
+          data-settings-panel="audio"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="audioSettingsPanel"
+        >
+          Audio
+        </button>
+      </div>
+      <section
+        class="settings-panel"
+        id="clashSettingsPanel"
+        role="tabpanel"
+        aria-labelledby="clashSettingsTab"
+      >
+        <fieldset class="clash-style-options">
+          <legend>Clash style</legend>
+          <label class="clash-style-option">
+            <input type="radio" name="clashStyle" value="cinematic" />
+            <span class="clash-style-seal cinematic-seal" aria-hidden="true">✦</span>
+            <span>
+              <strong>Cinematic</strong>
+              <small>Plays a longer elemental defeat sequence: Ember chars, Gust tears, and Tide soaks the losing card.</small>
+              <em>Detailed effects · Longer presentation</em>
+            </span>
+          </label>
+          <label class="clash-style-option">
+            <input type="radio" name="clashStyle" value="classic" />
+            <span class="clash-style-seal" aria-hidden="true">◆</span>
+            <span>
+              <strong>Classic</strong>
+              <small>Uses a quick card strike and impact burst, then shows the result immediately.</small>
+              <em>Faster · Original presentation</em>
+            </span>
+          </label>
+        </fieldset>
+        <p class="settings-status" id="settingsStatus" aria-live="polite">
+          Cinematic clashes are currently selected.
+        </p>
+      </section>
+      <section
+        class="settings-panel audio-settings-panel"
+        id="audioSettingsPanel"
+        role="tabpanel"
+        aria-labelledby="audioSettingsTab"
+        hidden
+      >
+        <p class="audio-settings-intro">
+          Balance the complete mix, menu and duel music, and card or clash effects independently.
+        </p>
+        <div class="audio-volume-controls">
+          <label class="audio-volume-control" for="masterVolume">
+            <span><strong>Master Volume</strong><output id="masterVolumeValue" for="masterVolume">72%</output></span>
+            <small>Controls the overall game volume.</small>
+            <input id="masterVolume" data-audio-volume="master" type="range" min="0" max="100" step="1" value="72" />
+          </label>
+          <label class="audio-volume-control" for="musicVolume">
+            <span><strong>Music Volume</strong><output id="musicVolumeValue" for="musicVolume">12%</output></span>
+            <small>Controls the music on the main menu and during duels.</small>
+            <input id="musicVolume" data-audio-volume="music" type="range" min="0" max="100" step="1" value="12" />
+          </label>
+          <label class="audio-volume-control" for="effectsVolume">
+            <span><strong>Sound Effects Volume</strong><output id="effectsVolumeValue" for="effectsVolume">100%</output></span>
+            <small>Controls cards, buttons, clashes, and elemental effects.</small>
+            <input id="effectsVolume" data-audio-volume="effects" type="range" min="0" max="100" step="1" value="100" />
+          </label>
+        </div>
+        <p class="settings-status" id="audioSettingsStatus" aria-live="polite">
+          Audio levels are saved for this browser.
+        </p>
+      </section>
       <button class="primary-button settings-done-button" data-close-settings type="button">Done</button>
     </dialog>
 

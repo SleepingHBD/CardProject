@@ -66,6 +66,12 @@ const ARCHIVE_SORT_SUMMARIES = {
 };
 const CLASH_STYLES = Object.freeze(["cinematic", "classic"]);
 const CLASH_STYLE_STORAGE_KEY = "projectProwl.clashStyle";
+const AUDIO_VOLUME_STORAGE_KEY = "projectProwl.audioVolumes";
+const DEFAULT_AUDIO_VOLUMES = Object.freeze({
+  master: 0.72,
+  music: 0.12,
+  effects: 1,
+});
 
 function readSavedClashStyle() {
   try {
@@ -73,6 +79,26 @@ function readSavedClashStyle() {
     return CLASH_STYLES.includes(savedStyle) ? savedStyle : "cinematic";
   } catch {
     return "cinematic";
+  }
+}
+
+function normalizedAudioVolumes(volumes = {}) {
+  return Object.fromEntries(
+    Object.entries(DEFAULT_AUDIO_VOLUMES).map(([key, fallback]) => {
+      const value = Number(volumes[key]);
+      return [key, Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback];
+    }),
+  );
+}
+
+function readSavedAudioVolumes() {
+  try {
+    const savedVolumes = JSON.parse(
+      window.localStorage.getItem(AUDIO_VOLUME_STORAGE_KEY) || "{}",
+    );
+    return normalizedAudioVolumes(savedVolumes);
+  } catch {
+    return { ...DEFAULT_AUDIO_VOLUMES };
   }
 }
 
@@ -101,6 +127,7 @@ const state = {
   dealing: false,
   soundOn: true,
   clashStyle: readSavedClashStyle(),
+  audioVolumes: readSavedAudioVolumes(),
 };
 
 const ui = {
@@ -145,6 +172,10 @@ const ui = {
   gameMenuDialog: document.querySelector("#gameMenuDialog"),
   settingsDialog: document.querySelector("#settingsDialog"),
   settingsStatus: document.querySelector("#settingsStatus"),
+  audioSettingsStatus: document.querySelector("#audioSettingsStatus"),
+  settingsTabs: document.querySelectorAll("[data-settings-panel]"),
+  settingsPanels: document.querySelectorAll(".settings-panel"),
+  audioVolumeInputs: document.querySelectorAll("[data-audio-volume]"),
   menuButton: document.querySelector("#menuButton"),
   resumeGameButton: document.querySelector("#resumeGameButton"),
   restartGameButton: document.querySelector("#restartGameButton"),
@@ -1432,25 +1463,64 @@ function saveClashStyle(clashStyle) {
   }
 }
 
-function renderSettings(saved = true) {
+function saveAudioVolumes(audioVolumes) {
+  try {
+    window.localStorage.setItem(
+      AUDIO_VOLUME_STORAGE_KEY,
+      JSON.stringify(audioVolumes),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function renderAudioSettings(saved = true) {
+  ui.audioVolumeInputs.forEach((input) => {
+    const volumeKey = input.dataset.audioVolume;
+    const percentage = Math.round((state.audioVolumes[volumeKey] || 0) * 100);
+    input.value = percentage;
+    const output = document.querySelector(`#${input.id}Value`);
+    if (output) output.textContent = `${percentage}%`;
+  });
+  ui.audioSettingsStatus.textContent = saved
+    ? "Audio levels are saved for this browser."
+    : "Audio levels are set for this session. Browser storage is unavailable.";
+}
+
+function renderSettings(clashSaved = true, audioSaved = true) {
   document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
     option.checked = option.value === state.clashStyle;
   });
   const styleLabel = state.clashStyle === "cinematic" ? "Cinematic" : "Classic";
-  ui.settingsStatus.textContent = saved
+  ui.settingsStatus.textContent = clashSaved
     ? `${styleLabel} clashes are selected and saved for this browser.`
     : `${styleLabel} clashes are selected for this session. Browser storage is unavailable.`;
+  renderAudioSettings(audioSaved);
+}
+
+function showSettingsPanel(panelName) {
+  ui.settingsTabs.forEach((tab) => {
+    const selected = tab.dataset.settingsPanel === panelName;
+    tab.classList.toggle("is-active", selected);
+    tab.setAttribute("aria-selected", String(selected));
+  });
+  ui.settingsPanels.forEach((panel) => {
+    panel.hidden = panel.id !== `${panelName}SettingsPanel`;
+  });
 }
 
 function openSettings(returnTarget) {
   settingsReturnTarget = returnTarget;
   if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
   renderSettings();
+  showSettingsPanel("clash");
   if (!ui.settingsDialog.open) ui.settingsDialog.showModal();
 }
 
 function showMainMenu() {
   state.locked = true;
+  audio.startMainMenuMusic();
   closeDialog(ui.gameMenuDialog);
   closeDialog(ui.difficultyDialog);
   closeDialog(ui.resultDialog);
@@ -1469,6 +1539,7 @@ function showDifficultyChooser() {
 }
 
 async function startGame() {
+  audio.startDuelMusic();
   clearCinematicRemains();
   state.deck = freshDeck();
   state.discardPile = [];
@@ -1615,11 +1686,30 @@ ui.gameMenuDialog.addEventListener("close", () => {
 document.querySelectorAll("[data-close-settings]").forEach((button) => {
   button.addEventListener("click", () => ui.settingsDialog.close());
 });
+ui.settingsTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    showSettingsPanel(tab.dataset.settingsPanel);
+  });
+});
 document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
   option.addEventListener("change", () => {
     if (!option.checked || !CLASH_STYLES.includes(option.value)) return;
     state.clashStyle = option.value;
     renderSettings(saveClashStyle(state.clashStyle));
+  });
+});
+ui.audioVolumeInputs.forEach((input) => {
+  input.addEventListener("input", () => {
+    const volumeKey = input.dataset.audioVolume;
+    state.audioVolumes = normalizedAudioVolumes({
+      ...state.audioVolumes,
+      [volumeKey]: Number(input.value) / 100,
+    });
+    audio.setVolumes(state.audioVolumes);
+    renderAudioSettings(saveAudioVolumes(state.audioVolumes));
+  });
+  input.addEventListener("change", () => {
+    if (input.dataset.audioVolume !== "music") audio.buttonPress();
   });
 });
 ui.settingsDialog.addEventListener("close", () => {
@@ -1661,5 +1751,9 @@ document.addEventListener("click", (event) => {
 }, { capture: true });
 
 renderGallery();
-renderSettings(saveClashStyle(state.clashStyle));
+audio.setVolumes(state.audioVolumes);
+renderSettings(
+  saveClashStyle(state.clashStyle),
+  saveAudioVolumes(state.audioVolumes),
+);
 showMainMenu();

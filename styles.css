@@ -4144,6 +4144,33 @@ footer {
   outline-offset: 3px;
 }
 
+.main-menu-music-credit {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: clamp(18px, 3vh, 30px);
+  width: min(620px, calc(100% - 48px));
+  margin: 0;
+  transform: translateX(-50%);
+  color: rgba(235, 216, 169, .72);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1.35;
+}
+
+.main-menu-music-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(235, 216, 169, .42);
+  text-underline-offset: 2px;
+}
+
+.main-menu-music-credit a:hover,
+.main-menu-music-credit a:focus-visible {
+  color: #f3dfac;
+}
+
 .settings-dialog {
   width: min(650px, calc(100vw - 30px));
   max-height: 92dvh;
@@ -4161,6 +4188,55 @@ footer {
   font-size: 13px;
   font-weight: 700;
   line-height: 1.45;
+}
+
+.settings-tabs {
+  width: min(480px, 100%);
+  margin: 0 auto 17px;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  background: rgba(83, 53, 35, .14);
+  border: 1px solid #987244;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.32);
+}
+
+.settings-tab {
+  min-height: 40px;
+  padding: 8px 12px;
+  color: #5b402e;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  cursor: pointer;
+}
+
+.settings-tab:hover,
+.settings-tab:focus-visible {
+  color: #3d2930;
+  background: rgba(255, 248, 222, .62);
+}
+
+.settings-tab:focus-visible {
+  outline: 3px solid #4a2934;
+  outline-offset: 2px;
+}
+
+.settings-tab.is-active {
+  color: #f0dda7;
+  background: linear-gradient(#65404c, #432a35);
+  border-color: #2e1c25;
+  box-shadow: inset 0 0 0 1px rgba(223, 183, 108, .42);
+}
+
+.settings-panel[hidden] {
+  display: none;
 }
 
 .clash-style-options {
@@ -4281,6 +4357,78 @@ footer {
   font-weight: 900;
   letter-spacing: .07em;
   text-transform: uppercase;
+}
+
+.audio-settings-intro {
+  max-width: 500px;
+  margin: 0 auto 12px;
+  color: #654a34;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.audio-volume-controls {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+
+.audio-volume-control {
+  padding: 12px 14px 13px;
+  display: grid;
+  gap: 5px;
+  color: #432e22;
+  background:
+    linear-gradient(100deg, rgba(151, 105, 48, .1), transparent 60%),
+    rgba(255, 250, 230, .68);
+  border: 1px solid #9b7446;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.38);
+}
+
+.audio-volume-control > span {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.audio-volume-control strong {
+  color: #402731;
+  font-family: "Cinzel", serif;
+  font-size: 13px;
+  letter-spacing: .03em;
+}
+
+.audio-volume-control output {
+  min-width: 43px;
+  color: #5b3544;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.audio-volume-control small {
+  color: #755537;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.audio-volume-control input[type="range"] {
+  width: 100%;
+  height: 24px;
+  margin: 2px 0 0;
+  accent-color: #593548;
+  cursor: pointer;
+}
+
+.audio-volume-control:focus-within {
+  border-color: #593548;
+  box-shadow:
+    inset 0 0 0 2px rgba(121, 74, 88, .18),
+    0 3px 0 rgba(57, 34, 29, .16);
 }
 
 .settings-status {
@@ -4910,6 +5058,12 @@ footer {
     font-size: 11px;
   }
 
+  .main-menu-music-credit {
+    bottom: 12px;
+    width: calc(100% - 34px);
+    font-size: 8px;
+  }
+
   .settings-dialog {
     width: calc(100vw - 16px);
     padding: 24px 13px 20px;
@@ -4921,6 +5075,16 @@ footer {
 
   .settings-intro {
     font-size: 11px;
+  }
+
+  .settings-tabs {
+    margin-bottom: 13px;
+  }
+
+  .settings-tab {
+    min-height: 38px;
+    padding-inline: 7px;
+    font-size: 9px;
   }
 
   .clash-style-option {
@@ -4941,6 +5105,22 @@ footer {
 
   .clash-style-option small {
     font-size: 10px;
+  }
+
+  .audio-settings-intro {
+    font-size: 10px;
+  }
+
+  .audio-volume-control {
+    padding: 10px 11px 11px;
+  }
+
+  .audio-volume-control strong {
+    font-size: 11px;
+  }
+
+  .audio-volume-control small {
+    font-size: 9px;
   }
 
 }
