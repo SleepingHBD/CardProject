@@ -15,7 +15,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "trophy-hunter",
     category: "motive",
     label: "Trophy Hunter",
-    description: "Favors elements it still needs as trophies.",
+    description: "Favors elements he still needs as trophies.",
   }),
   Object.freeze({
     id: "counter-scholar",
@@ -27,7 +27,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "power-seeker",
     category: "motive",
     label: "Power Seeker",
-    description: "Favors the highest-Power cards in its hand.",
+    description: "Favors the highest-Power cards in his hand.",
   }),
   Object.freeze({
     id: "element-loyalist",
@@ -45,7 +45,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "momentum-rider",
     category: "motive",
     label: "Momentum Rider",
-    description: "Favors its latest trophy's element.",
+    description: "Favors his latest trophy's element.",
   }),
 ]);
 const AI_FORMATION_TRAITS = Object.freeze([
@@ -59,13 +59,13 @@ const AI_FORMATION_TRAITS = Object.freeze([
     id: "strong-opener",
     category: "formation",
     label: "Strong Opener",
-    description: "Places its highest-Power card in Lane 1.",
+    description: "Places his highest-Power card in Lane 1.",
   }),
   Object.freeze({
     id: "late-striker",
     category: "formation",
     label: "Late Striker",
-    description: "Highest-Power card goes in its last played lane.",
+    description: "Highest-Power card goes in his last played lane.",
   }),
 ]);
 const AI_COMMITMENT_TRAITS = Object.freeze([
@@ -103,7 +103,7 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "restless-dealer",
     category: "commitment",
     label: "Restless Dealer",
-    description: "Usually changes its last round's card count.",
+    description: "Usually changes his last round's card count.",
   }),
 ]);
 
@@ -148,7 +148,7 @@ function createAiTraits(random = Math.random) {
       ...motive,
       element,
       label: `${ELEMENTS[element].label} Loyalist`,
-      description: `Favors ${ELEMENTS[element].label} cards whenever it has them.`,
+      description: `Favors ${ELEMENTS[element].label} cards whenever he has them.`,
     };
   }
 
