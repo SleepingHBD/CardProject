@@ -3,31 +3,39 @@ import assert from "node:assert/strict";
 import "../src/rules.js";
 
 const {
-  CHAIN_BONUS,
   ELEMENT_EDGE_BONUS,
+  TACTICS,
+  TACTIC_BONUS,
   OVERWHELM_BONUS,
   TROPHIES_PER_ELEMENT,
   buildTellClues,
   chooseAiCard,
   chooseAiCommitment,
   chooseAiCards,
+  chooseTrophyReward,
   createAiTraits,
   compareCards,
   forecastMatchup,
-  getChainBonus,
   getFormationReward,
+  getFormationRewardOptions,
   getFocusBonus,
+  getTacticBonus,
   getOverwhelmBonus,
   getPowerTier,
   getElementTrophyCounts,
   getTrophyProgress,
   hasCompletedElementSet,
+  orderAiFormation,
   reshuffleDiscardPile,
   resolveClashes,
   scoreClash,
 } = globalThis.ClawRules;
 
-const card = (element, power = 5) => ({ element, power });
+const card = (element, power = 5, tactic = "link") => ({
+  element,
+  power,
+  tactic,
+});
 
 test("element advantage adds a two-point edge", () => {
   assert.equal(ELEMENT_EDGE_BONUS, 2);
@@ -42,8 +50,24 @@ test("an elemental counter is strong but not an automatic win", () => {
   assert.deepEqual(
     scoreClash(card("ember", 3), card("gust", 9)),
     {
-      player: { base: 3, edge: 2, chain: 0, focus: 0, overwhelm: 0, total: 5 },
-      ai: { base: 9, edge: 0, chain: 0, focus: 0, overwhelm: 0, total: 9 },
+      player: {
+        base: 3,
+        edge: 2,
+        tactic: 0,
+        tacticName: "Link",
+        focus: 0,
+        overwhelm: 0,
+        total: 5,
+      },
+      ai: {
+        base: 9,
+        edge: 0,
+        tactic: 0,
+        tacticName: "Link",
+        focus: 0,
+        overwhelm: 0,
+        total: 9,
+      },
     },
   );
 });
@@ -54,12 +78,18 @@ test("same element compares power and can draw", () => {
   assert.equal(compareCards(card("ember", 6), card("ember", 6)), "draw");
 });
 
-test("changing elements between lanes earns a one-point chain bonus", () => {
-  const formation = [card("ember", 5), card("tide", 5), card("tide", 5)];
-  assert.equal(CHAIN_BONUS, 1);
-  assert.equal(getChainBonus(formation, 0), 0);
-  assert.equal(getChainBonus(formation, 1), 1);
-  assert.equal(getChainBonus(formation, 2), 0);
+test("card Tactics reward different formation positions", () => {
+  const formation = [
+    card("ember", 5, "vanguard"),
+    card("tide", 5, "link"),
+    card("tide", 5, "finisher"),
+  ];
+  assert.equal(TACTIC_BONUS, 1);
+  assert.equal(TACTICS.vanguard.label, "Vanguard");
+  assert.equal(getTacticBonus(formation, 0, 3), 1);
+  assert.equal(getTacticBonus(formation, 1, 3), 1);
+  assert.equal(getTacticBonus(formation, 2, 3), 1);
+  assert.equal(getTacticBonus(formation, 2, 2), 0);
   assert.equal(compareCards(card("tide", 5), card("tide", 5), 1, 0), "player");
 });
 
@@ -248,6 +278,32 @@ test("formation habits influence where the strongest chosen card appears", () =>
   assert.equal(chosen.at(-1).power, 9);
 });
 
+test("Tactic Planner orders cards to activate positional Tactics", () => {
+  const cards = [
+    card("ember", 4, "vanguard"),
+    card("gust", 9, "link"),
+    card("tide", 6, "finisher"),
+  ];
+  const ordered = orderAiFormation(
+    cards,
+    () => 0.5,
+    [{ id: "tactic-planner", category: "formation" }],
+  );
+
+  assert.deepEqual(ordered.map((entry) => entry.tactic), [
+    "vanguard",
+    "link",
+    "finisher",
+  ]);
+  assert.equal(
+    ordered.reduce(
+      (total, _, index) => total + getTacticBonus(ordered, index, 3),
+      0,
+    ),
+    3,
+  );
+});
+
 test("Trophy Denier favors counters to elements the player nearly completes", () => {
   const gust = card("gust", 5);
   const tide = card("tide", 5);
@@ -363,8 +419,8 @@ test("fewer committed cards gain Focus", () => {
 });
 
 test("three cards gain Overwhelm only when facing one card", () => {
-  assert.equal(OVERWHELM_BONUS, 3);
-  assert.equal(getOverwhelmBonus(3, 1), 3);
+  assert.equal(OVERWHELM_BONUS, 2);
+  assert.equal(getOverwhelmBonus(3, 1), 2);
   assert.equal(getOverwhelmBonus(3, 2), 0);
   assert.equal(getOverwhelmBonus(2, 1), 0);
   assert.equal(getOverwhelmBonus(3, 1, 1), 0);
@@ -391,14 +447,44 @@ test("multi-card formations resolve from left to right", () => {
   );
 });
 
-test("formation winner earns only their earliest winning card", () => {
+test("a normal formation win offers every lane-winning card as a trophy", () => {
   const playerCards = [card("ember"), card("gust"), card("tide")];
   const aiCards = [card("gust"), card("tide"), card("ember")];
   const resolution = resolveClashes(playerCards, aiCards);
+  const options = getFormationRewardOptions(playerCards, aiCards, resolution);
 
+  assert.equal(options.length, 3);
   assert.deepEqual(
-    getFormationReward(playerCards, aiCards, resolution),
-    { winner: "player", card: playerCards[0], lane: 0 },
+    getFormationReward(playerCards, aiCards, resolution, playerCards[2]),
+    {
+      winner: "player",
+      card: playerCards[2],
+      lane: 2,
+      fixed: false,
+    },
+  );
+});
+
+test("Professor Paws chooses a needed trophy element over raw power", () => {
+  const emberReward = {
+    winner: "ai",
+    card: card("ember", 9, "finisher"),
+    lane: 0,
+    fixed: false,
+  };
+  const tideReward = {
+    winner: "ai",
+    card: card("tide", 4, "vanguard"),
+    lane: 1,
+    fixed: false,
+  };
+
+  assert.equal(
+    chooseTrophyReward(
+      [emberReward, tideReward],
+      [card("ember"), card("ember")],
+    ),
+    tideReward,
   );
 });
 
@@ -409,20 +495,25 @@ test("an evenly split formation awards no trophy", () => {
 
   assert.deepEqual(
     getFormationReward(playerCards, aiCards, resolution),
-    { winner: "draw", card: null, lane: -1 },
+    { winner: "draw", card: null, lane: -1, fixed: false },
   );
 });
 
 test("Overwhelm lets three cards counter a lone focused card", () => {
-  const playerCards = [card("ember", 5)];
-  const aiCards = [card("gust", 6), card("tide", 8), card("ember", 8)];
+  const playerCards = [card("ember", 5, "finisher")];
+  const aiCards = [
+    card("ember", 6, "vanguard"),
+    card("tide", 8, "link"),
+    card("gust", 8, "finisher"),
+  ];
   const resolution = resolveClashes(playerCards, aiCards);
 
-  assert.equal(resolution.lanes[0].player.total, 9);
-  assert.equal(resolution.lanes[0].ai.overwhelm, 3);
+  assert.equal(resolution.lanes[0].player.total, 7);
+  assert.equal(resolution.lanes[0].ai.tactic, 1);
+  assert.equal(resolution.lanes[0].ai.overwhelm, 2);
   assert.equal(resolution.lanes[0].ai.total, 9);
   assert.equal(resolution.winner, "ai");
-  assert.equal(resolution.decidedBy, "pressure");
+  assert.equal(resolution.decidedBy, "clashes");
 });
 
 test("Overwhelm is a soft counter that power and Element Edge can beat", () => {
@@ -431,7 +522,7 @@ test("Overwhelm is a soft counter that power and Element Edge can beat", () => {
   const resolution = resolveClashes(playerCards, aiCards);
 
   assert.equal(resolution.lanes[0].player.total, 9);
-  assert.equal(resolution.lanes[0].ai.total, 8);
+  assert.equal(resolution.lanes[0].ai.total, 7);
   assert.equal(resolution.winner, "player");
   assert.equal(resolution.decidedBy, "clashes");
 });
@@ -450,7 +541,12 @@ test("the larger commitment uses Pressure to break a tied clash score", () => {
   assert.equal(resolution.decidedBy, "pressure");
   assert.deepEqual(
     getFormationReward(playerCards, aiCards, resolution),
-    { winner: "ai", card: aiCards[2], lane: 2 },
+    {
+      winner: "ai",
+      card: aiCards[2],
+      lane: 2,
+      fixed: true,
+    },
   );
 });
 

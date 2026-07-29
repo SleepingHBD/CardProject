@@ -1053,13 +1053,14 @@ h1 {
 }
 
 .tactics-board {
+  position: relative;
   width: min(860px, 100%);
   min-height: 116px;
   margin: 0 auto 10px;
   display: grid;
   grid-template-columns: 226px minmax(0, 1fr);
   grid-template-rows: auto auto;
-  overflow: hidden;
+  overflow: visible;
   color: #efe0b6;
   background:
     linear-gradient(90deg, rgba(220,178,91,.08), transparent 26%),
@@ -1070,6 +1071,269 @@ h1 {
     inset 0 0 0 1px #8f693b,
     inset 0 0 22px rgba(0,0,0,.28),
     0 3px 0 rgba(27,16,11,.4);
+}
+
+.clash-score-guide {
+  position: relative;
+  z-index: 45;
+  flex: 0 0 100%;
+  margin-top: 4px;
+}
+
+.clash-score-guide summary {
+  z-index: 2;
+  min-width: 136px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 5px 24px 5px 9px;
+  position: relative;
+  color: #f2dda5;
+  background: linear-gradient(#59452e, #34261d);
+  border: 1px solid #b28a4d;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 2px 0 #17100c;
+  cursor: pointer;
+  list-style: none;
+  text-align: left;
+}
+
+.clash-score-guide summary::-webkit-details-marker {
+  display: none;
+}
+
+.clash-score-guide summary::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  font-family: "Cinzel", serif;
+  font-size: 14px;
+  font-weight: 900;
+  transform: translateY(-50%);
+}
+
+.clash-score-guide[open] summary::after {
+  content: "−";
+}
+
+.clash-score-guide[open] > summary {
+  visibility: hidden;
+}
+
+.clash-score-guide summary span,
+.clash-score-guide summary small {
+  display: block;
+}
+
+.clash-score-guide summary span {
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.clash-score-guide summary small {
+  margin-top: 1px;
+  color: #c5b28b;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.clash-score-guide summary:hover,
+.clash-score-guide summary:focus-visible {
+  color: #fff0bd;
+  background: linear-gradient(#705838, #433020);
+  border-color: #e0bc68;
+}
+
+.clash-score-panel {
+  z-index: 1;
+  position: fixed;
+  top: 132px;
+  right: 16px;
+  width: min(540px, calc(100vw - 36px));
+  max-height: min(480px, calc(100vh - 130px));
+  padding: 12px;
+  overflow-y: auto;
+  color: #eadbb5;
+  background:
+    linear-gradient(135deg, rgba(184,133,59,.16), transparent 42%),
+    linear-gradient(#352820, #211813);
+  border: 2px solid #1a110d;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px #a57c43,
+    0 9px 22px rgba(12,7,5,.58);
+}
+
+.clash-score-panel-heading {
+  margin-bottom: 9px;
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(213,174,96,.42);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.clash-score-panel.is-dragging {
+  box-shadow:
+    inset 0 0 0 1px #d5ae60,
+    0 14px 30px rgba(12,7,5,.7);
+}
+
+.clash-score-panel.is-dragging .clash-score-panel-heading {
+  cursor: grabbing;
+}
+
+.clash-score-panel-heading > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.clash-score-panel-heading p,
+.clash-score-panel-heading strong {
+  margin: 0;
+}
+
+.clash-score-panel-heading p {
+  color: #f2d98f;
+  font-family: "Cinzel", serif;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.clash-score-panel-heading strong {
+  display: block;
+  margin-top: 2px;
+  color: #c9b58c;
+  font-size: 11px;
+}
+
+.clash-score-drag-hint {
+  flex: 0 0 auto;
+  color: #bda77d;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.clash-score-close {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #f1d99a;
+  background: #493522;
+  border: 1px solid #b48a4b;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: "Cinzel", serif;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.clash-score-close:hover,
+.clash-score-close:focus-visible {
+  color: #fff2c4;
+  background: #684c2c;
+  border-color: #e0bb67;
+}
+
+.clash-score-parts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.clash-score-parts > div {
+  min-width: 0;
+  padding: 7px 8px;
+  background: rgba(13,9,7,.28);
+  border: 1px solid rgba(180,141,75,.3);
+  border-radius: 3px;
+}
+
+.clash-score-parts dt {
+  color: #efd58d;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.clash-score-parts dd {
+  margin: 2px 0 0;
+  color: #d0c09e;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.28;
+}
+
+.clash-score-parts .tactic-score-part {
+  grid-column: 1 / -1;
+}
+
+.tactic-score-part ul {
+  margin: 7px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  list-style: none;
+}
+
+.tactic-score-part li {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #d9c9a6;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.tactic-score-part li > b {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: #302016;
+  background: #d8b660;
+  border: 1px solid #17100c;
+  border-radius: 50%;
+}
+
+.tactic-score-part li strong {
+  display: block;
+  color: #f0dca9;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+}
+
+.pressure-score-note {
+  margin: 8px 0 0;
+  padding: 7px 9px;
+  color: #d9c7a1;
+  background: rgba(126,86,41,.25);
+  border: 1px solid rgba(205,155,76,.46);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.pressure-score-note strong {
+  color: #f1d488;
 }
 
 .tactics-heading {
@@ -1407,6 +1671,107 @@ h1 {
 
 .selection-bar [hidden] {
   display: none;
+}
+
+.trophy-claim {
+  width: min(430px, 100%);
+  display: grid;
+  gap: 4px;
+  color: #f2dfad;
+  font-family: "Cinzel", serif;
+  text-align: center;
+}
+
+.trophy-claim > strong {
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.trophy-claim-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.trophy-claim-option {
+  min-width: 0;
+  flex: 1 1 128px;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f7e7b6;
+  background: linear-gradient(#5c4630, #36251c);
+  border: 2px solid #ba9250;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), 0 2px 0 #241610;
+  cursor: pointer;
+  text-align: left;
+}
+
+.trophy-claim-option:hover {
+  background: linear-gradient(#755a38, #443022);
+  border-color: #e0bd68;
+}
+
+.trophy-claim-option i {
+  flex: 0 0 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  background: #2e211a;
+  border-radius: 50%;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.trophy-claim-option span,
+.trophy-claim-option b,
+.trophy-claim-option small {
+  display: block;
+  min-width: 0;
+}
+
+.trophy-claim-option b {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trophy-claim-option small {
+  margin-top: 1px;
+  color: #d9c28a;
+  font-family: "Nunito", sans-serif;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.clash-card.claimable-trophy .game-card {
+  box-shadow:
+    0 7px 0 var(--rarity-dark),
+    0 0 0 4px #f0cc69,
+    0 0 22px rgba(240, 204, 105, .62);
+}
+
+.clash-card.claimable-trophy::after {
+  content: "TROPHY CHOICE";
+  position: absolute;
+  z-index: 31;
+  left: 50%;
+  bottom: 5px;
+  padding: 3px 6px 2px;
+  color: #3b291b;
+  background: #f0cc69;
+  border: 1px solid #3b291b;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  font-size: 7px;
+  font-weight: 900;
+  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
 .next-round-button {
@@ -1786,10 +2151,13 @@ h1 {
 .card-info small {
   display: block;
   margin-top: 1px;
+  overflow: hidden;
   color: #72563a;
   font-size: 8px;
   font-weight: 900;
-  letter-spacing: .1em;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   text-transform: uppercase;
 }
 
@@ -1868,8 +2236,10 @@ h1 {
 .play-zone .card-bonus-badge { top: 41px; right: 4px; width: 40px; height: 29px; }
 
 .deck-status {
+  position: relative;
   margin-top: 10px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 8px;
@@ -2350,6 +2720,7 @@ footer {
 .gallery-legend {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -5072,7 +5443,42 @@ footer {
   100% { opacity: 0; transform: translate(var(--drift-x), 178px) scale(.72,1.2); }
 }
 
+@media (min-width: 900px) {
+  .control-panel:has(.clash-score-guide) {
+    z-index: 20;
+    overflow: visible;
+  }
+
+  .control-panel .clash-score-guide {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: calc(50% - 75px);
+    width: 150px;
+    margin: 0;
+  }
+
+  .clash-score-panel {
+    top: 132px;
+    right: 16px;
+    width: min(500px, calc(100vw - 36px));
+    max-height: 380px;
+  }
+}
+
 @media (max-width: 640px) {
+  .clash-score-panel {
+    top: 76px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100dvh - 92px);
+  }
+
+  .clash-score-parts,
+  .tactic-score-part ul {
+    grid-template-columns: 1fr;
+  }
+
   .main-menu-actions {
     width: min(280px, 82%);
     margin-top: 42px;

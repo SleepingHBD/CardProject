@@ -1,14 +1,15 @@
 const {
   ELEMENTS,
+  TACTICS,
   ELEMENT_EDGE_BONUS,
   buildTellClues,
   chooseAiCommitment,
   chooseAiCards,
   createAiTraits,
-  getChainBonus,
+  getTacticBonus,
   getFocusBonus,
   getOverwhelmBonus,
-  getFormationReward,
+  getFormationRewardOptions,
   getPowerTier,
   getElementTrophyCounts,
   getTrophyProgress,
@@ -16,31 +17,32 @@ const {
   reshuffleDiscardPile,
   resolveClashes,
   scoreClash,
+  chooseTrophyReward,
   OVERWHELM_BONUS,
   TROPHIES_PER_ELEMENT,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
 
 const CARD_LIBRARY = [
-  ["ember", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "sizzle-mittens"],
-  ["ember", 6, "Candle Pounce", "Wax & Whack", "A bright idea with claws.", "rare", "candle-pounce"],
-  ["ember", 5, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "toastie-toe-beans"],
-  ["ember", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "comet-claw"],
-  ["ember", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "cinder-kit"],
-  ["ember", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "teapot-tabby"],
-  ["gust", 8, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "epic", "gale-groomer"],
-  ["gust", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "leafy-loaf"],
-  ["gust", 5, "Whisker Whirl", "Ribbon Twister", "Forecast: fabulous.", "uncommon", "whisker-whirl"],
-  ["gust", 9, "Sir Squall", "Galeguard Charge", "Even the wind rallies behind his shield.", "legendary", "sir-squall"],
-  ["gust", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "kitewhisker"],
-  ["gust", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "dandelion-dash"],
-  ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "puddle-pouncer"],
-  ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "bubble-bengal"],
-  ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "moonpool-mouser"],
-  ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "empress-ebb"],
-  ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "wellwater-wisp"],
-  ["tide", 3, "Mizzle Motley", "Ripple Rattle", "Three bells. No dry seats.", "common", "mizzle-motley"],
-].map(([element, power, name, move, lore, rarity, art], index) => ({
+  ["ember", 8, "Sizzle Mittens", "Flame Yarn", "Never leaves a loose end.", "epic", "link", "sizzle-mittens"],
+  ["ember", 6, "Candle Pounce", "Wax & Whack", "A bright idea with claws.", "rare", "vanguard", "candle-pounce"],
+  ["ember", 5, "Toastie Toe Beans", "Cozy Forge", "Tiny paws, furnace heart.", "uncommon", "finisher", "toastie-toe-beans"],
+  ["ember", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "finisher", "comet-claw"],
+  ["ember", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "vanguard", "cinder-kit"],
+  ["ember", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "link", "teapot-tabby"],
+  ["gust", 8, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "epic", "link", "gale-groomer"],
+  ["gust", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "finisher", "leafy-loaf"],
+  ["gust", 5, "Whisker Whirl", "Ribbon Twister", "Forecast: fabulous.", "uncommon", "link", "whisker-whirl"],
+  ["gust", 9, "Sir Squall", "Galeguard Charge", "Even the wind rallies behind his shield.", "legendary", "vanguard", "sir-squall"],
+  ["gust", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "vanguard", "kitewhisker"],
+  ["gust", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "finisher", "dandelion-dash"],
+  ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "vanguard", "puddle-pouncer"],
+  ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "link", "bubble-bengal"],
+  ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "link", "moonpool-mouser"],
+  ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "finisher", "empress-ebb"],
+  ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "vanguard", "wellwater-wisp"],
+  ["tide", 3, "Mizzle Motley", "Ripple Rattle", "Three bells. No dry seats.", "common", "finisher", "mizzle-motley"],
+].map(([element, power, name, move, lore, rarity, tactic, art], index) => ({
   id: `card-${index}`,
   element,
   power,
@@ -48,6 +50,7 @@ const CARD_LIBRARY = [
   move,
   lore,
   rarity,
+  tactic,
   art,
 }));
 
@@ -125,6 +128,7 @@ const state = {
   playerRoundWins: 0,
   aiRoundWins: 0,
   pendingMatchWinner: null,
+  pendingTrophyClaim: null,
   round: 1,
   locked: false,
   dealing: false,
@@ -150,12 +154,18 @@ const ui = {
   selectionCount: document.querySelector("#selectionCount"),
   playSelectedButton: document.querySelector("#playSelectedButton"),
   nextRoundButton: document.querySelector("#nextRoundButton"),
+  trophyClaim: document.querySelector("#trophyClaim"),
+  trophyClaimOptions: document.querySelector("#trophyClaimOptions"),
   roundLabel: document.querySelector("#roundLabel"),
   roundScore: document.querySelector("#roundScore"),
   playerRoundScore: document.querySelector("#playerRoundScore"),
   aiRoundScore: document.querySelector("#aiRoundScore"),
   deckCount: document.querySelector("#deckCount"),
   deckStatusText: document.querySelector("#deckStatusText"),
+  clashScoreGuide: document.querySelector("#clashScoreGuide"),
+  clashScorePanel: document.querySelector("#clashScorePanel"),
+  clashScoreDragHandle: document.querySelector("#clashScoreDragHandle"),
+  clashScoreClose: document.querySelector("#clashScoreClose"),
   versusBadge: document.querySelector("#versusBadge"),
   howDialog: document.querySelector("#howDialog"),
   rulebookDialog: document.querySelector("#rulebookDialog"),
@@ -192,6 +202,49 @@ const ui = {
 };
 let draggedCardId = null;
 let settingsReturnTarget = "main";
+const clashScoreDrag = {
+  pointerId: null,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+function clampClashScorePosition(left, top) {
+  const margin = 8;
+  const panelRect = ui.clashScorePanel.getBoundingClientRect();
+  return {
+    left: Math.min(
+      Math.max(margin, left),
+      Math.max(margin, window.innerWidth - panelRect.width - margin),
+    ),
+    top: Math.min(
+      Math.max(margin, top),
+      Math.max(margin, window.innerHeight - panelRect.height - margin),
+    ),
+  };
+}
+
+function moveClashScorePanel(left, top) {
+  const position = clampClashScorePosition(left, top);
+  ui.clashScorePanel.style.left = `${position.left}px`;
+  ui.clashScorePanel.style.top = `${position.top}px`;
+  ui.clashScorePanel.style.right = "auto";
+}
+
+function stopClashScoreDrag(event) {
+  if (event.pointerId !== clashScoreDrag.pointerId) return;
+  if (ui.clashScoreDragHandle.hasPointerCapture(event.pointerId)) {
+    ui.clashScoreDragHandle.releasePointerCapture(event.pointerId);
+  }
+  clashScoreDrag.pointerId = null;
+  ui.clashScorePanel.classList.remove("is-dragging");
+}
+
+function closeClashScoreGuide() {
+  ui.clashScoreGuide.removeAttribute("open");
+  window.requestAnimationFrame(() => {
+    ui.clashScoreGuide.querySelector("summary").focus();
+  });
+}
 
 function shuffle(items) {
   const copy = [...items];
@@ -383,7 +436,11 @@ function renderMatchupForecast() {
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
     const opponentCard = state.aiPlan[index];
-    const playerChain = getChainBonus(selectedCards, index);
+    const playerTactic = getTacticBonus(
+      selectedCards,
+      index,
+      concealsCommitment ? MAX_PLAY_SIZE : state.aiPlan.length,
+    );
     const playerOverwhelm = concealsCommitment
       ? 0
       : getOverwhelmBonus(selectedCards.length, state.aiPlan.length, index);
@@ -392,12 +449,14 @@ function renderMatchupForecast() {
       : getOverwhelmBonus(state.aiPlan.length, selectedCards.length, index);
     const knownPlayerScore = playerCard.power
       + playerFocus
-      + playerChain
+      + playerTactic
       + playerOverwhelm;
-    const knownBonusTotal = playerFocus + playerChain + playerOverwhelm;
+    const knownBonusTotal = playerFocus + playerTactic + playerOverwhelm;
     const knownBonuses = [];
     if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
-    if (playerChain) knownBonuses.push(`Chain +${playerChain}`);
+    if (playerTactic) {
+      knownBonuses.push(`${TACTICS[playerCard.tactic].label} +${playerTactic}`);
+    }
     if (playerOverwhelm) knownBonuses.push(`Overwhelm +${playerOverwhelm}`);
     const knownBonusDetail = knownBonuses.length
       ? knownBonuses.join(" · ")
@@ -418,7 +477,7 @@ function renderMatchupForecast() {
           <i>${index + 1}</i>
           <b>? POSSIBLE CLASH · ${knownPlayerScore}–${playerCard.power + maximumHiddenBonus}</b>
           <span class="forecast-equation">
-            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${maximumHiddenBonus} IF PAIRED</strong>
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${maximumHiddenBonus} IF IT CLASHES</strong>
           </span>
           <small>${knownBonusDetail} · ${hiddenWarning}</small>
         </span>
@@ -435,13 +494,17 @@ function renderMatchupForecast() {
         </span>
       `;
     }
-    const opponentChain = getChainBonus(state.aiPlan, index);
+    const opponentTactic = getTacticBonus(
+      state.aiPlan,
+      index,
+      selectedCards.length,
+    );
     const clue = state.aiTellClues[index] || "sealed";
     const scoring = scoreClash(
       playerCard,
       opponentCard,
-      playerChain,
-      opponentChain,
+      playerTactic,
+      opponentTactic,
       playerFocus,
       opponentFocus,
       playerOverwhelm,
@@ -500,12 +563,12 @@ function renderMatchupForecast() {
       .map(Number);
     const opponentMin = tierMin
       + scoring.ai.edge
-      + scoring.ai.chain
+      + scoring.ai.tactic
       + scoring.ai.focus
       + scoring.ai.overwhelm;
     const opponentMax = tierMax
       + scoring.ai.edge
-      + scoring.ai.chain
+      + scoring.ai.tactic
       + scoring.ai.focus
       + scoring.ai.overwhelm;
     const outlook = scoring.player.total > opponentMax
@@ -560,13 +623,14 @@ function cardMarkup(
   formationBonus = null,
 ) {
   const element = ELEMENTS[card.element];
+  const tactic = TACTICS[card.tactic] || TACTICS.link;
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
   const isPressureCard = displayMode === "pressure";
   const interactionLabel = isFormationCard
     ? `Remove ${card.name} from lane ${selectedIndex + 1}`
-    : `Add ${card.name}, ${element.label}, power ${card.power} to the next lane`;
+    : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Tactic to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
       <span class="card-bonus-badge preview-badge${formationBonus.pressure ? " pressure-badge" : ""}" aria-label="${formationBonus.label}">
@@ -599,10 +663,10 @@ function cardMarkup(
       </span>
       <span class="card-info">
         <strong>${card.name}</strong>
-        <small>${element.label}</small>
+        <small title="${tactic.description}">${element.label} · ${tactic.icon} ${tactic.label}</small>
       </span>
       <span class="card-ability">
-        <i aria-hidden="true">✦</i>
+        <i aria-hidden="true" title="${tactic.description}">${tactic.icon}</i>
         <span><b>${card.move}</b><small>${card.lore}</small></span>
       </span>
       <span class="card-rarity">${card.rarity}</span>
@@ -667,11 +731,15 @@ function bindCardInteractions(container) {
 function getFormationBonusPreview(selectedCards, index) {
   const playerCard = selectedCards[index];
   const focus = getFocusBonus(selectedCards.length);
-  const chain = getChainBonus(selectedCards, index);
+  const tactic = getTacticBonus(
+    selectedCards,
+    index,
+    state.difficulty === "instinct" ? MAX_PLAY_SIZE : state.aiPlan.length,
+  );
   const knownOverwhelm = state.difficulty === "instinct"
     ? 0
     : getOverwhelmBonus(selectedCards.length, state.aiPlan.length, index);
-  const knownBonus = focus + chain + knownOverwhelm;
+  const knownBonus = focus + tactic + knownOverwhelm;
   if (state.difficulty === "instinct") {
     const couldOverwhelm = selectedCards.length === MAX_PLAY_SIZE && index === 0;
     const maximumBonus = knownBonus
@@ -698,10 +766,13 @@ function getFormationBonusPreview(selectedCards, index) {
 
   const clue = state.aiTellClues[index] || "sealed";
   const edgeKnown = clue === "full" || clue === "element";
-  const edge = edgeKnown && ELEMENTS[playerCard.element].beats === opponentCard.element ? 2 : 0;
+  const edge = edgeKnown
+    && ELEMENTS[playerCard.element].beats === opponentCard.element
+    ? ELEMENT_EDGE_BONUS
+    : 0;
   const knownParts = [];
   if (focus) knownParts.push(`Focus +${focus}`);
-  if (chain) knownParts.push(`Chain +${chain}`);
+  if (tactic) knownParts.push(`${TACTICS[playerCard.tactic].label} +${tactic}`);
   if (knownOverwhelm) knownParts.push(`Overwhelm +${knownOverwhelm}`);
   if (edge) knownParts.push(`Element Edge +${edge}`);
 
@@ -973,11 +1044,57 @@ function renderRoundScore() {
 }
 
 function setRoundAdvanceControls(visible, finalMatch = false) {
+  ui.trophyClaim.hidden = true;
   ui.selectionCount.hidden = visible;
   ui.playSelectedButton.hidden = visible;
   ui.nextRoundButton.hidden = !visible;
   ui.nextRoundButton.disabled = !visible;
   ui.nextRoundButton.textContent = finalMatch ? "View Results" : "Next Round";
+}
+
+function clearTrophyClaim() {
+  state.pendingTrophyClaim = null;
+  ui.trophyClaim.hidden = true;
+  ui.trophyClaimOptions.innerHTML = "";
+  ui.playerPlayZone.querySelectorAll(".claimable-trophy").forEach((lane) => {
+    lane.classList.remove("claimable-trophy");
+  });
+}
+
+function showTrophyClaim(options, playerCards, aiCards, resolution) {
+  state.pendingTrophyClaim = {
+    options,
+    playerCards,
+    aiCards,
+    resolution,
+  };
+  ui.selectionCount.hidden = true;
+  ui.playSelectedButton.hidden = true;
+  ui.nextRoundButton.hidden = true;
+  ui.nextRoundButton.disabled = true;
+  ui.trophyClaim.hidden = false;
+  const trophyCounts = getElementTrophyCounts(state.playerWins);
+  ui.trophyClaimOptions.innerHTML = options.map((option) => {
+    const card = option.card;
+    const element = ELEMENTS[card.element];
+    const needed = trophyCounts[card.element] < TROPHIES_PER_ELEMENT;
+    return `
+      <button
+        class="trophy-claim-option element-${card.element}"
+        data-trophy-card="${card.instanceId}"
+        type="button"
+        aria-label="Claim ${card.name} from Lane ${option.lane + 1} as your trophy${needed ? "; this element is still needed" : "; this element is already complete"}"
+      >
+        <i aria-hidden="true">${element.icon}</i>
+        <span><b>${card.name}</b><small>Lane ${option.lane + 1} · ${needed ? "NEEDED" : "EXTRA"}</small></span>
+      </button>
+    `;
+  }).join("");
+  options.forEach((option) => {
+    ui.playerPlayZone
+      .querySelector(`[data-clash-index="${option.lane}"]`)
+      ?.classList.add("claimable-trophy");
+  });
 }
 
 function setMessage(title, detail) {
@@ -1041,10 +1158,15 @@ function getBonusBreakdown(scoring) {
   const parts = [];
   if (scoring.focus) parts.push(`Focus +${scoring.focus}`);
   if (scoring.edge) parts.push(`Element Edge +${scoring.edge}`);
-  if (scoring.chain) parts.push(`Chain +${scoring.chain}`);
+  if (scoring.tactic) {
+    parts.push(`${scoring.tacticName || "Tactic"} +${scoring.tactic}`);
+  }
   if (scoring.overwhelm) parts.push(`Overwhelm +${scoring.overwhelm}`);
   return {
-    total: scoring.focus + scoring.edge + scoring.chain + (scoring.overwhelm || 0),
+    total: scoring.focus
+      + scoring.edge
+      + scoring.tactic
+      + (scoring.overwhelm || 0),
     label: parts.length ? parts.join(", ") : "No bonuses",
   };
 }
@@ -1381,17 +1503,50 @@ function getCompletedMatchWinner(roundWinner) {
   return null;
 }
 
+function completeRoundReward(
+  reward,
+  playerCards,
+  aiCards,
+  resolution,
+  claimMessage = null,
+) {
+  clearTrophyClaim();
+  if (reward?.winner === "player" && reward.card) {
+    state.playerWins.push(reward.card);
+  }
+  if (reward?.winner === "ai" && reward.card) {
+    state.aiWins.push(reward.card);
+  }
+  state.discardPile.push(
+    ...playerCards.filter((card) => card !== reward?.card),
+    ...aiCards.filter((card) => card !== reward?.card),
+  );
+
+  if (claimMessage && reward?.card) {
+    setMessage(
+      `${reward.card.name} becomes your trophy!`,
+      claimMessage,
+    );
+  }
+  renderCollection(ui.playerCollection, state.playerWins);
+  renderCollection(ui.aiCollection, state.aiWins);
+  renderRound();
+  renderRoundScore();
+  state.pendingMatchWinner = getCompletedMatchWinner(resolution.winner);
+  setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
+  ui.menuButton.disabled = false;
+}
+
 function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCards, aiCards)) {
   const { results, score, winner, decidedBy } = resolution;
-  const reward = getFormationReward(playerCards, aiCards, resolution);
-  ui.versusBadge.className = "versus-badge";
-
-  if (reward.winner === "player" && reward.card) state.playerWins.push(reward.card);
-  if (reward.winner === "ai" && reward.card) state.aiWins.push(reward.card);
-  state.discardPile.push(
-    ...playerCards.filter((card) => card !== reward.card),
-    ...aiCards.filter((card) => card !== reward.card),
+  const rewardOptions = getFormationRewardOptions(
+    playerCards,
+    aiCards,
+    resolution,
   );
+  let reward = null;
+  let awaitsPlayerClaim = false;
+  ui.versusBadge.className = "versus-badge";
 
   const clashWord = results.length === 1 ? "clash" : "clashes";
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
@@ -1399,11 +1554,19 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   if (winner === "player") {
     state.playerRoundWins += 1;
     if (decidedBy === "pressure") {
+      reward = rewardOptions[0] || null;
       setMessage(
         `Your Pressure breaks the ${score.player}–${score.ai} tie!`,
         `${reward.card.name}, your first extra card, becomes the round trophy.`,
       );
+    } else if (rewardOptions.length > 1) {
+      awaitsPlayerClaim = true;
+      setMessage(
+        `You win ${score.player} of ${results.length} ${clashWord}!`,
+        "Choose which lane-winning card becomes your trophy.",
+      );
     } else {
+      reward = rewardOptions[0] || null;
       setMessage(
         `You win ${score.player} of ${results.length} ${clashWord}!`,
         `Lane ${reward.lane + 1}'s ${reward.card.name} becomes your round trophy.`,
@@ -1413,6 +1576,9 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     audio.roundResult("win");
   } else if (winner === "ai") {
     state.aiRoundWins += 1;
+    reward = decidedBy === "pressure"
+      ? rewardOptions[0] || null
+      : chooseTrophyReward(rewardOptions, state.aiWins);
     if (decidedBy === "pressure") {
       setMessage(
         `Professor Paws' Pressure breaks the ${score.ai}–${score.player} tie.`,
@@ -1434,19 +1600,22 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     audio.roundResult("draw");
   }
 
-  renderCollection(ui.playerCollection, state.playerWins);
-  renderCollection(ui.aiCollection, state.aiWins);
-  renderRound();
-  renderRoundScore();
   renderAftermathBreakdown(playerCards, resolution);
   restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
-  state.pendingMatchWinner = getCompletedMatchWinner(winner);
-  setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
-  ui.menuButton.disabled = false;
+  renderRoundScore();
+
+  if (awaitsPlayerClaim) {
+    showTrophyClaim(rewardOptions, playerCards, aiCards, resolution);
+    ui.menuButton.disabled = false;
+    return;
+  }
+
+  completeRoundReward(reward, playerCards, aiCards, resolution);
 }
 
 async function nextRound() {
   clearCinematicRemains();
+  clearTrophyClaim();
   state.pendingMatchWinner = null;
   setRoundAdvanceControls(false);
   const previousHandSize = state.playerHand.length;
@@ -1627,6 +1796,7 @@ async function startGame() {
   state.playerRoundWins = 0;
   state.aiRoundWins = 0;
   state.pendingMatchWinner = null;
+  state.pendingTrophyClaim = null;
   state.round = 1;
   state.locked = true;
   state.dealing = true;
@@ -1714,7 +1884,60 @@ ui.archiveResetFilters.addEventListener("click", () => {
   state.archiveRarities = Object.keys(RARITY_SORT_ORDER);
   renderGallery();
 });
+ui.clashScoreDragHandle.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || event.target.closest("button")) return;
+  const panelRect = ui.clashScorePanel.getBoundingClientRect();
+  clashScoreDrag.pointerId = event.pointerId;
+  clashScoreDrag.offsetX = event.clientX - panelRect.left;
+  clashScoreDrag.offsetY = event.clientY - panelRect.top;
+  ui.clashScoreDragHandle.setPointerCapture(event.pointerId);
+  ui.clashScorePanel.classList.add("is-dragging");
+  event.preventDefault();
+});
+ui.clashScoreDragHandle.addEventListener("pointermove", (event) => {
+  if (event.pointerId !== clashScoreDrag.pointerId) return;
+  moveClashScorePanel(
+    event.clientX - clashScoreDrag.offsetX,
+    event.clientY - clashScoreDrag.offsetY,
+  );
+});
+ui.clashScoreDragHandle.addEventListener("pointerup", stopClashScoreDrag);
+ui.clashScoreDragHandle.addEventListener("pointercancel", stopClashScoreDrag);
+ui.clashScoreDragHandle.addEventListener("lostpointercapture", () => {
+  clashScoreDrag.pointerId = null;
+  ui.clashScorePanel.classList.remove("is-dragging");
+});
+ui.clashScoreClose.addEventListener("pointerdown", (event) => {
+  event.stopPropagation();
+  closeClashScoreGuide();
+});
+ui.clashScoreClose.addEventListener("click", (event) => {
+  event.stopPropagation();
+  if (ui.clashScoreGuide.open) closeClashScoreGuide();
+});
+window.addEventListener("resize", () => {
+  if (!ui.clashScoreGuide.open) return;
+  const panelRect = ui.clashScorePanel.getBoundingClientRect();
+  moveClashScorePanel(panelRect.left, panelRect.top);
+});
 ui.playSelectedButton.addEventListener("click", playRound);
+ui.trophyClaimOptions.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-trophy-card]");
+  const pending = state.pendingTrophyClaim;
+  if (!button || !pending) return;
+  const reward = pending.options.find(
+    (option) => option.card.instanceId === button.dataset.trophyCard,
+  );
+  if (!reward) return;
+  const { playerCards, aiCards, resolution } = pending;
+  completeRoundReward(
+    reward,
+    playerCards,
+    aiCards,
+    resolution,
+    `Claimed from Lane ${reward.lane + 1}. Review the clash, then continue when ready.`,
+  );
+});
 ui.nextRoundButton.addEventListener("click", () => {
   ui.nextRoundButton.disabled = true;
   if (state.pendingMatchWinner) {

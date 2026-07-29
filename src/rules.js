@@ -6,9 +6,26 @@ const ELEMENTS = {
 };
 
 const ELEMENT_EDGE_BONUS = 2;
-const CHAIN_BONUS = 1;
+const TACTIC_BONUS = 1;
 const MAX_COMMITMENT = 3;
 const TROPHIES_PER_ELEMENT = 2;
+const TACTICS = Object.freeze({
+  vanguard: Object.freeze({
+    icon: "▲",
+    label: "Vanguard",
+    description: "Vanguard: +1 in Lane 1.",
+  }),
+  link: Object.freeze({
+    icon: "◆",
+    label: "Link",
+    description: "Link: +1 after a different element.",
+  }),
+  finisher: Object.freeze({
+    icon: "★",
+    label: "Finisher",
+    description: "Finisher: +1 when last in a 2- or 3-card play and facing a card.",
+  }),
+});
 const DIFFICULTY_MODES = Object.freeze(["guided", "veiled", "instinct", "blind"]);
 const AI_MOTIVE_TRAITS = Object.freeze([
   Object.freeze({
@@ -50,10 +67,10 @@ const AI_MOTIVE_TRAITS = Object.freeze([
 ]);
 const AI_FORMATION_TRAITS = Object.freeze([
   Object.freeze({
-    id: "chain-weaver",
+    id: "tactic-planner",
     category: "formation",
-    label: "Chain Weaver",
-    description: "Changes elements between lanes to earn Chain +1.",
+    label: "Tactic Planner",
+    description: "Usually orders his cards to activate as many Tactics as possible.",
   }),
   Object.freeze({
     id: "strong-opener",
@@ -112,7 +129,7 @@ function getFocusBonus(commitmentCount) {
   return Math.max(0, MAX_COMMITMENT - commitmentCount);
 }
 
-const OVERWHELM_BONUS = 3;
+const OVERWHELM_BONUS = 2;
 
 function getOverwhelmBonus(commitmentCount, opponentCommitmentCount, laneIndex = 0) {
   return commitmentCount === MAX_COMMITMENT
@@ -173,16 +190,35 @@ function hasAiTrait(traits, id) {
   return traits.some((trait) => trait.id === id);
 }
 
-function getChainBonus(cards, index) {
-  if (index <= 0 || !cards[index - 1] || !cards[index]) return 0;
-  return cards[index - 1].element === cards[index].element ? 0 : CHAIN_BONUS;
+function getTacticBonus(
+  cards,
+  index,
+  opponentCommitmentCount = cards.length,
+) {
+  const card = cards[index];
+  if (!card || !TACTICS[card.tactic]) return 0;
+
+  if (card.tactic === "vanguard") {
+    return index === 0 ? TACTIC_BONUS : 0;
+  }
+  if (card.tactic === "link") {
+    return index > 0
+      && cards[index - 1]?.element !== card.element
+      ? TACTIC_BONUS
+      : 0;
+  }
+  return cards.length > 1
+    && index === cards.length - 1
+    && index < opponentCommitmentCount
+    ? TACTIC_BONUS
+    : 0;
 }
 
 function scoreClash(
   playerCard,
   aiCard,
-  playerChain = 0,
-  aiChain = 0,
+  playerTactic = 0,
+  aiTactic = 0,
   playerFocus = 0,
   aiFocus = 0,
   playerOverwhelm = 0,
@@ -199,24 +235,26 @@ function scoreClash(
     player: {
       base: playerCard.power,
       edge: playerEdge,
-      chain: playerChain,
+      tactic: playerTactic,
+      tacticName: TACTICS[playerCard.tactic]?.label || "Tactic",
       focus: playerFocus,
       overwhelm: playerOverwhelm,
       total: playerCard.power
         + playerEdge
-        + playerChain
+        + playerTactic
         + playerFocus
         + playerOverwhelm,
     },
     ai: {
       base: aiCard.power,
       edge: aiEdge,
-      chain: aiChain,
+      tactic: aiTactic,
+      tacticName: TACTICS[aiCard.tactic]?.label || "Tactic",
       focus: aiFocus,
       overwhelm: aiOverwhelm,
       total: aiCard.power
         + aiEdge
-        + aiChain
+        + aiTactic
         + aiFocus
         + aiOverwhelm,
     },
@@ -226,8 +264,8 @@ function scoreClash(
 function compareCards(
   playerCard,
   aiCard,
-  playerChain = 0,
-  aiChain = 0,
+  playerTactic = 0,
+  aiTactic = 0,
   playerFocus = 0,
   aiFocus = 0,
   playerOverwhelm = 0,
@@ -236,8 +274,8 @@ function compareCards(
   const scoring = scoreClash(
     playerCard,
     aiCard,
-    playerChain,
-    aiChain,
+    playerTactic,
+    aiTactic,
     playerFocus,
     aiFocus,
     playerOverwhelm,
@@ -331,9 +369,13 @@ function chooseAiCard(
       score += 2;
       if (hasAiTrait(traits, "counter-scholar")) score += 3;
     }
-    if (previousCard && previousCard.element !== card.element) {
+    if (
+      previousCard
+      && card.tactic === "link"
+      && previousCard.element !== card.element
+    ) {
       score += 1.25;
-      if (hasAiTrait(traits, "chain-weaver")) score += 2.25;
+      if (hasAiTrait(traits, "tactic-planner")) score += 2.25;
     }
     if (hasAiTrait(traits, "power-seeker")) score += card.power * 0.5;
 
@@ -361,17 +403,37 @@ function chooseAiCard(
   return scored[0].card;
 }
 
-function moveStrongestCard(cards, targetIndex) {
-  if (cards.length < 2) return cards;
-  const strongestIndex = cards.reduce(
-    (bestIndex, card, index) => (
-      card.power > cards[bestIndex].power ? index : bestIndex
-    ),
-    0,
-  );
-  const [strongest] = cards.splice(strongestIndex, 1);
-  cards.splice(targetIndex, 0, strongest);
-  return cards;
+function getCardPermutations(cards) {
+  if (cards.length < 2) return [[...cards]];
+  return cards.flatMap((card, index) =>
+    getCardPermutations(cards.filter((_, cardIndex) => cardIndex !== index))
+      .map((remainder) => [card, ...remainder]));
+}
+
+function orderAiFormation(cards, random = Math.random, traits = []) {
+  if (cards.length < 2) return [...cards];
+  const strongestPower = Math.max(...cards.map((card) => card.power));
+  const tacticWeight = hasAiTrait(traits, "tactic-planner") ? 5 : 0.9;
+
+  return getCardPermutations(cards)
+    .map((formation) => {
+      const tacticScore = formation.reduce(
+        (total, _, index) =>
+          total + getTacticBonus(formation, index, formation.length),
+        0,
+      );
+      let score = tacticScore * tacticWeight + random() * 1.2;
+      if (
+        hasAiTrait(traits, "strong-opener")
+        && formation[0].power === strongestPower
+      ) score += 4.5;
+      if (
+        hasAiTrait(traits, "late-striker")
+        && formation.at(-1).power === strongestPower
+      ) score += 4.5;
+      return { formation, score };
+    })
+    .sort((a, b) => b.score - a.score)[0].formation;
 }
 
 function chooseAiCards(
@@ -399,13 +461,7 @@ function chooseAiCards(
     available.splice(available.indexOf(card), 1);
   }
 
-  if (hasAiTrait(traits, "strong-opener") && random() < 0.75) {
-    moveStrongestCard(chosen, 0);
-  } else if (hasAiTrait(traits, "late-striker") && random() < 0.75) {
-    moveStrongestCard(chosen, chosen.length - 1);
-  }
-
-  return chosen;
+  return orderAiFormation(chosen, random, traits);
 }
 
 function chooseAiCommitment(
@@ -485,8 +541,8 @@ function resolveClashes(playerCards, aiCards) {
   const aiFocus = getFocusBonus(aiCommitment);
   const lanes = playerCards.slice(0, clashCount).map((playerCard, index) => {
     const aiCard = aiCards[index];
-    const playerChain = getChainBonus(playerCards, index);
-    const aiChain = getChainBonus(aiCards, index);
+    const playerTactic = getTacticBonus(playerCards, index, aiCommitment);
+    const aiTactic = getTacticBonus(aiCards, index, playerCommitment);
     const playerOverwhelm = getOverwhelmBonus(
       playerCommitment,
       aiCommitment,
@@ -500,8 +556,8 @@ function resolveClashes(playerCards, aiCards) {
     const scoring = scoreClash(
       playerCard,
       aiCard,
-      playerChain,
-      aiChain,
+      playerTactic,
+      aiTactic,
       playerFocus,
       aiFocus,
       playerOverwhelm,
@@ -548,29 +604,57 @@ function resolveClashes(playerCards, aiCards) {
   };
 }
 
-function getFormationReward(playerCards, aiCards, resolution) {
+function getFormationRewardOptions(playerCards, aiCards, resolution) {
   const { results, score } = resolution;
   const winner = resolution.winner || (
     score.player > score.ai ? "player" : score.ai > score.player ? "ai" : "draw"
   );
-  if (winner === "draw") return { winner, card: null, lane: -1 };
+  if (winner === "draw") return [];
 
-  let rewardIndex = results.indexOf(winner);
-  if (resolution.decidedBy === "pressure") {
-    rewardIndex = Math.min(playerCards.length, aiCards.length);
-  }
   const winningCards = winner === "player" ? playerCards : aiCards;
-  return {
-    winner,
-    card: winningCards[rewardIndex] || winningCards[0] || null,
-    lane: rewardIndex,
-  };
+  if (resolution.decidedBy === "pressure") {
+    const rewardIndex = Math.min(playerCards.length, aiCards.length);
+    const card = winningCards[rewardIndex] || winningCards[0] || null;
+    return card ? [{ winner, card, lane: rewardIndex, fixed: true }] : [];
+  }
+
+  return results.flatMap((laneWinner, lane) =>
+    laneWinner === winner && winningCards[lane]
+      ? [{ winner, card: winningCards[lane], lane, fixed: false }]
+      : []);
+}
+
+function getFormationReward(
+  playerCards,
+  aiCards,
+  resolution,
+  selectedCard = null,
+) {
+  const options = getFormationRewardOptions(playerCards, aiCards, resolution);
+  if (!options.length) {
+    return { winner: "draw", card: null, lane: -1, fixed: false };
+  }
+  return options.find((option) => option.card === selectedCard) || options[0];
+}
+
+function chooseTrophyReward(options, collectedCards = []) {
+  if (!options.length) return null;
+  const counts = getElementTrophyCounts(collectedCards);
+  return [...options].sort((left, right) => {
+    const leftNeeded = counts[left.card.element] < TROPHIES_PER_ELEMENT ? 1 : 0;
+    const rightNeeded = counts[right.card.element] < TROPHIES_PER_ELEMENT ? 1 : 0;
+    return rightNeeded - leftNeeded
+      || counts[left.card.element] - counts[right.card.element]
+      || left.card.power - right.card.power
+      || left.lane - right.lane;
+  })[0];
 }
 
 global.ClawRules = Object.freeze({
   ELEMENTS,
+  TACTICS,
   ELEMENT_EDGE_BONUS,
-  CHAIN_BONUS,
+  TACTIC_BONUS,
   OVERWHELM_BONUS,
   MAX_COMMITMENT,
   TROPHIES_PER_ELEMENT,
@@ -582,11 +666,12 @@ global.ClawRules = Object.freeze({
   createAiTraits,
   compareCards,
   forecastMatchup,
-  getChainBonus,
+  getTacticBonus,
   getFocusBonus,
   getOverwhelmBonus,
   getPowerTier,
   getFormationReward,
+  getFormationRewardOptions,
   getElementTrophyCounts,
   getTrophyProgress,
   hasCompletedElementSet,
@@ -594,6 +679,8 @@ global.ClawRules = Object.freeze({
   chooseAiCard,
   chooseAiCards,
   chooseAiCommitment,
+  chooseTrophyReward,
+  orderAiFormation,
   resolveClashes,
   scoreClash,
 });
