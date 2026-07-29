@@ -5,6 +5,7 @@ import "../src/rules.js";
 const {
   CHAIN_BONUS,
   ELEMENT_EDGE_BONUS,
+  OVERWHELM_BONUS,
   TROPHIES_PER_ELEMENT,
   buildTellClues,
   chooseAiCard,
@@ -16,6 +17,7 @@ const {
   getChainBonus,
   getFormationReward,
   getFocusBonus,
+  getOverwhelmBonus,
   getPowerTier,
   getElementTrophyCounts,
   getTrophyProgress,
@@ -40,8 +42,8 @@ test("an elemental counter is strong but not an automatic win", () => {
   assert.deepEqual(
     scoreClash(card("ember", 3), card("gust", 9)),
     {
-      player: { base: 3, edge: 2, chain: 0, focus: 0, total: 5 },
-      ai: { base: 9, edge: 0, chain: 0, focus: 0, total: 9 },
+      player: { base: 3, edge: 2, chain: 0, focus: 0, overwhelm: 0, total: 5 },
+      ai: { base: 9, edge: 0, chain: 0, focus: 0, overwhelm: 0, total: 9 },
     },
   );
 });
@@ -360,6 +362,14 @@ test("fewer committed cards gain Focus", () => {
   );
 });
 
+test("three cards gain Overwhelm only when facing one card", () => {
+  assert.equal(OVERWHELM_BONUS, 3);
+  assert.equal(getOverwhelmBonus(3, 1), 3);
+  assert.equal(getOverwhelmBonus(3, 2), 0);
+  assert.equal(getOverwhelmBonus(2, 1), 0);
+  assert.equal(getOverwhelmBonus(3, 1, 1), 0);
+});
+
 test("multi-card formations resolve from left to right", () => {
   const playerCards = [
     card("ember", 5),
@@ -403,13 +413,25 @@ test("an evenly split formation awards no trophy", () => {
   );
 });
 
-test("a smaller focused formation can beat a larger commitment", () => {
+test("Overwhelm lets three cards counter a lone focused card", () => {
   const playerCards = [card("ember", 5)];
   const aiCards = [card("gust", 6), card("tide", 8), card("ember", 8)];
   const resolution = resolveClashes(playerCards, aiCards);
 
   assert.equal(resolution.lanes[0].player.total, 9);
-  assert.equal(resolution.lanes[0].ai.total, 6);
+  assert.equal(resolution.lanes[0].ai.overwhelm, 3);
+  assert.equal(resolution.lanes[0].ai.total, 9);
+  assert.equal(resolution.winner, "ai");
+  assert.equal(resolution.decidedBy, "pressure");
+});
+
+test("Overwhelm is a soft counter that power and Element Edge can beat", () => {
+  const playerCards = [card("tide", 5)];
+  const aiCards = [card("ember", 5), card("gust", 8), card("tide", 8)];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.equal(resolution.lanes[0].player.total, 9);
+  assert.equal(resolution.lanes[0].ai.total, 8);
   assert.equal(resolution.winner, "player");
   assert.equal(resolution.decidedBy, "clashes");
 });

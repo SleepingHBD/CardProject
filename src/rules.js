@@ -85,7 +85,7 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "pressure-gambler",
     category: "commitment",
     label: "Pressure Gambler",
-    description: "Usually commits 3 cards to threaten Pressure.",
+    description: "Usually commits 3 cards for Pressure and Overwhelm against a lone card.",
   }),
   Object.freeze({
     id: "score-reader",
@@ -110,6 +110,16 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
 function getFocusBonus(commitmentCount) {
   if (commitmentCount <= 0) return 0;
   return Math.max(0, MAX_COMMITMENT - commitmentCount);
+}
+
+const OVERWHELM_BONUS = 3;
+
+function getOverwhelmBonus(commitmentCount, opponentCommitmentCount, laneIndex = 0) {
+  return commitmentCount === MAX_COMMITMENT
+    && opponentCommitmentCount === 1
+    && laneIndex === 0
+    ? OVERWHELM_BONUS
+    : 0;
 }
 
 function buildTellClues(
@@ -175,6 +185,8 @@ function scoreClash(
   aiChain = 0,
   playerFocus = 0,
   aiFocus = 0,
+  playerOverwhelm = 0,
+  aiOverwhelm = 0,
 ) {
   const playerEdge = ELEMENTS[playerCard.element].beats === aiCard.element
     ? ELEMENT_EDGE_BONUS
@@ -189,14 +201,24 @@ function scoreClash(
       edge: playerEdge,
       chain: playerChain,
       focus: playerFocus,
-      total: playerCard.power + playerEdge + playerChain + playerFocus,
+      overwhelm: playerOverwhelm,
+      total: playerCard.power
+        + playerEdge
+        + playerChain
+        + playerFocus
+        + playerOverwhelm,
     },
     ai: {
       base: aiCard.power,
       edge: aiEdge,
       chain: aiChain,
       focus: aiFocus,
-      total: aiCard.power + aiEdge + aiChain + aiFocus,
+      overwhelm: aiOverwhelm,
+      total: aiCard.power
+        + aiEdge
+        + aiChain
+        + aiFocus
+        + aiOverwhelm,
     },
   };
 }
@@ -208,6 +230,8 @@ function compareCards(
   aiChain = 0,
   playerFocus = 0,
   aiFocus = 0,
+  playerOverwhelm = 0,
+  aiOverwhelm = 0,
 ) {
   const scoring = scoreClash(
     playerCard,
@@ -216,6 +240,8 @@ function compareCards(
     aiChain,
     playerFocus,
     aiFocus,
+    playerOverwhelm,
+    aiOverwhelm,
   );
   if (scoring.player.total === scoring.ai.total) return "draw";
   return scoring.player.total > scoring.ai.total ? "player" : "ai";
@@ -461,6 +487,16 @@ function resolveClashes(playerCards, aiCards) {
     const aiCard = aiCards[index];
     const playerChain = getChainBonus(playerCards, index);
     const aiChain = getChainBonus(aiCards, index);
+    const playerOverwhelm = getOverwhelmBonus(
+      playerCommitment,
+      aiCommitment,
+      index,
+    );
+    const aiOverwhelm = getOverwhelmBonus(
+      aiCommitment,
+      playerCommitment,
+      index,
+    );
     const scoring = scoreClash(
       playerCard,
       aiCard,
@@ -468,6 +504,8 @@ function resolveClashes(playerCards, aiCards) {
       aiChain,
       playerFocus,
       aiFocus,
+      playerOverwhelm,
+      aiOverwhelm,
     );
     const winner = scoring.player.total === scoring.ai.total
       ? "draw"
@@ -503,6 +541,10 @@ function resolveClashes(playerCards, aiCards) {
     decidedBy,
     commitments: { player: playerCommitment, ai: aiCommitment },
     focus: { player: playerFocus, ai: aiFocus },
+    overwhelm: {
+      player: getOverwhelmBonus(playerCommitment, aiCommitment),
+      ai: getOverwhelmBonus(aiCommitment, playerCommitment),
+    },
   };
 }
 
@@ -529,6 +571,7 @@ global.ClawRules = Object.freeze({
   ELEMENTS,
   ELEMENT_EDGE_BONUS,
   CHAIN_BONUS,
+  OVERWHELM_BONUS,
   MAX_COMMITMENT,
   TROPHIES_PER_ELEMENT,
   DIFFICULTY_MODES,
@@ -541,6 +584,7 @@ global.ClawRules = Object.freeze({
   forecastMatchup,
   getChainBonus,
   getFocusBonus,
+  getOverwhelmBonus,
   getPowerTier,
   getFormationReward,
   getElementTrophyCounts,

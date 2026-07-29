@@ -1,11 +1,13 @@
 const {
   ELEMENTS,
+  ELEMENT_EDGE_BONUS,
   buildTellClues,
   chooseAiCommitment,
   chooseAiCards,
   createAiTraits,
   getChainBonus,
   getFocusBonus,
+  getOverwhelmBonus,
   getFormationReward,
   getPowerTier,
   getElementTrophyCounts,
@@ -14,6 +16,7 @@ const {
   reshuffleDiscardPile,
   resolveClashes,
   scoreClash,
+  OVERWHELM_BONUS,
   TROPHIES_PER_ELEMENT,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
@@ -267,11 +270,16 @@ function prepareAiPlan() {
 
 function renderOpponentTells() {
   const focus = getFocusBonus(state.aiPlan.length);
+  const formationBonus = focus
+    ? `Focus +${focus}`
+    : state.aiPlan.length === MAX_PLAY_SIZE
+      ? `Overwhelm +${OVERWHELM_BONUS} against 1 card`
+      : "No Focus";
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
   const concealsCommitment = state.difficulty === "instinct";
   ui.commitmentHint.textContent = concealsCommitment
-    ? "Instinct · Commitment and Focus concealed"
-    : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${focus ? `Focus +${focus}` : "No Focus"}`;
+    ? "Instinct · Commitment and formation bonus concealed"
+    : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationBonus}`;
   const showsHabits = state.difficulty === "instinct" && state.aiTraits.length;
   ui.opponentHabits.hidden = !showsHabits;
   ui.opponentHabits.innerHTML = showsHabits
@@ -376,24 +384,43 @@ function renderMatchupForecast() {
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
     const opponentCard = state.aiPlan[index];
     const playerChain = getChainBonus(selectedCards, index);
-    const knownPlayerScore = playerCard.power + playerFocus + playerChain;
-    const knownBonusTotal = playerFocus + playerChain;
+    const playerOverwhelm = concealsCommitment
+      ? 0
+      : getOverwhelmBonus(selectedCards.length, state.aiPlan.length, index);
+    const aiOverwhelm = concealsCommitment
+      ? 0
+      : getOverwhelmBonus(state.aiPlan.length, selectedCards.length, index);
+    const knownPlayerScore = playerCard.power
+      + playerFocus
+      + playerChain
+      + playerOverwhelm;
+    const knownBonusTotal = playerFocus + playerChain + playerOverwhelm;
     const knownBonuses = [];
     if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
     if (playerChain) knownBonuses.push(`Chain +${playerChain}`);
+    if (playerOverwhelm) knownBonuses.push(`Overwhelm +${playerOverwhelm}`);
     const knownBonusDetail = knownBonuses.length
       ? knownBonuses.join(" · ")
       : "No known bonus";
 
     if (concealsCommitment) {
+      const couldOverwhelm = selectedCards.length === MAX_PLAY_SIZE && index === 0;
+      const maximumHiddenBonus = knownBonusTotal
+        + ELEMENT_EDGE_BONUS
+        + (couldOverwhelm ? OVERWHELM_BONUS : 0);
+      const hiddenWarning = selectedCards.length === 1 && index === 0
+        ? `A 3-card foe may gain Overwhelm +${OVERWHELM_BONUS}`
+        : couldOverwhelm
+          ? `Overwhelm +${OVERWHELM_BONUS} activates if the foe commits 1`
+          : "Foe presence and Element Edge hidden";
       return `
         <span class="forecast-chip forecast-sealed">
           <i>${index + 1}</i>
-          <b>? POSSIBLE CLASH · ${knownPlayerScore}–${knownPlayerScore + 2}</b>
+          <b>? POSSIBLE CLASH · ${knownPlayerScore}–${playerCard.power + maximumHiddenBonus}</b>
           <span class="forecast-equation">
-            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${knownBonusTotal + 2} IF PAIRED</strong>
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${maximumHiddenBonus} IF PAIRED</strong>
           </span>
-          <small>${knownBonusDetail} · Foe presence and Element Edge hidden</small>
+          <small>${knownBonusDetail} · ${hiddenWarning}</small>
         </span>
       `;
     }
@@ -417,6 +444,8 @@ function renderMatchupForecast() {
       opponentChain,
       playerFocus,
       opponentFocus,
+      playerOverwhelm,
+      aiOverwhelm,
     );
     if (clue === "sealed") {
       return `
@@ -452,7 +481,7 @@ function renderMatchupForecast() {
           ? { icon: "!", title: "FOE EDGE +2", className: "danger" }
           : { icon: "=", title: "SAME ELEMENT", className: "power" };
       if (scoring.player.edge) knownBonuses.push(`Element Edge +${scoring.player.edge}`);
-      const totalBonus = scoring.player.focus + scoring.player.edge + scoring.player.chain;
+      const totalBonus = getBonusBreakdown(scoring.player).total;
       const bonusDetail = knownBonuses.length ? knownBonuses.join(" · ") : "No bonuses";
       return `
         <span class="forecast-chip forecast-${elementRead.className}">
@@ -472,11 +501,13 @@ function renderMatchupForecast() {
     const opponentMin = tierMin
       + scoring.ai.edge
       + scoring.ai.chain
-      + scoring.ai.focus;
+      + scoring.ai.focus
+      + scoring.ai.overwhelm;
     const opponentMax = tierMax
       + scoring.ai.edge
       + scoring.ai.chain
-      + scoring.ai.focus;
+      + scoring.ai.focus
+      + scoring.ai.overwhelm;
     const outlook = scoring.player.total > opponentMax
       ? "favored"
       : scoring.player.total < opponentMin
@@ -637,11 +668,21 @@ function getFormationBonusPreview(selectedCards, index) {
   const playerCard = selectedCards[index];
   const focus = getFocusBonus(selectedCards.length);
   const chain = getChainBonus(selectedCards, index);
-  const knownBonus = focus + chain;
+  const knownOverwhelm = state.difficulty === "instinct"
+    ? 0
+    : getOverwhelmBonus(selectedCards.length, state.aiPlan.length, index);
+  const knownBonus = focus + chain + knownOverwhelm;
   if (state.difficulty === "instinct") {
+    const couldOverwhelm = selectedCards.length === MAX_PLAY_SIZE && index === 0;
+    const maximumBonus = knownBonus
+      + ELEMENT_EDGE_BONUS
+      + (couldOverwhelm ? OVERWHELM_BONUS : 0);
+    const overwhelmDetail = couldOverwhelm
+      ? `; includes Overwhelm +${OVERWHELM_BONUS} if Professor Paws commits 1 card`
+      : "";
     return {
-      text: `+${knownBonus}–${knownBonus + 2}`,
-      label: `If paired, bonus ranges from plus ${knownBonus} to plus ${knownBonus + 2}; opposing card presence and Element Edge are hidden`,
+      text: `+${knownBonus}–${maximumBonus}`,
+      label: `If paired, bonus ranges from plus ${knownBonus} to plus ${maximumBonus}${overwhelmDetail}; opposing card presence and Element Edge are hidden`,
       pressure: false,
     };
   }
@@ -661,12 +702,13 @@ function getFormationBonusPreview(selectedCards, index) {
   const knownParts = [];
   if (focus) knownParts.push(`Focus +${focus}`);
   if (chain) knownParts.push(`Chain +${chain}`);
+  if (knownOverwhelm) knownParts.push(`Overwhelm +${knownOverwhelm}`);
   if (edge) knownParts.push(`Element Edge +${edge}`);
 
   if (!edgeKnown) {
     return {
-      text: `+${knownBonus}–${knownBonus + 2}`,
-      label: `Bonus ranges from plus ${knownBonus} to plus ${knownBonus + 2}; Element Edge is hidden`,
+      text: `+${knownBonus}–${knownBonus + ELEMENT_EDGE_BONUS}`,
+      label: `Bonus ranges from plus ${knownBonus} to plus ${knownBonus + ELEMENT_EDGE_BONUS}; ${knownOverwhelm ? `includes Overwhelm +${knownOverwhelm}; ` : ""}Element Edge is hidden`,
       pressure: false,
     };
   }
@@ -759,10 +801,20 @@ function updateFormationMessage() {
     : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
   const focus = getFocusBonus(count);
   const focusLabel = focus ? `Focus +${focus}` : "No Focus";
+  const playerOverwhelm = getOverwhelmBonus(count, state.aiPlan.length);
+  const opponentOverwhelm = getOverwhelmBonus(state.aiPlan.length, count);
   const detail = count === 0
     ? "Drag a card into the glowing lane, or click a card to place it."
     : state.difficulty === "instinct"
-      ? `${focusLabel}. Professor Paws' commitment stays concealed until the reveal.`
+      ? count === MAX_PLAY_SIZE
+        ? `No Focus. Overwhelm +${OVERWHELM_BONUS} activates if Professor Paws committed 1 card; his commitment stays concealed.`
+        : count === 1
+          ? `${focusLabel}. Beware: a 3-card enemy formation gains Overwhelm +${OVERWHELM_BONUS}; his commitment stays concealed.`
+          : `${focusLabel}. Professor Paws' commitment stays concealed until the reveal.`
+    : playerOverwhelm
+      ? `Overwhelm +${playerOverwhelm} strengthens Lane 1, and your extra cards create Pressure.`
+      : opponentOverwhelm
+        ? `Professor Paws gains Overwhelm +${opponentOverwhelm} in Lane 1. Your ${focusLabel} can still beat it.`
     : count > state.aiPlan.length
       ? `Pressure advantage: tied formations go to you. ${focusLabel}.`
       : count < state.aiPlan.length
@@ -774,9 +826,13 @@ function updateFormationMessage() {
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
   const focus = getFocusBonus(count);
-  const focusLabel = focus ? `Focus +${focus}` : "No Focus";
+  const formationLabel = focus
+    ? `Focus +${focus}`
+    : count === MAX_PLAY_SIZE
+      ? `Overwhelm +${OVERWHELM_BONUS} vs 1 card`
+      : "No Focus";
   ui.selectionCount.textContent = count
-    ? `${count} of ${MAX_PLAY_SIZE} placed · ${focusLabel}`
+    ? `${count} of ${MAX_PLAY_SIZE} placed · ${formationLabel}`
     : `0 of ${MAX_PLAY_SIZE} placed`;
   ui.playSelectedButton.disabled = state.locked || count === 0;
   ui.playSelectedButton.textContent = count === 1 ? "Commit 1 Card" : `Commit ${count} Cards`;
@@ -986,8 +1042,9 @@ function getBonusBreakdown(scoring) {
   if (scoring.focus) parts.push(`Focus +${scoring.focus}`);
   if (scoring.edge) parts.push(`Element Edge +${scoring.edge}`);
   if (scoring.chain) parts.push(`Chain +${scoring.chain}`);
+  if (scoring.overwhelm) parts.push(`Overwhelm +${scoring.overwhelm}`);
   return {
-    total: scoring.focus + scoring.edge + scoring.chain,
+    total: scoring.focus + scoring.edge + scoring.chain + (scoring.overwhelm || 0),
     label: parts.length ? parts.join(", ") : "No bonuses",
   };
 }
@@ -1003,6 +1060,19 @@ function revealClashScore(lane, scoring, outcome, opposingTotal) {
     badge.classList.add("is-resolved");
     badge.setAttribute("aria-label", `Total bonus plus ${bonus.total}: ${bonus.label}`);
     badge.title = explanation;
+  }
+  if (scoring.overwhelm) {
+    let callout = lane.querySelector(".overwhelm-callout");
+    if (!callout) {
+      callout = document.createElement("span");
+      callout.className = "overwhelm-callout";
+      lane.append(callout);
+    }
+    callout.textContent = `OVERWHELM +${scoring.overwhelm}`;
+    callout.setAttribute(
+      "aria-label",
+      `Overwhelm bonus plus ${scoring.overwhelm}`,
+    );
   }
   if (result) {
     result.innerHTML = `<b>${outcome} ${scoring.total}–${opposingTotal}</b><small>BONUS +${bonus.total}</small>`;
