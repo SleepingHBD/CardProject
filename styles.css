@@ -4114,7 +4114,7 @@ footer {
   margin: 0;
 }
 
-.main-menu-settings-button {
+.main-menu-option-button {
   min-height: 44px;
   color: #ead49d;
   background:
@@ -4132,14 +4132,14 @@ footer {
   transition: transform .15s ease, background .15s ease, border-color .15s ease;
 }
 
-.main-menu-settings-button:hover,
-.main-menu-settings-button:focus-visible {
+.main-menu-option-button:hover,
+.main-menu-option-button:focus-visible {
   background: rgba(91, 54, 43, .88);
   border-color: #d1a755;
   transform: translateY(-1px);
 }
 
-.main-menu-settings-button:focus-visible {
+.main-menu-option-button:focus-visible {
   outline: 3px solid #efd786;
   outline-offset: 3px;
 }
@@ -5053,7 +5053,7 @@ footer {
     margin-top: 42px;
   }
 
-  .main-menu-settings-button {
+  .main-menu-option-button {
     min-height: 42px;
     font-size: 11px;
   }

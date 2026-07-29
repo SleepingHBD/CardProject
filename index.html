@@ -237,7 +237,16 @@
           Play
         </button>
         <button
-          class="main-menu-settings-button"
+          class="main-menu-option-button"
+          id="mainMenuRulebookButton"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="rulebookDialog"
+        >
+          Rulebook
+        </button>
+        <button
+          class="main-menu-option-button"
           id="mainMenuSettingsButton"
           type="button"
           aria-haspopup="dialog"
@@ -699,7 +708,7 @@
         </section>
       </div>
 
-      <button class="primary-button rulebook-finish" data-close-rulebook type="button">Return to the duel</button>
+      <button class="primary-button rulebook-finish" data-close-rulebook type="button">Return</button>
     </dialog>
 
     <dialog class="game-dialog result-dialog" id="resultDialog">

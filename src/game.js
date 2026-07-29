@@ -168,6 +168,7 @@ const ui = {
   difficultyDialog: document.querySelector("#difficultyDialog"),
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
+  mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
   gameMenuDialog: document.querySelector("#gameMenuDialog"),
   settingsDialog: document.querySelector("#settingsDialog"),
@@ -1661,6 +1662,7 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
   showDifficultyChooser();
 });
 ui.mainMenuPlayButton.addEventListener("click", showDifficultyChooser);
+ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
 ui.menuButton.addEventListener("click", () => {
   if (!ui.menuButton.disabled && !ui.gameMenuDialog.open) {
