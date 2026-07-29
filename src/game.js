@@ -663,10 +663,10 @@ function cardMarkup(
       </span>
       <span class="card-info">
         <strong>${card.name}</strong>
-        <small title="${tactic.description}">${element.label} · ${tactic.icon} ${tactic.label}</small>
+        <small title="${tactic.description}">${element.label} · <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-${tactic.icon}"></use></svg> ${tactic.label}</small>
       </span>
       <span class="card-ability">
-        <i aria-hidden="true" title="${tactic.description}">${tactic.icon}</i>
+        <i aria-hidden="true" title="${tactic.description}"><svg class="tactic-icon"><use href="#tactic-icon-${tactic.icon}"></use></svg></i>
         <span><b>${card.move}</b><small>${card.lore}</small></span>
       </span>
       <span class="card-rarity">${card.rarity}</span>

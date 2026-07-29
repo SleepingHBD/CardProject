@@ -11,17 +11,17 @@ const MAX_COMMITMENT = 3;
 const TROPHIES_PER_ELEMENT = 2;
 const TACTICS = Object.freeze({
   vanguard: Object.freeze({
-    icon: "▲",
+    icon: "shield",
     label: "Vanguard",
     description: "Vanguard: +1 in Lane 1.",
   }),
   link: Object.freeze({
-    icon: "◆",
+    icon: "chain",
     label: "Link",
     description: "Link: +1 after a different element.",
   }),
   finisher: Object.freeze({
-    icon: "★",
+    icon: "sword",
     label: "Finisher",
     description: "Finisher: +1 when last in a 2- or 3-card play and facing a card.",
   }),

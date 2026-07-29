@@ -52,6 +52,23 @@ button {
   font: inherit;
 }
 
+.tactic-symbol-library {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tactic-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  overflow: visible;
+  fill: currentColor;
+  vertical-align: -.14em;
+}
+
 button:focus-visible,
 .game-card:focus-visible {
   outline: 4px solid #ffd65a;
@@ -1313,6 +1330,11 @@ h1 {
   border-radius: 50%;
 }
 
+.tactic-score-part .tactic-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .tactic-score-part li strong {
   display: block;
   color: #f0dca9;
@@ -2161,6 +2183,11 @@ h1 {
   text-transform: uppercase;
 }
 
+.card-info small .tactic-icon {
+  width: 1.08em;
+  height: 1.08em;
+}
+
 .card-ability {
   height: 44px;
   padding: 4px 6px 3px;
@@ -2187,6 +2214,11 @@ h1 {
   border-radius: 3px 3px 8px 8px;
   font-style: normal;
   font-size: 11px;
+}
+
+.card-ability > i .tactic-icon {
+  width: 1.35em;
+  height: 1.35em;
 }
 
 .card-ability span,
@@ -2740,6 +2772,11 @@ footer {
   font-size: 15px;
 }
 
+.gallery-legend b .tactic-icon {
+  width: 15px;
+  height: 15px;
+}
+
 .rarity-legend {
   display: flex;
   justify-content: center;
@@ -2989,6 +3026,19 @@ footer {
 
 .rulebook-section li + li {
   margin-top: 4px;
+}
+
+.rulebook-section .rulebook-tactic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rulebook-tactic .tactic-icon {
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  color: #6b3d2d;
 }
 
 .rulebook-definitions {
