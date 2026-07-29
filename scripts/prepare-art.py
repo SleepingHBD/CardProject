@@ -16,7 +16,8 @@ SHEETS = {
     ),
     "tide": (
         GENERATED / "call_cKRoMfgCR7xOnlRiZ8YdH885.png",
-        # This legacy source sheet still contains the retired Drizzle Socks art.
+        # This legacy source sheet still contains retired Captain Catfish and
+        # Drizzle Socks art.
         ["puddle-pouncer", "bubble-bengal", "moonpool-mouser", "captain-catfish", "drizzle-socks"],
     ),
 }
@@ -46,6 +47,16 @@ def crop_grid(source: Path, names: list[str]) -> None:
 
 for _, (sheet, card_names) in SHEETS.items():
     crop_grid(sheet, card_names)
+
+empress_ebb = Image.open(
+    GENERATED / "call_mv9R2O8Q5i2XvlTm7ctl3RXD.png"
+).convert("RGB")
+empress_ebb.resize((768, 768), Image.Resampling.LANCZOS).save(
+    OUTPUT / "cards" / "empress-ebb.webp",
+    "WEBP",
+    quality=91,
+    method=6,
+)
 
 portraits = Image.open(GENERATED / "call_gfmhK721DYsAVDk5d6xwcu8i.png").convert("RGB")
 portrait_output = OUTPUT / "characters"

@@ -34,7 +34,7 @@ const CARD_LIBRARY = [
   ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "puddle-pouncer"],
   ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "bubble-bengal"],
   ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "moonpool-mouser"],
-  ["tide", 9, "Captain Catfish", "Big Catch", "The tale gets bigger each time.", "legendary", "captain-catfish"],
+  ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "empress-ebb"],
   ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "wellwater-wisp"],
   ["tide", 3, "Mizzle Motley", "Ripple Rattle", "Three bells. No dry seats.", "common", "mizzle-motley"],
 ].map(([element, power, name, move, lore, rarity, art], index) => ({

@@ -114,8 +114,14 @@ Append the card-specific action and prop brief below.
 - Bubble Bengal: compact Bengal court bubble-seer perched low on broad haunches
   in a sleeveless blue surcoat, holding one bubble wand and one open pearl shell.
 - Moonpool Mouser: hooded navy cat crouched beside a circular moon pool.
-- Captain Catfish: stocky orange harbor fisherman in a hooded loose wool frock,
-  rope belt, pouch, and boots, gripping one catfish below both faces.
+- Empress Ebb: compact, broad-pawed silver-blue Nebelung maritime sovereign with
+  an oversized feline head, wearing a coral-and-pearl crown, broad pearl collar,
+  and Byzantine-inspired navy-and-teal lamellar armour fitted to her short cat
+  stature. She plants one ceremonial trident, points her decree with the other
+  paw, and commands one stylized wave with a knowing one-fanged grin, raised
+  brow, cocked ear, and lively tail. Keep her pose diagonal and asymmetrical,
+  against a clean, uniform navy circle with no dark shadow markings, patterns,
+  or creature silhouettes.
 - Wellwater Wisp: calico well-keeper in a sleeveless teal wool kirtle and rope
   belt, pulling one bucket with both bare forelegs visible.
 - Mizzle Motley: slender slate-blue castle fool and water-juggler in a
