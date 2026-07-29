@@ -17,6 +17,9 @@
   const cardSoundBuffers = new Map();
   const cardSoundByteLoads = new Map();
   const cardSoundLoads = new Map();
+  const roundResultBuffers = new Map();
+  const roundResultByteLoads = new Map();
+  const roundResultLoads = new Map();
   const nextCardSample = new Map();
   let nextClashHit = 0;
   const musicSources = Object.freeze({
@@ -89,6 +92,16 @@
     reveal2: 0.54,
     reveal3: 0.54,
   });
+  const roundResultSources = Object.freeze({
+    win: "./assets/audio/results/round-win.wav",
+    loss: "./assets/audio/results/round-loss.wav",
+    draw: "./assets/audio/results/round-draw.wav",
+  });
+  const roundResultGains = Object.freeze({
+    win: 0.72,
+    loss: 0.7,
+    draw: 0.66,
+  });
   const cardSoundCount = Object.values(cardSoundSources)
     .reduce((total, sources) => total + sources.length, 0);
 
@@ -116,6 +129,7 @@
       preloadDestructionSounds(context);
       preloadClashHitSounds(context);
       preloadCardSounds(context);
+      preloadRoundResultSounds(context);
     }
 
     if (context.state === "suspended") {
@@ -403,6 +417,45 @@
           .catch(() => null);
         cardSoundLoads.set(key, load);
       });
+    });
+  }
+
+  function requestRoundResultBytes() {
+    if (typeof global.fetch !== "function") return;
+    Object.entries(roundResultSources).forEach(([result, sourcePath]) => {
+      if (roundResultByteLoads.has(result)) return;
+      const load = global.fetch(sourcePath)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+          return response.arrayBuffer();
+        })
+        .catch(() => null);
+      roundResultByteLoads.set(result, load);
+    });
+  }
+
+  function preloadRoundResultSounds(audioContext) {
+    requestRoundResultBytes();
+    Object.keys(roundResultSources).forEach((result) => {
+      if (roundResultBuffers.has(result) || roundResultLoads.has(result)) return;
+      const byteLoad = roundResultByteLoads.get(result);
+      if (!byteLoad) return;
+      const load = byteLoad
+        .then((bytes) => bytes ? audioContext.decodeAudioData(bytes.slice(0)) : null)
+        .then((buffer) => {
+          if (buffer) {
+            roundResultBuffers.set(result, buffer);
+            if (roundResultBuffers.size === Object.keys(roundResultSources).length) {
+              global.document?.documentElement?.setAttribute(
+                "data-round-result-audio",
+                "ready",
+              );
+            }
+          }
+          return buffer;
+        })
+        .catch(() => null);
+      roundResultLoads.set(result, load);
     });
   }
 
@@ -1055,7 +1108,34 @@
     source.start();
   }
 
+  function playRoundResultSample(result) {
+    const audioContext = createContext();
+    const buffer = roundResultBuffers.get(result);
+    if (!audioContext || !buffer) return false;
+
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    source.buffer = buffer;
+    gain.gain.value = roundResultGains[result] ?? 0.68;
+    source.connect(gain).connect(effectsBus);
+    source.addEventListener("ended", () => {
+      source.disconnect();
+      gain.disconnect();
+    }, { once: true });
+    global.document?.documentElement?.setAttribute(
+      "data-last-round-result-audio",
+      `${result}-file`,
+    );
+    source.start();
+    return true;
+  }
+
   function roundResult(result) {
+    if (playRoundResultSample(result)) return;
+    global.document?.documentElement?.setAttribute(
+      "data-last-round-result-audio",
+      `${result}-fallback`,
+    );
     const notes = result === "win"
       ? [392, 523.25, 659.25]
       : result === "loss"
@@ -1102,6 +1182,7 @@
   requestDestructionBytes();
   requestClashHitBytes();
   requestCardSoundBytes();
+  requestRoundResultBytes();
 
   global.ClawAudio = Object.freeze({
     cardFlip,
