@@ -177,7 +177,7 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Element Edge follows the cycle",
         text:
-          "Ember counters Gust, Gust counters Tide, and Tide counters Ember. A countering card earns Element Edge +2 when the lane is paired.",
+          "Ember beats Gust, Gust beats Tide, and Tide beats Ember. A card that beats the opposing element earns Element Edge +2 when the lane is paired.",
         objective:
           "Element Edge strengthens the card’s total, but it does not guarantee victory. Printed Power and every other active bonus still matter.",
         visual: "element-cycle",
