@@ -401,6 +401,11 @@ function renderTutorialCoach() {
     clearTutorialHighlights();
     return;
   }
+  if (tutorial.phase === "clashing") {
+    ui.tutorialCoach.hidden = true;
+    clearTutorialHighlights();
+    return;
+  }
 
   const lesson = currentTutorialLesson();
   if (!lesson) return;
@@ -441,13 +446,6 @@ function renderTutorialCoach() {
         ? `Place ${nextCard.name} into Lane ${selected.length + 1}.`
         : lesson.objective;
     }
-  } else if (tutorial.phase === "clashing") {
-    ui.tutorialCoachTitle.textContent = "Watch the totals resolve";
-    ui.tutorialCoachText.textContent =
-      "Every paired lane uses the normal duel formula: printed Power plus every active bonus.";
-    ui.tutorialObjective.textContent =
-      "The aftermath will identify exactly what decided this lesson.";
-    ui.tutorialActionButton.hidden = true;
   } else if (tutorial.phase === "claim") {
     ui.tutorialCoachTitle.textContent = "Choose a winning trophy";
     ui.tutorialCoachText.textContent = lesson.aftermath;
