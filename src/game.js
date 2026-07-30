@@ -283,17 +283,22 @@ const ui = {
   deckTransitionLabel: document.querySelector("#deckTransitionLabel"),
   soundButton: document.querySelector("#soundButton"),
   tutorialCoach: document.querySelector("#tutorialCoach"),
+  tutorialCoachDragHandle: document.querySelector("#tutorialCoachDragHandle"),
   tutorialProgress: document.querySelector("#tutorialProgress"),
   tutorialConcept: document.querySelector("#tutorialConcept"),
   tutorialCoachTitle: document.querySelector("#tutorialCoachTitle"),
   tutorialCoachText: document.querySelector("#tutorialCoachText"),
   tutorialObjective: document.querySelector("#tutorialObjective"),
   tutorialActionButton: document.querySelector("#tutorialActionButton"),
-  tutorialExitButton: document.querySelector("#tutorialExitButton"),
 };
 let draggedCardId = null;
 let settingsReturnTarget = "main";
 const clashScoreDrag = {
+  pointerId: null,
+  offsetX: 0,
+  offsetY: 0,
+};
+const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
   offsetY: 0,
@@ -408,7 +413,6 @@ function renderTutorialCoach() {
   ui.tutorialProgress.textContent = `Lesson ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
   ui.tutorialConcept.textContent = lesson.concept;
   ui.tutorialActionButton.hidden = false;
-  ui.tutorialExitButton.disabled = tutorial.phase === "clashing";
 
   if (tutorial.phase === "intro") {
     ui.tutorialCoachTitle.textContent = lesson.title;
@@ -465,7 +469,11 @@ function renderTutorialCoach() {
     ui.tutorialActionButton.textContent = finalLesson ? "Finish Training" : "Continue";
   }
 
-  window.requestAnimationFrame(applyTutorialHighlights);
+  window.requestAnimationFrame(() => {
+    applyTutorialHighlights();
+    const panelRect = ui.tutorialCoach.getBoundingClientRect();
+    moveTutorialCoach(panelRect.left, panelRect.top);
+  });
 }
 
 function configureGameMenu() {
@@ -669,6 +677,38 @@ function stopClashScoreDrag(event) {
   }
   clashScoreDrag.pointerId = null;
   ui.clashScorePanel.classList.remove("is-dragging");
+}
+
+function clampTutorialCoachPosition(left, top) {
+  const margin = 8;
+  const panelRect = ui.tutorialCoach.getBoundingClientRect();
+  return {
+    left: Math.min(
+      Math.max(margin, left),
+      Math.max(margin, window.innerWidth - panelRect.width - margin),
+    ),
+    top: Math.min(
+      Math.max(margin, top),
+      Math.max(margin, window.innerHeight - panelRect.height - margin),
+    ),
+  };
+}
+
+function moveTutorialCoach(left, top) {
+  const position = clampTutorialCoachPosition(left, top);
+  ui.tutorialCoach.style.left = `${position.left}px`;
+  ui.tutorialCoach.style.top = `${position.top}px`;
+  ui.tutorialCoach.style.right = "auto";
+  ui.tutorialCoach.style.bottom = "auto";
+}
+
+function stopTutorialCoachDrag(event) {
+  if (event.pointerId !== tutorialCoachDrag.pointerId) return;
+  if (ui.tutorialCoachDragHandle.hasPointerCapture(event.pointerId)) {
+    ui.tutorialCoachDragHandle.releasePointerCapture(event.pointerId);
+  }
+  tutorialCoachDrag.pointerId = null;
+  ui.tutorialCoach.classList.remove("is-dragging");
 }
 
 function closeClashScoreGuide() {
@@ -2383,10 +2423,38 @@ ui.clashScoreClose.addEventListener("click", (event) => {
   event.stopPropagation();
   if (ui.clashScoreGuide.open) closeClashScoreGuide();
 });
+ui.tutorialCoachDragHandle.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) return;
+  const panelRect = ui.tutorialCoach.getBoundingClientRect();
+  tutorialCoachDrag.pointerId = event.pointerId;
+  tutorialCoachDrag.offsetX = event.clientX - panelRect.left;
+  tutorialCoachDrag.offsetY = event.clientY - panelRect.top;
+  ui.tutorialCoachDragHandle.setPointerCapture(event.pointerId);
+  ui.tutorialCoach.classList.add("is-dragging");
+  event.preventDefault();
+});
+ui.tutorialCoachDragHandle.addEventListener("pointermove", (event) => {
+  if (event.pointerId !== tutorialCoachDrag.pointerId) return;
+  moveTutorialCoach(
+    event.clientX - tutorialCoachDrag.offsetX,
+    event.clientY - tutorialCoachDrag.offsetY,
+  );
+});
+ui.tutorialCoachDragHandle.addEventListener("pointerup", stopTutorialCoachDrag);
+ui.tutorialCoachDragHandle.addEventListener("pointercancel", stopTutorialCoachDrag);
+ui.tutorialCoachDragHandle.addEventListener("lostpointercapture", () => {
+  tutorialCoachDrag.pointerId = null;
+  ui.tutorialCoach.classList.remove("is-dragging");
+});
 window.addEventListener("resize", () => {
-  if (!ui.clashScoreGuide.open) return;
-  const panelRect = ui.clashScorePanel.getBoundingClientRect();
-  moveClashScorePanel(panelRect.left, panelRect.top);
+  if (ui.clashScoreGuide.open) {
+    const panelRect = ui.clashScorePanel.getBoundingClientRect();
+    moveClashScorePanel(panelRect.left, panelRect.top);
+  }
+  if (tutorial.active && !ui.tutorialCoach.hidden) {
+    const coachRect = ui.tutorialCoach.getBoundingClientRect();
+    moveTutorialCoach(coachRect.left, coachRect.top);
+  }
 });
 ui.playSelectedButton.addEventListener("click", playRound);
 ui.trophyClaimOptions.addEventListener("click", (event) => {
@@ -2457,10 +2525,6 @@ ui.tutorialActionButton.addEventListener("click", () => {
   } else if (tutorial.phase === "complete") {
     showMainMenu();
   }
-});
-ui.tutorialExitButton.addEventListener("click", () => {
-  if (!tutorial.active || tutorial.phase === "clashing") return;
-  showMainMenu();
 });
 ui.gameMenuDialog.addEventListener("cancel", (event) => {
   event.preventDefault();

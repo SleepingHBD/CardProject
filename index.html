@@ -114,8 +114,13 @@
           aria-labelledby="tutorialCoachTitle"
           hidden
         >
-          <div class="tutorial-coach-heading">
+          <div
+            class="tutorial-coach-heading"
+            id="tutorialCoachDragHandle"
+            title="Drag to move the tutorial panel"
+          >
             <span>TRAINING GROUNDS</span>
+            <span class="tutorial-drag-hint" aria-hidden="true">Drag to move</span>
             <b id="tutorialProgress">Lesson 1 of 5</b>
           </div>
           <div class="tutorial-coach-copy" aria-live="polite">
@@ -129,9 +134,6 @@
             </div>
           </div>
           <div class="tutorial-coach-actions">
-            <button class="tutorial-exit-button" id="tutorialExitButton" type="button">
-              Exit Training
-            </button>
             <button class="primary-button tutorial-action-button" id="tutorialActionButton" type="button">
               Begin Lesson
             </button>
