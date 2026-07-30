@@ -4602,12 +4602,11 @@ footer {
   position: fixed;
   z-index: 950;
   top: clamp(118px, 18vh, 148px);
-  left: 50%;
+  left: 18px;
   width: min(620px, calc(100vw - 40px));
   max-height: calc(100dvh - clamp(138px, 20vh, 168px));
   padding: 7px;
   overflow-y: auto;
-  transform: translateX(-50%);
   color: #35251d;
   background:
     radial-gradient(circle at 8px 9px, rgba(76,49,29,.09) 0 1px, transparent 2px) 0 0 / 22px 23px,
@@ -5718,7 +5717,7 @@ footer {
 
   .tutorial-coach {
     top: 76px;
-    left: 50%;
+    left: 8px;
     width: calc(100vw - 16px);
     max-height: min(56dvh, 430px);
     padding: 5px;
