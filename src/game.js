@@ -181,9 +181,8 @@ const TUTORIAL_LESSONS = Object.freeze([
         objective:
           "Element Edge strengthens the card’s total, but it does not guarantee victory. Printed Power and every other active bonus still matter.",
         visual: "element-cycle",
-        targets: Object.freeze([".rules-strip"]),
-        anchor: ".rules-strip",
-        preferredSide: "top",
+        targets: Object.freeze([]),
+        unanchored: true,
       }),
       Object.freeze({
         title: "Find the +2 in the preview",
@@ -612,6 +611,13 @@ function getTutorialCoachAnchorContext() {
 
   if (tutorial.phase === "intro") {
     const introPage = currentTutorialIntroPage();
+    if (introPage?.unanchored) {
+      return {
+        element: null,
+        key: `lesson:${lesson.id}:intro:${tutorial.introStep}`,
+        unanchored: true,
+      };
+    }
     return {
       element: document.querySelector(introPage?.anchor || ".tactics-board"),
       key: `lesson:${lesson.id}:intro:${tutorial.introStep}`,
@@ -721,7 +727,7 @@ function getTutorialCoachCandidate(side, anchorRect, panelRect, gap, margin) {
 
 function positionTutorialCoach() {
   const context = getTutorialCoachAnchorContext();
-  if (!context?.element || ui.tutorialCoach.hidden) return;
+  if (!context || ui.tutorialCoach.hidden) return;
 
   const newAnchor = tutorialCoachDrag.anchorKey !== context.key;
   if (newAnchor) {
@@ -736,6 +742,19 @@ function positionTutorialCoach() {
     moveTutorialCoach(panelRect.left, panelRect.top);
     return;
   }
+
+  if (context.unanchored) {
+    ui.tutorialCoach.classList.remove("is-anchored");
+    ui.tutorialCoach.removeAttribute("data-anchor-side");
+    const panelRect = ui.tutorialCoach.getBoundingClientRect();
+    moveTutorialCoach(
+      (window.innerWidth - panelRect.width) / 2,
+      (window.innerHeight - panelRect.height) / 2,
+    );
+    return;
+  }
+
+  if (!context.element) return;
 
   let anchorRect = context.element.getBoundingClientRect();
   if (
