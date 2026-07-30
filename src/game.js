@@ -637,6 +637,10 @@ async function startTutorial() {
   setGameMenuVisibility(true);
   configureGameMenu();
   ui.menuButton.disabled = true;
+  ui.tutorialCoach.style.removeProperty("left");
+  ui.tutorialCoach.style.removeProperty("top");
+  ui.tutorialCoach.style.removeProperty("right");
+  ui.tutorialCoach.style.removeProperty("bottom");
   ui.tutorialCoach.hidden = true;
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);

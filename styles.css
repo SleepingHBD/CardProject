@@ -4601,8 +4601,8 @@ footer {
 .tutorial-coach {
   position: fixed;
   z-index: 950;
-  top: 72px;
-  left: 18px;
+  right: 18px;
+  bottom: 18px;
   width: min(500px, calc(100vw - 36px));
   max-height: calc(100dvh - 88px);
   padding: 7px;
@@ -5722,8 +5722,8 @@ footer {
   }
 
   .tutorial-coach {
-    top: 72px;
-    left: 8px;
+    right: 8px;
+    bottom: 8px;
     width: calc(100vw - 16px);
     max-height: min(56dvh, 430px);
     padding: 5px;
