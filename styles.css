@@ -1383,6 +1383,95 @@ h1 {
   line-height: 1.25;
 }
 
+.commitment-phase {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(135px, .85fr) minmax(0, 1.5fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background:
+    radial-gradient(circle at 48% 40%, rgba(213, 172, 91, .13), transparent 46%),
+    rgba(18, 13, 11, .4);
+  border-bottom: 1px solid #9f7843;
+  box-shadow: inset 0 -1px 0 rgba(244, 214, 144, .16);
+}
+
+.commitment-phase[hidden] {
+  display: none;
+}
+
+.opponent-tells[hidden],
+.matchup-forecast[hidden] {
+  display: none;
+}
+
+.commitment-phase strong,
+.commitment-phase small {
+  display: block;
+}
+
+.commitment-phase strong {
+  color: #f1d488;
+  font-family: "Cinzel", serif;
+  font-size: 15px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.commitment-phase small {
+  margin-top: 3px;
+  color: #c7b695;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.commitment-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.commitment-options button {
+  min-width: 0;
+  min-height: 62px;
+  display: grid;
+  place-items: center;
+  padding: 5px 4px;
+  color: #f5e3b4;
+  background:
+    linear-gradient(rgba(120, 80, 45, .28), rgba(42, 27, 21, .75)),
+    #38241c;
+  border: 1px solid #ad8148;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 214, 144, .18),
+    0 2px 0 rgba(0, 0, 0, .35);
+  cursor: pointer;
+}
+
+.commitment-options button:hover,
+.commitment-options button:focus-visible {
+  color: #2c1c15;
+  background: linear-gradient(#f0d894, #c99a4f);
+  border-color: #f2d58d;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.commitment-options b {
+  display: block;
+}
+
+.commitment-options b {
+  font-family: "Cinzel", serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
 .opponent-habits {
   margin-top: 5px;
   display: grid;
@@ -1404,6 +1493,14 @@ h1 {
 .opponent-habit b,
 .opponent-habit span {
   display: block;
+}
+
+.formation-score-summary {
+  grid-column: 1 / -1;
+  border-color: #d1aa59;
+  background:
+    linear-gradient(90deg, rgba(194, 145, 66, .2), transparent 48%),
+    rgba(39, 27, 21, .94);
 }
 
 .opponent-habit b {
@@ -4088,6 +4185,10 @@ footer {
     grid-column: 1;
     grid-row: 2;
   }
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .commitment-phase {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+  }
   .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .matchup-forecast {
     grid-column: 1;
     grid-row: 3;
@@ -4320,6 +4421,14 @@ footer {
   .hand { gap: 6px; }
   .tactics-board { grid-template-columns: 190px minmax(0, 1fr); }
   .tactics-heading { padding: 10px; }
+  .commitment-phase {
+    grid-template-columns: minmax(112px, .8fr) minmax(0, 1.4fr);
+    gap: 8px;
+    padding: 8px;
+  }
+  .commitment-phase strong { font-size: 13px; }
+  .commitment-phase small { font-size: 9px; }
+  .commitment-options button { min-height: 54px; }
   .scout-seal { display: none; }
   .opponent-tell { padding-left: 33px; }
   .tell-element { left: 4px; width: 25px; height: 25px; font-size: 12px; }
@@ -4482,6 +4591,19 @@ footer {
 
   .tactics-heading p { font-size: 13px; }
   .tactics-heading small { font-size: 10px; }
+  .commitment-phase {
+    grid-column: 1;
+    grid-row: auto;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 8px;
+  }
+  .commitment-phase > div:first-child { text-align: center; }
+  .commitment-phase strong { font-size: 13px; }
+  .commitment-phase small { font-size: 10px; }
+  .commitment-options button { min-height: 48px; }
+  .commitment-options b { font-size: 20px; }
+  .commitment-options span { font-size: 8px; }
   .opponent-tells { padding: 6px 5px 3px; gap: 3px; }
   .opponent-tell {
     height: 45px;
@@ -5182,7 +5304,7 @@ footer {
   display: none;
 }
 
-.tutorial-focus-target {
+.tutorial-highlight-target {
   position: relative;
   z-index: 46;
   outline: 4px solid #ffd768 !important;
@@ -5201,7 +5323,7 @@ footer {
   transform: translateY(-9px);
 }
 
-.tutorial-active .trophy-claim.tutorial-focus-target {
+.tutorial-active .trophy-claim.tutorial-highlight-target {
   padding: 7px;
   border-radius: 5px;
 }

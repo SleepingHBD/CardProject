@@ -4,7 +4,8 @@ import "../src/rules.js";
 
 const {
   ELEMENT_EDGE_BONUS,
-  FOCUS_BONUS,
+  LANE_WIN_POINTS,
+  PRESSURE_CARD_POINTS,
   TACTICS,
   TACTIC_BONUS,
   TROPHIES_PER_ELEMENT,
@@ -18,7 +19,6 @@ const {
   forecastMatchup,
   getFormationReward,
   getFormationRewardOptions,
-  getFocusBonus,
   getTacticBonus,
   getPowerTier,
   getElementTrophyCounts,
@@ -54,7 +54,6 @@ test("an elemental counter is strong but not an automatic win", () => {
         edge: 2,
         tactic: 0,
         tacticName: "Link",
-        focus: 0,
         total: 5,
       },
       ai: {
@@ -62,7 +61,6 @@ test("an elemental counter is strong but not an automatic win", () => {
         edge: 0,
         tactic: 0,
         tacticName: "Link",
-        focus: 0,
         total: 9,
       },
     },
@@ -345,13 +343,13 @@ test("Momentum Rider favors the element of the professor's latest trophy", () =>
   );
 });
 
-test("commitment habits create distinct Focus and Pressure tendencies", () => {
-  const focusKeeper = [{ id: "focus-keeper", category: "commitment" }];
+test("commitment habits create distinct card-count tendencies", () => {
+  const soloGambler = [{ id: "solo-gambler", category: "commitment" }];
   const measuredPlanner = [{ id: "measured-planner", category: "commitment" }];
   const pressureGambler = [{ id: "pressure-gambler", category: "commitment" }];
 
   assert.equal(
-    chooseAiCommitment(6, [], [], () => 0.5, focusKeeper),
+    chooseAiCommitment(6, [], [], () => 0.5, soloGambler),
     1,
   );
   assert.equal(
@@ -413,17 +411,54 @@ test("Restless Dealer usually changes its previous commitment", () => {
   );
 });
 
-test("only the smaller formation's final committed card gains Focus +1", () => {
-  assert.equal(FOCUS_BONUS, 1);
-  assert.equal(getFocusBonus(1, 3, 0), 1);
-  assert.equal(getFocusBonus(2, 3, 0), 0);
-  assert.equal(getFocusBonus(2, 3, 1), 1);
-  assert.equal(getFocusBonus(3, 2, 2), 0);
-  assert.equal(getFocusBonus(2, 2, 1), 0);
+test("Formation Score uses two points per lane win and one per Pressure card", () => {
+  assert.equal(LANE_WIN_POINTS, 2);
+  assert.equal(PRESSURE_CARD_POINTS, 1);
   assert.equal(
-    scoreClash(card("ember", 4), card("ember", 5), 0, 0, 1, 0).player.total,
-    5,
+    scoreClash(card("ember", 4), card("ember", 5)).player.total,
+    4,
   );
+});
+
+test("Pressure scoring is symmetric across every commitment pairing", () => {
+  for (let playerCount = 1; playerCount <= 3; playerCount += 1) {
+    for (let aiCount = 1; aiCount <= 3; aiCount += 1) {
+      const playerCards = Array.from(
+        { length: playerCount },
+        () => card("ember", 5, "link"),
+      );
+      const aiCards = Array.from(
+        { length: aiCount },
+        () => card("ember", 5, "link"),
+      );
+      const resolution = resolveClashes(playerCards, aiCards);
+      const playerPressure = Math.max(0, playerCount - aiCount);
+      const aiPressure = Math.max(0, aiCount - playerCount);
+      const expectedWinner = playerPressure
+        ? "player"
+        : aiPressure
+          ? "ai"
+          : "draw";
+
+      assert.deepEqual(
+        resolution.pressure,
+        { player: playerPressure, ai: aiPressure },
+      );
+      assert.deepEqual(
+        resolution.score,
+        {
+          player: playerPressure,
+          ai: aiPressure,
+          draw: Math.min(playerCount, aiCount),
+        },
+      );
+      assert.equal(resolution.winner, expectedWinner);
+      assert.equal(
+        resolution.decidedBy,
+        expectedWinner === "draw" ? "draw" : "pressure",
+      );
+    }
+  }
 });
 
 test("multi-card formations resolve from left to right", () => {
@@ -440,7 +475,8 @@ test("multi-card formations resolve from left to right", () => {
   const resolution = resolveClashes(playerCards, aiCards);
 
   assert.deepEqual(resolution.results, ["ai", "ai", "player"]);
-  assert.deepEqual(resolution.score, { player: 1, ai: 2, draw: 0 });
+  assert.deepEqual(resolution.score, { player: 2, ai: 4, draw: 0 });
+  assert.deepEqual(resolution.laneWins, { player: 1, ai: 2, draw: 0 });
   assert.deepEqual(
     resolution.lanes.map((lane) => [lane.player.total, lane.ai.total]),
     [[7, 9], [5, 7], [9, 5]],
@@ -499,54 +535,40 @@ test("an evenly split formation awards no trophy", () => {
   );
 });
 
-test("Focus applies only to the smaller formation's final committed card", () => {
-  const playerCards = [
-    card("tide", 8, "vanguard"),
-    card("tide", 6, "link"),
-  ];
-  const aiCards = [
-    card("tide", 9, "finisher"),
-    card("tide", 6, "link"),
-    card("tide", 5, "link"),
-  ];
+test("one won lane beats one opposing Pressure card", () => {
+  const playerCards = [card("ember", 5, "vanguard")];
+  const aiCards = [card("gust", 5), card("tide", 8)];
   const resolution = resolveClashes(playerCards, aiCards);
 
-  assert.equal(resolution.lanes[0].player.focus, 0);
-  assert.equal(resolution.lanes[1].player.focus, 1);
-  assert.equal(resolution.lanes[0].winner, "draw");
-  assert.equal(resolution.lanes[1].winner, "player");
-  assert.equal(resolution.winner, "player");
-});
-
-test("a focused lone card must still beat Pressure rather than merely draw", () => {
-  const playerCards = [card("ember", 5, "link")];
-  const aiCards = [
-    card("ember", 6, "link"),
-    card("tide", 8, "link"),
-  ];
-  const resolution = resolveClashes(playerCards, aiCards);
-
-  assert.equal(resolution.lanes[0].player.focus, 1);
-  assert.equal(resolution.lanes[0].player.total, 6);
-  assert.equal(resolution.lanes[0].ai.total, 6);
-  assert.equal(resolution.lanes[0].winner, "draw");
-  assert.equal(resolution.winner, "ai");
-  assert.equal(resolution.decidedBy, "pressure");
-});
-
-test("an outright focused lane win cannot be overturned by Pressure", () => {
-  const playerCards = [card("tide", 5)];
-  const aiCards = [card("ember", 5), card("gust", 8), card("tide", 8)];
-  const resolution = resolveClashes(playerCards, aiCards);
-
-  assert.equal(resolution.lanes[0].player.focus, 1);
-  assert.equal(resolution.lanes[0].player.total, 8);
-  assert.equal(resolution.lanes[0].ai.total, 5);
+  assert.equal(resolution.lanes[0].winner, "player");
+  assert.deepEqual(resolution.lanePoints, { player: 2, ai: 0 });
+  assert.deepEqual(resolution.pressure, { player: 0, ai: 1 });
+  assert.deepEqual(resolution.score, { player: 2, ai: 1, draw: 0 });
   assert.equal(resolution.winner, "player");
   assert.equal(resolution.decidedBy, "clashes");
 });
 
-test("the larger commitment uses Pressure to break a tied clash score", () => {
+test("one won lane meets two opposing Pressure cards in a round draw", () => {
+  const playerCards = [card("ember", 5, "vanguard")];
+  const aiCards = [
+    card("gust", 5),
+    card("tide", 8),
+    card("ember", 8),
+  ];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.equal(resolution.lanes[0].winner, "player");
+  assert.deepEqual(resolution.pressure, { player: 0, ai: 2 });
+  assert.deepEqual(resolution.score, { player: 2, ai: 2, draw: 0 });
+  assert.equal(resolution.winner, "draw");
+  assert.equal(resolution.decidedBy, "draw");
+  assert.deepEqual(
+    getFormationReward(playerCards, aiCards, resolution),
+    { winner: "draw", card: null, lane: -1, fixed: false },
+  );
+});
+
+test("the larger commitment adds Pressure to a split lane score", () => {
   const playerCards = [card("ember", 5), card("gust", 5)];
   const aiCards = [
     card("gust", 6),
@@ -555,7 +577,10 @@ test("the larger commitment uses Pressure to break a tied clash score", () => {
   ];
   const resolution = resolveClashes(playerCards, aiCards);
 
-  assert.deepEqual(resolution.score, { player: 1, ai: 1, draw: 0 });
+  assert.deepEqual(resolution.laneWins, { player: 1, ai: 1, draw: 0 });
+  assert.deepEqual(resolution.lanePoints, { player: 2, ai: 2 });
+  assert.deepEqual(resolution.pressure, { player: 0, ai: 1 });
+  assert.deepEqual(resolution.score, { player: 2, ai: 3, draw: 0 });
   assert.equal(resolution.winner, "ai");
   assert.equal(resolution.decidedBy, "pressure");
   assert.deepEqual(
@@ -569,7 +594,7 @@ test("the larger commitment uses Pressure to break a tied clash score", () => {
   );
 });
 
-test("equal commitments still draw when clash scores are tied", () => {
+test("equal commitments still draw when Formation Scores are tied", () => {
   const playerCards = [card("ember", 5), card("gust", 5)];
   const aiCards = [card("gust", 6), card("ember", 5)];
   const resolution = resolveClashes(playerCards, aiCards);
@@ -585,22 +610,34 @@ test("scripted tutorial lessons demonstrate their intended rule outcomes", () =>
   );
   assert.equal(elementLesson.winner, "player");
   assert.equal(elementLesson.lanes[0].player.edge, 2);
-  assert.equal(elementLesson.lanes[0].player.focus, 0);
   assert.equal(elementLesson.lanes[0].player.tactic, 1);
   assert.equal(elementLesson.lanes[0].player.total, 7);
+  assert.deepEqual(elementLesson.score, { player: 2, ai: 0, draw: 0 });
 
-  const focusLesson = resolveClashes(
-    [card("tide", 8, "vanguard"), card("tide", 6, "link")],
+  const oneVsTwoCommitmentScenario = resolveClashes(
+    [card("gust", 9, "vanguard")],
+    [card("tide", 9, "finisher"), card("tide", 6, "link")],
+  );
+  assert.equal(oneVsTwoCommitmentScenario.lanes[0].winner, "player");
+  assert.deepEqual(
+    oneVsTwoCommitmentScenario.score,
+    { player: 2, ai: 1, draw: 0 },
+  );
+  assert.equal(oneVsTwoCommitmentScenario.winner, "player");
+
+  const oneVsThreeCommitmentScenario = resolveClashes(
+    [card("gust", 9, "vanguard")],
     [
       card("tide", 9, "finisher"),
       card("tide", 6, "link"),
       card("tide", 5, "link"),
     ],
   );
-  assert.equal(focusLesson.lanes[0].player.focus, 0);
-  assert.equal(focusLesson.lanes[1].player.focus, 1);
-  assert.equal(focusLesson.lanes[0].winner, "draw");
-  assert.equal(focusLesson.lanes[1].winner, "player");
+  assert.deepEqual(
+    oneVsThreeCommitmentScenario.score,
+    { player: 2, ai: 2, draw: 0 },
+  );
+  assert.equal(oneVsThreeCommitmentScenario.winner, "draw");
 
   const tacticLesson = resolveClashes(
     [
@@ -620,24 +657,13 @@ test("scripted tutorial lessons demonstrate their intended rule outcomes", () =>
     [1, 1, 1],
   );
 
-  const precisionLesson = resolveClashes(
-    [card("tide", 8, "vanguard")],
-    [
-      card("tide", 9, "finisher"),
-      card("tide", 6, "link"),
-      card("tide", 3, "finisher"),
-    ],
-  );
-  assert.equal(precisionLesson.lanes[0].player.focus, 1);
-  assert.equal(precisionLesson.lanes[0].player.total, 10);
-  assert.equal(precisionLesson.lanes[0].ai.total, 9);
-
   const pressureLesson = resolveClashes(
     [card("ember", 9, "finisher"), card("tide", 6, "link")],
-    [card("ember", 8, "link")],
+    [card("ember", 9, "finisher")],
   );
   assert.equal(pressureLesson.lanes[0].winner, "draw");
-  assert.equal(pressureLesson.lanes[0].ai.focus, 1);
+  assert.deepEqual(pressureLesson.pressure, { player: 1, ai: 0 });
+  assert.deepEqual(pressureLesson.score, { player: 1, ai: 0, draw: 1 });
   assert.equal(pressureLesson.winner, "player");
   assert.equal(pressureLesson.decidedBy, "pressure");
 });

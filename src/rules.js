@@ -87,16 +87,16 @@ const AI_FORMATION_TRAITS = Object.freeze([
 ]);
 const AI_COMMITMENT_TRAITS = Object.freeze([
   Object.freeze({
-    id: "focus-keeper",
+    id: "solo-gambler",
     category: "commitment",
-    label: "Focus Keeper",
-    description: "Usually commits 1 card; sometimes 2, favoring smaller formations that can earn Focus +1.",
+    label: "Solo Gambler",
+    description: "Often commits 1 card to conserve his hand, accepting a less reliable formation.",
   }),
   Object.freeze({
     id: "measured-planner",
     category: "commitment",
     label: "Measured Planner",
-    description: "Usually commits 2 cards, balancing potential Focus against Pressure.",
+    description: "Usually commits 2 cards, balancing reliability against card cost.",
   }),
   Object.freeze({
     id: "pressure-gambler",
@@ -124,27 +124,8 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
   }),
 ]);
 
-const FOCUS_BONUS = 1;
-
-function getFocusBonus(
-  commitmentCount,
-  opponentCommitmentCount,
-  laneIndex = commitmentCount - 1,
-) {
-  const safeCommitment = Math.min(
-    MAX_COMMITMENT,
-    Math.max(0, commitmentCount),
-  );
-  const safeOpponentCommitment = Math.min(
-    MAX_COMMITMENT,
-    Math.max(0, opponentCommitmentCount),
-  );
-  return safeCommitment > 0
-    && safeCommitment < safeOpponentCommitment
-    && laneIndex === safeCommitment - 1
-    ? FOCUS_BONUS
-    : 0;
-}
+const LANE_WIN_POINTS = 2;
+const PRESSURE_CARD_POINTS = 1;
 
 function buildTellClues(
   cardCount,
@@ -226,8 +207,6 @@ function scoreClash(
   aiCard,
   playerTactic = 0,
   aiTactic = 0,
-  playerFocus = 0,
-  aiFocus = 0,
 ) {
   const playerEdge = ELEMENTS[playerCard.element].beats === aiCard.element
     ? ELEMENT_EDGE_BONUS
@@ -242,22 +221,18 @@ function scoreClash(
       edge: playerEdge,
       tactic: playerTactic,
       tacticName: TACTICS[playerCard.tactic]?.label || "Role",
-      focus: playerFocus,
       total: playerCard.power
         + playerEdge
-        + playerTactic
-        + playerFocus,
+        + playerTactic,
     },
     ai: {
       base: aiCard.power,
       edge: aiEdge,
       tactic: aiTactic,
       tacticName: TACTICS[aiCard.tactic]?.label || "Role",
-      focus: aiFocus,
       total: aiCard.power
         + aiEdge
-        + aiTactic
-        + aiFocus,
+        + aiTactic,
     },
   };
 }
@@ -267,16 +242,12 @@ function compareCards(
   aiCard,
   playerTactic = 0,
   aiTactic = 0,
-  playerFocus = 0,
-  aiFocus = 0,
 ) {
   const scoring = scoreClash(
     playerCard,
     aiCard,
     playerTactic,
     aiTactic,
-    playerFocus,
-    aiFocus,
   );
   if (scoring.player.total === scoring.ai.total) return "draw";
   return scoring.player.total > scoring.ai.total ? "player" : "ai";
@@ -483,12 +454,12 @@ function chooseAiCommitment(
     && previousAiCommitment >= 1
     && previousAiCommitment <= MAX_COMMITMENT;
   let commitment;
-  if (hasAiTrait(traits, "focus-keeper")) {
-    commitment = roll < 0.62 ? 1 : roll < 0.92 ? 2 : 3;
+  if (hasAiTrait(traits, "solo-gambler")) {
+    commitment = roll < 0.52 ? 1 : roll < 0.9 ? 2 : 3;
   } else if (hasAiTrait(traits, "measured-planner")) {
-    commitment = roll < 0.15 ? 1 : roll < 0.85 ? 2 : 3;
+    commitment = roll < 0.1 ? 1 : roll < 0.82 ? 2 : 3;
   } else if (hasAiTrait(traits, "pressure-gambler")) {
-    commitment = roll < 0.1 ? 1 : roll < 0.35 ? 2 : 3;
+    commitment = roll < 0.06 ? 1 : roll < 0.35 ? 2 : 3;
   } else if (hasAiTrait(traits, "score-reader")) {
     if (trophyGap > 0) {
       commitment = roll < 0.1 ? 1 : roll < 0.3 ? 2 : 3;
@@ -523,7 +494,7 @@ function chooseAiCommitment(
       commitment = previousAiCommitment;
     }
   } else {
-    commitment = roll < 0.3 ? 1 : roll < 0.72 ? 2 : 3;
+    commitment = roll < 0.2 ? 1 : roll < 0.75 ? 2 : 3;
     if (trophyGap >= 2) commitment += 1;
     if (trophyGap <= -2) commitment -= 1;
   }
@@ -538,23 +509,11 @@ function resolveClashes(playerCards, aiCards) {
     const aiCard = aiCards[index];
     const playerTactic = getTacticBonus(playerCards, index, aiCommitment);
     const aiTactic = getTacticBonus(aiCards, index, playerCommitment);
-    const playerFocus = getFocusBonus(
-      playerCommitment,
-      aiCommitment,
-      index,
-    );
-    const aiFocus = getFocusBonus(
-      aiCommitment,
-      playerCommitment,
-      index,
-    );
     const scoring = scoreClash(
       playerCard,
       aiCard,
       playerTactic,
       aiTactic,
-      playerFocus,
-      aiFocus,
     );
     const winner = scoring.player.total === scoring.ai.total
       ? "draw"
@@ -564,35 +523,50 @@ function resolveClashes(playerCards, aiCards) {
     return { winner, ...scoring };
   });
   const results = lanes.map((lane) => lane.winner);
-  const score = results.reduce(
+  const laneWins = results.reduce(
     (totals, winner) => {
       totals[winner] += 1;
       return totals;
     },
     { player: 0, ai: 0, draw: 0 },
   );
+  const pressure = {
+    player: Math.max(0, playerCommitment - aiCommitment)
+      * PRESSURE_CARD_POINTS,
+    ai: Math.max(0, aiCommitment - playerCommitment)
+      * PRESSURE_CARD_POINTS,
+  };
+  const lanePoints = {
+    player: laneWins.player * LANE_WIN_POINTS,
+    ai: laneWins.ai * LANE_WIN_POINTS,
+  };
+  const score = {
+    player: lanePoints.player + pressure.player,
+    ai: lanePoints.ai + pressure.ai,
+    draw: laneWins.draw,
+  };
 
   let winner = "draw";
   let decidedBy = "draw";
   if (score.player !== score.ai) {
     winner = score.player > score.ai ? "player" : "ai";
-    decidedBy = "clashes";
-  } else if (playerCommitment !== aiCommitment) {
-    winner = playerCommitment > aiCommitment ? "player" : "ai";
-    decidedBy = "pressure";
+    const winnerLanePoints = lanePoints[winner];
+    const loser = winner === "player" ? "ai" : "player";
+    decidedBy = winnerLanePoints <= lanePoints[loser]
+      ? "pressure"
+      : "clashes";
   }
 
   return {
     results,
     score,
+    laneWins,
+    lanePoints,
+    pressure,
     lanes,
     winner,
     decidedBy,
     commitments: { player: playerCommitment, ai: aiCommitment },
-    focus: {
-      player: getFocusBonus(playerCommitment, aiCommitment),
-      ai: getFocusBonus(aiCommitment, playerCommitment),
-    },
   };
 }
 
@@ -647,7 +621,8 @@ global.ClawRules = Object.freeze({
   TACTICS,
   ELEMENT_EDGE_BONUS,
   TACTIC_BONUS,
-  FOCUS_BONUS,
+  LANE_WIN_POINTS,
+  PRESSURE_CARD_POINTS,
   MAX_COMMITMENT,
   TROPHIES_PER_ELEMENT,
   DIFFICULTY_MODES,
@@ -659,7 +634,6 @@ global.ClawRules = Object.freeze({
   compareCards,
   forecastMatchup,
   getTacticBonus,
-  getFocusBonus,
   getPowerTier,
   getFormationReward,
   getFormationRewardOptions,

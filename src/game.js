@@ -7,7 +7,6 @@ const {
   chooseAiCards,
   createAiTraits,
   getTacticBonus,
-  getFocusBonus,
   getFormationRewardOptions,
   getPowerTier,
   getElementTrophyCounts,
@@ -17,6 +16,8 @@ const {
   resolveClashes,
   scoreClash,
   chooseTrophyReward,
+  LANE_WIN_POINTS,
+  PRESSURE_CARD_POINTS,
   TROPHIES_PER_ELEMENT,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
@@ -79,9 +80,9 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
 const TUTORIAL_MODES = Object.freeze(["complete", "tour", "lesson"]);
 const TUTORIAL_SECTION_NAMES = Object.freeze([
   "Element Edge",
-  "Focus",
+  "Commitment Phase",
+  "Commitment Phase",
   "Formation Roles",
-  "Precision Play",
   "Pressure",
 ]);
 const TUTORIAL_TOUR_STEPS = Object.freeze([
@@ -114,9 +115,9 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Read Professor Paws",
     text:
-      "Professor’s Plan shows his committed lanes and any clues your difficulty allows. The tutorial reveals the full plan.",
+      "The Commitment Phase locks both formation sizes first. Professor’s Plan then shows his commitment and any clues your difficulty allows.",
     objective:
-      "Check this panel before choosing cards. Harder modes conceal more information.",
+      "After locking your size, check this panel before choosing exact cards. Instinct keeps the commitment hidden.",
     targets: Object.freeze([".tactics-board"]),
     anchor: ".tactics-board",
     preferredSide: "left",
@@ -128,7 +129,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "Cards do not combine into one 3v3 total. Lane 1 only clashes with Lane 1, Lane 2 with Lane 2, and Lane 3 with Lane 3.",
     objective:
-      "Each paired lane calculates its own clash score. If one side commits more cards, unpaired cards create Pressure instead of attacking another lane.",
+      "Each paired lane calculates its own clash score. A won lane adds 2 Formation Points; every unpaired card adds 1 Pressure point.",
     targets: Object.freeze(["#aiPlayZone", "#playerPlayZone"]),
     anchor: "#playerPlayZone",
     preferredSide: "right",
@@ -140,7 +141,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "These are the cards currently available to you. Every card has an element, printed Power, and a Formation Role.",
     objective:
-      "During a lesson, drag a card toward the board or click it to place it in the next lane.",
+      "During a scenario, drag a card toward the board or click it to place it in the next lane.",
     targets: Object.freeze(["#playerHand"]),
     anchor: "#playerHand",
     preferredSide: "top",
@@ -150,7 +151,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Build your formation",
     text:
-      "You may commit up to three cards. They enter Lane 1, Lane 2, and Lane 3 in the order you place them.",
+      "After the Commitment Phase locks your formation size, your chosen cards enter Lane 1, Lane 2, and Lane 3 in the order you place them.",
     objective:
       "Order matters because Vanguard, Link, and Finisher Role bonuses activate under different conditions.",
     targets: Object.freeze(["#playerPlayZone"]),
@@ -174,9 +175,9 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Help stays within reach",
     text:
-      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Clash Score Guide.",
+      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Score Guide.",
     objective:
-      "Use these references whenever you need them. Begin Lesson 1 when you are ready.",
+      "Use these references whenever you need them. Begin Element Edge when you are ready.",
     targets: Object.freeze(["#clashScoreGuide", ".top-actions"]),
     anchor: ".top-actions",
     preferredSide: "bottom",
@@ -185,7 +186,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
 const TUTORIAL_LESSONS = Object.freeze([
   Object.freeze({
     id: "element-edge",
-    concept: "Lesson 1 · Elements",
+    concept: "Scenario 1 · Elements",
     title: "Use Element Edge",
     intro:
       "Professor Paws committed Gust. Cinder Kit’s Ember element counters it and earns Element Edge +2.",
@@ -207,7 +208,7 @@ const TUTORIAL_LESSONS = Object.freeze([
         text:
           "Professor Paws committed Gust. After you place the Ember card Cinder Kit, its bonus badge and forecast will include Element Edge +2.",
         objective:
-          "Start the lesson, place Cinder Kit in Lane 1, and review its complete total before committing.",
+          "Start the scenario, place Cinder Kit in Lane 1, and review its complete total before committing.",
         targets: Object.freeze(["#matchupForecast"]),
         anchor: "#matchupForecast",
         preferredSide: "left",
@@ -221,25 +222,39 @@ const TUTORIAL_LESSONS = Object.freeze([
     aiCards: Object.freeze(["dandelion-dash"]),
     expected: Object.freeze(["cinder-kit"]),
     aftermath:
-      "Cinder Kit’s Power 4 gained Element Edge +2 and Vanguard +1 for a total of 7. Equal commitments receive no Focus or Pressure; the final clash total decided the lane.",
+      "Cinder Kit’s Power 4 gained Element Edge +2 and Vanguard +1 for a total of 7. Equal commitments created no Pressure, so its lane victory supplied the winning 2 Formation Points.",
   }),
   Object.freeze({
-    id: "focus",
-    concept: "Lesson 2 · Focus",
-    title: "Focus your final committed card",
+    id: "commitment-one-vs-two",
+    concept: "Commitment Phase · Scenario 1 of 2",
+    title: "A precise one-card commitment",
     intro:
-      "When you commit fewer cards than Professor Paws, your final committed card gains Focus +1. The larger formation receives no score bonus, but it can win a tied round through Pressure.",
+      "Both duelists lock their formation size before the plan is revealed. A lane victory is worth 2 Formation Points, while every extra unpaired card is worth 1 Pressure point.",
     objective:
-      "Commit Puddle Pouncer first and Bubble Bengal second. Focus +1 will appear only on Bubble Bengal in Lane 2.",
-    playerCards: Object.freeze(["puddle-pouncer", "bubble-bengal", "moonpool-mouser"]),
-    aiCards: Object.freeze(["empress-ebb", "bubble-bengal", "moonpool-mouser"]),
-    expected: Object.freeze(["puddle-pouncer", "bubble-bengal"]),
+      "Choose a one-card commitment, then play Sir Squall. His lane victory will score 2 points against the professor's 1 Pressure point.",
+    playerCards: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
+    aiCards: Object.freeze(["empress-ebb", "bubble-bengal"]),
+    expected: Object.freeze(["sir-squall"]),
     aftermath:
-      "Lane 1 drew without Focus. Bubble Bengal was your final committed card, so her Focus +1 raised Lane 2 from 6 to 7 and won the round. Professor Paws kept the Pressure advantage, but Pressure could not overturn your 1–0 lane score.",
+      "Sir Squall won Lane 1 for 2 Formation Points. Professor Paws' extra card added 1 Pressure point, so your precise one-card commitment won the round 2–1.",
+  }),
+  Object.freeze({
+    id: "commitment-one-vs-three",
+    concept: "Commitment Phase · Scenario 2 of 2",
+    title: "Know when one card is not enough",
+    intro:
+      "One card can defeat two by winning its paired lane: 2 points beat 1 Pressure point. Against three cards, one lane victory meets 2 Pressure points and the round draws.",
+    objective:
+      "Choose one card and play Sir Squall again. Watch a won lane become a 2–2 Formation Score against three cards.",
+    playerCards: Object.freeze(["sir-squall", "bubble-bengal", "moonpool-mouser"]),
+    aiCards: Object.freeze(["empress-ebb", "bubble-bengal", "moonpool-mouser"]),
+    expected: Object.freeze(["sir-squall"]),
+    aftermath:
+      "Sir Squall still won Lane 1 for 2 Formation Points, but Professor Paws' two extra cards supplied 2 Pressure points. The 2–2 Formation Score produced a round draw and no trophy.",
   }),
   Object.freeze({
     id: "tactics",
-    concept: "Lesson 3 · Formation Roles",
+    concept: "Scenario 4 · Formation Roles",
     title: "Build a three-role formation",
     intro:
       "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. Finisher earns +1 when it is your final committed card in a two- or three-card formation and faces an opposing card.",
@@ -281,7 +296,7 @@ const TUTORIAL_LESSONS = Object.freeze([
         text:
           "A Formation Role never prevents you from committing a card. It only decides whether that card earns Role +1. If its exact condition is not met, the card keeps its printed Power and other bonuses but receives no Role bonus.",
         objective:
-          "During this lesson, the formation preview will show exactly which cards receive Role +1 before you commit.",
+          "During this scenario, the formation preview will show exactly which cards receive Role +1 before you commit.",
         targets: Object.freeze(["#playerPlayZone", "#matchupForecast"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -321,32 +336,18 @@ const TUTORIAL_LESSONS = Object.freeze([
     trophyChoice: true,
   }),
   Object.freeze({
-    id: "precision",
-    concept: "Lesson 4 · Precision Play",
-    title: "Win before Pressure matters",
-    intro:
-      "A lone card is the final card in the smaller formation, so it gains Focus +1. It must still win Lane 1 outright—a draw gives the larger formation the round through Pressure.",
-    objective:
-      "Commit Puddle Pouncer alone. Vanguard +1 and Focus +1 will break the tie against Empress Ebb.",
-    playerCards: Object.freeze(["puddle-pouncer", "moonpool-mouser", "comet-claw"]),
-    aiCards: Object.freeze(["empress-ebb", "bubble-bengal", "mizzle-motley"]),
-    expected: Object.freeze(["puddle-pouncer"]),
-    aftermath:
-      "Puddle Pouncer’s Power 8, Vanguard +1, and Focus +1 reached 10 against Empress Ebb’s 9. Because the lone card won Lane 1 outright, Professor Paws could not use Pressure.",
-  }),
-  Object.freeze({
     id: "pressure",
-    concept: "Lesson 5 · Pressure",
+    concept: "Scenario 5 · Pressure",
     title: "Break a tied round",
     intro:
-      "Pressure is not a clash bonus. If lane wins are tied, the side that committed more cards wins the round. The smaller formation’s Focus +1 can change one clash, but it cannot protect an overall tie.",
+      "Pressure is not a clash bonus. Every extra, unpaired card adds 1 Formation Point after the paired lanes resolve.",
     objective:
-      "Order Comet Claw first and Bubble Bengal second. Comet Claw will draw the focused Sizzle Mittens; Bubble Bengal will provide Pressure.",
+      "Order Comet Claw first and Bubble Bengal second. The two Comet Claws will draw; Bubble Bengal will provide the winning Pressure point.",
     playerCards: Object.freeze(["comet-claw", "bubble-bengal", "cinder-kit"]),
-    aiCards: Object.freeze(["sizzle-mittens"]),
+    aiCards: Object.freeze(["comet-claw"]),
     expected: Object.freeze(["comet-claw", "bubble-bengal"]),
     aftermath:
-      "Comet Claw’s Power 9 drew with Sizzle Mittens’ Power 8 plus Focus +1. The 0–0 lane score let your larger formation invoke Pressure, so Bubble Bengal became the automatic trophy.",
+      "The paired Comet Claws drew and scored 0 lane points. Bubble Bengal was unpaired, added 1 Pressure point, and became the automatic trophy from your 1–0 Formation Score victory.",
     pressureTrophy: true,
   }),
 ]);
@@ -390,6 +391,7 @@ const state = {
   aiPlan: [],
   aiTellClues: [],
   aiTraits: [],
+  playerCommitment: null,
   previousPlayerCommitment: null,
   previousAiCommitment: null,
   selectedCardIds: [],
@@ -430,6 +432,8 @@ const ui = {
   aiCollection: document.querySelector("#aiCollection"),
   turnMessage: document.querySelector("#turnMessage"),
   commitmentHint: document.querySelector("#commitmentHint"),
+  commitmentPhase: document.querySelector("#commitmentPhase"),
+  commitmentOptions: document.querySelectorAll("[data-player-commitment]"),
   opponentHabits: document.querySelector("#opponentHabits"),
   opponentTells: document.querySelector("#opponentTells"),
   matchupForecast: document.querySelector("#matchupForecast"),
@@ -546,6 +550,20 @@ function currentTutorialSectionName() {
   return TUTORIAL_SECTION_NAMES[tutorial.lessonIndex] || "Tutorial Section";
 }
 
+function tutorialSectionScenarioIndexes(lessonIndex = tutorial.lessonIndex) {
+  const sectionName = TUTORIAL_SECTION_NAMES[lessonIndex];
+  if (!sectionName) return [];
+  return TUTORIAL_SECTION_NAMES.reduce((indexes, name, index) => {
+    if (name === sectionName) indexes.push(index);
+    return indexes;
+  }, []);
+}
+
+function tutorialContinuesCurrentSection() {
+  return TUTORIAL_SECTION_NAMES[tutorial.lessonIndex + 1]
+    === TUTORIAL_SECTION_NAMES[tutorial.lessonIndex];
+}
+
 function createTutorialCard(art, side, index) {
   const template = CARD_LIBRARY.find((card) => card.art === art);
   if (!template) throw new Error(`Unknown tutorial card: ${art}`);
@@ -584,8 +602,8 @@ function isTutorialSelectionPrefix() {
 }
 
 function clearTutorialHighlights() {
-  document.querySelectorAll(".tutorial-focus-target").forEach((element) => {
-    element.classList.remove("tutorial-focus-target");
+  document.querySelectorAll(".tutorial-highlight-target").forEach((element) => {
+    element.classList.remove("tutorial-highlight-target");
   });
   document.querySelectorAll(".tutorial-recommended-card").forEach((element) => {
     element.classList.remove("tutorial-recommended-card");
@@ -599,7 +617,7 @@ function applyTutorialHighlights() {
   if (tutorial.phase === "tour") {
     currentTutorialTourStep()?.targets.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => {
-        element.classList.add("tutorial-focus-target");
+        element.classList.add("tutorial-highlight-target");
       });
     });
     return;
@@ -608,7 +626,7 @@ function applyTutorialHighlights() {
   if (tutorial.phase === "intro") {
     currentTutorialIntroPage()?.targets.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => {
-        element.classList.add("tutorial-focus-target");
+        element.classList.add("tutorial-highlight-target");
       });
     });
     return;
@@ -616,8 +634,8 @@ function applyTutorialHighlights() {
 
   if (tutorial.phase === "play") {
     if (isTutorialSelectionValid()) {
-      ui.playSelectedButton.classList.add("tutorial-focus-target");
-      ui.matchupForecast.classList.add("tutorial-focus-target");
+      ui.playSelectedButton.classList.add("tutorial-highlight-target");
+      ui.matchupForecast.classList.add("tutorial-highlight-target");
       return;
     }
 
@@ -631,18 +649,23 @@ function applyTutorialHighlights() {
     recommendedCard?.classList.add("tutorial-recommended-card");
     ui.playerPlayZone
       .querySelector(".formation-slot.next-slot")
-      ?.classList.add("tutorial-focus-target");
+      ?.classList.add("tutorial-highlight-target");
+    return;
+  }
+
+  if (tutorial.phase === "declare") {
+    ui.commitmentPhase.classList.add("tutorial-highlight-target");
     return;
   }
 
   if (tutorial.phase === "claim") {
-    ui.trophyClaim.classList.add("tutorial-focus-target");
+    ui.trophyClaim.classList.add("tutorial-highlight-target");
     return;
   }
 
   if (tutorial.phase === "aftermath" || tutorial.phase === "complete") {
-    ui.playerPlayZone.classList.add("tutorial-focus-target");
-    ui.playerCollection.classList.add("tutorial-focus-target");
+    ui.playerPlayZone.classList.add("tutorial-highlight-target");
+    ui.playerCollection.classList.add("tutorial-highlight-target");
   }
 }
 
@@ -684,6 +707,14 @@ function getTutorialCoachAnchorContext() {
       element: document.querySelector(introPage?.anchor || ".tactics-board"),
       key: `lesson:${lesson.id}:intro:${tutorial.introStep}`,
       preferredSide: introPage?.preferredSide || "left",
+    };
+  }
+
+  if (tutorial.phase === "declare") {
+    return {
+      element: ui.commitmentPhase,
+      key: `lesson:${lesson.id}:commitment`,
+      preferredSide: "left",
     };
   }
 
@@ -939,7 +970,7 @@ function renderTutorialCoach() {
     ui.tutorialActionButton.textContent = finalTourStep
       ? tutorial.mode === "tour"
         ? "Finish Tour"
-        : "Begin Lesson 1"
+        : "Begin Element Edge"
       : "Next";
     window.requestAnimationFrame(() => {
       applyTutorialHighlights();
@@ -957,12 +988,12 @@ function renderTutorialCoach() {
     ui.tutorialCoachText.textContent =
       `You completed the ${sectionName} section without needing to replay the full training path.`;
     ui.tutorialObjective.textContent =
-      "Retry this section for more practice, choose another lesson, or return to the main menu.";
+      "Retry this section for more practice, choose another section, or return to the main menu.";
     ui.tutorialBackButton.hidden = true;
     ui.tutorialActionButton.hidden = true;
     ui.tutorialCompletionActions.hidden = false;
     ui.tutorialRetryButton.textContent =
-      tutorial.mode === "tour" ? "Retry Tour" : "Retry Lesson";
+      tutorial.mode === "tour" ? "Retry Tour" : "Retry Section";
     clearTutorialHighlights();
     window.requestAnimationFrame(positionTutorialCoach);
     return;
@@ -974,11 +1005,16 @@ function renderTutorialCoach() {
   const validFormation = isTutorialSelectionValid();
   const prefixFormation = isTutorialSelectionPrefix();
   const finalLesson = tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1;
+  const sectionScenarioIndexes = tutorialSectionScenarioIndexes();
+  const sectionScenarioPosition =
+    sectionScenarioIndexes.indexOf(tutorial.lessonIndex) + 1;
 
   ui.tutorialCoach.hidden = false;
   ui.tutorialProgress.textContent = tutorial.mode === "lesson"
-    ? "SECTION PRACTICE"
-    : `Lesson ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
+    ? sectionScenarioIndexes.length > 1
+      ? `Scenario ${sectionScenarioPosition} of ${sectionScenarioIndexes.length}`
+      : "SECTION PRACTICE"
+    : `Scenario ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
   ui.tutorialConcept.textContent = lesson.concept;
   ui.tutorialBackButton.hidden = true;
   ui.tutorialBackButton.disabled = true;
@@ -991,7 +1027,7 @@ function renderTutorialCoach() {
     if (introPages.length > 1) {
       ui.tutorialProgress.textContent = tutorial.mode === "lesson"
         ? `Step ${tutorial.introStep + 1} of ${introPages.length}`
-        : `Lesson ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
+        : `Scenario ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
     }
     ui.tutorialCoachTitle.textContent = introPage.title;
     renderTutorialVisual(introPage.visual);
@@ -1002,7 +1038,14 @@ function renderTutorialCoach() {
       tutorial.introStep === 0
       && tutorial.mode === "complete"
       && tutorial.lessonIndex > 0;
-    ui.tutorialActionButton.textContent = finalIntroPage ? "Start Lesson" : "Next";
+    ui.tutorialActionButton.textContent = finalIntroPage ? "Start Scenario" : "Next";
+  } else if (tutorial.phase === "declare") {
+    ui.tutorialCoachTitle.textContent = "Lock your commitment";
+    ui.tutorialCoachText.textContent =
+      "Both duelists choose their formation size before Professor Paws reveals his plan.";
+    ui.tutorialObjective.textContent =
+      `Choose ${lesson.expected.length} ${lesson.expected.length === 1 ? "card" : "cards"} for this scripted scenario.`;
+    ui.tutorialActionButton.hidden = true;
   } else if (tutorial.phase === "play") {
     ui.tutorialActionButton.hidden = true;
     ui.tutorialBackButton.hidden = selected.length > 0;
@@ -1038,11 +1081,11 @@ function renderTutorialCoach() {
       "Choose Ember, Tide, or Gust below. In a real match, choose an element you still need.";
     ui.tutorialActionButton.hidden = true;
   } else if (tutorial.phase === "aftermath") {
-    ui.tutorialCoachTitle.textContent = "Lesson complete";
+    ui.tutorialCoachTitle.textContent = "Scenario complete";
     ui.tutorialCoachText.textContent = lesson.aftermath;
     ui.tutorialObjective.textContent =
       "Study the totals on the cards, then continue when you are ready.";
-    ui.tutorialActionButton.textContent = "Next Lesson";
+    ui.tutorialActionButton.textContent = "Next Scenario";
   } else {
     ui.tutorialCoachTitle.textContent = "Training complete";
     ui.tutorialCoachText.textContent =
@@ -1062,7 +1105,7 @@ function configureGameMenu() {
   ui.gameMenuTitle.textContent = tutorial.active ? "Training is paused" : "The duel is paused";
   ui.gameMenuNote.textContent = tutorial.active
     ? tutorial.mode === "complete"
-      ? "Resume this lesson, restart the complete training path, adjust settings, or return to the main menu."
+      ? "Resume this scenario, restart the complete training path, adjust settings, or return to the main menu."
       : "Resume this section, restart it from the beginning, adjust settings, or return to the main menu."
     : "Restarting, changing difficulty, or returning to the main menu will end this duel.";
   ui.resumeGameButton.textContent = tutorial.active ? "Resume Training" : "Resume Duel";
@@ -1100,6 +1143,7 @@ function startTutorialTour(initialStep = 0) {
   state.round = 1;
   state.locked = true;
   state.dealing = false;
+  state.playerCommitment = previewLesson.expected.length;
   state.selectedCardIds = [];
   state.deck = [];
   state.discardPile = [];
@@ -1119,12 +1163,13 @@ function startTutorialTour(initialStep = 0) {
   const tourStep = currentTutorialTourStep();
   setMessage(tourStep.title, tourStep.objective);
   renderOpponentTells();
+  renderCommitmentPhase();
   renderHand();
   renderFormationBuilder();
   ui.matchupForecast.style.gridTemplateColumns = "";
   ui.matchupForecast.innerHTML = `
     <span class="forecast-instruction">
-      Place a card during a lesson to preview its bonuses and expected lane total here.
+      Place a card during a scenario to preview its bonuses and expected lane total here.
     </span>
   `;
   renderRound();
@@ -1159,9 +1204,12 @@ function loadTutorialLesson(index) {
   tutorial.lessonIndex = index;
   tutorial.introStep = 0;
   tutorial.phase = "intro";
-  state.round = tutorial.mode === "lesson" ? 1 : index + 1;
+  state.round = tutorial.mode === "lesson"
+    ? index - tutorial.entryLessonIndex + 1
+    : index + 1;
   state.locked = true;
   state.dealing = false;
+  state.playerCommitment = null;
   state.selectedCardIds = [];
   state.deck = [];
   state.discardPile = [];
@@ -1178,8 +1226,9 @@ function loadTutorialLesson(index) {
   ui.aiPlayZone.innerHTML = tutorialOpponentLaneGuideMarkup(state.aiPlan.length);
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage(lesson.title, "Read your coach’s instructions, then begin the lesson.");
+  setMessage(lesson.title, "Read your coach’s instructions, then begin the scenario.");
   renderOpponentTells();
+  renderCommitmentPhase();
   renderHand();
   renderFormationBuilder();
   renderRound();
@@ -1189,12 +1238,12 @@ function loadTutorialLesson(index) {
 
 function beginTutorialLesson() {
   if (!tutorial.active || tutorial.phase !== "intro") return;
-  tutorial.phase = "play";
-  state.locked = false;
   const lesson = currentTutorialLesson();
-  setMessage(lesson.title, lesson.objective);
-  renderHand();
-  renderTutorialCoach();
+  beginCommitmentPhase();
+  setMessage(
+    lesson.title,
+    `Choose the scripted ${lesson.expected.length}-card commitment to begin.`,
+  );
 }
 
 function advanceTutorialIntro() {
@@ -1234,7 +1283,11 @@ function retreatTutorialInstruction() {
       return;
     }
     if (tutorial.mode === "lesson") {
-      showTutorialMenu();
+      if (tutorial.lessonIndex > tutorial.entryLessonIndex) {
+        loadTutorialLesson(tutorial.lessonIndex - 1);
+      } else {
+        showTutorialMenu();
+      }
     } else if (tutorial.lessonIndex === 0) {
       startTutorialTour(TUTORIAL_TOUR_STEPS.length - 1);
     }
@@ -1247,6 +1300,8 @@ function retreatTutorialInstruction() {
     state.locked = true;
     const introPage = currentTutorialIntroPage();
     setMessage(introPage.title, introPage.objective);
+    state.playerCommitment = null;
+    renderCommitmentPhase();
     renderHand();
     renderFormationBuilder();
     renderTutorialCoach();
@@ -1261,7 +1316,9 @@ function finishTutorialLesson() {
   ui.nextRoundButton.hidden = true;
   ui.nextRoundButton.disabled = true;
   tutorial.phase = tutorial.mode === "lesson"
-    ? "section-complete"
+    ? tutorialContinuesCurrentSection()
+      ? "aftermath"
+      : "section-complete"
     : tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1
       ? "complete"
       : "aftermath";
@@ -1282,7 +1339,7 @@ function completeTutorialTrophyClaim(reward) {
 
 function resolveTutorialRound(playerCards, aiCards, resolution) {
   const lesson = currentTutorialLesson();
-  const { results, score, winner, decidedBy } = resolution;
+  const { score, winner, decidedBy } = resolution;
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
   ui.versusBadge.className = "versus-badge";
 
@@ -1298,13 +1355,15 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
     audio.roundResult("draw");
   }
 
-  const resultLabel = decidedBy === "pressure"
-    ? `Pressure breaks the ${score.player}–${score.ai} tie!`
-    : winner === "player"
-      ? `You win ${score.player} of ${results.length} clashes!`
-      : winner === "ai"
-        ? `Professor Paws wins ${score.ai} of ${results.length} clashes.`
-        : "The lesson ends in a draw.";
+  const resultLabel = winner === "player"
+    ? decidedBy === "pressure"
+      ? `Your Pressure wins the Formation Score ${score.player}–${score.ai}!`
+      : `You win the Formation Score ${score.player}–${score.ai}!`
+    : winner === "ai"
+      ? decidedBy === "pressure"
+        ? `Professor Paws' Pressure wins ${score.ai}–${score.player}.`
+        : `Professor Paws wins the Formation Score ${score.ai}–${score.player}.`
+      : `The Formation Score is tied ${score.player}–${score.ai}.`;
   setMessage(resultLabel, lesson.aftermath);
   renderAftermathBreakdown(playerCards, resolution);
   restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
@@ -1348,8 +1407,10 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   state.aiRoundWins = 0;
   state.pendingMatchWinner = null;
   state.pendingTrophyClaim = null;
+  state.playerCommitment = null;
   state.locked = true;
   state.dealing = true;
+  renderOpponentHabits();
 
   audio.startDuelMusic();
   clearCinematicRemains();
@@ -1380,7 +1441,7 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   setMessage(
     "Entering the Training Grounds...",
     selectedMode === "complete"
-      ? "Begin with a quick interface tour, then complete five scripted lessons."
+      ? "Begin with a quick interface tour, then complete four sections across five scripted scenarios."
       : `Preparing the ${sectionName} section.`,
   );
   await playDeckTransition("opening");
@@ -1536,20 +1597,9 @@ function prepareAiPlan() {
     state.aiPlan.length,
     state.difficulty,
   );
-  renderOpponentTells();
 }
 
-function renderOpponentTells() {
-  const formationBonus = state.aiPlan.length === 1
-    ? "Focus +1 if outnumbered"
-    : state.aiPlan.length === 2
-      ? "Focus +1 if outnumbered · Pressure if larger"
-      : "Pressure if larger";
-  const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
-  const concealsCommitment = state.difficulty === "instinct";
-  ui.commitmentHint.textContent = concealsCommitment
-    ? "Instinct · Commitment and advantage concealed"
-    : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationBonus}`;
+function renderOpponentHabits() {
   const showsHabits = state.difficulty === "instinct" && state.aiTraits.length;
   ui.opponentHabits.hidden = !showsHabits;
   ui.opponentHabits.innerHTML = showsHabits
@@ -1560,6 +1610,23 @@ function renderOpponentTells() {
         </div>
       `).join("")
     : "";
+}
+
+function renderOpponentTells() {
+  const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
+  const concealsCommitment = state.difficulty === "instinct";
+  const playerCommitment = state.playerCommitment || 0;
+  const aiPressure = Math.max(0, state.aiPlan.length - playerCommitment);
+  const playerPressure = Math.max(0, playerCommitment - state.aiPlan.length);
+  const formationStatus = aiPressure
+    ? `${aiPressure} Pressure ${aiPressure === 1 ? "point" : "points"}`
+    : playerPressure
+      ? `You hold ${playerPressure} Pressure ${playerPressure === 1 ? "point" : "points"}`
+      : "Equal commitment";
+  ui.commitmentHint.textContent = concealsCommitment
+    ? "Instinct · Commitment and Pressure concealed"
+    : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationStatus}`;
+  renderOpponentHabits();
   const laneLabels = ["1", "2", "3"];
   ui.opponentTells.innerHTML = laneLabels.map((lane, index) => {
     if (concealsCommitment) {
@@ -1616,11 +1683,95 @@ function renderOpponentTells() {
   }).join("");
 }
 
+function renderCommitmentPhase() {
+  if (state.dealing) {
+    ui.commitmentPhase.hidden = true;
+    ui.opponentTells.hidden = true;
+    ui.matchupForecast.hidden = true;
+    ui.selectionCount.hidden = true;
+    ui.playSelectedButton.hidden = true;
+    return;
+  }
+  const commitmentPending = state.playerCommitment === null && !state.dealing;
+  const choosingCommitment = commitmentPending
+    && (!tutorial.active || tutorial.phase === "declare");
+  ui.commitmentPhase.hidden = !choosingCommitment;
+  ui.opponentTells.hidden = commitmentPending;
+  ui.matchupForecast.hidden = commitmentPending;
+  ui.selectionCount.hidden = commitmentPending;
+  ui.playSelectedButton.hidden = commitmentPending;
+  if (!commitmentPending && ui.nextRoundButton.hidden && ui.trophyClaim.hidden) {
+    ui.selectionCount.hidden = false;
+    ui.playSelectedButton.hidden = false;
+  }
+  if (!choosingCommitment) return;
+
+  ui.commitmentHint.textContent = tutorial.active
+    ? "Training plan sealed until you choose the scripted commitment"
+    : "Plan sealed until you lock your commitment";
+  ui.commitmentOptions.forEach((button) => {
+    const count = Number(button.dataset.playerCommitment);
+    button.disabled = count > state.playerHand.length;
+  });
+}
+
+function beginCommitmentPhase() {
+  state.playerCommitment = null;
+  state.selectedCardIds = [];
+  state.locked = true;
+  if (tutorial.active) tutorial.phase = "declare";
+  renderOpponentHabits();
+  renderCommitmentPhase();
+  renderHand();
+  renderFormationBuilder();
+  setMessage(
+    "Commitment Phase",
+    "Choose one, two, or three cards before Professor Paws reveals his plan.",
+  );
+  if (tutorial.active) renderTutorialCoach();
+}
+
+function lockPlayerCommitment(count) {
+  const safeCount = Number(count);
+  if (
+    state.playerCommitment !== null
+    || !Number.isInteger(safeCount)
+    || safeCount < 1
+    || safeCount > Math.min(MAX_PLAY_SIZE, state.playerHand.length)
+  ) return;
+
+  const lesson = currentTutorialLesson();
+  if (tutorial.active && safeCount !== lesson?.expected.length) {
+    setMessage(
+      `Choose ${lesson.expected.length} ${lesson.expected.length === 1 ? "card" : "cards"} for this scenario.`,
+      "The Training Grounds uses a scripted commitment so the rule demonstration resolves correctly.",
+    );
+    audio.denied();
+    return;
+  }
+
+  state.playerCommitment = safeCount;
+  state.locked = false;
+  if (tutorial.active && tutorial.phase === "declare") tutorial.phase = "play";
+  audio.buttonPress();
+  renderCommitmentPhase();
+  renderOpponentTells();
+  renderHand();
+  renderFormationBuilder();
+  setMessage(
+    `${safeCount}-card commitment locked.`,
+    state.difficulty === "instinct"
+      ? "Professor Paws' commitment remains hidden. Use his habits, then build exactly the formation size you chose."
+      : `Professor Paws committed ${state.aiPlan.length}. Build exactly ${safeCount} ${safeCount === 1 ? "card" : "cards"} using the available clues.`,
+  );
+  if (tutorial.active) renderTutorialCoach();
+}
+
 function renderMatchupForecast() {
   if (state.locked) {
     ui.matchupForecast.style.gridTemplateColumns = "";
     const lockedMessage = tutorial.active && tutorial.phase === "intro"
-      ? "Place a card after the lesson begins to reveal its active bonuses and expected lane total."
+      ? "Place a card after the scenario begins to reveal its active bonuses and expected lane total."
       : state.dealing
         ? "New cards are being dealt."
         : "Cards committed. Watch each lane.";
@@ -1661,18 +1812,10 @@ function renderMatchupForecast() {
       index,
       concealsCommitment ? MAX_PLAY_SIZE : state.aiPlan.length,
     );
-    const playerFocus = concealsCommitment
-      ? 0
-      : getFocusBonus(selectedCards.length, state.aiPlan.length, index);
-    const opponentFocus = concealsCommitment
-      ? 0
-      : getFocusBonus(state.aiPlan.length, selectedCards.length, index);
     const knownPlayerScore = playerCard.power
-      + playerFocus
       + playerTactic;
-    const knownBonusTotal = playerFocus + playerTactic;
+    const knownBonusTotal = playerTactic;
     const knownBonuses = [];
-    if (playerFocus) knownBonuses.push(`Focus +${playerFocus}`);
     if (playerTactic) {
       knownBonuses.push(`${TACTICS[playerCard.tactic].label} +${playerTactic}`);
     }
@@ -1681,16 +1824,9 @@ function renderMatchupForecast() {
       : "No known bonus";
 
     if (concealsCommitment) {
-      const potentialFocus = selectedCards.length < MAX_PLAY_SIZE
-        && index === selectedCards.length - 1
-        ? 1
-        : 0;
       const maximumHiddenBonus = knownBonusTotal
-        + ELEMENT_EDGE_BONUS
-        + potentialFocus;
-      const hiddenWarning = potentialFocus
-        ? "Focus +1 activates here if the foe committed more cards"
-        : "Foe presence, Focus, and Element Edge hidden";
+        + ELEMENT_EDGE_BONUS;
+      const hiddenWarning = "Foe presence, Pressure, and Element Edge hidden";
       return `
         <span class="forecast-chip forecast-sealed">
           <i>${index + 1}</i>
@@ -1707,9 +1843,9 @@ function renderMatchupForecast() {
       return `
         <span class="forecast-chip forecast-pressure">
           <i>${index + 1}</i>
-          <b>◆ PRESSURE CARD</b>
-          <span class="forecast-equation"><strong>NO DUEL TOTAL</strong></span>
-          <small>Spent only to win a tied formation</small>
+          <b>◆ PRESSURE +${PRESSURE_CARD_POINTS}</b>
+          <span class="forecast-equation"><strong>+${PRESSURE_CARD_POINTS} FORMATION POINT</strong></span>
+          <small>Unpaired card; it does not clash</small>
         </span>
       `;
     }
@@ -1724,8 +1860,6 @@ function renderMatchupForecast() {
       opponentCard,
       playerTactic,
       opponentTactic,
-      playerFocus,
-      opponentFocus,
     );
     if (clue === "sealed") {
       return `
@@ -1780,12 +1914,10 @@ function renderMatchupForecast() {
       .map(Number);
     const opponentMin = tierMin
       + scoring.ai.edge
-      + scoring.ai.tactic
-      + scoring.ai.focus;
+      + scoring.ai.tactic;
     const opponentMax = tierMax
       + scoring.ai.edge
-      + scoring.ai.tactic
-      + scoring.ai.focus;
+      + scoring.ai.tactic;
     const outlook = scoring.player.total > opponentMax
       ? "favored"
       : scoring.player.total < opponentMin
@@ -1809,7 +1941,18 @@ function renderMatchupForecast() {
 
 function renderAftermathBreakdown(playerCards, resolution) {
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${Math.max(1, resolution.lanes.length)}, minmax(0, 1fr))`;
-  ui.matchupForecast.innerHTML = resolution.lanes.map((lane, index) => {
+  const summary = `
+    <span class="forecast-chip formation-score-summary">
+      <b>FORMATION SCORE · ${resolution.score.player}–${resolution.score.ai}</b>
+      <span class="forecast-equation">
+        <em>${resolution.laneWins.player} LANE ${resolution.laneWins.player === 1 ? "WIN" : "WINS"} × ${LANE_WIN_POINTS}</em>
+        <span>+</span>
+        <strong>${resolution.pressure.player} PRESSURE</strong>
+      </span>
+      <small>Professor: ${resolution.laneWins.ai} × ${LANE_WIN_POINTS} lane points + ${resolution.pressure.ai} Pressure</small>
+    </span>
+  `;
+  const laneBreakdown = resolution.lanes.map((lane, index) => {
     const bonus = getBonusBreakdown(lane.player);
     const outcome = lane.winner === "player" ? "WIN" : lane.winner === "ai" ? "LOSS" : "DRAW";
     const className = lane.winner === "player"
@@ -1828,6 +1971,7 @@ function renderAftermathBreakdown(playerCards, resolution) {
       </span>
     `;
   }).join("");
+  ui.matchupForecast.innerHTML = summary + laneBreakdown;
 }
 
 function cardMarkup(
@@ -1856,9 +2000,9 @@ function cardMarkup(
     : "";
   const resolvedBonusBadge = isPlayedCard || isPressureCard
     ? `
-      <span class="card-bonus-badge${isPressureCard ? " pressure-badge" : ""}" aria-label="${isPressureCard ? "Pressure card; no lane bonus" : "Bonus not yet resolved"}">
+      <span class="card-bonus-badge${isPressureCard ? " pressure-badge" : ""}" aria-label="${isPressureCard ? `Pressure card; adds ${PRESSURE_CARD_POINTS} Formation Point` : "Bonus not yet resolved"}">
         <small>${isPressureCard ? "ROLE" : "BONUS"}</small>
-        <b>${isPressureCard ? "P" : "+?"}</b>
+        <b>${isPressureCard ? `P+${PRESSURE_CARD_POINTS}` : "+?"}</b>
       </span>
     `
     : "";
@@ -1972,24 +2116,13 @@ function getFormationBonusPreview(selectedCards, index) {
     index,
     state.difficulty === "instinct" ? MAX_PLAY_SIZE : state.aiPlan.length,
   );
-  const focus = state.difficulty === "instinct"
-    ? 0
-    : getFocusBonus(selectedCards.length, state.aiPlan.length, index);
-  const knownBonus = focus + tactic;
+  const knownBonus = tactic;
   if (state.difficulty === "instinct") {
-    const potentialFocus = selectedCards.length < MAX_PLAY_SIZE
-      && index === selectedCards.length - 1
-      ? 1
-      : 0;
     const maximumBonus = knownBonus
-      + ELEMENT_EDGE_BONUS
-      + potentialFocus;
-    const focusDetail = potentialFocus
-      ? "; includes Focus +1 if Professor Paws committed more cards"
-      : "";
+      + ELEMENT_EDGE_BONUS;
     return {
       text: `+${knownBonus}–${maximumBonus}`,
-      label: `If paired, bonus ranges from plus ${knownBonus} to plus ${maximumBonus}${focusDetail}; opposing card presence and Element Edge are hidden`,
+      label: `If paired, bonus ranges from plus ${knownBonus} to plus ${maximumBonus}; opposing card presence and Element Edge are hidden`,
       pressure: false,
     };
   }
@@ -1997,8 +2130,8 @@ function getFormationBonusPreview(selectedCards, index) {
   const opponentCard = state.aiPlan[index];
   if (!opponentCard) {
     return {
-      text: "P",
-      label: "Pressure card; it does not receive a lane bonus",
+      text: `P+${PRESSURE_CARD_POINTS}`,
+      label: `Pressure card; adds ${PRESSURE_CARD_POINTS} Formation Point instead of clashing`,
       pressure: true,
     };
   }
@@ -2010,14 +2143,13 @@ function getFormationBonusPreview(selectedCards, index) {
     ? ELEMENT_EDGE_BONUS
     : 0;
   const knownParts = [];
-  if (focus) knownParts.push(`Focus +${focus}`);
   if (tactic) knownParts.push(`${TACTICS[playerCard.tactic].label} +${tactic}`);
   if (edge) knownParts.push(`Element Edge +${edge}`);
 
   if (!edgeKnown) {
     return {
       text: `+${knownBonus}–${knownBonus + ELEMENT_EDGE_BONUS}`,
-      label: `Bonus ranges from plus ${knownBonus} to plus ${knownBonus + ELEMENT_EDGE_BONUS}; ${focus ? `includes Focus +${focus}; ` : ""}Element Edge is hidden`,
+      label: `Bonus ranges from plus ${knownBonus} to plus ${knownBonus + ELEMENT_EDGE_BONUS}; Element Edge is hidden`,
       pressure: false,
     };
   }
@@ -2034,13 +2166,17 @@ function renderFormationBuilder() {
   const selectedCards = state.selectedCardIds
     .map((instanceId) => state.playerHand.find((card) => card.instanceId === instanceId))
     .filter(Boolean);
+  const commitmentLimit = state.playerCommitment || 0;
 
   ui.playerPlayZone.innerHTML = `
     <div class="formation-builder" aria-label="Your formation lanes">
       ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => {
         const card = selectedCards[index];
-        const isLockedSlot = state.locked && !card;
-        const isNextSlot = !state.locked && index === selectedCards.length;
+        const isOutsideCommitment = commitmentLimit > 0 && index >= commitmentLimit;
+        const isLockedSlot = (state.locked || commitmentLimit === 0 || isOutsideCommitment) && !card;
+        const isNextSlot = !state.locked
+          && index < commitmentLimit
+          && index === selectedCards.length;
         if (card) {
           const bonusPreview = getFormationBonusPreview(selectedCards, index);
           return `
@@ -2054,11 +2190,11 @@ function renderFormationBuilder() {
           <div
             class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}${isLockedSlot ? " locked-slot" : ""}"
             data-drop-lane="${index}"
-            aria-label="Lane ${index + 1}${isLockedSlot ? ", locked until the lesson starts" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
+            aria-label="Lane ${index + 1}${isOutsideCommitment ? ", not included in your commitment" : isLockedSlot ? ", locked until the commitment is chosen" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
           >
             <span>LANE ${index + 1}</span>
-            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
-            <small>${isLockedSlot ? "START THE LESSON" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
+            <b>${isOutsideCommitment ? "NOT DECLARED" : isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
+            <small>${isOutsideCommitment ? "OUTSIDE YOUR COMMITMENT" : isLockedSlot ? "CHOOSE COMMITMENT FIRST" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
           </div>
         `;
       }).join("")}
@@ -2069,7 +2205,11 @@ function renderFormationBuilder() {
   ui.playerPlayZone.querySelectorAll("[data-drop-lane]").forEach((slot) => {
     const laneIndex = Number(slot.dataset.dropLane);
     slot.addEventListener("dragover", (event) => {
-      if (state.locked || laneIndex > state.selectedCardIds.length) return;
+      if (
+        state.locked
+        || laneIndex >= (state.playerCommitment || 0)
+        || laneIndex > state.selectedCardIds.length
+      ) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
       slot.classList.add("drag-over");
@@ -2088,9 +2228,13 @@ function renderFormationBuilder() {
 
 function placeCardInLane(instanceId, laneIndex) {
   if (state.locked || !state.playerHand.some((card) => card.instanceId === instanceId)) return;
+  const commitmentLimit = state.playerCommitment || 0;
   const currentIndex = state.selectedCardIds.indexOf(instanceId);
-  if (currentIndex < 0 && state.selectedCardIds.length >= MAX_PLAY_SIZE) {
-    setMessage("Three-card limit reached.", "Return a card to your hand before adding another.");
+  if (currentIndex < 0 && state.selectedCardIds.length >= commitmentLimit) {
+    setMessage(
+      `${commitmentLimit}-card commitment reached.`,
+      "Return a card to your hand before adding another.",
+    );
     audio.denied();
     return;
   }
@@ -2106,56 +2250,40 @@ function placeCardInLane(instanceId, laneIndex) {
 
 function updateFormationMessage() {
   const count = state.selectedCardIds.length;
+  const commitment = state.playerCommitment || 0;
   const title = count === 0
     ? "Build your formation."
     : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
-  const focus = getFocusBonus(count, state.aiPlan.length);
-  const opponentFocus = getFocusBonus(state.aiPlan.length, count);
+  const playerPressure = Math.max(0, commitment - state.aiPlan.length);
+  const aiPressure = Math.max(0, state.aiPlan.length - commitment);
   const detail = count === 0
-    ? "Drag a card into the glowing lane, or click a card to place it."
+    ? `Choose exactly ${commitment} ${commitment === 1 ? "card" : "cards"} for your locked commitment.`
     : state.difficulty === "instinct"
-      ? count < MAX_PLAY_SIZE
-        ? "Your last card gains Focus +1 if Professor Paws committed more cards; commitment and Pressure stay concealed."
-        : "Three cards cannot earn Focus, but they hold Pressure against any smaller formation."
-    : focus
-      ? `Focus +1 strengthens Lane ${count}, where you committed your final card. Professor Paws holds Pressure if the lane score ties.`
-      : opponentFocus
-        ? "Professor Paws' final committed card gains Focus +1. Your larger formation holds Pressure if the lane score ties."
-    : count > state.aiPlan.length
-      ? "Pressure advantage: tied formations go to you."
-      : count < state.aiPlan.length
-        ? "Professor Paws wins tied formations through Pressure."
-        : "Equal commitment: no Focus or Pressure, so a tied formation remains a draw.";
+      ? "Each lane win is worth 2 Formation Points. Professor Paws' commitment and Pressure remain concealed."
+      : playerPressure
+        ? `Your ${playerPressure} extra ${playerPressure === 1 ? "card adds" : "cards add"} ${playerPressure} Pressure ${playerPressure === 1 ? "point" : "points"}.`
+        : aiPressure
+          ? `Professor Paws has ${aiPressure} extra ${aiPressure === 1 ? "card" : "cards"} worth ${aiPressure} Pressure ${aiPressure === 1 ? "point" : "points"}.`
+          : "Equal commitments create no Pressure; only paired lane victories score.";
   setMessage(title, detail);
 }
 
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
-  const focus = state.difficulty === "instinct"
-    ? 0
-    : getFocusBonus(count, state.aiPlan.length);
-  let formationLabel = "No commitment bonus";
-  if (state.difficulty === "instinct") {
-    formationLabel = count === 1
-      ? "Focus +1 if outnumbered"
-      : count === 2
-        ? "Focus if outnumbered · Pressure if larger"
-        : count === 3
-          ? "Pressure if larger"
-          : formationLabel;
-  } else if (focus) {
-    formationLabel = `Focus +1 on Lane ${count}`;
-  } else if (count > state.aiPlan.length) {
-    formationLabel = "Pressure advantage";
-  } else if (count < state.aiPlan.length) {
-    formationLabel = "Foe has Pressure";
-  }
+  const commitment = state.playerCommitment || 0;
+  const remaining = Math.max(0, commitment - count);
   ui.selectionCount.textContent = count
-    ? `${count} of ${MAX_PLAY_SIZE} placed · ${formationLabel}`
-    : `0 of ${MAX_PLAY_SIZE} placed`;
+    ? `${count} of ${commitment} placed${remaining ? ` · ${remaining} remaining` : " · ready"}`
+    : commitment
+      ? `0 of ${commitment} placed`
+      : "Choose commitment first";
   const tutorialFormationReady = !tutorial.active || isTutorialSelectionValid();
-  ui.playSelectedButton.disabled = state.locked || count === 0 || !tutorialFormationReady;
-  ui.playSelectedButton.textContent = count === 1 ? "Commit 1 Card" : `Commit ${count} Cards`;
+  ui.playSelectedButton.disabled = state.locked
+    || count !== commitment
+    || !tutorialFormationReady;
+  ui.playSelectedButton.textContent = commitment === 1
+    ? "Commit 1 Card"
+    : `Commit ${commitment || 0} Cards`;
   renderMatchupForecast();
   if (tutorial.active) renderTutorialCoach();
 }
@@ -2169,12 +2297,15 @@ function toggleCardSelection(instanceId) {
     state.selectedCardIds.splice(selectedIndex, 1);
     changed = true;
     audio.cardFlip(false, selectedIndex + 1);
-  } else if (state.selectedCardIds.length < MAX_PLAY_SIZE) {
+  } else if (state.selectedCardIds.length < (state.playerCommitment || 0)) {
     state.selectedCardIds.push(instanceId);
     changed = true;
     audio.cardFlip(true, state.selectedCardIds.length);
   } else {
-    setMessage("Three-card limit reached.", "Deselect a card before choosing another.");
+    setMessage(
+      `${state.playerCommitment}-card commitment reached.`,
+      "Deselect a card before choosing another.",
+    );
     audio.denied();
   }
 
@@ -2270,15 +2401,26 @@ function renderCollection(target, cards) {
 }
 
 function renderRound() {
-  ui.roundLabel.textContent = tutorial.active && tutorial.phase === "tour"
-    ? "INTERFACE TOUR"
-    : tutorial.active
-      ? `LESSON ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`
-      : `ROUND ${state.round}`;
+  if (tutorial.active && tutorial.phase === "tour") {
+    ui.roundLabel.textContent = "INTERFACE TOUR";
+  } else if (tutorial.active && tutorial.mode === "lesson") {
+    const sectionScenarios = tutorialSectionScenarioIndexes();
+    const sectionScenarioPosition =
+      sectionScenarios.indexOf(tutorial.lessonIndex) + 1;
+    const sectionName = currentTutorialSectionName().toUpperCase();
+    ui.roundLabel.textContent = sectionScenarios.length > 1
+      ? `${sectionName} ${sectionScenarioPosition} / ${sectionScenarios.length}`
+      : sectionName;
+  } else if (tutorial.active) {
+    ui.roundLabel.textContent =
+      `SCENARIO ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`;
+  } else {
+    ui.roundLabel.textContent = `ROUND ${state.round}`;
+  }
   if (tutorial.active) {
     ui.deckStatusText.innerHTML = tutorial.phase === "tour"
       ? "<strong>Training tour</strong> &middot; interface overview"
-      : "<strong>Training deck</strong> &middot; scripted lesson";
+      : "<strong>Training deck</strong> &middot; scripted scenario";
     return;
   }
   if (state.deck.length === 0 && state.discardPile.length > 0) {
@@ -2416,14 +2558,12 @@ async function animateHandDraw(drawCount, openingHand = false) {
 
 function getBonusBreakdown(scoring) {
   const parts = [];
-  if (scoring.focus) parts.push(`Focus +${scoring.focus}`);
   if (scoring.edge) parts.push(`Element Edge +${scoring.edge}`);
   if (scoring.tactic) {
     parts.push(`${scoring.tacticName || "Role"} +${scoring.tactic}`);
   }
   return {
-    total: scoring.focus
-      + scoring.edge
+    total: scoring.edge
       + scoring.tactic,
     label: parts.length ? parts.join(", ") : "No bonuses",
   };
@@ -2688,9 +2828,13 @@ async function animateClashes(playerCards, aiCards) {
 }
 
 function playRound() {
-  if (state.locked || state.selectedCardIds.length === 0) return;
+  if (
+    state.locked
+    || state.playerCommitment === null
+    || state.selectedCardIds.length !== state.playerCommitment
+  ) return;
   if (tutorial.active && !isTutorialSelectionValid()) {
-    setMessage("That formation does not match the lesson.", "Follow the highlighted order, then commit again.");
+    setMessage("That formation does not match the scenario.", "Follow the highlighted order, then commit again.");
     audio.denied();
     renderTutorialCoach();
     return;
@@ -2810,7 +2954,6 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   let awaitsPlayerClaim = false;
   ui.versusBadge.className = "versus-badge";
 
-  const clashWord = results.length === 1 ? "clash" : "clashes";
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
 
   if (winner === "player") {
@@ -2818,19 +2961,19 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     if (decidedBy === "pressure") {
       reward = rewardOptions[0] || null;
       setMessage(
-        `Your Pressure breaks the ${score.player}–${score.ai} tie!`,
+        `Your Pressure wins the Formation Score ${score.player}–${score.ai}!`,
         `${reward.card.name}, your first extra card, becomes the round trophy.`,
       );
     } else if (rewardOptions.length > 1) {
       awaitsPlayerClaim = true;
       setMessage(
-        `You win ${score.player} of ${results.length} ${clashWord}!`,
+        `You win the Formation Score ${score.player}–${score.ai}!`,
         "Choose which lane-winning card becomes your trophy.",
       );
     } else {
       reward = rewardOptions[0] || null;
       setMessage(
-        `You win ${score.player} of ${results.length} ${clashWord}!`,
+        `You win the Formation Score ${score.player}–${score.ai}!`,
         `Lane ${reward.lane + 1}'s ${reward.card.name} becomes your round trophy.`,
       );
     }
@@ -2843,12 +2986,12 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
       : chooseTrophyReward(rewardOptions, state.aiWins);
     if (decidedBy === "pressure") {
       setMessage(
-        `Professor Paws' Pressure breaks the ${score.ai}–${score.player} tie.`,
+        `Professor Paws' Pressure wins ${score.ai}–${score.player}.`,
         `${reward.card.name}, the first extra card, becomes the professor's trophy.`,
       );
     } else {
       setMessage(
-        `Professor Paws wins ${score.ai} of ${results.length} ${clashWord}.`,
+        `Professor Paws wins the Formation Score ${score.ai}–${score.player}.`,
         `The professor claims ${reward.card.name} from lane ${reward.lane + 1}.`,
       );
     }
@@ -2856,9 +2999,9 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     audio.roundResult("loss");
   } else {
     const drawDetail = score.draw
-      ? `${score.draw} ${score.draw === 1 ? "lane ends" : "lanes end"} in a draw. No trophy is claimed.`
-      : "The formation is evenly matched, so no trophy is claimed.";
-    setMessage("The round is evenly split!", drawDetail);
+      ? `${score.draw} ${score.draw === 1 ? "lane ended" : "lanes ended"} in a draw. The final Formation Score is ${score.player}–${score.ai}.`
+      : `The Formation Score is tied ${score.player}–${score.ai}. No trophy is claimed.`;
+    setMessage("The Formation Score is tied!", drawDetail);
     audio.roundResult("draw");
   }
 
@@ -2897,12 +3040,14 @@ async function nextRound() {
   state.round += 1;
   state.locked = true;
   state.dealing = true;
+  state.playerCommitment = null;
   ui.menuButton.disabled = true;
   state.selectedCardIds = [];
   prepareAiPlan();
+  renderCommitmentPhase();
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
-  ui.playerPlayZone.innerHTML = placeholder("Choose up to 3 cards");
+  ui.playerPlayZone.innerHTML = placeholder("Commitment pending");
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
@@ -2916,16 +3061,9 @@ async function nextRound() {
   renderRound();
   renderRoundScore();
   await animateHandDraw(drawnCardCount);
-  state.locked = false;
   state.dealing = false;
   ui.menuButton.disabled = false;
-  setMessage(
-    reshuffled ? "The discard pile has been reshuffled!" : "Build your formation.",
-    reshuffled
-      ? "Your spent cards are back in the draw pile. Build your next formation."
-      : "Drag a card into the glowing lane, or click a card to place it.",
-  );
-  renderHand();
+  beginCommitmentPhase();
 }
 
 async function endGame(winner) {
@@ -3062,6 +3200,8 @@ async function startGame() {
   state.aiPlan = [];
   state.aiTellClues = [];
   state.aiTraits = state.difficulty === "instinct" ? createAiTraits() : [];
+  renderOpponentHabits();
+  state.playerCommitment = null;
   state.previousPlayerCommitment = null;
   state.previousAiCommitment = null;
   state.selectedCardIds = [];
@@ -3079,7 +3219,8 @@ async function startGame() {
   ui.battlefield.classList.remove("is-clashing");
   refillHands();
   prepareAiPlan();
-  ui.playerPlayZone.innerHTML = placeholder("Choose up to 3 cards");
+  renderCommitmentPhase();
+  ui.playerPlayZone.innerHTML = placeholder("Commitment pending");
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
@@ -3093,11 +3234,9 @@ async function startGame() {
   await playDeckTransition("opening");
   setMessage("Drawing your opening hand...", "Six cards are being dealt for the first round.");
   await animateHandDraw(state.playerHand.length, true);
-  state.locked = false;
   state.dealing = false;
   ui.menuButton.disabled = false;
-  setMessage("Build your formation.", "Drag a card into the glowing lane, or click a card to place it.");
-  renderHand();
+  beginCommitmentPhase();
 }
 
 document.querySelector("#howButton").addEventListener("click", () => ui.howDialog.showModal());
@@ -3221,6 +3360,11 @@ window.addEventListener("resize", () => {
   if (tutorial.active && !ui.tutorialCoach.hidden) {
     positionTutorialCoach();
   }
+});
+ui.commitmentOptions.forEach((button) => {
+  button.addEventListener("click", () => {
+    lockPlayerCommitment(button.dataset.playerCommitment);
+  });
 });
 ui.playSelectedButton.addEventListener("click", playRound);
 ui.trophyClaimOptions.addEventListener("click", (event) => {
