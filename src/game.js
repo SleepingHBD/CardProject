@@ -116,6 +116,18 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     preferredSide: "left",
   }),
   Object.freeze({
+    id: "lane-matchups",
+    concept: "Training Grounds Tour",
+    title: "Each lane fights its match",
+    text:
+      "Cards do not combine into one 3v3 total. Lane 1 only clashes with Lane 1, Lane 2 with Lane 2, and Lane 3 with Lane 3.",
+    objective:
+      "Each paired lane calculates its own clash score. If one side commits more cards, unpaired cards create Pressure instead of attacking another lane.",
+    targets: Object.freeze(["#aiPlayZone", "#playerPlayZone"]),
+    anchor: "#playerPlayZone",
+    preferredSide: "right",
+  }),
+  Object.freeze({
     id: "hand",
     concept: "Training Grounds Tour",
     title: "Choose from your hand",
@@ -224,26 +236,46 @@ const TUTORIAL_LESSONS = Object.freeze([
     concept: "Lesson 3 · Tactic roles",
     title: "Build a three-role formation",
     intro:
-      "Vanguard starts in Lane 1, Link follows a different element, and Finisher closes a two- or three-card formation while facing a card.",
+      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before it has a different element. Finisher earns +1 as the last paired card in a two- or three-card formation.",
     objective:
       "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Tactics.",
     introPages: Object.freeze([
       Object.freeze({
-        title: "Recognise the three Tactic roles",
+        title: "Vanguard: commit it in Lane 1",
         text:
-          "Vanguard’s shield earns +1 in Lane 1. Link’s chain earns +1 after a different element. Finisher’s sword earns +1 when last in a two- or three-card formation and facing a card.",
+          "A Vanguard card gets Vanguard +1 only when it is committed in Lane 1. If you commit that Vanguard in Lane 2 or Lane 3, it still battles normally but receives no Vanguard bonus.",
         objective:
-          "Every card shows its Tactic role beneath its name and beside its ability.",
+          "Look for the shield symbol on a card. Shield means Vanguard, and Vanguard means Lane 1.",
         targets: Object.freeze(["#playerHand"]),
         anchor: "#playerHand",
         preferredSide: "top",
       }),
       Object.freeze({
-        title: "Placement activates the bonus",
+        title: "Link: check the card directly before it",
         text:
-          "Tactic bonuses depend on formation order, not printed Power. A card committed in the wrong position receives no Tactic bonus.",
+          "A Link card can earn Link +1 in Lane 2 or Lane 3. In Lane 2, it checks your card in Lane 1. In Lane 3, it checks your card in Lane 2. The two elements must be different.",
         objective:
-          "During the lesson, watch the formation preview add Tactic +1 only when each condition is satisfied.",
+          "Link cannot activate in Lane 1 because no card comes before it. A Tide Link after Ember earns +1; a Tide Link after Tide earns no bonus.",
+        targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
+        anchor: "#playerPlayZone",
+        preferredSide: "right",
+      }),
+      Object.freeze({
+        title: "Finisher: commit it last and face a card",
+        text:
+          "A Finisher gets Finisher +1 only when all three conditions are true: you commit at least two cards, the Finisher is your last committed card, and Professor Paws committed a card in that same lane.",
+        objective:
+          "With two cards, the Finisher belongs in Lane 2. With three cards, it belongs in Lane 3. A lone Finisher or an unpaired extra Finisher earns no bonus.",
+        targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
+        anchor: "#playerPlayZone",
+        preferredSide: "right",
+      }),
+      Object.freeze({
+        title: "Placement decides whether Tactic +1 activates",
+        text:
+          "A Tactic role never prevents you from committing a card. It only decides whether that card earns Tactic +1. If its exact condition is not met, the card keeps its printed Power and other bonuses but receives no Tactic bonus.",
+        objective:
+          "During this lesson, the formation preview will show exactly which cards receive Tactic +1 before you commit.",
         targets: Object.freeze(["#playerPlayZone", "#matchupForecast"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -259,25 +291,27 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Connect with Link",
         text:
-          "Bubble Bengal has the Link role. Her Tide element differs from Candle Pounce’s Ember element.",
-        objective: "Place Bubble Bengal in Lane 2 to activate Link +1.",
+          "Bubble Bengal is a Tide Link. In Lane 2, she checks the card directly before her: Candle Pounce in Lane 1. Tide and Ember are different elements, so Link +1 will activate. A Link can also activate in Lane 3 by checking Lane 2.",
+        objective:
+          "Place Bubble Bengal in Lane 2. Because the card directly before her has a different element, she receives Link +1.",
       }),
       Object.freeze({
         title: "Close with Finisher",
         text:
-          "Dandelion Dash has the Finisher role. He will be last in a three-card formation and Professor Paws has a card in Lane 3.",
-        objective: "Place Dandelion Dash in Lane 3 to activate Finisher +1.",
+          "Dandelion Dash is a Finisher. You will commit three cards, he will be your last committed card in Lane 3, and Professor Paws has a card in Lane 3. All three Finisher conditions are met.",
+        objective:
+          "Place Dandelion Dash in Lane 3. Because he is last and faces an opposing card, he receives Finisher +1.",
       }),
     ]),
     readyText:
-      "The preview shows Vanguard +1 in Lane 1, Link +1 in Lane 2, and Finisher +1 in Lane 3.",
+      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because Lane 2 follows a different element, and Finisher +1 because Lane 3 is last and paired.",
     readyObjective:
       "Confirm all three Tactic +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aftermath:
-      "Candle Pounce gained Vanguard +1 in Lane 1. Bubble Bengal gained Link +1 after a different element. Dandelion Dash gained Finisher +1 as the last paired card. Changing their order could disable these bonuses.",
+      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card directly before her had a different element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation and faced Lane 3. Changing their order could disable these bonuses.",
     trophyChoice: true,
   }),
   Object.freeze({
@@ -1003,7 +1037,7 @@ function startTutorialTour() {
   ui.menuButton.disabled = false;
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
-  ui.aiPlayZone.innerHTML = placeholder("Training plan sealed");
+  ui.aiPlayZone.innerHTML = tutorialOpponentLaneGuideMarkup();
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
   setMessage("Training Grounds Tour", "Learn where the game keeps its most important information.");
@@ -1719,6 +1753,20 @@ function cardMarkup(
 
 function placeholder(label) {
   return `<div class="card-placeholder"><span class="paw">◆</span><small>${label}</small></div>`;
+}
+
+function tutorialOpponentLaneGuideMarkup() {
+  return `
+    <div class="formation-builder tutorial-lane-guide" aria-label="Professor Paws’ formation lanes">
+      ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => `
+        <div class="formation-slot empty-slot">
+          <span>LANE ${index + 1}</span>
+          <b>SEALED</b>
+          <small>FACES YOUR LANE ${index + 1}</small>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderHand() {

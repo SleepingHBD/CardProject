@@ -13,17 +13,17 @@ const TACTICS = Object.freeze({
   vanguard: Object.freeze({
     icon: "shield",
     label: "Vanguard",
-    description: "Vanguard: +1 in Lane 1.",
+    description: "Vanguard: +1 when committed in Lane 1.",
   }),
   link: Object.freeze({
     icon: "chain",
     label: "Link",
-    description: "Link: +1 after a different element.",
+    description: "Link: +1 in Lane 2 or 3 when the card directly before it has a different element.",
   }),
   finisher: Object.freeze({
     icon: "sword",
     label: "Finisher",
-    description: "Finisher: +1 when last in a 2- or 3-card play and facing a card.",
+    description: "Finisher: +1 when committed last in a 2- or 3-card formation and facing an opposing card in the same lane.",
   }),
 });
 const DIFFICULTY_MODES = Object.freeze(["guided", "veiled", "instinct", "blind"]);
