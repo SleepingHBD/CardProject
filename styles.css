@@ -5402,21 +5402,31 @@ footer {
   .element-cycle i { font-size: 7px; }
   .difficulty-dialog,
   .tutorial-menu-dialog { padding: 22px 13px 18px; }
+  .tutorial-menu-dialog {
+    max-height: 96dvh;
+    padding: 15px 10px 13px;
+  }
   .difficulty-dialog h2 { margin-bottom: 6px; font-size: 21px; }
   .difficulty-intro { margin-bottom: 13px; font-size: 12px; }
   .tutorial-menu-dialog h2 { font-size: 21px; }
-  .tutorial-menu-intro { margin-bottom: 13px; font-size: 12px; }
-  .tutorial-menu-options { grid-template-columns: 1fr; gap: 8px; }
-  .tutorial-menu-complete { grid-column: auto; }
-  .tutorial-menu-option {
-    min-height: 80px;
-    padding: 10px;
-    grid-template-columns: 42px minmax(0, 1fr);
-    gap: 9px;
+  .tutorial-menu-intro { margin-bottom: 9px; font-size: 12px; }
+  .tutorial-menu-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
   }
-  .tutorial-menu-icon { width: 40px; height: 40px; font-size: 18px; }
+  .tutorial-menu-complete { grid-column: 1 / -1; }
+  .tutorial-menu-option {
+    min-height: 72px;
+    padding: 7px 8px;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 6px;
+  }
+  .tutorial-menu-complete { min-height: 62px; }
+  .tutorial-menu-icon { width: 30px; height: 30px; font-size: 14px; }
   .tutorial-menu-option strong { font-size: 12px; }
-  .tutorial-menu-option small { font-size: 10px; }
+  .tutorial-menu-option small { margin-top: 2px; font-size: 11px; line-height: 1.22; }
+  .tutorial-menu-option em { margin-top: 2px; font-size: 8px; }
+  .tutorial-menu-return { min-height: 36px; margin-top: 8px; }
   .difficulty-option {
     min-height: 88px;
     padding: 11px 10px;
@@ -5709,6 +5719,11 @@ footer {
 .tutorial-coach-heading b {
   color: #d9b664;
   white-space: nowrap;
+}
+
+.tutorial-coach-heading:focus-visible {
+  outline: 3px solid #f0cf78;
+  outline-offset: 2px;
 }
 
 .tutorial-drag-hint {
@@ -7079,7 +7094,7 @@ footer {
     right: 8px;
     bottom: 8px;
     width: calc(100vw - 16px);
-    max-height: min(56dvh, 430px);
+    max-height: min(84dvh, 540px);
     padding: 5px;
   }
 
@@ -7102,11 +7117,11 @@ footer {
   }
 
   .tutorial-coach h2 {
-    font-size: 19px;
+    font-size: 20px;
   }
 
   .element-edge-cycle {
-    width: min(280px, 100%);
+    width: min(250px, 100%);
   }
 
   .element-cycle-node {
@@ -7152,7 +7167,7 @@ footer {
 
   .tutorial-coach-copy > p:not(.tutorial-concept),
   .tutorial-objective {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .tutorial-objective {
@@ -7162,7 +7177,7 @@ footer {
 
   .tutorial-coach-actions button {
     min-height: 38px;
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .settings-dialog {

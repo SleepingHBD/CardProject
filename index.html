@@ -117,18 +117,21 @@
           <div
             class="tutorial-coach-heading"
             id="tutorialCoachDragHandle"
-            title="Drag to move the tutorial panel"
+            role="button"
+            tabindex="0"
+            aria-label="Move the tutorial panel. Drag it, use the arrow keys, or press Home to reset its position."
+            title="Drag or use arrow keys to move; press Home to reset"
           >
             <span>TRAINING GROUNDS</span>
             <span class="tutorial-drag-hint" aria-hidden="true">Drag to move</span>
-            <b id="tutorialProgress">Scenario 1 of 5</b>
+            <b id="tutorialProgress">Scenario 1 of 7</b>
           </div>
           <div class="tutorial-coach-copy" aria-live="polite">
             <p class="tutorial-concept" id="tutorialConcept">The elemental cycle</p>
-            <h2 id="tutorialCoachTitle">Read the professor’s plan</h2>
+            <h2 id="tutorialCoachTitle" tabindex="-1">Read the professor’s plan</h2>
             <div class="tutorial-visual" id="tutorialVisual" hidden></div>
             <p id="tutorialCoachText">
-              Professor Paws reveals enough information for you to choose a counter.
+              Professor Paws reveals enough information for you to plan a response.
             </p>
             <div class="tutorial-objective" id="tutorialObjective">
               Follow the highlighted instruction to continue.
@@ -546,36 +549,50 @@
           <span class="tutorial-menu-icon" aria-hidden="true">ALL</span>
           <span>
             <strong>Complete Training</strong>
-            <small>Interface tour followed by every scripted scenario in order.</small>
+            <small>Tour plus all seven scenarios.</small>
             <em>Recommended for first-time players</em>
           </span>
         </button>
         <button class="tutorial-menu-option" data-tutorial-path="tour" type="button">
-          <span class="tutorial-menu-icon" aria-hidden="true">0</span>
+          <span class="tutorial-menu-icon" aria-hidden="true">1</span>
           <span>
             <strong>Training Grounds Tour</strong>
-            <small>Learn the interface, trophies, lane matchups, formations, and reference buttons.</small>
+            <small>Tour the interface.</small>
           </span>
         </button>
         <button class="tutorial-menu-option" data-tutorial-lesson="0" type="button">
-          <span class="tutorial-menu-icon" aria-hidden="true">1</span>
+          <span class="tutorial-menu-icon" aria-hidden="true">2</span>
           <span>
             <strong>Element Edge</strong>
-            <small>Learn the element cycle and how a winning element earns Edge +2.</small>
+            <small>Learn Edge +2.</small>
           </span>
         </button>
         <button class="tutorial-menu-option" data-tutorial-lesson="1" type="button">
-          <span class="tutorial-menu-icon" aria-hidden="true">2</span>
-          <span>
-            <strong>Round Points</strong>
-            <small>Learn how won lanes and extra cards combine to decide the round.</small>
-          </span>
-        </button>
-        <button class="tutorial-menu-option" data-tutorial-lesson="3" type="button">
           <span class="tutorial-menu-icon" aria-hidden="true">3</span>
           <span>
             <strong>Formation Roles</strong>
-            <small>Practise Vanguard, Link, Finisher, placement, and Role +1.</small>
+            <small>Learn every Role +1.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="2" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">4</span>
+          <span>
+            <strong>Round Points</strong>
+            <small>Score lanes and extra cards.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="5" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">5</span>
+          <span>
+            <strong>Trophies &amp; Card Flow</strong>
+            <small>Claim trophies; recycle cards.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="6" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">6</span>
+          <span>
+            <strong>Instinct Practice</strong>
+            <small>Read habits; choose freely.</small>
           </span>
         </button>
       </div>

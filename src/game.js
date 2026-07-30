@@ -1,6 +1,9 @@
 const {
   ELEMENTS,
   TACTICS,
+  AI_MOTIVE_TRAITS,
+  AI_FORMATION_TRAITS,
+  AI_COMMITMENT_TRAITS,
   ELEMENT_EDGE_BONUS,
   buildTellClues,
   chooseAiCommitment,
@@ -79,12 +82,26 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
 const TUTORIAL_MODES = Object.freeze(["complete", "tour", "lesson"]);
 const TUTORIAL_SECTION_NAMES = Object.freeze([
   "Element Edge",
-  "Round Points",
-  "Round Points",
   "Formation Roles",
   "Round Points",
+  "Round Points",
+  "Round Points",
+  "Trophies & Card Flow",
+  "Instinct Practice",
 ]);
 const TUTORIAL_TOUR_STEPS = Object.freeze([
+  Object.freeze({
+    id: "trophy-progress",
+    concept: "Training Grounds Tour",
+    title: "Know the match goal",
+    text:
+      "The elemental crests beside each duelist track trophies collected from winning rounds.",
+    objective:
+      "Win the match by collecting two Ember, two Gust, and two Tide trophies before Professor Paws.",
+    targets: Object.freeze(["#playerCollection", "#aiCollection"]),
+    anchor: "#playerCollection",
+    preferredSide: "left",
+  }),
   Object.freeze({
     id: "round-score",
     concept: "Training Grounds Tour",
@@ -92,22 +109,10 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "This display records how many rounds you and Professor Paws have won during the current duel.",
     objective:
-      "Rounds Won tracks duel performance, but it does not complete the match. Only the six required trophies do.",
+      "Rounds Won shows duel performance, but it does not complete the match. Only the six required trophies do.",
     targets: Object.freeze(["#roundScore"]),
     anchor: "#roundScore",
     preferredSide: "bottom",
-  }),
-  Object.freeze({
-    id: "trophy-progress",
-    concept: "Training Grounds Tour",
-    title: "Track trophy progress",
-    text:
-      "The elemental crests beside each duelist show the trophies collected from winning formations.",
-    objective:
-      "The real win condition is two Ember, two Gust, and two Tide trophies before Professor Paws.",
-    targets: Object.freeze(["#playerCollection", "#aiCollection"]),
-    anchor: "#playerCollection",
-    preferredSide: "left",
   }),
   Object.freeze({
     id: "plan",
@@ -176,21 +181,21 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Score Guide.",
     objective:
-      "Use these references whenever you need them. Begin Element Edge when you are ready.",
+      "Use these references whenever you need them during training or a duel.",
     targets: Object.freeze(["#clashScoreGuide", ".top-actions"]),
     anchor: ".top-actions",
     preferredSide: "bottom",
   }),
 ]);
-const TUTORIAL_LESSONS = Object.freeze([
+const TUTORIAL_LESSON_LIBRARY = Object.freeze([
   Object.freeze({
     id: "element-edge",
-    concept: "Scenario 1 · Elements",
+    concept: "Elements",
     title: "Use Element Edge",
     intro:
-      "Professor Paws committed Gust. Cinder Kit’s Ember element counters it and earns Element Edge +2.",
+      "Professor Paws committed Gust. Teapot Tabby’s Ember element beats it and earns Element Edge +2.",
     objective:
-      "Commit Cinder Kit. Its Ember element counters Gust and earns Element Edge +2.",
+      "Commit Teapot Tabby. Ember beats Gust, so the card earns Element Edge +2.",
     introPages: Object.freeze([
       Object.freeze({
         title: "Element Edge follows the cycle",
@@ -205,23 +210,23 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Find the +2 in the preview",
         text:
-          "Professor Paws committed Gust. After you place the Ember card Cinder Kit, its bonus badge and forecast will include Element Edge +2.",
+          "Professor Paws committed Gust. After you place the Ember card Teapot Tabby, its bonus badge and forecast will include Element Edge +2.",
         objective:
-          "Start the scenario, place Cinder Kit in Lane 1, and review its complete total before committing.",
+          "Start the scenario, place Teapot Tabby in Lane 1, and review its complete total before committing.",
         targets: Object.freeze(["#matchupForecast"]),
         anchor: "#matchupForecast",
         preferredSide: "left",
       }),
     ]),
     readyText:
-      "Cinder Kit’s preview includes Element Edge +2 alongside Vanguard +1.",
+      "Teapot Tabby’s preview includes Element Edge +2. No Role bonus is active in this lane.",
     readyObjective:
-      "Compare Power 4 + bonuses 3 = total 7, then press the highlighted Commit button.",
-    playerCards: Object.freeze(["cinder-kit", "kitewhisker", "wellwater-wisp"]),
+      "Compare Power 3 + Element Edge 2 = Clash Total 5, then press the highlighted Commit button.",
+    playerCards: Object.freeze(["teapot-tabby", "kitewhisker", "wellwater-wisp"]),
     aiCards: Object.freeze(["dandelion-dash"]),
-    expected: Object.freeze(["cinder-kit"]),
+    expected: Object.freeze(["teapot-tabby"]),
     aftermath:
-      "Cinder Kit’s Power 4 gained Element Edge +2 and Vanguard +1 for a total of 7. The formations had no extra cards, so its lane victory supplied the winning 2 Round Points.",
+      "Teapot Tabby’s Power 3 gained Element Edge +2 for a Clash Total of 5. No Role bonus was involved. Winning that lane supplied the round’s 2 Round Points and an Ember trophy.",
   }),
   Object.freeze({
     id: "commitment-one-vs-two",
@@ -253,7 +258,7 @@ const TUTORIAL_LESSONS = Object.freeze([
   }),
   Object.freeze({
     id: "tactics",
-    concept: "Scenario 4 · Formation Roles",
+    concept: "Formation Roles",
     title: "Build a three-role formation",
     intro:
       "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. Finisher earns +1 when it is your final committed card in a two- or three-card formation and faces an opposing card.",
@@ -265,7 +270,7 @@ const TUTORIAL_LESSONS = Object.freeze([
         text:
           "A Vanguard card gets Vanguard +1 only when it is committed in Lane 1. If you commit that Vanguard in Lane 2 or Lane 3, it still battles normally but receives no Vanguard bonus.",
         objective:
-          "Look for the shield symbol on a card. Shield means Vanguard, and Vanguard means Lane 1.",
+          "Look for the shield symbol. A Vanguard may be committed in any lane, but it earns Vanguard +1 only in Lane 1.",
         targets: Object.freeze(["#playerHand"]),
         anchor: "#playerHand",
         preferredSide: "top",
@@ -349,6 +354,111 @@ const TUTORIAL_LESSONS = Object.freeze([
       "The Comet Claws faced each other in Lane 1 and drew for 0 Round Points. Bubble Bengal had no opposing card, added 1 Round Point, and became the automatic trophy from your 1–0 Round Points win.",
     extraCardTrophy: true,
   }),
+  Object.freeze({
+    id: "trophies-card-flow",
+    concept: "Trophies & Card Flow",
+    title: "Claim a trophy and follow the cards",
+    intro:
+      "Winning a round earns one trophy. When several lane-winning cards qualify, you choose which one leaves circulation as your trophy.",
+    objective:
+      "Commit Candle Pounce, then Bubble Bengal. Both will win their lanes, so you must choose one as your trophy.",
+    introPages: Object.freeze([
+      Object.freeze({
+        title: "A round awards one trophy",
+        text:
+          "Win a round and one qualifying card becomes a trophy. If several of your cards won contested lanes, you choose one. If extra cards decide the round, your first extra card becomes the trophy automatically. A drawn round awards no trophy.",
+        objective:
+          "Watch the elemental crests: the chosen trophy moves there and counts toward the match goal.",
+        targets: Object.freeze(["#playerCollection", "#aiCollection"]),
+        anchor: "#playerCollection",
+        preferredSide: "left",
+      }),
+      Object.freeze({
+        title: "The other cards return later",
+        text:
+          "The trophy leaves circulation. Every other committed card enters the discard pile. Hands refill from the draw pile, and the discard pile reshuffles when the draw pile runs out.",
+        objective:
+          "This cycle rewards planning: a claimed card is secured, while discarded cards may return in a later hand.",
+        targets: Object.freeze(["#deckStatusText", "#playerHand"]),
+        anchor: "#deckStatusText",
+        preferredSide: "top",
+      }),
+    ]),
+    readyText:
+      "Candle Pounce and Bubble Bengal are both projected to win their lanes, giving you two possible trophy choices.",
+    readyObjective:
+      "Commit the formation, then choose which lane-winning card becomes your one trophy.",
+    playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "cinder-kit"]),
+    aiCards: Object.freeze(["teapot-tabby", "wellwater-wisp"]),
+    expected: Object.freeze(["candle-pounce", "bubble-bengal"]),
+    aftermath:
+      "Candle Pounce won Lane 1 and Bubble Bengal won Lane 2. The round still awarded only one trophy: the card you selected. The other committed cards entered the training discard pile.",
+  }),
+  Object.freeze({
+    id: "instinct-practice",
+    concept: "Instinct Practice",
+    title: "Read habits without seeing the plan",
+    intro:
+      "Instinct hides Professor Paws’ cards and formation size. His three known habits are useful clues, but they describe tendencies rather than promises.",
+    objective:
+      "Use the three visible habits to build any two- or three-card formation you believe can handle his likely plan.",
+    introPages: Object.freeze([
+      Object.freeze({
+        title: "Habits replace exact tells",
+        text:
+          "In Instinct, Professor Paws’ card details and commitment count stay sealed. You always see one motive habit, one formation habit, and one commitment habit.",
+        objective:
+          "Read all three together. Each habit answers a different question: what he favors, how he orders it, and how many cards he tends to commit.",
+        targets: Object.freeze(["#opponentHabits"]),
+        anchor: "#opponentHabits",
+        preferredSide: "left",
+      }),
+      Object.freeze({
+        title: "Turn clues into a prediction",
+        text:
+          "Power Seeker favors high-Power cards. Strong Opener places his highest-Power card in Lane 1. Full Formation usually commits three cards.",
+        objective:
+          "Expect a strong three-card formation with its biggest threat first—but remember that habits never reveal the elements.",
+        targets: Object.freeze(["#opponentHabits", "#playerHand"]),
+        anchor: "#opponentHabits",
+        preferredSide: "left",
+      }),
+    ]),
+    readyText:
+      "Your formation is valid. Before committing, compare its Roles and elements with the habits you were given.",
+    readyObjective:
+      "Commit when your two- or three-card answer feels ready. This scenario does not reveal a prescribed solution.",
+    playerCards: Object.freeze([
+      "candle-pounce",
+      "bubble-bengal",
+      "dandelion-dash",
+      "comet-claw",
+      "sir-squall",
+      "moonpool-mouser",
+    ]),
+    aiCards: Object.freeze(["sir-squall", "empress-ebb", "comet-claw"]),
+    expected: Object.freeze([]),
+    freeChoice: true,
+    minCards: 2,
+    maxCards: 3,
+    difficulty: "instinct",
+    aiTraits: Object.freeze([
+      AI_MOTIVE_TRAITS.find((trait) => trait.id === "power-seeker"),
+      AI_FORMATION_TRAITS.find((trait) => trait.id === "strong-opener"),
+      AI_COMMITMENT_TRAITS.find((trait) => trait.id === "full-formation"),
+    ]),
+    aftermath:
+      "Full Formation correctly warned you to expect three cards. Power Seeker and Strong Opener suggested a high-Power card in Lane 1, but they did not reveal any elements. That uncertainty is the heart of Instinct: habits guide a prediction without guaranteeing the result.",
+  }),
+]);
+const TUTORIAL_LESSONS = Object.freeze([
+  TUTORIAL_LESSON_LIBRARY[0],
+  TUTORIAL_LESSON_LIBRARY[3],
+  TUTORIAL_LESSON_LIBRARY[1],
+  TUTORIAL_LESSON_LIBRARY[2],
+  TUTORIAL_LESSON_LIBRARY[4],
+  TUTORIAL_LESSON_LIBRARY[5],
+  TUTORIAL_LESSON_LIBRARY[6],
 ]);
 
 function readSavedClashStyle() {
@@ -517,9 +627,20 @@ const tutorialCoachDrag = {
   manual: false,
 };
 
+function focusTutorialHeading() {
+  window.requestAnimationFrame(() => {
+    if (!ui.tutorialCoach.hidden) {
+      ui.tutorialCoachTitle.focus({ preventScroll: true });
+    }
+  });
+}
+
 function getPlayerFormationLimit() {
   if (tutorial.active && tutorial.phase !== "tour") {
-    return currentTutorialLesson()?.expected.length || MAX_PLAY_SIZE;
+    const lesson = currentTutorialLesson();
+    return lesson?.freeChoice
+      ? lesson.maxCards || MAX_PLAY_SIZE
+      : lesson?.expected.length || MAX_PLAY_SIZE;
   }
   return Math.min(MAX_PLAY_SIZE, state.playerHand.length);
 }
@@ -596,22 +717,25 @@ function isTutorialSelectionValid() {
   if (!tutorial.active || tutorial.phase !== "play") return true;
   const lesson = currentTutorialLesson();
   const selected = selectedTutorialTemplates();
-  return Boolean(
-    lesson
-    && selected.length === lesson.expected.length
-    && selected.every((art, index) => art === lesson.expected[index])
-  );
+  if (!lesson) return false;
+  if (lesson.freeChoice) {
+    return selected.length >= (lesson.minCards || 1)
+      && selected.length <= (lesson.maxCards || MAX_PLAY_SIZE);
+  }
+  return selected.length === lesson.expected.length
+    && selected.every((art, index) => art === lesson.expected[index]);
 }
 
 function isTutorialSelectionPrefix() {
   if (!tutorial.active || tutorial.phase !== "play") return false;
   const lesson = currentTutorialLesson();
   const selected = selectedTutorialTemplates();
-  return Boolean(
-    lesson
-    && selected.length <= lesson.expected.length
-    && selected.every((art, index) => art === lesson.expected[index])
-  );
+  if (!lesson) return false;
+  if (lesson.freeChoice) {
+    return selected.length <= (lesson.maxCards || MAX_PLAY_SIZE);
+  }
+  return selected.length <= lesson.expected.length
+    && selected.every((art, index) => art === lesson.expected[index]);
 }
 
 function clearTutorialHighlights() {
@@ -654,6 +778,13 @@ function applyTutorialHighlights() {
 
     const lesson = currentTutorialLesson();
     const selected = selectedTutorialTemplates();
+    if (lesson?.freeChoice) {
+      ui.playerHand.classList.add("tutorial-highlight-target");
+      ui.playerPlayZone
+        .querySelector(".formation-slot.next-slot")
+        ?.classList.add("tutorial-highlight-target");
+      return;
+    }
     const prefixLength = isTutorialSelectionPrefix() ? selected.length : 0;
     const nextArt = lesson?.expected[prefixLength];
     const recommendedCard = nextArt
@@ -724,6 +855,13 @@ function getTutorialCoachAnchorContext() {
       return {
         element: ui.matchupForecast,
         key: `lesson:${lesson.id}:formation-ready`,
+        preferredSide: "left",
+      };
+    }
+    if (lesson.freeChoice) {
+      return {
+        element: ui.opponentHabits,
+        key: `lesson:${lesson.id}:free-choice:${selected.length}`,
         preferredSide: "left",
       };
     }
@@ -902,7 +1040,7 @@ function renderTutorialVisual(type = null) {
     <div
       class="element-edge-cycle"
       role="img"
-      aria-label="Element Edge cycle: Ember beats Gust, Gust beats Tide, and Tide beats Ember. A winning elemental counter adds Element Edge plus two to that card's Clash Total."
+      aria-label="Element Edge cycle: Ember beats Gust, Gust beats Tide, and Tide beats Ember. A card whose element beats its opponent adds Element Edge plus two to that card's Clash Total."
     >
       <svg class="element-cycle-arrows" viewBox="0 0 320 190" aria-hidden="true">
         <defs>
@@ -962,10 +1100,12 @@ function renderTutorialCoach() {
     ui.tutorialConcept.textContent = tourStep.concept;
     ui.tutorialCoachTitle.textContent = tourStep.title;
     ui.tutorialCoachText.textContent = tourStep.text;
-    ui.tutorialObjective.textContent = tourStep.objective;
-    ui.tutorialBackButton.hidden = false;
-    ui.tutorialBackButton.disabled =
+    ui.tutorialObjective.textContent = finalTourStep && tutorial.mode === "tour"
+      ? "Use these references whenever you need them, then finish the tour when you are ready."
+      : tourStep.objective;
+    ui.tutorialBackButton.hidden =
       tutorial.tourStep === 0 && tutorial.mode === "complete";
+    ui.tutorialBackButton.disabled = false;
     ui.tutorialActionButton.hidden = false;
     ui.tutorialActionButton.textContent = finalTourStep
       ? tutorial.mode === "tour"
@@ -1017,7 +1157,7 @@ function renderTutorialCoach() {
     : `Scenario ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
   ui.tutorialConcept.textContent = lesson.concept;
   ui.tutorialBackButton.hidden = true;
-  ui.tutorialBackButton.disabled = true;
+  ui.tutorialBackButton.disabled = false;
   ui.tutorialActionButton.hidden = false;
 
   if (tutorial.phase === "intro") {
@@ -1034,15 +1174,10 @@ function renderTutorialCoach() {
     ui.tutorialCoachText.textContent = introPage.text;
     ui.tutorialObjective.textContent = introPage.objective;
     ui.tutorialBackButton.hidden = false;
-    ui.tutorialBackButton.disabled =
-      tutorial.introStep === 0
-      && tutorial.mode === "complete"
-      && tutorial.lessonIndex > 0;
     ui.tutorialActionButton.textContent = finalIntroPage ? "Start Scenario" : "Next";
   } else if (tutorial.phase === "play") {
     ui.tutorialActionButton.hidden = true;
-    ui.tutorialBackButton.hidden = selected.length > 0;
-    ui.tutorialBackButton.disabled = false;
+    ui.tutorialBackButton.hidden = false;
     if (validFormation) {
       ui.tutorialCoachTitle.textContent = "Formation ready";
       ui.tutorialCoachText.textContent =
@@ -1051,6 +1186,11 @@ function renderTutorialCoach() {
       ui.tutorialObjective.textContent =
         lesson.readyObjective
         || "Review the preview, then press the highlighted Commit button.";
+    } else if (lesson.freeChoice) {
+      ui.tutorialCoachTitle.textContent = lesson.title;
+      ui.tutorialCoachText.textContent = lesson.intro;
+      ui.tutorialObjective.textContent =
+        `Choose ${lesson.minCards || 1} or ${lesson.maxCards || MAX_PLAY_SIZE} cards in any order. Read all three habits before you commit.`;
     } else if (selected.length && !prefixFormation) {
       ui.tutorialCoachTitle.textContent = "Try a different order";
       ui.tutorialCoachText.textContent =
@@ -1069,22 +1209,29 @@ function renderTutorialCoach() {
     }
   } else if (tutorial.phase === "claim") {
     ui.tutorialCoachTitle.textContent = "Choose a winning trophy";
-    ui.tutorialCoachText.textContent = lesson.aftermath;
+    ui.tutorialCoachText.textContent =
+      "You won the round with more than one eligible lane-winning card. A round awards exactly one trophy.";
     ui.tutorialObjective.textContent =
-      "Choose Ember, Tide, or Gust below. In a real match, choose an element you still need.";
+      "Choose one of the highlighted lane-winning cards below. In a real match, prefer an element you still need.";
     ui.tutorialActionButton.hidden = true;
   } else if (tutorial.phase === "aftermath") {
     ui.tutorialCoachTitle.textContent = "Scenario complete";
     ui.tutorialCoachText.textContent = lesson.aftermath;
     ui.tutorialObjective.textContent =
       "Study the totals on the cards, then continue when you are ready.";
-    ui.tutorialActionButton.textContent = "Next Scenario";
+    ui.tutorialActionButton.textContent = tutorial.mode === "lesson"
+      ? tutorialContinuesCurrentSection()
+        ? "Next Scenario"
+        : "Finish Section"
+      : finalLesson
+        ? "Review Training"
+        : "Next Scenario";
   } else {
     ui.tutorialCoachTitle.textContent = "Training complete";
     ui.tutorialCoachText.textContent =
-      `${lesson.aftermath} In a real duel, collect two Ember, two Gust, and two Tide trophies before Professor Paws.`;
+      "You toured the interface, practised Element Edge and Roles, scored different formation sizes, claimed trophies, followed card flow, and made an independent Instinct read.";
     ui.tutorialObjective.textContent =
-      "Trophies leave circulation. Other committed cards enter the discard pile, and that pile reshuffles when the draw pile empties.";
+      "In a real duel, collect two Ember, two Gust, and two Tide trophies before Professor Paws.";
     ui.tutorialActionButton.textContent = finalLesson ? "Finish Training" : "Continue";
   }
 
@@ -1138,13 +1285,14 @@ function startTutorialTour(initialStep = 0) {
   state.dealing = false;
   state.selectedCardIds = [];
   state.deck = [];
-  state.discardPile = [];
+  state.difficulty = "guided";
+  state.aiTraits = [];
   state.playerHand = previewLesson.playerCards.map((art, cardIndex) =>
     createTutorialCard(art, "tour-player", cardIndex));
   state.aiHand = previewLesson.aiCards.map((art, cardIndex) =>
     createTutorialCard(art, "tour-ai", cardIndex));
   state.aiPlan = [...state.aiHand];
-  state.aiTellClues = state.aiPlan.map(() => "full");
+  state.aiTellClues = buildTellClues(state.aiPlan.length, state.difficulty);
   setRoundAdvanceControls(false);
   ui.menuButton.disabled = false;
   ui.clashEffects.innerHTML = "";
@@ -1167,6 +1315,7 @@ function startTutorialTour(initialStep = 0) {
   renderRound();
   renderRoundScore();
   renderTutorialCoach();
+  focusTutorialHeading();
 }
 
 function advanceTutorialTour() {
@@ -1176,6 +1325,7 @@ function advanceTutorialTour() {
       state.locked = true;
       tutorial.phase = "section-complete";
       renderTutorialCoach();
+      focusTutorialHeading();
       return;
     }
     loadTutorialLesson(0);
@@ -1185,6 +1335,7 @@ function advanceTutorialTour() {
   const tourStep = currentTutorialTourStep();
   setMessage(tourStep.title, tourStep.objective);
   renderTutorialCoach();
+  focusTutorialHeading();
 }
 
 function loadTutorialLesson(index) {
@@ -1203,14 +1354,14 @@ function loadTutorialLesson(index) {
   state.locked = true;
   state.dealing = false;
   state.selectedCardIds = [];
-  state.deck = [];
-  state.discardPile = [];
+  state.difficulty = lesson.difficulty || "guided";
+  state.aiTraits = lesson.aiTraits ? [...lesson.aiTraits] : [];
   state.playerHand = lesson.playerCards.map((art, cardIndex) =>
     createTutorialCard(art, "player", cardIndex));
   state.aiHand = lesson.aiCards.map((art, cardIndex) =>
     createTutorialCard(art, "ai", cardIndex));
   state.aiPlan = [...state.aiHand];
-  state.aiTellClues = state.aiPlan.map(() => "full");
+  state.aiTellClues = buildTellClues(state.aiPlan.length, state.difficulty);
   setRoundAdvanceControls(false);
   ui.menuButton.disabled = false;
   ui.clashEffects.innerHTML = "";
@@ -1226,6 +1377,7 @@ function loadTutorialLesson(index) {
   renderRound();
   renderRoundScore();
   renderTutorialCoach();
+  focusTutorialHeading();
 }
 
 function beginTutorialLesson() {
@@ -1240,9 +1392,12 @@ function beginTutorialLesson() {
   renderFormationBuilder();
   setMessage(
     lesson.title,
-    `Build the scripted ${lesson.expected.length}-card formation shown by your coach.`,
+    lesson.freeChoice
+      ? `Build any ${lesson.minCards || 1}- or ${lesson.maxCards || MAX_PLAY_SIZE}-card formation using Professor Paws’ habits as clues.`
+      : `Build the scripted ${lesson.expected.length}-card formation shown by your coach.`,
   );
   renderTutorialCoach();
+  focusTutorialHeading();
 }
 
 function advanceTutorialIntro() {
@@ -1256,6 +1411,7 @@ function advanceTutorialIntro() {
   const introPage = currentTutorialIntroPage();
   setMessage(introPage.title, introPage.objective);
   renderTutorialCoach();
+  focusTutorialHeading();
 }
 
 function retreatTutorialInstruction() {
@@ -1267,6 +1423,7 @@ function retreatTutorialInstruction() {
       const tourStep = currentTutorialTourStep();
       setMessage(tourStep.title, tourStep.objective);
       renderTutorialCoach();
+      focusTutorialHeading();
     } else if (tutorial.mode === "tour") {
       showTutorialMenu();
     }
@@ -1279,6 +1436,7 @@ function retreatTutorialInstruction() {
       const introPage = currentTutorialIntroPage();
       setMessage(introPage.title, introPage.objective);
       renderTutorialCoach();
+      focusTutorialHeading();
       return;
     }
     if (tutorial.mode === "lesson") {
@@ -1290,11 +1448,14 @@ function retreatTutorialInstruction() {
       }
     } else if (tutorial.lessonIndex === 0) {
       startTutorialTour(TUTORIAL_TOUR_STEPS.length - 1);
+    } else {
+      loadTutorialLesson(tutorial.lessonIndex - 1);
     }
     return;
   }
 
-  if (tutorial.phase === "play" && state.selectedCardIds.length === 0) {
+  if (tutorial.phase === "play") {
+    state.selectedCardIds = [];
     tutorial.phase = "intro";
     tutorial.introStep = currentTutorialIntroPages().length - 1;
     state.locked = true;
@@ -1304,6 +1465,7 @@ function retreatTutorialInstruction() {
     renderHand();
     renderFormationBuilder();
     renderTutorialCoach();
+    focusTutorialHeading();
   }
 }
 
@@ -1314,21 +1476,33 @@ function finishTutorialLesson() {
   ui.playSelectedButton.hidden = true;
   ui.nextRoundButton.hidden = true;
   ui.nextRoundButton.disabled = true;
-  tutorial.phase = tutorial.mode === "lesson"
-    ? tutorialContinuesCurrentSection()
-      ? "aftermath"
-      : "section-complete"
-    : tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1
-      ? "complete"
-      : "aftermath";
+  tutorial.phase = "aftermath";
   renderTutorialCoach();
+  focusTutorialHeading();
+}
+
+function recordTutorialRoundReward(reward, playerCards, aiCards) {
+  if (reward?.winner === "player" && reward.card) {
+    state.playerWins.push(reward.card);
+  }
+  if (reward?.winner === "ai" && reward.card) {
+    state.aiWins.push(reward.card);
+  }
+  state.discardPile.push(
+    ...playerCards.filter((card) => card !== reward?.card),
+    ...aiCards.filter((card) => card !== reward?.card),
+  );
+  renderCollection(ui.playerCollection, state.playerWins);
+  renderCollection(ui.aiCollection, state.aiWins);
+  renderRound();
 }
 
 function completeTutorialTrophyClaim(reward) {
   if (!tutorial.active || tutorial.phase !== "claim" || !reward?.card) return;
-  state.playerWins.push(reward.card);
+  const pending = state.pendingTrophyClaim;
+  if (!pending) return;
   clearTrophyClaim();
-  renderCollection(ui.playerCollection, state.playerWins);
+  recordTutorialRoundReward(reward, pending.playerCards, pending.aiCards);
   setMessage(
     `${reward.card.name} becomes your training trophy!`,
     "A normal duel asks you to collect two trophies from each element.",
@@ -1338,7 +1512,7 @@ function completeTutorialTrophyClaim(reward) {
 
 function resolveTutorialRound(playerCards, aiCards, resolution) {
   const lesson = currentTutorialLesson();
-  const { score, winner, decidedBy } = resolution;
+  const { score, winner, decidedBy, extraCardPoints } = resolution;
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
   ui.versusBadge.className = "versus-badge";
 
@@ -1356,11 +1530,11 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
 
   const resultLabel = winner === "player"
     ? decidedBy === "extra-cards"
-      ? `Your extra cards win the round, ${score.player}–${score.ai} Round Points!`
+      ? `Your ${extraCardPoints.player === 1 ? "extra card wins" : "extra cards win"} the round, ${score.player}–${score.ai} Round Points!`
       : `You win with ${score.player}–${score.ai} Round Points!`
     : winner === "ai"
       ? decidedBy === "extra-cards"
-        ? `Professor Paws' extra cards win ${score.ai}–${score.player}.`
+        ? `Professor Paws' ${extraCardPoints.ai === 1 ? "extra card wins" : "extra cards win"} ${score.ai}–${score.player}.`
         : `Professor Paws wins with ${score.ai}–${score.player} Round Points.`
       : `Round Points are tied ${score.player}–${score.ai}.`;
   setMessage(resultLabel, lesson.aftermath);
@@ -1369,7 +1543,7 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
   renderRoundScore();
 
   const rewardOptions = getFormationRewardOptions(playerCards, aiCards, resolution);
-  if (lesson.trophyChoice && rewardOptions.length > 1) {
+  if (winner === "player" && rewardOptions.length > 1 && !rewardOptions[0].fixed) {
     showTrophyClaim(rewardOptions, playerCards, aiCards, resolution);
     tutorial.phase = "claim";
     ui.menuButton.disabled = false;
@@ -1377,10 +1551,10 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
     return;
   }
 
-  if (lesson.extraCardTrophy && rewardOptions[0]?.card) {
-    state.playerWins.push(rewardOptions[0].card);
-    renderCollection(ui.playerCollection, state.playerWins);
-  }
+  const reward = winner === "ai"
+    ? chooseTrophyReward(rewardOptions, state.aiWins)
+    : rewardOptions[0] || null;
+  recordTutorialRoundReward(reward, playerCards, aiCards);
   finishTutorialLesson();
 }
 
@@ -1406,6 +1580,9 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   state.aiRoundWins = 0;
   state.pendingMatchWinner = null;
   state.pendingTrophyClaim = null;
+  state.deck = [];
+  state.discardPile = [];
+  state.aiTraits = [];
   state.locked = true;
   state.dealing = true;
   renderOpponentHabits();
@@ -1439,7 +1616,7 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   setMessage(
     "Entering the Training Grounds...",
     selectedMode === "complete"
-      ? "Begin with a quick interface tour, then complete three sections across five scripted scenarios."
+      ? "Begin with an interface tour, then complete five sections across seven scenarios."
       : `Preparing the ${sectionName} section.`,
   );
   await playDeckTransition("opening");
@@ -2191,7 +2368,13 @@ function updateFormationMessage() {
   const aiExtraCards = Math.max(0, state.aiPlan.length - count);
   const detail = state.difficulty === "instinct"
     ? count === 0
-      ? "Choose one to three cards. His commitment habit is your only clue to his hidden formation size."
+      ? tutorial.active && currentTutorialLesson()?.freeChoice
+        ? `Choose ${currentTutorialLesson().minCards || 1}–${currentTutorialLesson().maxCards || MAX_PLAY_SIZE} cards. His commitment habit is your only clue to his hidden formation size.`
+        : "Choose one to three cards. His commitment habit is your only clue to his hidden formation size."
+      : tutorial.active
+        && currentTutorialLesson()?.freeChoice
+        && count < (currentTutorialLesson().minCards || 1)
+        ? `Place at least ${currentTutorialLesson().minCards || 1} cards for this practice formation.`
       : "Your current formation is ready to commit. Professor Paws' cards and formation size remain concealed."
     : count === 0
       ? "Choose one to three cards using Professor Paws' visible plan."
@@ -2206,10 +2389,22 @@ function updateFormationMessage() {
 
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
-  ui.selectionCount.textContent = count
-    ? `${count} ${count === 1 ? "card" : "cards"} placed · ready · up to ${MAX_PLAY_SIZE}`
-    : `0 placed · choose 1–${MAX_PLAY_SIZE} cards`;
   const tutorialFormationReady = !tutorial.active || isTutorialSelectionValid();
+  const lesson = tutorial.active ? currentTutorialLesson() : null;
+  const minimumCards = lesson?.freeChoice
+    ? lesson.minCards || 1
+    : lesson?.expected.length || 1;
+  const formationLimit = getPlayerFormationLimit();
+  const readiness = tutorialFormationReady
+    ? "ready"
+    : count >= minimumCards
+      ? "adjust the order"
+      : `${minimumCards - count} more needed`;
+  ui.selectionCount.textContent = count
+    ? `${count} ${count === 1 ? "card" : "cards"} placed · ${readiness} · up to ${formationLimit}`
+    : minimumCards === formationLimit
+      ? `0 placed · choose ${minimumCards} ${minimumCards === 1 ? "card" : "cards"}`
+      : `0 placed · choose ${minimumCards}–${formationLimit} cards`;
   ui.playSelectedButton.disabled = state.locked
     || count < 1
     || count > getPlayerFormationLimit()
@@ -2353,7 +2548,7 @@ function renderRound() {
   if (tutorial.active) {
     ui.deckStatusText.innerHTML = tutorial.phase === "tour"
       ? "<strong>Training tour</strong> &middot; interface overview"
-      : "<strong>Training deck</strong> &middot; scripted scenario";
+      : `<strong>Training deck</strong> &middot; ${state.discardPile.length} ${state.discardPile.length === 1 ? "card" : "cards"} in the training discard pile`;
     return;
   }
   if (state.deck.length === 0 && state.discardPile.length > 0) {
@@ -2768,7 +2963,13 @@ function playRound() {
     || selectedCount > getPlayerFormationLimit()
   ) return;
   if (tutorial.active && !isTutorialSelectionValid()) {
-    setMessage("That formation does not match the scenario.", "Follow the highlighted order, then commit again.");
+    const lesson = currentTutorialLesson();
+    setMessage(
+      lesson?.freeChoice ? "Complete your formation first." : "That formation does not match the scenario.",
+      lesson?.freeChoice
+        ? `Commit between ${lesson.minCards || 1} and ${lesson.maxCards || MAX_PLAY_SIZE} cards.`
+        : "Follow the highlighted order, then commit again.",
+    );
     audio.denied();
     renderTutorialCoach();
     return;
@@ -3287,6 +3488,40 @@ ui.tutorialCoachDragHandle.addEventListener("lostpointercapture", () => {
   tutorialCoachDrag.pointerId = null;
   ui.tutorialCoach.classList.remove("is-dragging");
 });
+ui.tutorialCoachDragHandle.addEventListener("keydown", (event) => {
+  if (!tutorial.active || ui.tutorialCoach.hidden) return;
+  if (event.key === "Home") {
+    tutorialCoachDrag.manual = false;
+    tutorialCoachDrag.anchorKey = null;
+    ui.tutorialCoach.style.removeProperty("left");
+    ui.tutorialCoach.style.removeProperty("top");
+    ui.tutorialCoach.style.removeProperty("right");
+    ui.tutorialCoach.style.removeProperty("bottom");
+    positionTutorialCoach();
+    event.preventDefault();
+    return;
+  }
+
+  const directions = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1],
+  };
+  const direction = directions[event.key];
+  if (!direction) return;
+  const distance = event.shiftKey ? 48 : 24;
+  const panelRect = ui.tutorialCoach.getBoundingClientRect();
+  tutorialCoachDrag.manual = true;
+  tutorialCoachDrag.anchorKey = null;
+  ui.tutorialCoach.classList.remove("is-anchored");
+  ui.tutorialCoach.removeAttribute("data-anchor-side");
+  moveTutorialCoach(
+    panelRect.left + direction[0] * distance,
+    panelRect.top + direction[1] * distance,
+  );
+  event.preventDefault();
+});
 window.addEventListener("resize", () => {
   if (ui.clashScoreGuide.open) {
     syncClashScorePanelPosition();
@@ -3380,7 +3615,20 @@ ui.tutorialActionButton.addEventListener("click", () => {
   } else if (tutorial.phase === "intro") {
     advanceTutorialIntro();
   } else if (tutorial.phase === "aftermath") {
-    loadTutorialLesson(adjacentTutorialLessonIndex(1));
+    if (tutorial.mode === "lesson" && !tutorialContinuesCurrentSection()) {
+      tutorial.phase = "section-complete";
+      renderTutorialCoach();
+      focusTutorialHeading();
+    } else if (
+      tutorial.mode === "complete"
+      && tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1
+    ) {
+      tutorial.phase = "complete";
+      renderTutorialCoach();
+      focusTutorialHeading();
+    } else {
+      loadTutorialLesson(adjacentTutorialLessonIndex(1));
+    }
   } else if (tutorial.phase === "complete") {
     showMainMenu();
   }

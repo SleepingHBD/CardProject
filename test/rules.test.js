@@ -604,13 +604,13 @@ test("equal commitments still draw when Round Points are tied", () => {
 
 test("scripted tutorial lessons demonstrate their intended rule outcomes", () => {
   const elementLesson = resolveClashes(
-    [card("ember", 4, "vanguard")],
+    [card("ember", 3, "link")],
     [card("gust", 3, "finisher")],
   );
   assert.equal(elementLesson.winner, "player");
   assert.equal(elementLesson.lanes[0].player.edge, 2);
-  assert.equal(elementLesson.lanes[0].player.tactic, 1);
-  assert.equal(elementLesson.lanes[0].player.total, 7);
+  assert.equal(elementLesson.lanes[0].player.tactic, 0);
+  assert.equal(elementLesson.lanes[0].player.total, 5);
   assert.deepEqual(elementLesson.score, { player: 2, ai: 0, draw: 0 });
 
   const oneVsTwoCommitmentScenario = resolveClashes(
@@ -665,4 +665,17 @@ test("scripted tutorial lessons demonstrate their intended rule outcomes", () =>
   assert.deepEqual(extraCardLesson.score, { player: 1, ai: 0, draw: 1 });
   assert.equal(extraCardLesson.winner, "player");
   assert.equal(extraCardLesson.decidedBy, "extra-cards");
+
+  const trophyAndCardFlowLesson = resolveClashes(
+    [card("ember", 6, "vanguard"), card("tide", 6, "link")],
+    [card("ember", 3, "link"), card("tide", 4, "vanguard")],
+  );
+  assert.deepEqual(trophyAndCardFlowLesson.results, ["player", "player"]);
+  const trophyOptions = getFormationRewardOptions(
+    [card("ember", 6, "vanguard"), card("tide", 6, "link")],
+    [card("ember", 3, "link"), card("tide", 4, "vanguard")],
+    trophyAndCardFlowLesson,
+  );
+  assert.equal(trophyOptions.length, 2);
+  assert.equal(trophyOptions.every((option) => option.fixed === false), true);
 });
