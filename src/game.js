@@ -80,16 +80,28 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
 });
 const TUTORIAL_TOUR_STEPS = Object.freeze([
   Object.freeze({
-    id: "progress",
+    id: "round-score",
     concept: "Training Grounds Tour",
-    title: "Track the duel",
+    title: "Track round wins",
     text:
-      "The round score records rounds won by each duelist. The elemental crests beside each duelist track trophies.",
+      "This score records how many rounds you and Professor Paws have won during the current duel.",
     objective:
-      "Win a full duel by collecting two Ember, two Gust, and two Tide trophies before Professor Paws.",
-    targets: Object.freeze(["#roundScore", "#playerCollection", "#aiCollection"]),
+      "Round wins help explain who is performing better, but the score itself does not complete the match.",
+    targets: Object.freeze(["#roundScore"]),
     anchor: "#roundScore",
     preferredSide: "bottom",
+  }),
+  Object.freeze({
+    id: "trophy-progress",
+    concept: "Training Grounds Tour",
+    title: "Track trophy progress",
+    text:
+      "The elemental crests beside each duelist show the trophies collected from winning formations.",
+    objective:
+      "The real win condition is two Ember, two Gust, and two Tide trophies before Professor Paws.",
+    targets: Object.freeze(["#playerCollection", "#aiCollection"]),
+    anchor: "#playerCollection",
+    preferredSide: "left",
   }),
   Object.freeze({
     id: "plan",
@@ -156,16 +168,42 @@ const TUTORIAL_LESSONS = Object.freeze([
   Object.freeze({
     id: "element-edge",
     concept: "Lesson 1 · Elements",
-    title: "Counter the revealed element",
+    title: "Use Element Edge",
     intro:
-      "Ember beats Gust, Gust beats Tide, and Tide beats Ember. Professor Paws has committed a Gust card.",
+      "Professor Paws committed Gust. Cinder Kit’s Ember element counters it and earns Element Edge +2.",
     objective:
       "Commit Cinder Kit. Its Ember element counters Gust and earns Element Edge +2.",
+    introPages: Object.freeze([
+      Object.freeze({
+        title: "Element Edge follows the cycle",
+        text:
+          "Ember counters Gust, Gust counters Tide, and Tide counters Ember. A countering card earns Element Edge +2 when the lane is paired.",
+        objective:
+          "Element Edge strengthens the card’s total, but it does not guarantee victory. Printed Power and every other active bonus still matter.",
+        targets: Object.freeze([".rules-strip"]),
+        anchor: ".rules-strip",
+        preferredSide: "top",
+      }),
+      Object.freeze({
+        title: "Find the +2 in the preview",
+        text:
+          "Professor Paws committed Gust. After you place the Ember card Cinder Kit, its bonus badge and forecast will include Element Edge +2.",
+        objective:
+          "Start the lesson, place Cinder Kit in Lane 1, and review its complete total before committing.",
+        targets: Object.freeze(["#matchupForecast"]),
+        anchor: "#matchupForecast",
+        preferredSide: "left",
+      }),
+    ]),
+    readyText:
+      "Cinder Kit’s preview includes Element Edge +2 alongside Focus +2 and Vanguard +1.",
+    readyObjective:
+      "Compare Power 4 + bonuses 5 = total 9, then press the highlighted Commit button.",
     playerCards: Object.freeze(["cinder-kit", "kitewhisker", "wellwater-wisp"]),
     aiCards: Object.freeze(["dandelion-dash"]),
     expected: Object.freeze(["cinder-kit"]),
     aftermath:
-      "Cinder Kit’s Ember counter earned Element Edge +2. Its Lane 1 Vanguard bonus and one-card Focus were also added to its printed Power.",
+      "Cinder Kit’s Power 4 gained Element Edge +2, Focus +2, and Vanguard +1 for a total of 9. The counter helped, but the final total decided the lane.",
   }),
   Object.freeze({
     id: "focus",
@@ -189,11 +227,57 @@ const TUTORIAL_LESSONS = Object.freeze([
       "Vanguard starts in Lane 1, Link follows a different element, and Finisher closes a two- or three-card formation while facing a card.",
     objective:
       "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Tactics.",
+    introPages: Object.freeze([
+      Object.freeze({
+        title: "Recognise the three Tactic roles",
+        text:
+          "Vanguard’s shield earns +1 in Lane 1. Link’s chain earns +1 after a different element. Finisher’s sword earns +1 when last in a two- or three-card formation and facing a card.",
+        objective:
+          "Every card shows its Tactic role beneath its name and beside its ability.",
+        targets: Object.freeze(["#playerHand"]),
+        anchor: "#playerHand",
+        preferredSide: "top",
+      }),
+      Object.freeze({
+        title: "Placement activates the bonus",
+        text:
+          "Tactic bonuses depend on formation order, not printed Power. A card committed in the wrong position receives no Tactic bonus.",
+        objective:
+          "During the lesson, watch the formation preview add Tactic +1 only when each condition is satisfied.",
+        targets: Object.freeze(["#playerPlayZone", "#matchupForecast"]),
+        anchor: "#playerPlayZone",
+        preferredSide: "right",
+      }),
+    ]),
+    placementGuidance: Object.freeze([
+      Object.freeze({
+        title: "Lead with Vanguard",
+        text:
+          "Candle Pounce has the Vanguard role. Vanguard earns +1 only when committed in Lane 1.",
+        objective: "Place Candle Pounce in Lane 1 to activate Vanguard +1.",
+      }),
+      Object.freeze({
+        title: "Connect with Link",
+        text:
+          "Bubble Bengal has the Link role. Her Tide element differs from Candle Pounce’s Ember element.",
+        objective: "Place Bubble Bengal in Lane 2 to activate Link +1.",
+      }),
+      Object.freeze({
+        title: "Close with Finisher",
+        text:
+          "Dandelion Dash has the Finisher role. He will be last in a three-card formation and Professor Paws has a card in Lane 3.",
+        objective: "Place Dandelion Dash in Lane 3 to activate Finisher +1.",
+      }),
+    ]),
+    readyText:
+      "The preview shows Vanguard +1 in Lane 1, Link +1 in Lane 2, and Finisher +1 in Lane 3.",
+    readyObjective:
+      "Confirm all three Tactic +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aftermath:
-      "All three placement conditions activated for +1 each. Because several lanes won, you may now choose which winning card becomes your trophy.",
+      "Candle Pounce gained Vanguard +1 in Lane 1. Bubble Bengal gained Link +1 after a different element. Dandelion Dash gained Finisher +1 as the last paired card. Changing their order could disable these bonuses.",
     trophyChoice: true,
   }),
   Object.freeze({
@@ -288,6 +372,7 @@ const tutorial = {
   active: false,
   lessonIndex: 0,
   tourStep: 0,
+  introStep: 0,
   phase: "idle",
   runId: 0,
 };
@@ -385,6 +470,23 @@ function currentTutorialLesson() {
   return TUTORIAL_LESSONS[tutorial.lessonIndex] || null;
 }
 
+function currentTutorialIntroPages() {
+  const lesson = currentTutorialLesson();
+  if (!lesson) return [];
+  return lesson.introPages || [{
+    title: lesson.title,
+    text: lesson.intro,
+    objective: lesson.objective,
+    targets: [".tactics-board"],
+    anchor: ".tactics-board",
+    preferredSide: "left",
+  }];
+}
+
+function currentTutorialIntroPage() {
+  return currentTutorialIntroPages()[tutorial.introStep] || null;
+}
+
 function currentTutorialTourStep() {
   return TUTORIAL_TOUR_STEPS[tutorial.tourStep] || null;
 }
@@ -449,7 +551,11 @@ function applyTutorialHighlights() {
   }
 
   if (tutorial.phase === "intro") {
-    document.querySelector(".tactics-board")?.classList.add("tutorial-focus-target");
+    currentTutorialIntroPage()?.targets.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => {
+        element.classList.add("tutorial-focus-target");
+      });
+    });
     return;
   }
 
@@ -503,10 +609,11 @@ function getTutorialCoachAnchorContext() {
   if (!lesson) return null;
 
   if (tutorial.phase === "intro") {
+    const introPage = currentTutorialIntroPage();
     return {
-      element: document.querySelector(".tactics-board"),
-      key: `lesson:${lesson.id}:intro`,
-      preferredSide: "left",
+      element: document.querySelector(introPage?.anchor || ".tactics-board"),
+      key: `lesson:${lesson.id}:intro:${tutorial.introStep}`,
+      preferredSide: introPage?.preferredSide || "left",
     };
   }
 
@@ -714,17 +821,27 @@ function renderTutorialCoach() {
   ui.tutorialActionButton.hidden = false;
 
   if (tutorial.phase === "intro") {
-    ui.tutorialCoachTitle.textContent = lesson.title;
-    ui.tutorialCoachText.textContent = lesson.intro;
-    ui.tutorialObjective.textContent = lesson.objective;
-    ui.tutorialActionButton.textContent = "Start Lesson";
+    const introPages = currentTutorialIntroPages();
+    const introPage = currentTutorialIntroPage();
+    const finalIntroPage = tutorial.introStep === introPages.length - 1;
+    if (introPages.length > 1) {
+      ui.tutorialProgress.textContent =
+        `Lesson ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
+    }
+    ui.tutorialCoachTitle.textContent = introPage.title;
+    ui.tutorialCoachText.textContent = introPage.text;
+    ui.tutorialObjective.textContent = introPage.objective;
+    ui.tutorialActionButton.textContent = finalIntroPage ? "Start Lesson" : "Next";
   } else if (tutorial.phase === "play") {
     ui.tutorialActionButton.hidden = true;
     if (validFormation) {
       ui.tutorialCoachTitle.textContent = "Formation ready";
       ui.tutorialCoachText.textContent =
-        "The highlighted forecast shows the bonuses currently included in each lane total.";
-      ui.tutorialObjective.textContent = "Review the preview, then press the highlighted Commit button.";
+        lesson.readyText
+        || "The highlighted forecast shows the bonuses currently included in each lane total.";
+      ui.tutorialObjective.textContent =
+        lesson.readyObjective
+        || "Review the preview, then press the highlighted Commit button.";
     } else if (selected.length && !prefixFormation) {
       ui.tutorialCoachTitle.textContent = "Try a different order";
       ui.tutorialCoachText.textContent =
@@ -732,13 +849,14 @@ function renderTutorialCoach() {
       ui.tutorialObjective.textContent =
         "Click a placed card to return it to your hand, then follow the highlighted card.";
     } else {
-      ui.tutorialCoachTitle.textContent = lesson.title;
-      ui.tutorialCoachText.textContent = lesson.intro;
+      const placementGuidance = lesson.placementGuidance?.[selected.length];
+      ui.tutorialCoachTitle.textContent = placementGuidance?.title || lesson.title;
+      ui.tutorialCoachText.textContent = placementGuidance?.text || lesson.intro;
       const nextArt = lesson.expected[selected.length];
       const nextCard = CARD_LIBRARY.find((card) => card.art === nextArt);
-      ui.tutorialObjective.textContent = nextCard
+      ui.tutorialObjective.textContent = placementGuidance?.objective || (nextCard
         ? `Place ${nextCard.name} into Lane ${selected.length + 1}.`
-        : lesson.objective;
+        : lesson.objective);
     }
   } else if (tutorial.phase === "claim") {
     ui.tutorialCoachTitle.textContent = "Choose a winning trophy";
@@ -852,6 +970,7 @@ function loadTutorialLesson(index) {
   clearCinematicRemains();
   clearTrophyClaim();
   tutorial.lessonIndex = index;
+  tutorial.introStep = 0;
   tutorial.phase = "intro";
   state.round = index + 1;
   state.locked = true;
@@ -888,6 +1007,19 @@ function beginTutorialLesson() {
   const lesson = currentTutorialLesson();
   setMessage(lesson.title, lesson.objective);
   renderHand();
+  renderTutorialCoach();
+}
+
+function advanceTutorialIntro() {
+  if (!tutorial.active || tutorial.phase !== "intro") return;
+  const introPages = currentTutorialIntroPages();
+  if (tutorial.introStep >= introPages.length - 1) {
+    beginTutorialLesson();
+    return;
+  }
+  tutorial.introStep += 1;
+  const introPage = currentTutorialIntroPage();
+  setMessage(introPage.title, introPage.objective);
   renderTutorialCoach();
 }
 
@@ -967,6 +1099,7 @@ async function startTutorial() {
   tutorial.active = true;
   tutorial.lessonIndex = 0;
   tutorial.tourStep = 0;
+  tutorial.introStep = 0;
   tutorial.phase = "opening";
   state.difficulty = "guided";
   state.playerWins = [];
@@ -1236,9 +1369,14 @@ function renderOpponentTells() {
 function renderMatchupForecast() {
   if (state.locked) {
     ui.matchupForecast.style.gridTemplateColumns = "";
+    const lockedMessage = tutorial.active && tutorial.phase === "intro"
+      ? "Place a card after the lesson begins to reveal its active bonuses and expected lane total."
+      : state.dealing
+        ? "New cards are being dealt."
+        : "Cards committed. Watch each lane.";
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction forecast-locked">
-        ${state.dealing ? "New cards are being dealt." : "Cards committed. Watch each lane."}
+        ${lockedMessage}
       </span>
     `;
     return;
@@ -2889,7 +3027,7 @@ ui.tutorialActionButton.addEventListener("click", () => {
   if (tutorial.phase === "tour") {
     advanceTutorialTour();
   } else if (tutorial.phase === "intro") {
-    beginTutorialLesson();
+    advanceTutorialIntro();
   } else if (tutorial.phase === "aftermath") {
     loadTutorialLesson(tutorial.lessonIndex + 1);
   } else if (tutorial.phase === "complete") {

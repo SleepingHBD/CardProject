@@ -90,6 +90,14 @@ test("card Tactics reward different formation positions", () => {
   assert.equal(getTacticBonus(formation, 1, 3), 1);
   assert.equal(getTacticBonus(formation, 2, 3), 1);
   assert.equal(getTacticBonus(formation, 2, 2), 0);
+  assert.equal(
+    getTacticBonus([card("ember", 5, "link"), card("gust", 5, "vanguard")], 1, 2),
+    0,
+  );
+  assert.equal(
+    getTacticBonus([card("ember", 5, "vanguard"), card("ember", 5, "link")], 1, 2),
+    0,
+  );
   assert.equal(compareCards(card("tide", 5), card("tide", 5), 1, 0), "player");
 });
 
@@ -566,6 +574,9 @@ test("scripted tutorial lessons demonstrate their intended rule outcomes", () =>
   );
   assert.equal(elementLesson.winner, "player");
   assert.equal(elementLesson.lanes[0].player.edge, 2);
+  assert.equal(elementLesson.lanes[0].player.focus, 2);
+  assert.equal(elementLesson.lanes[0].player.tactic, 1);
+  assert.equal(elementLesson.lanes[0].player.total, 9);
 
   const focusLesson = resolveClashes(
     [card("ember", 8, "link")],
