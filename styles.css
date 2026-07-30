@@ -4924,7 +4924,7 @@ footer {
 }
 
 .beats-gust-tide {
-  bottom: 41px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -6031,7 +6031,7 @@ footer {
   }
 
   .beats-gust-tide {
-    bottom: 34px;
+    bottom: 3px;
   }
 
   .beats-tide-ember {
