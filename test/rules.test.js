@@ -426,11 +426,13 @@ test("fewer committed cards gain Focus", () => {
   );
 });
 
-test("three cards gain Overwhelm only when facing one card", () => {
+test("two or three cards gain scaled Overwhelm only in Lane 1 against one card", () => {
   assert.equal(OVERWHELM_BONUS, 2);
   assert.equal(getOverwhelmBonus(3, 1), 2);
+  assert.equal(getOverwhelmBonus(2, 1), 1);
   assert.equal(getOverwhelmBonus(3, 2), 0);
-  assert.equal(getOverwhelmBonus(2, 1), 0);
+  assert.equal(getOverwhelmBonus(2, 2), 0);
+  assert.equal(getOverwhelmBonus(1, 1), 0);
   assert.equal(getOverwhelmBonus(3, 1, 1), 0);
 });
 
@@ -524,6 +526,24 @@ test("Overwhelm lets three cards counter a lone focused card", () => {
   assert.equal(resolution.decidedBy, "clashes");
 });
 
+test("two-card Overwhelm balances a lone card's stronger Focus in Lane 1", () => {
+  const playerCards = [
+    card("ember", 6, "vanguard"),
+    card("tide", 6, "link"),
+  ];
+  const aiCards = [card("ember", 6, "vanguard")];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.equal(resolution.lanes[0].player.focus, 1);
+  assert.equal(resolution.lanes[0].player.overwhelm, 1);
+  assert.equal(resolution.lanes[0].ai.focus, 2);
+  assert.equal(resolution.lanes[0].ai.overwhelm, 0);
+  assert.equal(resolution.lanes[0].player.total, 9);
+  assert.equal(resolution.lanes[0].ai.total, 9);
+  assert.equal(resolution.winner, "player");
+  assert.equal(resolution.decidedBy, "pressure");
+});
+
 test("Overwhelm is a soft counter that power and Element Edge can beat", () => {
   const playerCards = [card("tide", 5)];
   const aiCards = [card("ember", 5), card("gust", 8), card("tide", 8)];
@@ -579,13 +599,17 @@ test("scripted tutorial lessons demonstrate their intended rule outcomes", () =>
   assert.equal(elementLesson.lanes[0].player.total, 9);
 
   const focusLesson = resolveClashes(
-    [card("ember", 8, "link")],
-    [card("tide", 6, "link"), card("ember", 3, "link")],
+    [card("ember", 8, "link"), card("ember", 6, "vanguard")],
+    [
+      card("tide", 6, "link"),
+      card("ember", 3, "link"),
+      card("gust", 4, "vanguard"),
+    ],
   );
-  assert.equal(focusLesson.lanes[0].player.focus, 2);
-  assert.equal(focusLesson.lanes[0].ai.focus, 1);
-  assert.equal(focusLesson.lanes[0].player.total, 10);
-  assert.equal(focusLesson.lanes[0].ai.total, 9);
+  assert.equal(focusLesson.lanes[0].player.focus, 1);
+  assert.equal(focusLesson.lanes[0].ai.focus, 0);
+  assert.equal(focusLesson.lanes[0].player.total, 9);
+  assert.equal(focusLesson.lanes[0].ai.total, 8);
 
   const tacticLesson = resolveClashes(
     [
@@ -618,10 +642,11 @@ test("scripted tutorial lessons demonstrate their intended rule outcomes", () =>
   assert.equal(overwhelmLesson.lanes[0].ai.total, 10);
 
   const pressureLesson = resolveClashes(
-    [card("ember", 8, "link"), card("tide", 6, "link")],
+    [card("ember", 6, "vanguard"), card("tide", 6, "link")],
     [card("ember", 6, "vanguard")],
   );
   assert.equal(pressureLesson.lanes[0].winner, "draw");
+  assert.equal(pressureLesson.lanes[0].player.overwhelm, 1);
   assert.equal(pressureLesson.winner, "player");
   assert.equal(pressureLesson.decidedBy, "pressure");
 });

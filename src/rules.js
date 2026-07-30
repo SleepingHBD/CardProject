@@ -102,7 +102,7 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "pressure-gambler",
     category: "commitment",
     label: "Pressure Gambler",
-    description: "Usually commits 3 cards for Pressure and Overwhelm against a lone card.",
+    description: "Usually commits 3 cards for Pressure and maximum Overwhelm against a lone card.",
   }),
   Object.freeze({
     id: "score-reader",
@@ -132,11 +132,14 @@ function getFocusBonus(commitmentCount) {
 const OVERWHELM_BONUS = 2;
 
 function getOverwhelmBonus(commitmentCount, opponentCommitmentCount, laneIndex = 0) {
-  return commitmentCount === MAX_COMMITMENT
-    && opponentCommitmentCount === 1
-    && laneIndex === 0
-    ? OVERWHELM_BONUS
-    : 0;
+  if (
+    commitmentCount <= 1
+    || opponentCommitmentCount !== 1
+    || laneIndex !== 0
+  ) {
+    return 0;
+  }
+  return Math.min(OVERWHELM_BONUS, commitmentCount - 1);
 }
 
 function buildTellClues(

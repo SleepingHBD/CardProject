@@ -18,7 +18,6 @@ const {
   resolveClashes,
   scoreClash,
   chooseTrophyReward,
-  OVERWHELM_BONUS,
   TROPHIES_PER_ELEMENT,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
@@ -232,12 +231,12 @@ const TUTORIAL_LESSONS = Object.freeze([
     intro:
       "Committing one card grants Focus +2. Two cards receive Focus +1 each, while three cards receive no Focus.",
     objective:
-      "Commit Sizzle Mittens alone. Its Focus lets it withstand Bubble Bengal’s Tide advantage.",
+      "Commit Sizzle Mittens first and Candle Pounce second. Their Focus +1 gives both paired cards an advantage over the professor’s three-card formation.",
     playerCards: Object.freeze(["sizzle-mittens", "candle-pounce", "moonpool-mouser"]),
-    aiCards: Object.freeze(["bubble-bengal", "teapot-tabby"]),
-    expected: Object.freeze(["sizzle-mittens"]),
+    aiCards: Object.freeze(["bubble-bengal", "teapot-tabby", "kitewhisker"]),
+    expected: Object.freeze(["sizzle-mittens", "candle-pounce"]),
     aftermath:
-      "Sizzle Mittens gained Focus +2 while each opposing card gained only Focus +1. That extra point overcame Bubble Bengal’s Element Edge.",
+      "Both of your paired cards gained Focus +1 because you committed two cards. Professor Paws committed three, so his cards gained no Focus. Sizzle Mittens’ extra point broke the Lane 1 tie after Bubble Bengal’s Element Edge.",
   }),
   Object.freeze({
     id: "tactics",
@@ -327,9 +326,9 @@ const TUTORIAL_LESSONS = Object.freeze([
     concept: "Lesson 4 · Overwhelm",
     title: "Punish a lone commitment",
     intro:
-      "When three cards face exactly one, Lane 1 gains Overwhelm +2. The larger formation spends more cards and receives no Focus.",
+      "When a larger formation faces exactly one card, Lane 1 gains Overwhelm: +1 for two cards or +2 for three. The bonus offsets the lone card’s stronger Focus, but every committed card is still spent.",
     objective:
-      "Order Sir Squall, Moonpool Mouser, then Comet Claw. Watch Overwhelm strengthen Lane 1.",
+      "Order Sir Squall, Moonpool Mouser, then Comet Claw. Watch the maximum Overwhelm +2 strengthen Lane 1.",
     playerCards: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
     aiCards: Object.freeze(["gale-groomer"]),
     expected: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
@@ -341,14 +340,14 @@ const TUTORIAL_LESSONS = Object.freeze([
     concept: "Lesson 5 · Pressure",
     title: "Break a tied round",
     intro:
-      "Pressure is not a clash bonus. If lane wins are tied, the side that committed more cards wins the round.",
+      "Pressure is not a clash bonus. If lane wins are tied, the side that committed more cards wins the round. In this 2v1 example, your Focus +1 and Overwhelm +1 balance the lone card’s Focus +2.",
     objective:
-      "Order Sizzle Mittens first and Bubble Bengal second. The paired clash will draw; Bubble Bengal will provide Pressure.",
-    playerCards: Object.freeze(["sizzle-mittens", "bubble-bengal", "cinder-kit"]),
+      "Order Candle Pounce first and Bubble Bengal second. The paired clash will draw; Bubble Bengal will provide Pressure.",
+    playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "cinder-kit"]),
     aiCards: Object.freeze(["candle-pounce"]),
-    expected: Object.freeze(["sizzle-mittens", "bubble-bengal"]),
+    expected: Object.freeze(["candle-pounce", "bubble-bengal"]),
     aftermath:
-      "The only paired clash drew 9–9. Your extra card broke the tied round through Pressure and became the automatic trophy.",
+      "The Candle Pounces drew 9–9. Yours combined Power 6, Vanguard +1, Focus +1, and Overwhelm +1; Professor Paws combined Power 6, Vanguard +1, and Focus +2. Bubble Bengal then broke the tied round through Pressure and became the automatic trophy.",
     pressureTrophy: true,
   }),
 ]);
@@ -1543,15 +1542,17 @@ function prepareAiPlan() {
 
 function renderOpponentTells() {
   const focus = getFocusBonus(state.aiPlan.length);
-  const formationBonus = focus
-    ? `Focus +${focus}`
-    : state.aiPlan.length === MAX_PLAY_SIZE
-      ? `Overwhelm +${OVERWHELM_BONUS} against 1 card`
-      : "No Focus";
+  const potentialOverwhelm = getOverwhelmBonus(state.aiPlan.length, 1);
+  const formationBonus = [
+    focus ? `Focus +${focus}` : "",
+    potentialOverwhelm
+      ? `Overwhelm +${potentialOverwhelm} against 1 card`
+      : "",
+  ].filter(Boolean).join(" · ") || "No Focus";
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
   const concealsCommitment = state.difficulty === "instinct";
   ui.commitmentHint.textContent = concealsCommitment
-    ? "Instinct · Commitment and formation bonus concealed"
+    ? "Instinct · Commitment and formation bonuses concealed"
     : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationBonus}`;
   const showsHabits = state.difficulty === "instinct" && state.aiTraits.length;
   ui.opponentHabits.hidden = !showsHabits;
@@ -1688,14 +1689,18 @@ function renderMatchupForecast() {
       : "No known bonus";
 
     if (concealsCommitment) {
-      const couldOverwhelm = selectedCards.length === MAX_PLAY_SIZE && index === 0;
+      const potentialOverwhelm = getOverwhelmBonus(
+        selectedCards.length,
+        1,
+        index,
+      );
       const maximumHiddenBonus = knownBonusTotal
         + ELEMENT_EDGE_BONUS
-        + (couldOverwhelm ? OVERWHELM_BONUS : 0);
+        + potentialOverwhelm;
       const hiddenWarning = selectedCards.length === 1 && index === 0
-        ? `A 3-card foe may gain Overwhelm +${OVERWHELM_BONUS}`
-        : couldOverwhelm
-          ? `Overwhelm +${OVERWHELM_BONUS} activates if the foe commits 1`
+        ? "A 2- or 3-card foe may gain Overwhelm +1 or +2"
+        : potentialOverwhelm
+          ? `Overwhelm +${potentialOverwhelm} activates if the foe commits 1`
           : "Foe presence and Element Edge hidden";
       return `
         <span class="forecast-chip forecast-sealed">
@@ -1988,12 +1993,16 @@ function getFormationBonusPreview(selectedCards, index) {
     : getOverwhelmBonus(selectedCards.length, state.aiPlan.length, index);
   const knownBonus = focus + tactic + knownOverwhelm;
   if (state.difficulty === "instinct") {
-    const couldOverwhelm = selectedCards.length === MAX_PLAY_SIZE && index === 0;
+    const potentialOverwhelm = getOverwhelmBonus(
+      selectedCards.length,
+      1,
+      index,
+    );
     const maximumBonus = knownBonus
       + ELEMENT_EDGE_BONUS
-      + (couldOverwhelm ? OVERWHELM_BONUS : 0);
-    const overwhelmDetail = couldOverwhelm
-      ? `; includes Overwhelm +${OVERWHELM_BONUS} if Professor Paws commits 1 card`
+      + potentialOverwhelm;
+    const overwhelmDetail = potentialOverwhelm
+      ? `; includes Overwhelm +${potentialOverwhelm} if Professor Paws commits 1 card`
       : "";
     return {
       text: `+${knownBonus}–${maximumBonus}`,
@@ -2122,13 +2131,14 @@ function updateFormationMessage() {
   const focusLabel = focus ? `Focus +${focus}` : "No Focus";
   const playerOverwhelm = getOverwhelmBonus(count, state.aiPlan.length);
   const opponentOverwhelm = getOverwhelmBonus(state.aiPlan.length, count);
+  const potentialPlayerOverwhelm = getOverwhelmBonus(count, 1);
   const detail = count === 0
     ? "Drag a card into the glowing lane, or click a card to place it."
     : state.difficulty === "instinct"
-      ? count === MAX_PLAY_SIZE
-        ? `No Focus. Overwhelm +${OVERWHELM_BONUS} activates if Professor Paws committed 1 card; his commitment stays concealed.`
-        : count === 1
-          ? `${focusLabel}. Beware: a 3-card enemy formation gains Overwhelm +${OVERWHELM_BONUS}; his commitment stays concealed.`
+      ? count === 1
+        ? `${focusLabel}. Beware: a 2- or 3-card enemy formation may gain Overwhelm +1 or +2; his commitment stays concealed.`
+        : potentialPlayerOverwhelm
+          ? `${focusLabel}. Overwhelm +${potentialPlayerOverwhelm} activates if Professor Paws committed 1 card; his commitment stays concealed.`
           : `${focusLabel}. Professor Paws' commitment stays concealed until the reveal.`
     : playerOverwhelm
       ? `Overwhelm +${playerOverwhelm} strengthens Lane 1, and your extra cards create Pressure.`
@@ -2145,16 +2155,19 @@ function updateFormationMessage() {
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
   const focus = getFocusBonus(count);
-  const overwhelmActive = getOverwhelmBonus(count, state.aiPlan.length) > 0;
-  const formationLabel = focus
-    ? `Focus +${focus}`
-    : count === MAX_PLAY_SIZE
-      ? state.difficulty === "instinct"
-        ? `Overwhelm +${OVERWHELM_BONUS} if the foe committed 1`
-        : overwhelmActive
-          ? `Overwhelm +${OVERWHELM_BONUS} active`
-          : "No Focus"
-      : "No Focus";
+  const overwhelm = state.difficulty === "instinct"
+    ? getOverwhelmBonus(count, 1)
+    : getOverwhelmBonus(count, state.aiPlan.length);
+  const formationParts = [];
+  if (focus) formationParts.push(`Focus +${focus}`);
+  if (overwhelm) {
+    formationParts.push(
+      state.difficulty === "instinct"
+        ? `Overwhelm +${overwhelm} if foe committed 1`
+        : `Overwhelm +${overwhelm} active`,
+    );
+  }
+  const formationLabel = formationParts.join(" · ") || "No Focus";
   ui.selectionCount.textContent = count
     ? `${count} of ${MAX_PLAY_SIZE} placed · ${formationLabel}`
     : `0 of ${MAX_PLAY_SIZE} placed`;

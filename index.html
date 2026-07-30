@@ -289,8 +289,8 @@
                       <dd>+2 when you commit one card, +1 for two, and +0 for three.</dd>
                     </div>
                     <div>
-                      <dt>Overwhelm +2</dt>
-                      <dd>Applied in Lane 1 when you commit three cards against one.</dd>
+                      <dt>Overwhelm +1/+2</dt>
+                      <dd>In Lane 1 against one card: +1 when you commit two, or +2 when you commit three.</dd>
                     </div>
                     <div class="tactic-score-part">
                       <dt>Role +1</dt>
@@ -573,7 +573,7 @@
           <span class="tutorial-menu-icon" aria-hidden="true">4</span>
           <span>
             <strong>Overwhelm</strong>
-            <small>See how a three-card formation punishes a lone commitment.</small>
+            <small>See how two or three cards gain strength against a lone commitment.</small>
           </span>
         </button>
         <button class="tutorial-menu-option" data-tutorial-lesson="4" type="button">
@@ -596,7 +596,7 @@
       <p class="eyebrow">CHOOSE YOUR TRIAL</p>
       <h2 id="difficultyTitle">How Much Will You Scout?</h2>
       <p class="difficulty-intro" id="difficultyIntro">
-        Guided, Veiled, and Blind show the professor's commitment and formation bonus.
+        Guided, Veiled, and Blind show the professor's commitment and formation bonuses.
         Instinct conceals both and replaces them with behavioral knowledge.
       </p>
       <div class="difficulty-options">
@@ -629,7 +629,7 @@
           <span class="difficulty-icon" aria-hidden="true">♞</span>
           <span>
             <strong>Instinct</strong>
-            <small>Hides every card, the commitment count, and formation bonus—but reveals <b>three persistent habits</b>.</small>
+            <small>Hides every card, the commitment count, and formation bonuses—but reveals <b>three persistent habits</b>.</small>
             <em>Read motives, formation patterns, and commitment behavior.</em>
           </span>
         </button>
@@ -728,7 +728,7 @@
         <div><span>5</span><p><b>Vanguard +1:</b> Activates when the Vanguard is committed in Lane 1.</p></div>
         <div><span>6</span><p><b>Link +1:</b> Activates in Lane 2 or Lane 3 when the card committed directly before the Link has a different element from the Link card.</p></div>
         <div><span>7</span><p><b>Finisher +1:</b> Activates when the Finisher is your last committed card in a two- or three-card formation and faces an opposing card.</p></div>
-        <div><span>8</span><p><b>Overwhelm:</b> When three cards face one, the three-card formation gains +2 in Lane 1.</p></div>
+        <div><span>8</span><p><b>Overwhelm:</b> Against one card, a two-card formation gains +1 in Lane 1 and a three-card formation gains +2.</p></div>
         <div><span>9</span><p><b>Pressure:</b> If clash wins are tied, the side that committed more cards wins the round. Every committed card is spent.</p></div>
         <div><span>10</span><p><b>Reshuffle:</b> Non-trophy cards enter the discard pile and return when the draw pile runs out.</p></div>
       </div>
@@ -776,7 +776,7 @@
             <li>The shared draw pile starts with 36 cards: two copies of every card in the archive.</li>
             <li>You and Professor Paws each draw up to six cards.</li>
             <li>The professor secretly commits one to three cards before you build your formation.</li>
-            <li>His commitment count and formation bonus—Focus or Overwhelm—are visible in Guided, Veiled, and Blind, but concealed in Instinct.</li>
+            <li>His commitment count, Focus, and conditional Overwhelm are visible in Guided, Veiled, and Blind, but concealed in Instinct.</li>
           </ul>
         </section>
 
@@ -786,8 +786,8 @@
           <dl class="rulebook-definitions">
             <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
             <div><dt>Veiled</dt><dd>Shows either the element or power range of each card.</dd></div>
-            <div><dt>Blind</dt><dd>Seals all individual card clues but still shows the commitment count and formation bonus.</dd></div>
-            <div><dt>Instinct</dt><dd>Also conceals commitment and formation bonus, but reveals one motive, one formation habit, and one commitment habit. Habits persist for the duel and are tendencies, not guarantees.</dd></div>
+            <div><dt>Blind</dt><dd>Seals all individual card clues but still shows the commitment count and formation bonuses.</dd></div>
+            <div><dt>Instinct</dt><dd>Also conceals commitment and formation bonuses, but reveals one motive, one formation habit, and one commitment habit. Habits persist for the duel and are tendencies, not guarantees.</dd></div>
           </dl>
           <p>Difficulty changes the information you receive, not the scoring rules or Professor Paws' card strength.</p>
         </section>
@@ -814,11 +814,11 @@
           <span class="rulebook-number" aria-hidden="true">4</span>
           <h3 id="rulebookTurn">How to play a round</h3>
           <ol class="rulebook-steps">
-            <li><b>Scout.</b> Read the professor's commitment, formation bonus, and card clues—or, in Instinct, use the three known habits instead.</li>
+            <li><b>Scout.</b> Read the professor's commitment, formation bonuses, and card clues—or, in Instinct, use the three known habits instead.</li>
             <li><b>Build.</b> Drag or click one to three cards into your lanes. You may return or reorder them before committing.</li>
             <li><b>Preview.</b> Check the displayed bonus and forecast for each paired lane.</li>
             <li><b>Commit.</b> Lock your formation. Every committed card will be spent after the round.</li>
-            <li><b>Clash.</b> Paired cards resolve from Lane 1 to Lane 3. Three cards Overwhelm one; extra, unpaired cards become Pressure.</li>
+            <li><b>Clash.</b> Paired cards resolve from Lane 1 to Lane 3. Two or three cards Overwhelm one in Lane 1; extra, unpaired cards become Pressure.</li>
             <li><b>Claim.</b> After a normal win with multiple winning lanes, choose which winning card becomes your trophy. Pressure trophies remain automatic.</li>
             <li><b>Review.</b> Study every total and trophy result, then press <b>Next Round</b>.</li>
           </ol>
@@ -834,7 +834,7 @@
             <li class="rulebook-tactic"><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-shield"></use></svg><span><b>Vanguard +1:</b> Play it in Lane 1.</span></li>
             <li class="rulebook-tactic"><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-chain"></use></svg><span><b>Link +1:</b> A Link can activate in Lane 2 or Lane 3. It gains +1 when the card committed directly before the Link has a different element from the Link card itself.</span></li>
             <li class="rulebook-tactic"><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg><span><b>Finisher +1:</b> Play it last in a two- or three-card formation. It must face an opposing card.</span></li>
-            <li><b>Overwhelm +2:</b> awarded in Lane 1 when your three-card formation faces exactly one opposing card.</li>
+            <li><b>Overwhelm:</b> awarded in Lane 1 when a larger formation faces exactly one opposing card: +1 for two committed cards or +2 for three.</li>
           </ul>
           <p><b>Formation Roles do not restrict placement.</b> You may commit any card in any available lane. If its Role condition is not met, the card still clashes normally but receives no Role +1.</p>
           <p>The higher total wins the lane. Equal totals draw that lane. Element Edge is helpful, but never an automatic win.</p>
@@ -850,7 +850,7 @@
             <li>If both lane wins and commitments are tied, the round is a draw and awards no trophy.</li>
           </ul>
           <p><b>Pressure cannot overturn a normal loss.</b> A 0–1 result remains a loss even if you committed more cards.</p>
-          <p><b>Overwhelm acts before Pressure.</b> In a three-versus-one round, +2 changes the Lane 1 clash total; Pressure only breaks a tied lane score afterward.</p>
+          <p><b>Overwhelm acts before Pressure.</b> In a two-versus-one or three-versus-one round, +1 or +2 changes the Lane 1 clash total; Pressure only breaks a tied lane score afterward.</p>
         </section>
 
         <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookPressure">
@@ -901,12 +901,12 @@
           <h3 id="rulebookStrategy">Subtle strategy</h3>
           <div class="strategy-grid">
             <p><b>Plan the trophy.</b><span>Win with more than one element to choose the trophy afterward. For Pressure, make the needed element your first extra card.</span></p>
-            <p><b>Read the commitment triangle.</b><span>One card has strong Focus against two; two keeps Focus against three; three gains Overwhelm against one.</span></p>
+            <p><b>Read the commitment triangle.</b><span>One card gains Focus +2. Two cards gain Focus +1 and Overwhelm +1 against one. Three cards trade Focus for Overwhelm +2 against one.</span></p>
             <p><b>Activate Formation Roles.</b><span>Start with Vanguard, place Link after a card whose element differs from the Link card, and end a longer play with Finisher.</span></p>
             <p><b>Risk the Finisher.</b><span>Finisher gains +1 only when an opposing card is there to clash with it.</span></p>
             <p><b>Read the range.</b><span>Against a hidden exact power, compare your lowest and highest possible totals before risking a valuable card.</span></p>
             <p><b>Avoid empty progress.</b><span>A third trophy of one element is allowed, but it does not fill one of your remaining elemental slots.</span></p>
-            <p><b>Spend three cards deliberately.</b><span>Use three to punish a likely lone card with Overwhelm or to threaten Pressure, but remember that all three cards are spent.</span></p>
+            <p><b>Scale your commitment deliberately.</b><span>Two cards offer Focus +1 and Overwhelm +1 against one; three cards offer maximum Overwhelm +2. Every committed card is still spent.</span></p>
           </div>
         </section>
       </div>
