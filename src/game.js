@@ -195,10 +195,10 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Help stays within reach",
     text:
-      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Score Guide and Previous Rounds History.",
+      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. Previous Rounds History stays beside the draw pile.",
     objective:
-      "Use these references whenever you need them during training or a duel.",
-    targets: Object.freeze(["#clashScoreGuide", "#previousRoundsHistoryButton", ".top-actions"]),
+      "Use the Duel Codex for quick scoring reminders, the Rulebook for full explanations, and Previous Rounds History to review completed plays.",
+    targets: Object.freeze(["#howButton", "#previousRoundsHistoryButton", ".top-actions"]),
     anchor: ".top-actions",
     preferredSide: "bottom",
   }),
@@ -576,10 +576,6 @@ const ui = {
   previousRoundsHistoryCount: document.querySelector("#previousRoundsHistoryCount"),
   previousRoundsHistoryDialog: document.querySelector("#previousRoundsHistoryDialog"),
   previousRoundsHistoryList: document.querySelector("#previousRoundsHistoryList"),
-  clashScoreGuide: document.querySelector("#clashScoreGuide"),
-  clashScorePanel: document.querySelector("#clashScorePanel"),
-  clashScoreDragHandle: document.querySelector("#clashScoreDragHandle"),
-  clashScoreClose: document.querySelector("#clashScoreClose"),
   versusBadge: document.querySelector("#versusBadge"),
   howDialog: document.querySelector("#howDialog"),
   rulebookDialog: document.querySelector("#rulebookDialog"),
@@ -635,11 +631,6 @@ const ui = {
 };
 let draggedCardId = null;
 let settingsReturnTarget = "main";
-const clashScoreDrag = {
-  pointerId: null,
-  offsetX: 0,
-  offsetY: 0,
-};
 const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
@@ -1659,52 +1650,6 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   }
 }
 
-function clampClashScorePosition(left, top) {
-  const margin = 8;
-  const panelRect = ui.clashScorePanel.getBoundingClientRect();
-  return {
-    left: Math.min(
-      Math.max(margin, left),
-      Math.max(margin, window.innerWidth - panelRect.width - margin),
-    ),
-    top: Math.min(
-      Math.max(margin, top),
-      Math.max(margin, window.innerHeight - panelRect.height - margin),
-    ),
-  };
-}
-
-function moveClashScorePanel(left, top) {
-  const position = clampClashScorePosition(left, top);
-  ui.clashScorePanel.style.left = `${position.left}px`;
-  ui.clashScorePanel.style.top = `${position.top}px`;
-  ui.clashScorePanel.style.right = "auto";
-}
-
-function resetClashScorePanelPosition() {
-  ui.clashScorePanel.style.removeProperty("left");
-  ui.clashScorePanel.style.removeProperty("top");
-  ui.clashScorePanel.style.removeProperty("right");
-}
-
-function syncClashScorePanelPosition() {
-  if (window.matchMedia("(max-width: 640px)").matches) {
-    resetClashScorePanelPosition();
-    return;
-  }
-  const panelRect = ui.clashScorePanel.getBoundingClientRect();
-  moveClashScorePanel(panelRect.left, panelRect.top);
-}
-
-function stopClashScoreDrag(event) {
-  if (event.pointerId !== clashScoreDrag.pointerId) return;
-  if (ui.clashScoreDragHandle.hasPointerCapture(event.pointerId)) {
-    ui.clashScoreDragHandle.releasePointerCapture(event.pointerId);
-  }
-  clashScoreDrag.pointerId = null;
-  ui.clashScorePanel.classList.remove("is-dragging");
-}
-
 function clampTutorialCoachPosition(left, top) {
   const margin = 8;
   const panelRect = ui.tutorialCoach.getBoundingClientRect();
@@ -1736,13 +1681,6 @@ function stopTutorialCoachDrag(event) {
   }
   tutorialCoachDrag.pointerId = null;
   ui.tutorialCoach.classList.remove("is-dragging");
-}
-
-function closeClashScoreGuide() {
-  ui.clashScoreGuide.removeAttribute("open");
-  window.requestAnimationFrame(() => {
-    ui.clashScoreGuide.querySelector("summary").focus();
-  });
 }
 
 function shuffle(items) {
@@ -3629,40 +3567,6 @@ ui.archiveResetFilters.addEventListener("click", () => {
   state.archiveRarities = Object.keys(RARITY_SORT_ORDER);
   renderGallery();
 });
-ui.clashScoreDragHandle.addEventListener("pointerdown", (event) => {
-  if (event.button !== 0 || event.target.closest("button")) return;
-  const panelRect = ui.clashScorePanel.getBoundingClientRect();
-  clashScoreDrag.pointerId = event.pointerId;
-  clashScoreDrag.offsetX = event.clientX - panelRect.left;
-  clashScoreDrag.offsetY = event.clientY - panelRect.top;
-  ui.clashScoreDragHandle.setPointerCapture(event.pointerId);
-  ui.clashScorePanel.classList.add("is-dragging");
-  event.preventDefault();
-});
-ui.clashScoreDragHandle.addEventListener("pointermove", (event) => {
-  if (event.pointerId !== clashScoreDrag.pointerId) return;
-  moveClashScorePanel(
-    event.clientX - clashScoreDrag.offsetX,
-    event.clientY - clashScoreDrag.offsetY,
-  );
-});
-ui.clashScoreDragHandle.addEventListener("pointerup", stopClashScoreDrag);
-ui.clashScoreDragHandle.addEventListener("pointercancel", stopClashScoreDrag);
-ui.clashScoreDragHandle.addEventListener("lostpointercapture", () => {
-  clashScoreDrag.pointerId = null;
-  ui.clashScorePanel.classList.remove("is-dragging");
-});
-ui.clashScoreClose.addEventListener("pointerdown", (event) => {
-  event.stopPropagation();
-  closeClashScoreGuide();
-});
-ui.clashScoreClose.addEventListener("click", (event) => {
-  event.stopPropagation();
-  if (ui.clashScoreGuide.open) closeClashScoreGuide();
-});
-ui.clashScoreGuide.addEventListener("toggle", () => {
-  if (ui.clashScoreGuide.open) syncClashScorePanelPosition();
-});
 ui.tutorialCoachDragHandle.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
   const panelRect = ui.tutorialCoach.getBoundingClientRect();
@@ -3724,9 +3628,6 @@ ui.tutorialCoachDragHandle.addEventListener("keydown", (event) => {
   event.preventDefault();
 });
 window.addEventListener("resize", () => {
-  if (ui.clashScoreGuide.open) {
-    syncClashScorePanelPosition();
-  }
   if (tutorial.active && !ui.tutorialCoach.hidden) {
     positionTutorialCoach();
   }

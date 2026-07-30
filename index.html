@@ -261,66 +261,6 @@
             <div class="deck-status">
               <span class="mini-deck" aria-hidden="true"></span>
               <span id="deckStatusText"><strong id="deckCount">0</strong> cards in draw pile</span>
-              <details class="clash-score-guide" id="clashScoreGuide">
-                <summary>
-                  <span>Score Guide</span>
-                </summary>
-                <div class="clash-score-panel" id="clashScorePanel">
-                  <div class="clash-score-panel-heading" id="clashScoreDragHandle">
-                    <div>
-                      <p>Scoring Desk</p>
-                      <strong>Clash Total wins a lane. Round Points win the round.</strong>
-                    </div>
-                    <span class="clash-score-drag-hint">Drag to move</span>
-                    <button
-                      class="clash-score-close"
-                      id="clashScoreClose"
-                      type="button"
-                      aria-label="Close Score Guide"
-                    >×</button>
-                  </div>
-                  <div class="score-guide-columns">
-                    <section class="score-guide-block clash-guide-block" aria-labelledby="scoreGuideClash">
-                      <span class="score-guide-kicker">1 · How to see who wins each lane</span>
-                      <h3 id="scoreGuideClash">Clash Total</h3>
-                      <p class="score-guide-formula">Power + Edge + Role = Clash Total</p>
-                      <dl class="score-guide-key">
-                        <div><dt>Power</dt><dd>The printed number.</dd></div>
-                        <div><dt>Edge +2</dt><dd>Your element beats the opposing element.</dd></div>
-                        <div><dt>Role +1</dt><dd>Your card meets its Role condition.</dd></div>
-                      </dl>
-                      <div class="score-guide-role-grid" aria-label="Formation Role reminders">
-                        <p><b><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-shield"></use></svg> Vanguard</b><span>+1 in Lane 1.</span></p>
-                        <p><b><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-chain"></use></svg> Link</b><span>+1 after a different element.</span></p>
-                        <p><b><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg> Finisher</b><span>+1 when last, in a 2–3 card formation, and opposed.</span></p>
-                      </div>
-                      <p class="score-guide-verdict"><b>Higher Clash Total wins that lane.</b> Equal totals draw. Roles never restrict placement.</p>
-                    </section>
-
-                    <section class="score-guide-block round-guide-block" aria-labelledby="scoreGuideRound">
-                      <span class="score-guide-kicker">2 · How to see who wins the round</span>
-                      <h3 id="scoreGuideRound">Round Points</h3>
-                      <div class="formation-guide-formula" aria-label="Number of won lanes times two, plus number of extra cards times one, equals Round Points">
-                        <span><b>Won lanes</b><em>× 2</em></span>
-                        <i>+</i>
-                        <span><b>Extra cards</b><em>× 1</em></span>
-                        <i>=</i>
-                        <strong>Round Points</strong>
-                      </div>
-                      <dl class="score-guide-key round-score-key">
-                        <div><dt>Won lane</dt><dd>A lane where your Clash Total was higher.</dd></div>
-                        <div><dt>Extra card</dt><dd>Your card has no opposing card in its lane.</dd></div>
-                      </dl>
-                      <div class="score-guide-examples" aria-label="Common Round Point examples">
-                        <p><span>1 vs 1</span><b>Win lane = 2–0</b></p>
-                        <p><span>1 vs 2</span><b>Win lane = 2–1</b></p>
-                        <p><span>1 vs 3</span><b>Win lane = 2–2</b></p>
-                      </div>
-                      <p class="score-guide-verdict"><b>More Round Points wins the round.</b> Equal points draw. Extra cards never clash or alter Clash Total.</p>
-                    </section>
-                  </div>
-                </div>
-              </details>
               <button
                 class="previous-rounds-history-button"
                 id="previousRoundsHistoryButton"
