@@ -69,8 +69,8 @@ const AI_FORMATION_TRAITS = Object.freeze([
   Object.freeze({
     id: "tactic-planner",
     category: "formation",
-    label: "Tactic Planner",
-    description: "Usually orders his cards to activate as many Tactics as possible.",
+    label: "Role Planner",
+    description: "Usually orders his cards to activate as many Formation Roles as possible.",
   }),
   Object.freeze({
     id: "strong-opener",
@@ -236,7 +236,7 @@ function scoreClash(
       base: playerCard.power,
       edge: playerEdge,
       tactic: playerTactic,
-      tacticName: TACTICS[playerCard.tactic]?.label || "Tactic",
+      tacticName: TACTICS[playerCard.tactic]?.label || "Role",
       focus: playerFocus,
       overwhelm: playerOverwhelm,
       total: playerCard.power
@@ -249,7 +249,7 @@ function scoreClash(
       base: aiCard.power,
       edge: aiEdge,
       tactic: aiTactic,
-      tacticName: TACTICS[aiCard.tactic]?.label || "Tactic",
+      tacticName: TACTICS[aiCard.tactic]?.label || "Role",
       focus: aiFocus,
       overwhelm: aiOverwhelm,
       total: aiCard.power

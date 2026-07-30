@@ -132,7 +132,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Choose from your hand",
     text:
-      "These are the cards currently available to you. Every card has an element, printed Power, and a positional Tactic role.",
+      "These are the cards currently available to you. Every card has an element, printed Power, and a Formation Role.",
     objective:
       "During a lesson, drag a card toward the board or click it to place it in the next lane.",
     targets: Object.freeze(["#playerHand"]),
@@ -146,7 +146,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "You may commit up to three cards. They enter Lane 1, Lane 2, and Lane 3 in the order you place them.",
     objective:
-      "Order matters because Vanguard, Link, and Finisher Tactics activate in different positions.",
+      "Order matters because Vanguard, Link, and Finisher Role bonuses activate under different conditions.",
     targets: Object.freeze(["#playerPlayZone"]),
     anchor: "#playerPlayZone",
     preferredSide: "right",
@@ -233,12 +233,12 @@ const TUTORIAL_LESSONS = Object.freeze([
   }),
   Object.freeze({
     id: "tactics",
-    concept: "Lesson 3 · Tactic roles",
+    concept: "Lesson 3 · Formation Roles",
     title: "Build a three-role formation",
     intro:
       "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. Finisher earns +1 as the last paired card in a two- or three-card formation.",
     objective:
-      "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Tactics.",
+      "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Formation Role bonuses.",
     introPages: Object.freeze([
       Object.freeze({
         title: "Vanguard: commit it in Lane 1",
@@ -253,9 +253,9 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Link: check the card directly before it",
         text:
-          "A Link card can earn Link +1 in Lane 2 or Lane 3. In Lane 2, the Link checks your card in Lane 1. In Lane 3, the Link checks your card in Lane 2. It gains +1 only when that preceding card has a different element from the Link card itself.",
+          "A Link card can earn Link +1 in Lane 2 or Lane 3. It gains +1 only when the card committed directly before the Link has a different element from the Link card itself.",
         objective:
-          "Link cannot activate in Lane 1 because no card comes before it. A Tide Link after Ember earns +1; a Tide Link after Tide earns no bonus.",
+          "For example, a Tide Link committed after an Ember card earns +1; a Tide Link committed after another Tide card earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -271,11 +271,11 @@ const TUTORIAL_LESSONS = Object.freeze([
         preferredSide: "right",
       }),
       Object.freeze({
-        title: "Placement decides whether Tactic +1 activates",
+        title: "Placement decides whether Role +1 activates",
         text:
-          "A Tactic role never prevents you from committing a card. It only decides whether that card earns Tactic +1. If its exact condition is not met, the card keeps its printed Power and other bonuses but receives no Tactic bonus.",
+          "A Formation Role never prevents you from committing a card. It only decides whether that card earns Role +1. If its exact condition is not met, the card keeps its printed Power and other bonuses but receives no Role bonus.",
         objective:
-          "During this lesson, the formation preview will show exactly which cards receive Tactic +1 before you commit.",
+          "During this lesson, the formation preview will show exactly which cards receive Role +1 before you commit.",
         targets: Object.freeze(["#playerPlayZone", "#matchupForecast"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -291,7 +291,7 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Connect with Link",
         text:
-          "Bubble Bengal is a Tide Link. In Lane 2, she checks the card directly before her: Candle Pounce in Lane 1. The card before the Link is Ember, which differs from Bubble Bengal’s Tide element, so Link +1 will activate. A Link can also activate in Lane 3 by checking Lane 2.",
+          "Bubble Bengal is a Tide Link. Candle Pounce was committed directly before her. The card before the Link is Ember, which differs from Bubble Bengal’s Tide element, so Link +1 will activate.",
         objective:
           "Place Bubble Bengal in Lane 2. Because the card directly before the Link has a different element from her Tide element, she receives Link +1.",
       }),
@@ -306,7 +306,7 @@ const TUTORIAL_LESSONS = Object.freeze([
     readyText:
       "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Lane 3 is last and paired.",
     readyObjective:
-      "Confirm all three Tactic +1 bonuses in the forecast, then commit the formation.",
+      "Confirm all three Role +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
@@ -1706,7 +1706,7 @@ function cardMarkup(
   const isPressureCard = displayMode === "pressure";
   const interactionLabel = isFormationCard
     ? `Remove ${card.name} from lane ${selectedIndex + 1}`
-    : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Tactic to the next lane`;
+    : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
       <span class="card-bonus-badge preview-badge${formationBonus.pressure ? " pressure-badge" : ""}" aria-label="${formationBonus.label}">
@@ -2268,7 +2268,7 @@ function getBonusBreakdown(scoring) {
   if (scoring.focus) parts.push(`Focus +${scoring.focus}`);
   if (scoring.edge) parts.push(`Element Edge +${scoring.edge}`);
   if (scoring.tactic) {
-    parts.push(`${scoring.tacticName || "Tactic"} +${scoring.tactic}`);
+    parts.push(`${scoring.tacticName || "Role"} +${scoring.tactic}`);
   }
   if (scoring.overwhelm) parts.push(`Overwhelm +${scoring.overwhelm}`);
   return {
