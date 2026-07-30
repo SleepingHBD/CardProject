@@ -88,6 +88,8 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     objective:
       "Win a full duel by collecting two Ember, two Gust, and two Tide trophies before Professor Paws.",
     targets: Object.freeze(["#roundScore", "#playerCollection", "#aiCollection"]),
+    anchor: "#roundScore",
+    preferredSide: "bottom",
   }),
   Object.freeze({
     id: "plan",
@@ -98,6 +100,8 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     objective:
       "Check this panel before choosing cards. Harder modes conceal more information.",
     targets: Object.freeze([".tactics-board"]),
+    anchor: ".tactics-board",
+    preferredSide: "left",
   }),
   Object.freeze({
     id: "hand",
@@ -108,6 +112,8 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     objective:
       "During a lesson, drag a card toward the board or click it to place it in the next lane.",
     targets: Object.freeze(["#playerHand"]),
+    anchor: "#playerHand",
+    preferredSide: "top",
   }),
   Object.freeze({
     id: "lanes",
@@ -118,6 +124,8 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     objective:
       "Order matters because Vanguard, Link, and Finisher Tactics activate in different positions.",
     targets: Object.freeze(["#playerPlayZone"]),
+    anchor: "#playerPlayZone",
+    preferredSide: "right",
   }),
   Object.freeze({
     id: "forecast",
@@ -128,6 +136,8 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     objective:
       "Review the preview before committing. You can return a placed card to your hand and change the order first.",
     targets: Object.freeze(["#matchupForecast", "#playSelectedButton"]),
+    anchor: "#matchupForecast",
+    preferredSide: "left",
   }),
   Object.freeze({
     id: "references",
@@ -138,6 +148,8 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     objective:
       "Use these references whenever you need them. Begin Lesson 1 when you are ready.",
     targets: Object.freeze(["#clashScoreGuide", ".top-actions"]),
+    anchor: ".top-actions",
+    preferredSide: "bottom",
   }),
 ]);
 const TUTORIAL_LESSONS = Object.freeze([
@@ -365,6 +377,8 @@ const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
   offsetY: 0,
+  anchorKey: null,
+  manual: false,
 };
 
 function currentTutorialLesson() {
@@ -471,6 +485,190 @@ function applyTutorialHighlights() {
   }
 }
 
+function getTutorialCoachAnchorContext() {
+  if (!tutorial.active) return null;
+
+  if (tutorial.phase === "tour") {
+    const tourStep = currentTutorialTourStep();
+    return tourStep
+      ? {
+          element: document.querySelector(tourStep.anchor),
+          key: `tour:${tourStep.id}`,
+          preferredSide: tourStep.preferredSide,
+        }
+      : null;
+  }
+
+  const lesson = currentTutorialLesson();
+  if (!lesson) return null;
+
+  if (tutorial.phase === "intro") {
+    return {
+      element: document.querySelector(".tactics-board"),
+      key: `lesson:${lesson.id}:intro`,
+      preferredSide: "left",
+    };
+  }
+
+  if (tutorial.phase === "play") {
+    const selected = selectedTutorialTemplates();
+    if (isTutorialSelectionValid()) {
+      return {
+        element: ui.matchupForecast,
+        key: `lesson:${lesson.id}:formation-ready`,
+        preferredSide: "left",
+      };
+    }
+    if (selected.length && !isTutorialSelectionPrefix()) {
+      return {
+        element: ui.playerPlayZone,
+        key: `lesson:${lesson.id}:wrong-order:${selected.join("-")}`,
+        preferredSide: "right",
+      };
+    }
+    const nextArt = lesson.expected[selected.length];
+    const recommendedCard = nextArt
+      ? ui.playerHand.querySelector(`[data-card-template="${nextArt}"]`)
+      : null;
+    return {
+      element: recommendedCard || ui.playerPlayZone,
+      key: `lesson:${lesson.id}:next-card:${selected.length}`,
+      preferredSide: recommendedCard ? "top" : "right",
+    };
+  }
+
+  if (tutorial.phase === "claim") {
+    return {
+      element: ui.trophyClaim,
+      key: `lesson:${lesson.id}:claim`,
+      preferredSide: "left",
+    };
+  }
+
+  if (tutorial.phase === "aftermath") {
+    return {
+      element: ui.playerPlayZone,
+      key: `lesson:${lesson.id}:aftermath`,
+      preferredSide: "right",
+    };
+  }
+
+  if (tutorial.phase === "complete") {
+    return {
+      element: ui.playerCollection,
+      key: `lesson:${lesson.id}:complete`,
+      preferredSide: "left",
+    };
+  }
+
+  return null;
+}
+
+function getRectOverlapArea(first, second) {
+  const width = Math.max(
+    0,
+    Math.min(first.right, second.right) - Math.max(first.left, second.left),
+  );
+  const height = Math.max(
+    0,
+    Math.min(first.bottom, second.bottom) - Math.max(first.top, second.top),
+  );
+  return width * height;
+}
+
+function getTutorialCoachCandidate(side, anchorRect, panelRect, gap, margin) {
+  const centerX = anchorRect.left + anchorRect.width / 2;
+  const centerY = anchorRect.top + anchorRect.height / 2;
+  let left = centerX - panelRect.width / 2;
+  let top = centerY - panelRect.height / 2;
+
+  if (side === "right") left = anchorRect.right + gap;
+  if (side === "left") left = anchorRect.left - panelRect.width - gap;
+  if (side === "bottom") top = anchorRect.bottom + gap;
+  if (side === "top") top = anchorRect.top - panelRect.height - gap;
+
+  left = Math.min(
+    Math.max(margin, left),
+    Math.max(margin, window.innerWidth - panelRect.width - margin),
+  );
+  top = Math.min(
+    Math.max(margin, top),
+    Math.max(margin, window.innerHeight - panelRect.height - margin),
+  );
+
+  const rect = {
+    left,
+    top,
+    right: left + panelRect.width,
+    bottom: top + panelRect.height,
+  };
+  return {
+    side,
+    left,
+    top,
+    overlap: getRectOverlapArea(rect, anchorRect),
+  };
+}
+
+function positionTutorialCoach() {
+  const context = getTutorialCoachAnchorContext();
+  if (!context?.element || ui.tutorialCoach.hidden) return;
+
+  const newAnchor = tutorialCoachDrag.anchorKey !== context.key;
+  if (newAnchor) {
+    tutorialCoachDrag.anchorKey = context.key;
+    tutorialCoachDrag.manual = false;
+  }
+
+  if (tutorialCoachDrag.manual) {
+    ui.tutorialCoach.classList.remove("is-anchored");
+    ui.tutorialCoach.removeAttribute("data-anchor-side");
+    const panelRect = ui.tutorialCoach.getBoundingClientRect();
+    moveTutorialCoach(panelRect.left, panelRect.top);
+    return;
+  }
+
+  let anchorRect = context.element.getBoundingClientRect();
+  if (
+    newAnchor
+    && (anchorRect.bottom < 68 || anchorRect.top > window.innerHeight - 44)
+  ) {
+    context.element.scrollIntoView({ block: "center", inline: "nearest" });
+    anchorRect = context.element.getBoundingClientRect();
+  }
+
+  const panelRect = ui.tutorialCoach.getBoundingClientRect();
+  const preferredOrder = [
+    context.preferredSide,
+    "right",
+    "left",
+    "bottom",
+    "top",
+  ].filter((side, index, sides) => side && sides.indexOf(side) === index);
+  const candidates = preferredOrder.map((side, order) => ({
+    ...getTutorialCoachCandidate(side, anchorRect, panelRect, 16, 8),
+    order,
+  }));
+  candidates.sort((first, second) =>
+    first.overlap - second.overlap || first.order - second.order);
+  const chosen = candidates[0];
+  const position = moveTutorialCoach(chosen.left, chosen.top);
+  const anchorCenterX = anchorRect.left + anchorRect.width / 2;
+  const anchorCenterY = anchorRect.top + anchorRect.height / 2;
+  const arrowX = Math.min(
+    Math.max(26, anchorCenterX - position.left),
+    Math.max(26, panelRect.width - 26),
+  );
+  const arrowY = Math.min(
+    Math.max(26, anchorCenterY - position.top),
+    Math.max(26, panelRect.height - 26),
+  );
+  ui.tutorialCoach.style.setProperty("--tutorial-arrow-x", `${arrowX}px`);
+  ui.tutorialCoach.style.setProperty("--tutorial-arrow-y", `${arrowY}px`);
+  ui.tutorialCoach.dataset.anchorSide = chosen.side;
+  ui.tutorialCoach.classList.add("is-anchored");
+}
+
 function renderTutorialCoach() {
   if (!tutorial.active) {
     ui.tutorialCoach.hidden = true;
@@ -498,8 +696,7 @@ function renderTutorialCoach() {
     ui.tutorialActionButton.textContent = finalTourStep ? "Begin Lesson 1" : "Next";
     window.requestAnimationFrame(() => {
       applyTutorialHighlights();
-      const panelRect = ui.tutorialCoach.getBoundingClientRect();
-      moveTutorialCoach(panelRect.left, panelRect.top);
+      positionTutorialCoach();
     });
     return;
   }
@@ -566,8 +763,7 @@ function renderTutorialCoach() {
 
   window.requestAnimationFrame(() => {
     applyTutorialHighlights();
-    const panelRect = ui.tutorialCoach.getBoundingClientRect();
-    moveTutorialCoach(panelRect.left, panelRect.top);
+    positionTutorialCoach();
   });
 }
 
@@ -585,7 +781,11 @@ function stopTutorialMode() {
   if (tutorial.active) tutorial.runId += 1;
   tutorial.active = false;
   tutorial.phase = "idle";
+  tutorialCoachDrag.anchorKey = null;
+  tutorialCoachDrag.manual = false;
   ui.tutorialCoach.hidden = true;
+  ui.tutorialCoach.classList.remove("is-anchored", "is-dragging");
+  ui.tutorialCoach.removeAttribute("data-anchor-side");
   document.body.classList.remove("tutorial-active");
   clearTutorialHighlights();
   configureGameMenu();
@@ -793,6 +993,10 @@ async function startTutorial() {
   ui.tutorialCoach.style.removeProperty("top");
   ui.tutorialCoach.style.removeProperty("right");
   ui.tutorialCoach.style.removeProperty("bottom");
+  tutorialCoachDrag.anchorKey = null;
+  tutorialCoachDrag.manual = false;
+  ui.tutorialCoach.classList.remove("is-anchored", "is-dragging");
+  ui.tutorialCoach.removeAttribute("data-anchor-side");
   ui.tutorialCoach.hidden = true;
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
@@ -857,6 +1061,7 @@ function moveTutorialCoach(left, top) {
   ui.tutorialCoach.style.top = `${position.top}px`;
   ui.tutorialCoach.style.right = "auto";
   ui.tutorialCoach.style.bottom = "auto";
+  return position;
 }
 
 function stopTutorialCoachDrag(event) {
@@ -2587,9 +2792,12 @@ ui.clashScoreClose.addEventListener("click", (event) => {
 ui.tutorialCoachDragHandle.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
   const panelRect = ui.tutorialCoach.getBoundingClientRect();
+  tutorialCoachDrag.manual = true;
   tutorialCoachDrag.pointerId = event.pointerId;
   tutorialCoachDrag.offsetX = event.clientX - panelRect.left;
   tutorialCoachDrag.offsetY = event.clientY - panelRect.top;
+  ui.tutorialCoach.classList.remove("is-anchored");
+  ui.tutorialCoach.removeAttribute("data-anchor-side");
   ui.tutorialCoachDragHandle.setPointerCapture(event.pointerId);
   ui.tutorialCoach.classList.add("is-dragging");
   event.preventDefault();
@@ -2613,8 +2821,7 @@ window.addEventListener("resize", () => {
     moveClashScorePanel(panelRect.left, panelRect.top);
   }
   if (tutorial.active && !ui.tutorialCoach.hidden) {
-    const coachRect = ui.tutorialCoach.getBoundingClientRect();
-    moveTutorialCoach(coachRect.left, coachRect.top);
+    positionTutorialCoach();
   }
 });
 ui.playSelectedButton.addEventListener("click", playRound);
