@@ -133,7 +133,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "Cards do not combine into one 3v3 total. Lane 1 only clashes with Lane 1, Lane 2 with Lane 2, and Lane 3 with Lane 3.",
     objective:
-      "Each lane where both sides committed a card calculates its own Clash Total. Winning that lane adds 2 Round Points; every extra card with no opposing card adds 1 Round Point.",
+      "When your card faces one of Professor Paws’ cards in the same lane, compare their Clash Totals. Winning that lane earns 2 Round Points. A card with no opposing card earns 1 Round Point instead.",
     targets: Object.freeze(["#aiPlayZone", "#playerPlayZone"]),
     anchor: "#playerPlayZone",
     preferredSide: "right",
@@ -233,7 +233,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Round Points · Scenario 1 of 3",
     title: "One card against two",
     intro:
-      "A lane victory where both sides committed a card earns 2 Round Points. Every extra card with no opposing card adds 1 Round Point. This scripted scenario gives you one card against two.",
+      "When your card faces one of Professor Paws’ cards in the same lane, winning that lane earns 2 Round Points. Any card with no opponent in its lane earns 1 Round Point. In this scenario, your one card faces the first of the professor’s two cards.",
     objective:
       "Play Sir Squall. His lane victory will earn 2 Round Points against the professor's 1 Round Point from his extra card.",
     playerCards: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
@@ -2382,7 +2382,7 @@ function updateFormationMessage() {
         ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraCards} Round ${playerExtraCards === 1 ? "Point" : "Points"}.`
         : aiExtraCards
           ? `Professor Paws has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}.`
-          : "Equal formation sizes mean there are no extra cards; only victories in lanes where both sides committed a card score.";
+          : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of Professor Paws’ cards.";
   setMessage(title, detail);
   renderOpponentTells();
 }
