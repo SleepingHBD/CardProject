@@ -78,6 +78,80 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
   music: 0.12,
   effects: 1,
 });
+const TUTORIAL_LESSONS = Object.freeze([
+  Object.freeze({
+    id: "element-edge",
+    concept: "Lesson 1 · Elements",
+    title: "Counter the revealed element",
+    intro:
+      "Ember beats Gust, Gust beats Tide, and Tide beats Ember. Professor Paws has committed a Gust card.",
+    objective:
+      "Commit Cinder Kit. Its Ember element counters Gust and earns Element Edge +2.",
+    playerCards: Object.freeze(["cinder-kit", "kitewhisker", "wellwater-wisp"]),
+    aiCards: Object.freeze(["dandelion-dash"]),
+    expected: Object.freeze(["cinder-kit"]),
+    aftermath:
+      "Cinder Kit’s Ember counter earned Element Edge +2. Its Lane 1 Vanguard bonus and one-card Focus were also added to its printed Power.",
+  }),
+  Object.freeze({
+    id: "focus",
+    concept: "Lesson 2 · Focus",
+    title: "Do more with fewer cards",
+    intro:
+      "Committing one card grants Focus +2. Two cards receive Focus +1 each, while three cards receive no Focus.",
+    objective:
+      "Commit Sizzle Mittens alone. Its Focus lets it withstand Bubble Bengal’s Tide advantage.",
+    playerCards: Object.freeze(["sizzle-mittens", "candle-pounce", "moonpool-mouser"]),
+    aiCards: Object.freeze(["bubble-bengal", "teapot-tabby"]),
+    expected: Object.freeze(["sizzle-mittens"]),
+    aftermath:
+      "Sizzle Mittens gained Focus +2 while each opposing card gained only Focus +1. That extra point overcame Bubble Bengal’s Element Edge.",
+  }),
+  Object.freeze({
+    id: "tactics",
+    concept: "Lesson 3 · Tactic roles",
+    title: "Build a three-role formation",
+    intro:
+      "Vanguard starts in Lane 1, Link follows a different element, and Finisher closes a two- or three-card formation while facing a card.",
+    objective:
+      "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Tactics.",
+    playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
+    aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
+    expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
+    aftermath:
+      "All three placement conditions activated for +1 each. Because several lanes won, you may now choose which winning card becomes your trophy.",
+    trophyChoice: true,
+  }),
+  Object.freeze({
+    id: "overwhelm",
+    concept: "Lesson 4 · Overwhelm",
+    title: "Punish a lone commitment",
+    intro:
+      "When three cards face exactly one, Lane 1 gains Overwhelm +2. The larger formation spends more cards and receives no Focus.",
+    objective:
+      "Order Sir Squall, Moonpool Mouser, then Comet Claw. Watch Overwhelm strengthen Lane 1.",
+    playerCards: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
+    aiCards: Object.freeze(["gale-groomer"]),
+    expected: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
+    aftermath:
+      "Sir Squall’s Lane 1 total included Overwhelm +2. The two unpaired cards created Pressure, but Pressure was not needed because Lane 1 won normally.",
+  }),
+  Object.freeze({
+    id: "pressure",
+    concept: "Lesson 5 · Pressure",
+    title: "Break a tied round",
+    intro:
+      "Pressure is not a clash bonus. If lane wins are tied, the side that committed more cards wins the round.",
+    objective:
+      "Order Sizzle Mittens first and Bubble Bengal second. The paired clash will draw; Bubble Bengal will provide Pressure.",
+    playerCards: Object.freeze(["sizzle-mittens", "bubble-bengal", "cinder-kit"]),
+    aiCards: Object.freeze(["candle-pounce"]),
+    expected: Object.freeze(["sizzle-mittens", "bubble-bengal"]),
+    aftermath:
+      "The only paired clash drew 9–9. Your extra card broke the tied round through Pressure and became the automatic trophy.",
+    pressureTrophy: true,
+  }),
+]);
 
 function readSavedClashStyle() {
   try {
@@ -136,6 +210,12 @@ const state = {
   clashStyle: readSavedClashStyle(),
   audioVolumes: readSavedAudioVolumes(),
 };
+const tutorial = {
+  active: false,
+  lessonIndex: 0,
+  phase: "idle",
+  runId: 0,
+};
 
 const ui = {
   gameShell: document.querySelector(".game-shell"),
@@ -181,9 +261,12 @@ const ui = {
   difficultyDialog: document.querySelector("#difficultyDialog"),
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
+  mainMenuTutorialButton: document.querySelector("#mainMenuTutorialButton"),
   mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
   gameMenuDialog: document.querySelector("#gameMenuDialog"),
+  gameMenuTitle: document.querySelector("#gameMenuTitle"),
+  gameMenuNote: document.querySelector("#gameMenuNote"),
   settingsDialog: document.querySelector("#settingsDialog"),
   settingsStatus: document.querySelector("#settingsStatus"),
   audioSettingsStatus: document.querySelector("#audioSettingsStatus"),
@@ -199,6 +282,14 @@ const ui = {
   deckTransition: document.querySelector("#deckTransition"),
   deckTransitionLabel: document.querySelector("#deckTransitionLabel"),
   soundButton: document.querySelector("#soundButton"),
+  tutorialCoach: document.querySelector("#tutorialCoach"),
+  tutorialProgress: document.querySelector("#tutorialProgress"),
+  tutorialConcept: document.querySelector("#tutorialConcept"),
+  tutorialCoachTitle: document.querySelector("#tutorialCoachTitle"),
+  tutorialCoachText: document.querySelector("#tutorialCoachText"),
+  tutorialObjective: document.querySelector("#tutorialObjective"),
+  tutorialActionButton: document.querySelector("#tutorialActionButton"),
+  tutorialExitButton: document.querySelector("#tutorialExitButton"),
 };
 let draggedCardId = null;
 let settingsReturnTarget = "main";
@@ -207,6 +298,347 @@ const clashScoreDrag = {
   offsetX: 0,
   offsetY: 0,
 };
+
+function currentTutorialLesson() {
+  return TUTORIAL_LESSONS[tutorial.lessonIndex] || null;
+}
+
+function createTutorialCard(art, side, index) {
+  const template = CARD_LIBRARY.find((card) => card.art === art);
+  if (!template) throw new Error(`Unknown tutorial card: ${art}`);
+  return {
+    ...template,
+    instanceId: `tutorial-${tutorial.runId}-${tutorial.lessonIndex}-${side}-${index}`,
+  };
+}
+
+function selectedTutorialTemplates() {
+  return state.selectedCardIds
+    .map((instanceId) => state.playerHand.find((card) => card.instanceId === instanceId)?.art)
+    .filter(Boolean);
+}
+
+function isTutorialSelectionValid() {
+  if (!tutorial.active || tutorial.phase !== "play") return true;
+  const lesson = currentTutorialLesson();
+  const selected = selectedTutorialTemplates();
+  return Boolean(
+    lesson
+    && selected.length === lesson.expected.length
+    && selected.every((art, index) => art === lesson.expected[index])
+  );
+}
+
+function isTutorialSelectionPrefix() {
+  if (!tutorial.active || tutorial.phase !== "play") return false;
+  const lesson = currentTutorialLesson();
+  const selected = selectedTutorialTemplates();
+  return Boolean(
+    lesson
+    && selected.length <= lesson.expected.length
+    && selected.every((art, index) => art === lesson.expected[index])
+  );
+}
+
+function clearTutorialHighlights() {
+  document.querySelectorAll(".tutorial-focus-target").forEach((element) => {
+    element.classList.remove("tutorial-focus-target");
+  });
+  document.querySelectorAll(".tutorial-recommended-card").forEach((element) => {
+    element.classList.remove("tutorial-recommended-card");
+  });
+}
+
+function applyTutorialHighlights() {
+  clearTutorialHighlights();
+  if (!tutorial.active || ui.tutorialCoach.hidden) return;
+
+  if (tutorial.phase === "intro") {
+    document.querySelector(".tactics-board")?.classList.add("tutorial-focus-target");
+    return;
+  }
+
+  if (tutorial.phase === "play") {
+    if (isTutorialSelectionValid()) {
+      ui.playSelectedButton.classList.add("tutorial-focus-target");
+      ui.matchupForecast.classList.add("tutorial-focus-target");
+      return;
+    }
+
+    const lesson = currentTutorialLesson();
+    const selected = selectedTutorialTemplates();
+    const prefixLength = isTutorialSelectionPrefix() ? selected.length : 0;
+    const nextArt = lesson?.expected[prefixLength];
+    const recommendedCard = nextArt
+      ? ui.playerHand.querySelector(`[data-card-template="${nextArt}"]`)
+      : null;
+    recommendedCard?.classList.add("tutorial-recommended-card");
+    ui.playerPlayZone
+      .querySelector(".formation-slot.next-slot")
+      ?.classList.add("tutorial-focus-target");
+    return;
+  }
+
+  if (tutorial.phase === "claim") {
+    ui.trophyClaim.classList.add("tutorial-focus-target");
+    return;
+  }
+
+  if (tutorial.phase === "aftermath" || tutorial.phase === "complete") {
+    ui.playerPlayZone.classList.add("tutorial-focus-target");
+    ui.playerCollection.classList.add("tutorial-focus-target");
+  }
+}
+
+function renderTutorialCoach() {
+  if (!tutorial.active) {
+    ui.tutorialCoach.hidden = true;
+    clearTutorialHighlights();
+    return;
+  }
+
+  const lesson = currentTutorialLesson();
+  if (!lesson) return;
+  const selected = selectedTutorialTemplates();
+  const validFormation = isTutorialSelectionValid();
+  const prefixFormation = isTutorialSelectionPrefix();
+  const finalLesson = tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1;
+
+  ui.tutorialCoach.hidden = false;
+  ui.tutorialProgress.textContent = `Lesson ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
+  ui.tutorialConcept.textContent = lesson.concept;
+  ui.tutorialActionButton.hidden = false;
+  ui.tutorialExitButton.disabled = tutorial.phase === "clashing";
+
+  if (tutorial.phase === "intro") {
+    ui.tutorialCoachTitle.textContent = lesson.title;
+    ui.tutorialCoachText.textContent = lesson.intro;
+    ui.tutorialObjective.textContent = lesson.objective;
+    ui.tutorialActionButton.textContent = "Start Lesson";
+  } else if (tutorial.phase === "play") {
+    ui.tutorialActionButton.hidden = true;
+    if (validFormation) {
+      ui.tutorialCoachTitle.textContent = "Formation ready";
+      ui.tutorialCoachText.textContent =
+        "The highlighted forecast shows the bonuses currently included in each lane total.";
+      ui.tutorialObjective.textContent = "Review the preview, then press the highlighted Commit button.";
+    } else if (selected.length && !prefixFormation) {
+      ui.tutorialCoachTitle.textContent = "Try a different order";
+      ui.tutorialCoachText.textContent =
+        `Required order: ${lesson.expected.map((art) => CARD_LIBRARY.find((card) => card.art === art)?.name).join(" → ")}.`;
+      ui.tutorialObjective.textContent =
+        "Click a placed card to return it to your hand, then follow the highlighted card.";
+    } else {
+      ui.tutorialCoachTitle.textContent = lesson.title;
+      ui.tutorialCoachText.textContent = lesson.intro;
+      const nextArt = lesson.expected[selected.length];
+      const nextCard = CARD_LIBRARY.find((card) => card.art === nextArt);
+      ui.tutorialObjective.textContent = nextCard
+        ? `Place ${nextCard.name} into Lane ${selected.length + 1}.`
+        : lesson.objective;
+    }
+  } else if (tutorial.phase === "clashing") {
+    ui.tutorialCoachTitle.textContent = "Watch the totals resolve";
+    ui.tutorialCoachText.textContent =
+      "Every paired lane uses the normal duel formula: printed Power plus every active bonus.";
+    ui.tutorialObjective.textContent =
+      "The aftermath will identify exactly what decided this lesson.";
+    ui.tutorialActionButton.hidden = true;
+  } else if (tutorial.phase === "claim") {
+    ui.tutorialCoachTitle.textContent = "Choose a winning trophy";
+    ui.tutorialCoachText.textContent = lesson.aftermath;
+    ui.tutorialObjective.textContent =
+      "Choose Ember, Tide, or Gust below. In a real match, choose an element you still need.";
+    ui.tutorialActionButton.hidden = true;
+  } else if (tutorial.phase === "aftermath") {
+    ui.tutorialCoachTitle.textContent = "Lesson complete";
+    ui.tutorialCoachText.textContent = lesson.aftermath;
+    ui.tutorialObjective.textContent =
+      "Study the totals on the cards, then continue when you are ready.";
+    ui.tutorialActionButton.textContent = "Next Lesson";
+  } else {
+    ui.tutorialCoachTitle.textContent = "Training complete";
+    ui.tutorialCoachText.textContent =
+      `${lesson.aftermath} In a real duel, collect two Ember, two Gust, and two Tide trophies before Professor Paws.`;
+    ui.tutorialObjective.textContent =
+      "Trophies leave circulation. Other committed cards enter the discard pile, and that pile reshuffles when the draw pile empties.";
+    ui.tutorialActionButton.textContent = finalLesson ? "Finish Training" : "Continue";
+  }
+
+  window.requestAnimationFrame(applyTutorialHighlights);
+}
+
+function configureGameMenu() {
+  ui.gameMenuTitle.textContent = tutorial.active ? "Training is paused" : "The duel is paused";
+  ui.gameMenuNote.textContent = tutorial.active
+    ? "Resume this lesson, restart the complete tutorial, adjust settings, or return to the main menu."
+    : "Restarting, changing difficulty, or returning to the main menu will end this duel.";
+  ui.resumeGameButton.textContent = tutorial.active ? "Resume Training" : "Resume Duel";
+  ui.restartGameButton.textContent = tutorial.active ? "Restart Tutorial" : "Restart Duel";
+  ui.changeDifficultyButton.hidden = tutorial.active;
+}
+
+function stopTutorialMode() {
+  if (tutorial.active) tutorial.runId += 1;
+  tutorial.active = false;
+  tutorial.phase = "idle";
+  ui.tutorialCoach.hidden = true;
+  document.body.classList.remove("tutorial-active");
+  clearTutorialHighlights();
+  configureGameMenu();
+}
+
+function loadTutorialLesson(index) {
+  const lesson = TUTORIAL_LESSONS[index];
+  if (!tutorial.active || !lesson) return;
+
+  clearCinematicRemains();
+  clearTrophyClaim();
+  tutorial.lessonIndex = index;
+  tutorial.phase = "intro";
+  state.round = index + 1;
+  state.locked = true;
+  state.dealing = false;
+  state.selectedCardIds = [];
+  state.deck = [];
+  state.discardPile = [];
+  state.playerHand = lesson.playerCards.map((art, cardIndex) =>
+    createTutorialCard(art, "player", cardIndex));
+  state.aiHand = lesson.aiCards.map((art, cardIndex) =>
+    createTutorialCard(art, "ai", cardIndex));
+  state.aiPlan = [...state.aiHand];
+  state.aiTellClues = state.aiPlan.map(() => "full");
+  setRoundAdvanceControls(false);
+  ui.menuButton.disabled = false;
+  ui.clashEffects.innerHTML = "";
+  ui.battlefield.classList.remove("is-clashing");
+  ui.playerPlayZone.innerHTML = placeholder("Lesson formation");
+  ui.aiPlayZone.innerHTML = placeholder("Training plan sealed");
+  ui.versusBadge.textContent = "VS";
+  ui.versusBadge.className = "versus-badge";
+  setMessage(lesson.title, "Read your coach’s instructions, then begin the lesson.");
+  renderOpponentTells();
+  renderHand();
+  renderRound();
+  renderRoundScore();
+  renderTutorialCoach();
+}
+
+function beginTutorialLesson() {
+  if (!tutorial.active || tutorial.phase !== "intro") return;
+  tutorial.phase = "play";
+  state.locked = false;
+  const lesson = currentTutorialLesson();
+  setMessage(lesson.title, lesson.objective);
+  renderHand();
+  renderTutorialCoach();
+}
+
+function finishTutorialLesson() {
+  state.locked = true;
+  ui.menuButton.disabled = false;
+  ui.selectionCount.hidden = true;
+  ui.playSelectedButton.hidden = true;
+  ui.nextRoundButton.hidden = true;
+  ui.nextRoundButton.disabled = true;
+  tutorial.phase = tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1
+    ? "complete"
+    : "aftermath";
+  renderTutorialCoach();
+}
+
+function completeTutorialTrophyClaim(reward) {
+  if (!tutorial.active || tutorial.phase !== "claim" || !reward?.card) return;
+  state.playerWins.push(reward.card);
+  clearTrophyClaim();
+  renderCollection(ui.playerCollection, state.playerWins);
+  setMessage(
+    `${reward.card.name} becomes your training trophy!`,
+    "A normal duel asks you to collect two trophies from each element.",
+  );
+  finishTutorialLesson();
+}
+
+function resolveTutorialRound(playerCards, aiCards, resolution) {
+  const lesson = currentTutorialLesson();
+  const { results, score, winner, decidedBy } = resolution;
+  ui.versusBadge.textContent = `${score.player}–${score.ai}`;
+  ui.versusBadge.className = "versus-badge";
+
+  if (winner === "player") {
+    state.playerRoundWins += 1;
+    ui.versusBadge.classList.add("win");
+    audio.roundResult("win");
+  } else if (winner === "ai") {
+    state.aiRoundWins += 1;
+    ui.versusBadge.classList.add("lose");
+    audio.roundResult("loss");
+  } else {
+    audio.roundResult("draw");
+  }
+
+  const resultLabel = decidedBy === "pressure"
+    ? `Pressure breaks the ${score.player}–${score.ai} tie!`
+    : winner === "player"
+      ? `You win ${score.player} of ${results.length} clashes!`
+      : winner === "ai"
+        ? `Professor Paws wins ${score.ai} of ${results.length} clashes.`
+        : "The lesson ends in a draw.";
+  setMessage(resultLabel, lesson.aftermath);
+  renderAftermathBreakdown(playerCards, resolution);
+  restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
+  renderRoundScore();
+
+  const rewardOptions = getFormationRewardOptions(playerCards, aiCards, resolution);
+  if (lesson.trophyChoice && rewardOptions.length > 1) {
+    showTrophyClaim(rewardOptions, playerCards, aiCards, resolution);
+    tutorial.phase = "claim";
+    ui.menuButton.disabled = false;
+    renderTutorialCoach();
+    return;
+  }
+
+  if (lesson.pressureTrophy && rewardOptions[0]?.card) {
+    state.playerWins.push(rewardOptions[0].card);
+    renderCollection(ui.playerCollection, state.playerWins);
+  }
+  finishTutorialLesson();
+}
+
+async function startTutorial() {
+  tutorial.runId += 1;
+  tutorial.active = true;
+  tutorial.lessonIndex = 0;
+  tutorial.phase = "opening";
+  state.difficulty = "guided";
+  state.playerWins = [];
+  state.aiWins = [];
+  state.playerRoundWins = 0;
+  state.aiRoundWins = 0;
+  state.pendingMatchWinner = null;
+  state.pendingTrophyClaim = null;
+  state.locked = true;
+  state.dealing = true;
+
+  audio.startDuelMusic();
+  clearCinematicRemains();
+  closeDialog(ui.gameMenuDialog);
+  closeDialog(ui.difficultyDialog);
+  closeDialog(ui.resultDialog);
+  ui.mainMenuScreen.hidden = true;
+  document.body.classList.remove("main-menu-active");
+  document.body.classList.add("tutorial-active");
+  setGameMenuVisibility(true);
+  configureGameMenu();
+  ui.menuButton.disabled = true;
+  ui.tutorialCoach.hidden = true;
+  renderCollection(ui.playerCollection, []);
+  renderCollection(ui.aiCollection, []);
+  setMessage("Entering the Training Grounds...", "Professor Paws has prepared five scripted lessons.");
+  await playDeckTransition("opening");
+  state.dealing = false;
+  loadTutorialLesson(0);
+}
 
 function clampClashScorePosition(left, top) {
   const margin = 8;
@@ -650,6 +1082,7 @@ function cardMarkup(
   return `
     <button
       class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${isFormationCard ? " selected formation-card" : ""}"
+      data-card-template="${card.art}"
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       type="button"
     >
@@ -700,6 +1133,7 @@ function renderHand() {
   };
   if (!state.locked) renderFormationBuilder();
   updateSelectionControls();
+  if (tutorial.active) window.requestAnimationFrame(applyTutorialHighlights);
 }
 
 function bindCardInteractions(container) {
@@ -897,17 +1331,24 @@ function updateFormationMessage() {
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
   const focus = getFocusBonus(count);
+  const overwhelmActive = getOverwhelmBonus(count, state.aiPlan.length) > 0;
   const formationLabel = focus
     ? `Focus +${focus}`
     : count === MAX_PLAY_SIZE
-      ? `Overwhelm +${OVERWHELM_BONUS} vs 1 card`
+      ? state.difficulty === "instinct"
+        ? `Overwhelm +${OVERWHELM_BONUS} if the foe committed 1`
+        : overwhelmActive
+          ? `Overwhelm +${OVERWHELM_BONUS} active`
+          : "No Focus"
       : "No Focus";
   ui.selectionCount.textContent = count
     ? `${count} of ${MAX_PLAY_SIZE} placed · ${formationLabel}`
     : `0 of ${MAX_PLAY_SIZE} placed`;
-  ui.playSelectedButton.disabled = state.locked || count === 0;
+  const tutorialFormationReady = !tutorial.active || isTutorialSelectionValid();
+  ui.playSelectedButton.disabled = state.locked || count === 0 || !tutorialFormationReady;
   ui.playSelectedButton.textContent = count === 1 ? "Commit 1 Card" : `Commit ${count} Cards`;
   renderMatchupForecast();
+  if (tutorial.active) renderTutorialCoach();
 }
 
 function toggleCardSelection(instanceId) {
@@ -1020,7 +1461,13 @@ function renderCollection(target, cards) {
 }
 
 function renderRound() {
-  ui.roundLabel.textContent = `ROUND ${state.round}`;
+  ui.roundLabel.textContent = tutorial.active
+    ? `LESSON ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`
+    : `ROUND ${state.round}`;
+  if (tutorial.active) {
+    ui.deckStatusText.innerHTML = "<strong>Training deck</strong> · scripted lesson";
+    return;
+  }
   if (state.deck.length === 0 && state.discardPile.length > 0) {
     ui.deckStatusText.innerHTML = `<strong>${state.discardPile.length}</strong> discarded cards ready to reshuffle`;
   } else if (state.deck.length === 0 && state.discardPile.length === 0) {
@@ -1039,7 +1486,7 @@ function renderRoundScore() {
   ui.aiRoundScore.textContent = state.aiRoundWins;
   ui.roundScore.setAttribute(
     "aria-label",
-    `Round score: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
+    `${tutorial.active ? "Training score" : "Round score"}: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
   );
 }
 
@@ -1444,7 +1891,14 @@ async function animateClashes(playerCards, aiCards) {
 
 function playRound() {
   if (state.locked || state.selectedCardIds.length === 0) return;
+  if (tutorial.active && !isTutorialSelectionValid()) {
+    setMessage("That formation does not match the lesson.", "Follow the highlighted order, then commit again.");
+    audio.denied();
+    renderTutorialCoach();
+    return;
+  }
 
+  const tutorialRunId = tutorial.active ? tutorial.runId : null;
   setRoundAdvanceControls(false);
   ui.menuButton.disabled = true;
   const playerCards = state.selectedCardIds
@@ -1467,8 +1921,13 @@ function playRound() {
   ui.aiPlayZone.innerHTML = placeholder(`Revealing Professor Paws' ${state.aiPlan.length}-card plan...`);
   setMessage("The sealed formation opens...", "Professor Paws committed this plan before your choice.");
   audio.commit(playerCards.length);
+  if (tutorial.active) {
+    tutorial.phase = "clashing";
+    renderTutorialCoach();
+  }
 
   window.setTimeout(async () => {
+    if (tutorialRunId !== null && (!tutorial.active || tutorial.runId !== tutorialRunId)) return;
     const aiCards = state.aiPlan
       .map((card) => removeCard(state.aiHand, card.instanceId))
       .filter(Boolean);
@@ -1481,7 +1940,12 @@ function playRound() {
     );
     audio.reveal(aiCards.length);
     const resolution = await animateClashes(playerCards, aiCards);
-    resolveRound(playerCards, aiCards, resolution);
+    if (tutorialRunId !== null) {
+      if (!tutorial.active || tutorial.runId !== tutorialRunId) return;
+      resolveTutorialRound(playerCards, aiCards, resolution);
+    } else {
+      resolveRound(playerCards, aiCards, resolution);
+    }
   }, 700);
 }
 
@@ -1688,6 +2152,7 @@ async function endGame(winner) {
 
 function setGameMenuVisibility(inGame) {
   ui.menuButton.hidden = !inGame;
+  configureGameMenu();
 }
 
 function closeDialog(dialog) {
@@ -1760,6 +2225,7 @@ function openSettings(returnTarget) {
 
 function showMainMenu() {
   state.locked = true;
+  stopTutorialMode();
   audio.startMainMenuMusic();
   closeDialog(ui.gameMenuDialog);
   closeDialog(ui.difficultyDialog);
@@ -1770,6 +2236,7 @@ function showMainMenu() {
 }
 
 function showDifficultyChooser() {
+  stopTutorialMode();
   state.locked = true;
   ui.mainMenuScreen.hidden = true;
   document.body.classList.remove("main-menu-active");
@@ -1779,6 +2246,7 @@ function showDifficultyChooser() {
 }
 
 async function startGame() {
+  stopTutorialMode();
   audio.startDuelMusic();
   clearCinematicRemains();
   state.deck = freshDeck();
@@ -1929,6 +2397,10 @@ ui.trophyClaimOptions.addEventListener("click", (event) => {
     (option) => option.card.instanceId === button.dataset.trophyCard,
   );
   if (!reward) return;
+  if (tutorial.active) {
+    completeTutorialTrophyClaim(reward);
+    return;
+  }
   const { playerCards, aiCards, resolution } = pending;
   completeRoundReward(
     reward,
@@ -1955,6 +2427,7 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
   showDifficultyChooser();
 });
 ui.mainMenuPlayButton.addEventListener("click", showDifficultyChooser);
+ui.mainMenuTutorialButton.addEventListener("click", startTutorial);
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
 ui.menuButton.addEventListener("click", () => {
@@ -1966,11 +2439,29 @@ ui.menuButton.addEventListener("click", () => {
 ui.resumeGameButton.addEventListener("click", () => ui.gameMenuDialog.close());
 ui.restartGameButton.addEventListener("click", () => {
   ui.gameMenuDialog.close();
-  startGame();
+  if (tutorial.active) {
+    startTutorial();
+  } else {
+    startGame();
+  }
 });
 ui.changeDifficultyButton.addEventListener("click", showDifficultyChooser);
 ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
+ui.tutorialActionButton.addEventListener("click", () => {
+  if (!tutorial.active) return;
+  if (tutorial.phase === "intro") {
+    beginTutorialLesson();
+  } else if (tutorial.phase === "aftermath") {
+    loadTutorialLesson(tutorial.lessonIndex + 1);
+  } else if (tutorial.phase === "complete") {
+    showMainMenu();
+  }
+});
+ui.tutorialExitButton.addEventListener("click", () => {
+  if (!tutorial.active || tutorial.phase === "clashing") return;
+  showMainMenu();
+});
 ui.gameMenuDialog.addEventListener("cancel", (event) => {
   event.preventDefault();
   ui.gameMenuDialog.close();

@@ -4590,6 +4590,179 @@ footer {
   outline-offset: 3px;
 }
 
+.main-menu-tutorial-button {
+  color: #f5dfa3;
+  background:
+    linear-gradient(rgba(255,255,255,.08), transparent),
+    rgba(77, 44, 35, .84);
+  border-color: #c89a49;
+}
+
+.tutorial-coach {
+  position: fixed;
+  z-index: 950;
+  left: 18px;
+  bottom: 18px;
+  width: min(340px, calc(100vw - 36px));
+  max-height: calc(100dvh - 110px);
+  padding: 5px;
+  overflow-y: auto;
+  color: #35251d;
+  background:
+    radial-gradient(circle at 8px 9px, rgba(76,49,29,.09) 0 1px, transparent 2px) 0 0 / 22px 23px,
+    linear-gradient(90deg, #b88847, #f0dfb3 7% 93%, #b88847);
+  border: 4px solid #251711;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 2px #d5ac5d,
+    0 6px 0 rgba(31, 18, 13, .7),
+    0 15px 34px rgba(12, 7, 7, .45);
+}
+
+.tutorial-coach[hidden] {
+  display: none;
+}
+
+.tutorial-coach-heading {
+  min-height: 30px;
+  padding: 5px 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: #f1d99c;
+  background:
+    linear-gradient(90deg, rgba(207,157,74,.18), transparent),
+    #39231d;
+  border: 1px solid #19100d;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.tutorial-coach-heading b {
+  color: #d9b664;
+  white-space: nowrap;
+}
+
+.tutorial-coach-copy {
+  padding: 11px 12px 9px;
+}
+
+.tutorial-concept {
+  margin: 0 0 3px;
+  color: #895436;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.tutorial-coach h2 {
+  margin: 0;
+  color: #3e261d;
+  font-family: "Cinzel", serif;
+  font-size: 17px;
+  line-height: 1.16;
+}
+
+.tutorial-coach-copy > p:not(.tutorial-concept) {
+  margin: 6px 0 0;
+  color: #604630;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.tutorial-objective {
+  margin-top: 9px;
+  padding: 7px 8px;
+  color: #3e2b20;
+  background: rgba(255, 244, 204, .7);
+  border: 1px solid #9a6f3a;
+  border-left: 4px solid #7a3f31;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.tutorial-coach-actions {
+  padding: 0 9px 9px;
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  gap: 7px;
+}
+
+.tutorial-coach-actions button {
+  min-height: 36px;
+  margin: 0;
+  padding: 7px 8px;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.tutorial-exit-button {
+  color: #5a392a;
+  background: rgba(255, 246, 213, .55);
+  border: 2px solid #795436;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.tutorial-exit-button:hover,
+.tutorial-exit-button:focus-visible {
+  background: #f6e4b7;
+}
+
+.tutorial-exit-button:disabled {
+  opacity: .45;
+  cursor: wait;
+}
+
+.tutorial-action-button[hidden] {
+  display: none;
+}
+
+.tutorial-coach-actions:has(.tutorial-action-button[hidden]) {
+  grid-template-columns: 1fr;
+}
+
+.tutorial-active .hand {
+  padding-left: 335px;
+}
+
+.tutorial-focus-target {
+  position: relative;
+  z-index: 46;
+  outline: 4px solid #ffd768 !important;
+  outline-offset: 4px;
+  animation: tutorial-focus-pulse 1.35s ease-in-out infinite;
+}
+
+.game-card.tutorial-recommended-card {
+  z-index: 30;
+  outline: 4px solid #ffe081;
+  outline-offset: 3px;
+  box-shadow:
+    0 8px 0 var(--rarity-dark),
+    0 0 0 7px rgba(105, 54, 35, .78),
+    0 0 28px 10px rgba(255, 214, 92, .7);
+  transform: translateY(-9px);
+}
+
+.tutorial-active .trophy-claim.tutorial-focus-target {
+  padding: 7px;
+  border-radius: 5px;
+}
+
+@keyframes tutorial-focus-pulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 216, 104, .55)); }
+  50% { filter: drop-shadow(0 0 11px rgba(255, 216, 104, .95)); }
+}
+
 .main-menu-music-credit {
   position: absolute;
   z-index: 1;
@@ -5531,11 +5704,12 @@ footer {
 
   .main-menu-actions {
     width: min(280px, 82%);
-    margin-top: 42px;
+    margin-top: 30px;
+    gap: 8px;
   }
 
   .main-menu-option-button {
-    min-height: 42px;
+    min-height: 38px;
     font-size: 11px;
   }
 
@@ -5543,6 +5717,42 @@ footer {
     bottom: 12px;
     width: calc(100% - 34px);
     font-size: 8px;
+  }
+
+  .tutorial-coach {
+    top: 68px;
+    right: 8px;
+    bottom: auto;
+    left: 8px;
+    width: auto;
+    max-height: 176px;
+  }
+
+  .tutorial-coach-copy {
+    padding-block: 7px 6px;
+  }
+
+  .tutorial-coach h2 {
+    font-size: 14px;
+  }
+
+  .tutorial-coach-copy > p:not(.tutorial-concept),
+  .tutorial-objective {
+    font-size: 9px;
+  }
+
+  .tutorial-objective {
+    margin-top: 6px;
+    padding-block: 5px;
+  }
+
+  .tutorial-coach-actions button {
+    min-height: 31px;
+    font-size: 8px;
+  }
+
+  .tutorial-active .hand {
+    padding-left: 0;
   }
 
   .settings-dialog {

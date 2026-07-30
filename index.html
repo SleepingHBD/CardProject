@@ -108,6 +108,36 @@
           <strong id="deckTransitionLabel">Shuffling the deck...</strong>
         </div>
 
+        <aside
+          class="tutorial-coach"
+          id="tutorialCoach"
+          aria-labelledby="tutorialCoachTitle"
+          hidden
+        >
+          <div class="tutorial-coach-heading">
+            <span>TRAINING GROUNDS</span>
+            <b id="tutorialProgress">Lesson 1 of 5</b>
+          </div>
+          <div class="tutorial-coach-copy" aria-live="polite">
+            <p class="tutorial-concept" id="tutorialConcept">The elemental cycle</p>
+            <h2 id="tutorialCoachTitle">Read the professor’s plan</h2>
+            <p id="tutorialCoachText">
+              Professor Paws reveals enough information for you to choose a counter.
+            </p>
+            <div class="tutorial-objective" id="tutorialObjective">
+              Follow the highlighted instruction to continue.
+            </div>
+          </div>
+          <div class="tutorial-coach-actions">
+            <button class="tutorial-exit-button" id="tutorialExitButton" type="button">
+              Exit Training
+            </button>
+            <button class="primary-button tutorial-action-button" id="tutorialActionButton" type="button">
+              Begin Lesson
+            </button>
+          </div>
+        </aside>
+
         <div class="round-bar">
           <div>
             <p class="eyebrow">THE GREAT HALL OF WHISKERKEEP</p>
@@ -305,6 +335,13 @@
       <div class="main-menu-actions">
         <button class="primary-button main-menu-play-button" id="mainMenuPlayButton" type="button" autofocus>
           Play
+        </button>
+        <button
+          class="main-menu-option-button main-menu-tutorial-button"
+          id="mainMenuTutorialButton"
+          type="button"
+        >
+          How to Play
         </button>
         <button
           class="main-menu-option-button"
