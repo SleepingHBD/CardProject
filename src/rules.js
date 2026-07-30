@@ -90,19 +90,19 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "focus-keeper",
     category: "commitment",
     label: "Focus Keeper",
-    description: "Usually commits 1 card (Focus +2); sometimes 2 (Focus +1).",
+    description: "Usually commits 1 card; sometimes 2, favoring smaller formations that can earn Focus +1.",
   }),
   Object.freeze({
     id: "measured-planner",
     category: "commitment",
     label: "Measured Planner",
-    description: "Usually commits 2 cards (Focus +1).",
+    description: "Usually commits 2 cards, balancing potential Focus against Pressure.",
   }),
   Object.freeze({
     id: "pressure-gambler",
     category: "commitment",
     label: "Pressure Gambler",
-    description: "Usually commits 3 cards for Pressure and maximum Overwhelm against a lone card.",
+    description: "Usually commits 3 cards to threaten Pressure.",
   }),
   Object.freeze({
     id: "score-reader",
@@ -124,22 +124,26 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
   }),
 ]);
 
-function getFocusBonus(commitmentCount) {
-  if (commitmentCount <= 0) return 0;
-  return Math.max(0, MAX_COMMITMENT - commitmentCount);
-}
+const FOCUS_BONUS = 1;
 
-const OVERWHELM_BONUS = 2;
-
-function getOverwhelmBonus(commitmentCount, opponentCommitmentCount, laneIndex = 0) {
-  if (
-    commitmentCount <= 1
-    || opponentCommitmentCount !== 1
-    || laneIndex !== 0
-  ) {
-    return 0;
-  }
-  return Math.min(OVERWHELM_BONUS, commitmentCount - 1);
+function getFocusBonus(
+  commitmentCount,
+  opponentCommitmentCount,
+  laneIndex = commitmentCount - 1,
+) {
+  const safeCommitment = Math.min(
+    MAX_COMMITMENT,
+    Math.max(0, commitmentCount),
+  );
+  const safeOpponentCommitment = Math.min(
+    MAX_COMMITMENT,
+    Math.max(0, opponentCommitmentCount),
+  );
+  return safeCommitment > 0
+    && safeCommitment < safeOpponentCommitment
+    && laneIndex === safeCommitment - 1
+    ? FOCUS_BONUS
+    : 0;
 }
 
 function buildTellClues(
@@ -224,8 +228,6 @@ function scoreClash(
   aiTactic = 0,
   playerFocus = 0,
   aiFocus = 0,
-  playerOverwhelm = 0,
-  aiOverwhelm = 0,
 ) {
   const playerEdge = ELEMENTS[playerCard.element].beats === aiCard.element
     ? ELEMENT_EDGE_BONUS
@@ -241,12 +243,10 @@ function scoreClash(
       tactic: playerTactic,
       tacticName: TACTICS[playerCard.tactic]?.label || "Role",
       focus: playerFocus,
-      overwhelm: playerOverwhelm,
       total: playerCard.power
         + playerEdge
         + playerTactic
-        + playerFocus
-        + playerOverwhelm,
+        + playerFocus,
     },
     ai: {
       base: aiCard.power,
@@ -254,12 +254,10 @@ function scoreClash(
       tactic: aiTactic,
       tacticName: TACTICS[aiCard.tactic]?.label || "Role",
       focus: aiFocus,
-      overwhelm: aiOverwhelm,
       total: aiCard.power
         + aiEdge
         + aiTactic
-        + aiFocus
-        + aiOverwhelm,
+        + aiFocus,
     },
   };
 }
@@ -271,8 +269,6 @@ function compareCards(
   aiTactic = 0,
   playerFocus = 0,
   aiFocus = 0,
-  playerOverwhelm = 0,
-  aiOverwhelm = 0,
 ) {
   const scoring = scoreClash(
     playerCard,
@@ -281,8 +277,6 @@ function compareCards(
     aiTactic,
     playerFocus,
     aiFocus,
-    playerOverwhelm,
-    aiOverwhelm,
   );
   if (scoring.player.total === scoring.ai.total) return "draw";
   return scoring.player.total > scoring.ai.total ? "player" : "ai";
@@ -540,18 +534,16 @@ function resolveClashes(playerCards, aiCards) {
   const playerCommitment = Math.min(playerCards.length, MAX_COMMITMENT);
   const aiCommitment = Math.min(aiCards.length, MAX_COMMITMENT);
   const clashCount = Math.min(playerCommitment, aiCommitment);
-  const playerFocus = getFocusBonus(playerCommitment);
-  const aiFocus = getFocusBonus(aiCommitment);
   const lanes = playerCards.slice(0, clashCount).map((playerCard, index) => {
     const aiCard = aiCards[index];
     const playerTactic = getTacticBonus(playerCards, index, aiCommitment);
     const aiTactic = getTacticBonus(aiCards, index, playerCommitment);
-    const playerOverwhelm = getOverwhelmBonus(
+    const playerFocus = getFocusBonus(
       playerCommitment,
       aiCommitment,
       index,
     );
-    const aiOverwhelm = getOverwhelmBonus(
+    const aiFocus = getFocusBonus(
       aiCommitment,
       playerCommitment,
       index,
@@ -563,8 +555,6 @@ function resolveClashes(playerCards, aiCards) {
       aiTactic,
       playerFocus,
       aiFocus,
-      playerOverwhelm,
-      aiOverwhelm,
     );
     const winner = scoring.player.total === scoring.ai.total
       ? "draw"
@@ -599,10 +589,9 @@ function resolveClashes(playerCards, aiCards) {
     winner,
     decidedBy,
     commitments: { player: playerCommitment, ai: aiCommitment },
-    focus: { player: playerFocus, ai: aiFocus },
-    overwhelm: {
-      player: getOverwhelmBonus(playerCommitment, aiCommitment),
-      ai: getOverwhelmBonus(aiCommitment, playerCommitment),
+    focus: {
+      player: getFocusBonus(playerCommitment, aiCommitment),
+      ai: getFocusBonus(aiCommitment, playerCommitment),
     },
   };
 }
@@ -658,7 +647,7 @@ global.ClawRules = Object.freeze({
   TACTICS,
   ELEMENT_EDGE_BONUS,
   TACTIC_BONUS,
-  OVERWHELM_BONUS,
+  FOCUS_BONUS,
   MAX_COMMITMENT,
   TROPHIES_PER_ELEMENT,
   DIFFICULTY_MODES,
@@ -671,7 +660,6 @@ global.ClawRules = Object.freeze({
   forecastMatchup,
   getTacticBonus,
   getFocusBonus,
-  getOverwhelmBonus,
   getPowerTier,
   getFormationReward,
   getFormationRewardOptions,

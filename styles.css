@@ -861,31 +861,6 @@ h1 {
   box-shadow: 0 7px 0 var(--rarity-dark), 0 0 0 3px #d9b45e, 0 12px 20px rgba(30,19,13,.3);
 }
 
-.overwhelm-callout {
-  position: absolute;
-  z-index: 30;
-  left: 50%;
-  min-width: 104px;
-  padding: 4px 8px 3px;
-  color: #fff0b3;
-  background: linear-gradient(#695028, #3c2918);
-  border: 2px solid #e2bd5e;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 3px 8px rgba(20,12,8,.35);
-  font-family: "Cinzel", serif;
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: .05em;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  transform: translateX(-50%);
-  animation: bonus-badge-pop .34s ease both;
-}
-
-.ai-formation .overwhelm-callout { bottom: -38px; }
-.player-formation .overwhelm-callout { top: -38px; }
-
 .clash-card.result-win .game-card {
   box-shadow: 0 7px 0 var(--rarity-dark), 0 0 0 4px #e1bd67, 0 13px 24px rgba(30,19,13,.35);
 }
@@ -4099,6 +4074,24 @@ footer {
   .control-panel .turn-message span { font-size: 12px; line-height: 1.25; }
 
   .control-panel .tactics-board { margin: 0; }
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .tactics-heading {
+    grid-column: 1;
+    grid-row: 1;
+    border-right: 0;
+    border-bottom: 1px solid #795631;
+  }
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .opponent-tells {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .matchup-forecast {
+    grid-column: 1;
+    grid-row: 3;
+  }
   .control-panel .tactics-heading { padding: 7px 9px; }
   .control-panel .tactics-heading > div { flex: 1; min-width: 0; }
   .control-panel .scout-seal { display: grid; width: 34px; height: 34px; flex-basis: 34px; font-size: 17px; }
@@ -4205,7 +4198,7 @@ footer {
   .play-zone .card-ability b { font-size: 9px; }
 }
 
-@media (min-width: 900px) and (max-height: 700px) {
+@media (min-width: 900px) and (max-height: 760px) {
   .topbar { height: 56px; }
   .brand-logo { width: 168px; }
 
