@@ -78,6 +78,68 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
   music: 0.12,
   effects: 1,
 });
+const TUTORIAL_TOUR_STEPS = Object.freeze([
+  Object.freeze({
+    id: "progress",
+    concept: "Training Grounds Tour",
+    title: "Track the duel",
+    text:
+      "The round score records rounds won by each duelist. The elemental crests beside each duelist track trophies.",
+    objective:
+      "Win a full duel by collecting two Ember, two Gust, and two Tide trophies before Professor Paws.",
+    targets: Object.freeze(["#roundScore", "#playerCollection", "#aiCollection"]),
+  }),
+  Object.freeze({
+    id: "plan",
+    concept: "Training Grounds Tour",
+    title: "Read Professor Paws",
+    text:
+      "Professor’s Plan shows his committed lanes and any clues your difficulty allows. The tutorial reveals the full plan.",
+    objective:
+      "Check this panel before choosing cards. Harder modes conceal more information.",
+    targets: Object.freeze([".tactics-board"]),
+  }),
+  Object.freeze({
+    id: "hand",
+    concept: "Training Grounds Tour",
+    title: "Choose from your hand",
+    text:
+      "These are the cards currently available to you. Every card has an element, printed Power, and a positional Tactic role.",
+    objective:
+      "During a lesson, drag a card toward the board or click it to place it in the next lane.",
+    targets: Object.freeze(["#playerHand"]),
+  }),
+  Object.freeze({
+    id: "lanes",
+    concept: "Training Grounds Tour",
+    title: "Build your formation",
+    text:
+      "You may commit up to three cards. They enter Lane 1, Lane 2, and Lane 3 in the order you place them.",
+    objective:
+      "Order matters because Vanguard, Link, and Finisher Tactics activate in different positions.",
+    targets: Object.freeze(["#playerPlayZone"]),
+  }),
+  Object.freeze({
+    id: "forecast",
+    concept: "Training Grounds Tour",
+    title: "Preview before committing",
+    text:
+      "After placing a card, this forecast shows its active bonuses and expected lane total. The Commit button locks your formation.",
+    objective:
+      "Review the preview before committing. You can return a placed card to your hand and change the order first.",
+    targets: Object.freeze(["#matchupForecast", "#playSelectedButton"]),
+  }),
+  Object.freeze({
+    id: "references",
+    concept: "Training Grounds Tour",
+    title: "Help stays within reach",
+    text:
+      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Clash Score Guide.",
+    objective:
+      "Use these references whenever you need them. Begin Lesson 1 when you are ready.",
+    targets: Object.freeze(["#clashScoreGuide", ".top-actions"]),
+  }),
+]);
 const TUTORIAL_LESSONS = Object.freeze([
   Object.freeze({
     id: "element-edge",
@@ -213,6 +275,7 @@ const state = {
 const tutorial = {
   active: false,
   lessonIndex: 0,
+  tourStep: 0,
   phase: "idle",
   runId: 0,
 };
@@ -308,6 +371,10 @@ function currentTutorialLesson() {
   return TUTORIAL_LESSONS[tutorial.lessonIndex] || null;
 }
 
+function currentTutorialTourStep() {
+  return TUTORIAL_TOUR_STEPS[tutorial.tourStep] || null;
+}
+
 function createTutorialCard(art, side, index) {
   const template = CARD_LIBRARY.find((card) => card.art === art);
   if (!template) throw new Error(`Unknown tutorial card: ${art}`);
@@ -358,6 +425,15 @@ function applyTutorialHighlights() {
   clearTutorialHighlights();
   if (!tutorial.active || ui.tutorialCoach.hidden) return;
 
+  if (tutorial.phase === "tour") {
+    currentTutorialTourStep()?.targets.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => {
+        element.classList.add("tutorial-focus-target");
+      });
+    });
+    return;
+  }
+
   if (tutorial.phase === "intro") {
     document.querySelector(".tactics-board")?.classList.add("tutorial-focus-target");
     return;
@@ -404,6 +480,27 @@ function renderTutorialCoach() {
   if (tutorial.phase === "clashing") {
     ui.tutorialCoach.hidden = true;
     clearTutorialHighlights();
+    return;
+  }
+
+  if (tutorial.phase === "tour") {
+    const tourStep = currentTutorialTourStep();
+    if (!tourStep) return;
+    const finalTourStep = tutorial.tourStep === TUTORIAL_TOUR_STEPS.length - 1;
+    ui.tutorialCoach.hidden = false;
+    ui.tutorialProgress.textContent =
+      `Tour ${tutorial.tourStep + 1} of ${TUTORIAL_TOUR_STEPS.length}`;
+    ui.tutorialConcept.textContent = tourStep.concept;
+    ui.tutorialCoachTitle.textContent = tourStep.title;
+    ui.tutorialCoachText.textContent = tourStep.text;
+    ui.tutorialObjective.textContent = tourStep.objective;
+    ui.tutorialActionButton.hidden = false;
+    ui.tutorialActionButton.textContent = finalTourStep ? "Begin Lesson 1" : "Next";
+    window.requestAnimationFrame(() => {
+      applyTutorialHighlights();
+      const panelRect = ui.tutorialCoach.getBoundingClientRect();
+      moveTutorialCoach(panelRect.left, panelRect.top);
+    });
     return;
   }
 
@@ -492,6 +589,60 @@ function stopTutorialMode() {
   document.body.classList.remove("tutorial-active");
   clearTutorialHighlights();
   configureGameMenu();
+}
+
+function startTutorialTour() {
+  if (!tutorial.active) return;
+  const previewLesson = TUTORIAL_LESSONS[0];
+  clearCinematicRemains();
+  clearTrophyClaim();
+  tutorial.lessonIndex = 0;
+  tutorial.tourStep = 0;
+  tutorial.phase = "tour";
+  state.round = 1;
+  state.locked = true;
+  state.dealing = false;
+  state.selectedCardIds = [];
+  state.deck = [];
+  state.discardPile = [];
+  state.playerHand = previewLesson.playerCards.map((art, cardIndex) =>
+    createTutorialCard(art, "tour-player", cardIndex));
+  state.aiHand = previewLesson.aiCards.map((art, cardIndex) =>
+    createTutorialCard(art, "tour-ai", cardIndex));
+  state.aiPlan = [...state.aiHand];
+  state.aiTellClues = state.aiPlan.map(() => "full");
+  setRoundAdvanceControls(false);
+  ui.menuButton.disabled = false;
+  ui.clashEffects.innerHTML = "";
+  ui.battlefield.classList.remove("is-clashing");
+  ui.aiPlayZone.innerHTML = placeholder("Training plan sealed");
+  ui.versusBadge.textContent = "VS";
+  ui.versusBadge.className = "versus-badge";
+  setMessage("Training Grounds Tour", "Learn where the game keeps its most important information.");
+  renderOpponentTells();
+  renderHand();
+  renderFormationBuilder();
+  ui.matchupForecast.style.gridTemplateColumns = "";
+  ui.matchupForecast.innerHTML = `
+    <span class="forecast-instruction">
+      Place a card during a lesson to preview its bonuses and expected lane total here.
+    </span>
+  `;
+  renderRound();
+  renderRoundScore();
+  renderTutorialCoach();
+}
+
+function advanceTutorialTour() {
+  if (!tutorial.active || tutorial.phase !== "tour") return;
+  if (tutorial.tourStep >= TUTORIAL_TOUR_STEPS.length - 1) {
+    loadTutorialLesson(0);
+    return;
+  }
+  tutorial.tourStep += 1;
+  const tourStep = currentTutorialTourStep();
+  setMessage(tourStep.title, tourStep.objective);
+  renderTutorialCoach();
 }
 
 function loadTutorialLesson(index) {
@@ -615,6 +766,7 @@ async function startTutorial() {
   tutorial.runId += 1;
   tutorial.active = true;
   tutorial.lessonIndex = 0;
+  tutorial.tourStep = 0;
   tutorial.phase = "opening";
   state.difficulty = "guided";
   state.playerWins = [];
@@ -644,10 +796,13 @@ async function startTutorial() {
   ui.tutorialCoach.hidden = true;
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
-  setMessage("Entering the Training Grounds...", "Professor Paws has prepared five scripted lessons.");
+  setMessage(
+    "Entering the Training Grounds...",
+    "Begin with a quick interface tour, then complete five scripted lessons.",
+  );
   await playDeckTransition("opening");
   state.dealing = false;
-  loadTutorialLesson(0);
+  startTutorialTour();
 }
 
 function clampClashScorePosition(left, top) {
@@ -1503,11 +1658,15 @@ function renderCollection(target, cards) {
 }
 
 function renderRound() {
-  ui.roundLabel.textContent = tutorial.active
-    ? `LESSON ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`
-    : `ROUND ${state.round}`;
+  ui.roundLabel.textContent = tutorial.active && tutorial.phase === "tour"
+    ? "INTERFACE TOUR"
+    : tutorial.active
+      ? `LESSON ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`
+      : `ROUND ${state.round}`;
   if (tutorial.active) {
-    ui.deckStatusText.innerHTML = "<strong>Training deck</strong> · scripted lesson";
+    ui.deckStatusText.innerHTML = tutorial.phase === "tour"
+      ? "<strong>Training tour</strong> &middot; interface overview"
+      : "<strong>Training deck</strong> &middot; scripted lesson";
     return;
   }
   if (state.deck.length === 0 && state.discardPile.length > 0) {
@@ -2520,7 +2679,9 @@ ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
 ui.tutorialActionButton.addEventListener("click", () => {
   if (!tutorial.active) return;
-  if (tutorial.phase === "intro") {
+  if (tutorial.phase === "tour") {
+    advanceTutorialTour();
+  } else if (tutorial.phase === "intro") {
     beginTutorialLesson();
   } else if (tutorial.phase === "aftermath") {
     loadTutorialLesson(tutorial.lessonIndex + 1);
