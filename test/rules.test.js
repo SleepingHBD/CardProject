@@ -228,9 +228,9 @@ test("invalid difficulty falls back to Guided tells", () => {
   );
 });
 
-test("Blind tells seal card details but preserve commitment count", () => {
+test("Blind tells conceal card details and commitment count", () => {
   assert.deepEqual(
-    buildTellClues(3, "blind", () => 0.2),
+    buildTellClues(2, "blind", () => 0.2),
     ["sealed", "sealed", "sealed"],
   );
 });

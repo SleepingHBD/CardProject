@@ -321,6 +321,16 @@
                   </div>
                 </div>
               </details>
+              <button
+                class="previous-rounds-history-button"
+                id="previousRoundsHistoryButton"
+                type="button"
+                aria-haspopup="dialog"
+                aria-controls="previousRoundsHistoryDialog"
+              >
+                Previous Rounds History
+                <span id="previousRoundsHistoryCount" aria-label="0 completed rounds">0</span>
+              </button>
             </div>
           </div>
           <div class="hand" id="playerHand" aria-label="Your hand of cards"></div>
@@ -608,8 +618,8 @@
       <p class="eyebrow">CHOOSE YOUR TRIAL</p>
       <h2 id="difficultyTitle">How Will You Read Your Rival?</h2>
       <p class="difficulty-intro" id="difficultyIntro">
-        Every mode lets you build one to three cards directly.
-        Guided and Blind reveal Professor Paws' formation size; Instinct hides it and gives you his known habits instead.
+        Every mode lets you build one to three cards and review completed rounds in Previous Rounds History.
+        Guided reveals live clues, Instinct reveals habits, and Blind conceals both.
       </p>
       <div class="difficulty-options">
         <button class="difficulty-option guided-option" data-difficulty="guided" type="button">
@@ -630,14 +640,47 @@
           </span>
         </button>
         <button class="difficulty-option blind-option" data-difficulty="blind" type="button">
-          <span class="difficulty-icon" aria-hidden="true">?</span>
+          <span class="difficulty-icon blind-difficulty-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" focusable="false">
+              <path class="blind-eye-outline" d="M5 24c5-7.3 11.3-11 19-11s14 3.7 19 11c-5 7.3-11.3 11-19 11S10 31.3 5 24Z" />
+              <circle class="blind-eye-iris" cx="24" cy="24" r="6.2" />
+              <circle class="blind-eye-pupil" cx="24" cy="24" r="2.6" />
+              <path class="blind-eye-seal" d="m8 37 5 4L40 11l-5-4L8 37Z" />
+              <path class="blind-eye-seal-edge" d="M11 39 38 9" />
+            </svg>
+          </span>
           <span>
             <strong>Blind</strong>
-            <small>Shows the formation size, but <b>seals all card details</b> until the clash.</small>
-            <em>For experienced duelists who enjoy uncertainty.</em>
+            <small>Hides every current card, formation size, and habit. Identify his patterns through <b>Previous Rounds History</b>.</small>
+            <em>The hardest trial: deduction without live clues.</em>
           </span>
         </button>
       </div>
+    </dialog>
+
+    <dialog
+      class="game-dialog previous-rounds-history-dialog"
+      id="previousRoundsHistoryDialog"
+      aria-labelledby="previousRoundsHistoryTitle"
+      aria-describedby="previousRoundsHistoryIntro"
+    >
+      <button
+        class="dialog-close"
+        data-close-previous-rounds-history
+        type="button"
+        aria-label="Close Previous Rounds History"
+      >×</button>
+      <p class="eyebrow">THE DUEL RECORD</p>
+      <h2 id="previousRoundsHistoryTitle">Previous Rounds History</h2>
+      <p class="previous-rounds-history-intro" id="previousRoundsHistoryIntro">
+        Completed rounds appear here after every clash and trophy decision. Current hidden information is never revealed early.
+      </p>
+      <div
+        class="previous-rounds-history-list"
+        id="previousRoundsHistoryList"
+        aria-live="polite"
+      ></div>
+      <button class="primary-button" data-close-previous-rounds-history type="button">Return</button>
     </dialog>
 
     <dialog class="game-dialog gallery-dialog" id="galleryDialog">
@@ -776,7 +819,7 @@
         <section class="codex-card">
           <span class="codex-number">5</span>
           <h3>Claim and continue</h3>
-          <p>Claim a trophy after winning. Other committed cards are discarded, hands refill to 6, and the discard pile reshuffles when needed.</p>
+          <p>Claim a trophy after winning. Other committed cards are discarded, hands refill to 6, and the discard pile reshuffles when needed. Previous Rounds History records the completed round.</p>
         </section>
       </div>
       <button class="primary-button" data-close-dialog type="button">Return</button>
@@ -833,10 +876,10 @@
           <p>The shared draw pile contains 36 cards: two copies of each of the 18 cards in the archive. Both duelists draw up to six cards.</p>
           <dl class="rulebook-definitions">
             <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
-            <div><dt>Blind</dt><dd>Shows Professor Paws' formation size but seals all individual card clues.</dd></div>
-            <div><dt>Instinct</dt><dd>Hides his cards and formation size. Instead, it reveals one motive, one formation habit, and one commitment habit that persist for the match.</dd></div>
+            <div><dt>Instinct</dt><dd>Hides his current cards and formation size, but reveals one motive, one formation habit, and one commitment habit that persist for the match.</dd></div>
+            <div><dt>Blind</dt><dd>Hides his current cards, formation size, and habits. Infer his persistent habits from Previous Rounds History.</dd></div>
           </dl>
-          <p>Habits are tendencies, not guarantees. Difficulty changes available information, never the scoring rules or card strength.</p>
+          <p>Every difficulty includes Previous Rounds History, which records both revealed formations, lane results, Round Points, trophy context, and the claimed trophy after a round is complete. Habits are tendencies, not guarantees. Difficulty changes available information, never the scoring rules or card strength.</p>
         </section>
 
         <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookCards">
@@ -861,7 +904,7 @@
           <span class="rulebook-number" aria-hidden="true">4</span>
           <h3 id="rulebookTurn">Play a round from start to finish</h3>
           <ol class="rulebook-steps">
-            <li><b>Read.</b> Study the plan or habits revealed by the chosen difficulty.</li>
+            <li><b>Read.</b> Study the live clues, visible habits, or Previous Rounds History available in the chosen difficulty.</li>
             <li><b>Build.</b> Drag or click 1–3 cards into consecutive lanes. The first card enters Lane 1.</li>
             <li><b>Order.</b> Return cards to your hand or rearrange them until the formation works as intended.</li>
             <li><b>Preview.</b> Review known bonuses and totals. Hidden information remains unknown until the clash.</li>
@@ -1002,7 +1045,7 @@
             <p><b>Order before committing.</b><span>Formation order determines lanes and can activate or disable Vanguard, Link, and Finisher bonuses.</span></p>
             <p><b>Plan the trophy element.</b><span>When several cards win lanes, arrange to give yourself a useful trophy choice. For an extra-card win, the first extra card is fixed.</span></p>
             <p><b>Respect printed Power.</b><span>Element Edge helps, but a two-point bonus does not always overcome a much stronger card.</span></p>
-            <p><b>Read hidden information.</b><span>In Guided and Blind, use the shown formation size. In Instinct, use all three persistent habits together.</span></p>
+            <p><b>Read hidden information.</b><span>In Guided, use the live plan clues. In Instinct, combine all three visible habits. In Blind, compare several entries in Previous Rounds History to infer those hidden habits yourself.</span></p>
             <p><b>Track the real goal.</b><span>Do not spend valuable cards collecting a third trophy of an element when another element is still missing.</span></p>
           </div>
         </section>

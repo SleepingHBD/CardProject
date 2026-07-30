@@ -137,7 +137,7 @@ function buildTellClues(
   const safeCount = Math.min(MAX_COMMITMENT, Math.max(0, cardCount));
 
   return Array.from({ length: MAX_COMMITMENT }, (_, index) => {
-    if (safeDifficulty === "instinct") return "sealed";
+    if (safeDifficulty === "instinct" || safeDifficulty === "blind") return "sealed";
     if (index >= safeCount) return "empty";
     if (safeDifficulty === "guided") return "full";
     return "sealed";

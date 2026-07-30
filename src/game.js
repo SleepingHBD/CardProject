@@ -63,6 +63,10 @@ const DIFFICULTIES = {
   instinct: { label: "Instinct" },
   blind: { label: "Blind" },
 };
+const concealsOpponentFormation = (difficulty = state.difficulty) =>
+  difficulty === "instinct" || difficulty === "blind";
+const usesPersistentAiHabits = (difficulty = state.difficulty) =>
+  difficulty === "instinct" || difficulty === "blind";
 const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
 const RARITY_SORT_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 const ARCHIVE_SORT_SUMMARIES = {
@@ -119,9 +123,9 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Read Professor Paws",
     text:
-      "This panel gives you the rival information allowed by your difficulty. Guided and Blind show his formation size immediately; Instinct shows his habits instead.",
+      "This panel gives you the rival information allowed by your difficulty. Guided shows live plan clues, Instinct shows his habits, and Blind conceals both.",
     objective:
-      "Use the visible plan in Guided and Blind. In Instinct, read the habits while his cards and formation size remain hidden.",
+      "Use Guided's current clues, Instinct's visible habits, or Blind's Previous Rounds History while his current plan remains hidden.",
     targets: Object.freeze([".tactics-board"]),
     anchor: ".tactics-board",
     preferredSide: "left",
@@ -175,14 +179,26 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     preferredSide: "left",
   }),
   Object.freeze({
+    id: "history",
+    concept: "Training Grounds Tour",
+    title: "Review completed rounds",
+    text:
+      "Previous Rounds History records both revealed formations, every lane result, Round Points, trophy progress, and the claimed trophy after each round.",
+    objective:
+      "It is available in every difficulty. In Blind, compare several completed rounds to identify Professor Paws' hidden habits yourself.",
+    targets: Object.freeze(["#previousRoundsHistoryButton"]),
+    anchor: "#previousRoundsHistoryButton",
+    preferredSide: "top",
+  }),
+  Object.freeze({
     id: "references",
     concept: "Training Grounds Tour",
     title: "Help stays within reach",
     text:
-      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Score Guide.",
+      "The top bar opens the card archive, Duel Codex, Rulebook, and Menu. The draw-pile area contains the draggable Score Guide and Previous Rounds History.",
     objective:
       "Use these references whenever you need them during training or a duel.",
-    targets: Object.freeze(["#clashScoreGuide", ".top-actions"]),
+    targets: Object.freeze(["#clashScoreGuide", "#previousRoundsHistoryButton", ".top-actions"]),
     anchor: ".top-actions",
     preferredSide: "bottom",
   }),
@@ -500,6 +516,7 @@ const state = {
   aiPlan: [],
   aiTellClues: [],
   aiTraits: [],
+  previousRoundsHistory: [],
   previousPlayerCommitment: null,
   previousAiCommitment: null,
   selectedCardIds: [],
@@ -555,6 +572,10 @@ const ui = {
   aiRoundScore: document.querySelector("#aiRoundScore"),
   deckCount: document.querySelector("#deckCount"),
   deckStatusText: document.querySelector("#deckStatusText"),
+  previousRoundsHistoryButton: document.querySelector("#previousRoundsHistoryButton"),
+  previousRoundsHistoryCount: document.querySelector("#previousRoundsHistoryCount"),
+  previousRoundsHistoryDialog: document.querySelector("#previousRoundsHistoryDialog"),
+  previousRoundsHistoryList: document.querySelector("#previousRoundsHistoryList"),
   clashScoreGuide: document.querySelector("#clashScoreGuide"),
   clashScorePanel: document.querySelector("#clashScorePanel"),
   clashScoreDragHandle: document.querySelector("#clashScoreDragHandle"),
@@ -1481,7 +1502,8 @@ function finishTutorialLesson() {
   focusTutorialHeading();
 }
 
-function recordTutorialRoundReward(reward, playerCards, aiCards) {
+function recordTutorialRoundReward(reward, playerCards, aiCards, resolution) {
+  recordCompletedRound(reward, playerCards, aiCards, resolution);
   if (reward?.winner === "player" && reward.card) {
     state.playerWins.push(reward.card);
   }
@@ -1502,7 +1524,12 @@ function completeTutorialTrophyClaim(reward) {
   const pending = state.pendingTrophyClaim;
   if (!pending) return;
   clearTrophyClaim();
-  recordTutorialRoundReward(reward, pending.playerCards, pending.aiCards);
+  recordTutorialRoundReward(
+    reward,
+    pending.playerCards,
+    pending.aiCards,
+    pending.resolution,
+  );
   setMessage(
     `${reward.card.name} becomes your training trophy!`,
     "A normal duel asks you to collect two trophies from each element.",
@@ -1554,7 +1581,7 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
   const reward = winner === "ai"
     ? chooseTrophyReward(rewardOptions, state.aiWins)
     : rewardOptions[0] || null;
-  recordTutorialRoundReward(reward, playerCards, aiCards);
+  recordTutorialRoundReward(reward, playerCards, aiCards, resolution);
   finishTutorialLesson();
 }
 
@@ -1582,10 +1609,12 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   state.pendingTrophyClaim = null;
   state.deck = [];
   state.discardPile = [];
+  state.previousRoundsHistory = [];
   state.aiTraits = [];
   state.locked = true;
   state.dealing = true;
   renderOpponentHabits();
+  renderPreviousRoundsHistory();
 
   audio.startDuelMusic();
   clearCinematicRemains();
@@ -1593,6 +1622,7 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   closeDialog(ui.difficultyDialog);
   closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
+  closeDialog(ui.previousRoundsHistoryDialog);
   ui.mainMenuScreen.hidden = true;
   document.body.classList.remove("main-menu-active");
   document.body.classList.add("tutorial-active");
@@ -1804,14 +1834,16 @@ function renderOpponentHabits() {
 
 function renderOpponentTells() {
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Guided";
-  const concealsCommitment = state.difficulty === "instinct";
-  ui.tacticsTitle.textContent = concealsCommitment
+  const concealsCommitment = concealsOpponentFormation();
+  ui.tacticsTitle.textContent = state.difficulty === "instinct"
     ? "Professor's Habits"
     : "Professor's Plan";
   renderOpponentHabits();
 
   if (concealsCommitment) {
-    ui.commitmentHint.textContent = "Instinct · Formation size and cards concealed";
+    ui.commitmentHint.textContent = state.difficulty === "instinct"
+      ? "Instinct · Formation size and cards concealed"
+      : "Blind · Current formation and habits concealed";
     ui.opponentTells.innerHTML = "";
     ui.opponentTells.hidden = true;
     return;
@@ -1874,7 +1906,7 @@ function renderFormationControls() {
     ui.playSelectedButton.hidden = true;
     return;
   }
-  ui.opponentTells.hidden = state.difficulty === "instinct";
+  ui.opponentTells.hidden = concealsOpponentFormation();
   ui.matchupForecast.hidden = false;
   if (ui.nextRoundButton.hidden && ui.trophyClaim.hidden) {
     ui.selectionCount.hidden = false;
@@ -1889,22 +1921,28 @@ function beginFormationBuilding() {
   renderFormationControls();
   renderHand();
   renderFormationBuilder();
-  const hidesFormation = state.difficulty === "instinct";
+  const hidesFormation = concealsOpponentFormation();
   setMessage(
-    hidesFormation ? "Read the habits. Build your formation." : "Study the plan. Build your formation.",
+    state.difficulty === "instinct"
+      ? "Read the habits. Build your formation."
+      : state.difficulty === "blind"
+        ? "Study Previous Rounds History. Build your formation."
+        : "Study the plan. Build your formation.",
     hidesFormation
-      ? "Place one to three cards. Professor Paws' formation stays hidden until the clash."
+      ? state.difficulty === "blind"
+        ? "Place one to three cards. His current formation and hidden habits are revealed only through completed rounds."
+        : "Place one to three cards. Professor Paws' formation stays hidden until the clash."
       : "Place one to three cards in order, review the forecast, then commit when ready.",
   );
 }
 
 function getKnownPlayerTacticBonus(cards, index) {
   const card = cards[index];
-  if (state.difficulty === "instinct" && card?.tactic === "finisher") return 0;
+  if (concealsOpponentFormation() && card?.tactic === "finisher") return 0;
   return getTacticBonus(
     cards,
     index,
-    state.difficulty === "instinct" ? MAX_PLAY_SIZE : state.aiPlan.length,
+    concealsOpponentFormation() ? MAX_PLAY_SIZE : state.aiPlan.length,
   );
 }
 
@@ -1943,7 +1981,7 @@ function renderMatchupForecast() {
     close: { icon: "≈", title: "CLOSE", className: "power" },
     risky: { icon: "!", title: "RISKY", className: "danger" },
   };
-  const concealsCommitment = state.difficulty === "instinct";
+  const concealsCommitment = concealsOpponentFormation();
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${selectedCards.length}, minmax(0, 1fr))`;
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
@@ -2219,7 +2257,7 @@ function getFormationBonusPreview(selectedCards, index) {
   const playerCard = selectedCards[index];
   const tactic = getKnownPlayerTacticBonus(selectedCards, index);
   const knownBonus = tactic;
-  if (state.difficulty === "instinct") {
+  if (concealsOpponentFormation()) {
     const finisherUnknown = playerCard.tactic === "finisher"
       && selectedCards.length > 1
       && index === selectedCards.length - 1;
@@ -2366,16 +2404,20 @@ function updateFormationMessage() {
     : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
   const playerExtraCards = Math.max(0, count - state.aiPlan.length);
   const aiExtraCards = Math.max(0, state.aiPlan.length - count);
-  const detail = state.difficulty === "instinct"
+  const detail = concealsOpponentFormation()
     ? count === 0
-      ? tutorial.active && currentTutorialLesson()?.freeChoice
+      ? state.difficulty === "instinct" && tutorial.active && currentTutorialLesson()?.freeChoice
         ? `Choose ${currentTutorialLesson().minCards || 1}–${currentTutorialLesson().maxCards || MAX_PLAY_SIZE} cards. His commitment habit is your only clue to his hidden formation size.`
-        : "Choose one to three cards. His commitment habit is your only clue to his hidden formation size."
+        : state.difficulty === "instinct"
+          ? "Choose one to three cards. His commitment habit is your clue to his hidden formation size."
+          : "Choose one to three cards. Use Previous Rounds History to infer his hidden formation habits."
       : tutorial.active
         && currentTutorialLesson()?.freeChoice
         && count < (currentTutorialLesson().minCards || 1)
         ? `Place at least ${currentTutorialLesson().minCards || 1} cards for this practice formation.`
-      : "Your current formation is ready to commit. Professor Paws' cards and formation size remain concealed."
+      : state.difficulty === "blind"
+        ? "Your formation is ready. Professor Paws' current cards, formation size, and habits remain concealed."
+        : "Your current formation is ready to commit. Professor Paws' cards and formation size remain concealed."
     : count === 0
       ? "Choose one to three cards using Professor Paws' visible plan."
       : playerExtraCards
@@ -2571,6 +2613,152 @@ function renderRoundScore() {
     "aria-label",
     `${tutorial.active ? "Training rounds won" : "Rounds won"}: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
   );
+}
+
+function snapshotHistoryCard(card) {
+  if (!card) return null;
+  return {
+    name: card.name,
+    element: card.element,
+    power: card.power,
+    tactic: card.tactic,
+  };
+}
+
+function recordCompletedRound(reward, playerCards, aiCards, resolution) {
+  if (!resolution) return;
+  state.previousRoundsHistory.push({
+    round: state.round,
+    difficulty: state.difficulty,
+    playerCards: playerCards.map(snapshotHistoryCard),
+    aiCards: aiCards.map(snapshotHistoryCard),
+    winner: resolution.winner,
+    score: { ...resolution.score },
+    laneResults: resolution.lanes.map((lane) => ({
+      winner: lane.winner,
+      playerTotal: lane.player.total,
+      aiTotal: lane.ai.total,
+    })),
+    trophy: reward?.card
+      ? {
+          winner: reward.winner,
+          lane: reward.lane,
+          card: snapshotHistoryCard(reward.card),
+        }
+      : null,
+    trophyProgressBefore: {
+      player: { ...getElementTrophyCounts(state.playerWins) },
+      ai: { ...getElementTrophyCounts(state.aiWins) },
+    },
+  });
+  renderPreviousRoundsHistory();
+}
+
+function historyProgressMarkup(counts, label) {
+  return `
+    <span class="history-progress" aria-label="${label}: Ember ${counts.ember}, Gust ${counts.gust}, Tide ${counts.tide}">
+      <b>${label}</b>
+      ${Object.entries(ELEMENTS).map(([key, element]) =>
+        `<i class="element-${key}">${element.icon} ${counts[key]}</i>`).join("")}
+    </span>
+  `;
+}
+
+function historyFormationMarkup(entry, side) {
+  const cards = side === "player" ? entry.playerCards : entry.aiCards;
+  const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
+  const sideLabel = side === "player" ? "You" : "Professor Paws";
+  return `
+    <section class="history-formation history-${side}">
+      <h4>${sideLabel} · ${cards.length} ${cards.length === 1 ? "card" : "cards"}</h4>
+      <div class="history-formation-cards">
+        ${cards.map((card, index) => {
+          const lane = entry.laneResults[index];
+          const isExtra = index >= opposingCards.length;
+          const outcome = isExtra
+            ? "EXTRA +1"
+            : lane?.winner === "draw"
+              ? "DRAW"
+              : lane?.winner === side
+                ? "WIN"
+                : "LOSS";
+          const total = isExtra
+            ? "No opposing card"
+            : `Clash Total ${side === "player" ? lane?.playerTotal : lane?.aiTotal}`;
+          const element = ELEMENTS[card.element];
+          const role = TACTICS[card.tactic]?.label || "Role";
+          return `
+            <article class="history-card element-${card.element}">
+              <span class="history-lane">LANE ${index + 1}</span>
+              <span class="history-element" aria-hidden="true">${element.icon}</span>
+              <div>
+                <strong>${card.name}</strong>
+                <small>${element.label} · Power ${card.power} · ${role}</small>
+              </div>
+              <em class="history-outcome history-outcome-${outcome.split(" ")[0].toLowerCase()}">${outcome}</em>
+              <small class="history-total">${total}</small>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderPreviousRoundsHistory() {
+  const count = state.previousRoundsHistory.length;
+  ui.previousRoundsHistoryCount.textContent = count;
+  ui.previousRoundsHistoryCount.setAttribute(
+    "aria-label",
+    `${count} completed ${count === 1 ? "round" : "rounds"}`,
+  );
+  if (!count) {
+    ui.previousRoundsHistoryList.innerHTML = `
+      <div class="previous-rounds-history-empty">
+        <strong>No completed rounds yet.</strong>
+        <span>The first entry will appear after the clash and trophy decision.</span>
+      </div>
+    `;
+    return;
+  }
+
+  ui.previousRoundsHistoryList.innerHTML = [...state.previousRoundsHistory]
+    .reverse()
+    .map((entry) => {
+      const winnerLabel = entry.winner === "player"
+        ? "You won"
+        : entry.winner === "ai"
+          ? "Professor Paws won"
+          : "Draw";
+      const trophyLabel = entry.trophy
+        ? `${entry.trophy.winner === "player" ? "You claimed" : "Professor Paws claimed"} ${entry.trophy.card.name} · ${ELEMENTS[entry.trophy.card.element].label}`
+        : "No trophy was claimed";
+      return `
+        <article class="previous-round-entry">
+          <header>
+            <div>
+              <span>ROUND ${entry.round} · ${DIFFICULTIES[entry.difficulty]?.label || "Training"}</span>
+              <h3>${winnerLabel} · ${entry.score.player}–${entry.score.ai} Round Points</h3>
+            </div>
+            <b class="history-round-result history-round-result-${entry.winner}">${winnerLabel}</b>
+          </header>
+          <div class="history-progress-before">
+            <span>Trophies before this round</span>
+            ${historyProgressMarkup(entry.trophyProgressBefore.player, "You")}
+            ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Professor")}
+          </div>
+          <div class="history-formations">
+            ${historyFormationMarkup(entry, "ai")}
+            ${historyFormationMarkup(entry, "player")}
+          </div>
+          <footer class="history-trophy">
+            <span aria-hidden="true">◆</span>
+            <strong>${trophyLabel}</strong>
+          </footer>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 function setRoundAdvanceControls(visible, finalMatch = false) {
@@ -3052,6 +3240,7 @@ function completeRoundReward(
   claimMessage = null,
 ) {
   clearTrophyClaim();
+  recordCompletedRound(reward, playerCards, aiCards, resolution);
   if (reward?.winner === "player" && reward.card) {
     state.playerWins.push(reward.card);
   }
@@ -3301,6 +3490,7 @@ function showMainMenu() {
   closeDialog(ui.difficultyDialog);
   closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
+  closeDialog(ui.previousRoundsHistoryDialog);
   setGameMenuVisibility(false);
   ui.mainMenuScreen.hidden = false;
   document.body.classList.add("main-menu-active");
@@ -3333,8 +3523,10 @@ async function startGame() {
   state.aiWins = [];
   state.aiPlan = [];
   state.aiTellClues = [];
-  state.aiTraits = state.difficulty === "instinct" ? createAiTraits() : [];
+  state.aiTraits = usesPersistentAiHabits() ? createAiTraits() : [];
+  state.previousRoundsHistory = [];
   renderOpponentHabits();
+  renderPreviousRoundsHistory();
   state.previousPlayerCommitment = null;
   state.previousAiCommitment = null;
   state.selectedCardIds = [];
@@ -3379,6 +3571,15 @@ document.querySelectorAll("[data-close-dialog]").forEach((button) => {
 document.querySelector("#rulebookButton").addEventListener("click", () => ui.rulebookDialog.showModal());
 document.querySelectorAll("[data-close-rulebook]").forEach((button) => {
   button.addEventListener("click", () => ui.rulebookDialog.close());
+});
+ui.previousRoundsHistoryButton.addEventListener("click", () => {
+  renderPreviousRoundsHistory();
+  if (!ui.previousRoundsHistoryDialog.open) {
+    ui.previousRoundsHistoryDialog.showModal();
+  }
+});
+document.querySelectorAll("[data-close-previous-rounds-history]").forEach((button) => {
+  button.addEventListener("click", () => ui.previousRoundsHistoryDialog.close());
 });
 ui.galleryButton.addEventListener("click", () => {
   if (ui.galleryDialog.open) {
@@ -3708,6 +3909,7 @@ document.addEventListener("click", (event) => {
 }, { capture: true });
 
 renderGallery();
+renderPreviousRoundsHistory();
 audio.setVolumes(state.audioVolumes);
 renderSettings(
   saveClashStyle(state.clashStyle),

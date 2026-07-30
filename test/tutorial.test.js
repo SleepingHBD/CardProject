@@ -58,3 +58,30 @@ test("tutorial navigation exposes keyboard focus and movable-panel controls", ()
   assert.match(gameSource, /event\.key === "Home"/);
   assert.match(gameSource, /function focusTutorialHeading\(\)/);
 });
+
+test("Previous Rounds History is shared by normal duels and training", () => {
+  assert.match(pageSource, /id="previousRoundsHistoryButton"[\s\S]*Previous Rounds History/);
+  assert.match(pageSource, /id="previousRoundsHistoryDialog"/);
+  assert.doesNotMatch(`${pageSource}\n${gameSource}`, /Duel Ledger/i);
+  assert.match(gameSource, /function recordCompletedRound\(/);
+  assert.match(
+    gameSource,
+    /function recordTutorialRoundReward[\s\S]*recordCompletedRound\(reward, playerCards, aiCards, resolution\)/,
+  );
+  assert.match(
+    gameSource,
+    /function completeRoundReward[\s\S]*recordCompletedRound\(reward, playerCards, aiCards, resolution\)/,
+  );
+});
+
+test("Blind conceals live information while using persistent hidden habits", () => {
+  assert.match(
+    gameSource,
+    /const concealsOpponentFormation[\s\S]*difficulty === "instinct" \|\| difficulty === "blind"/,
+  );
+  assert.match(
+    gameSource,
+    /state\.aiTraits = usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
+  );
+  assert.match(pageSource, /Blind[\s\S]*Identify his patterns through <b>Previous Rounds History<\/b>/);
+});
