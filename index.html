@@ -135,9 +135,17 @@
             </div>
           </div>
           <div class="tutorial-coach-actions">
+            <button class="tutorial-back-button" id="tutorialBackButton" type="button">
+              Back
+            </button>
             <button class="primary-button tutorial-action-button" id="tutorialActionButton" type="button">
               Begin Lesson
             </button>
+            <div class="tutorial-completion-actions" id="tutorialCompletionActions" hidden>
+              <button class="primary-button" id="tutorialRetryButton" type="button">Retry Section</button>
+              <button class="tutorial-back-button" id="tutorialMenuButton" type="button">Tutorial Menu</button>
+              <button class="tutorial-back-button" id="tutorialMainMenuButton" type="button">Main Menu</button>
+            </div>
           </div>
         </aside>
 
@@ -510,6 +518,73 @@
         </p>
       </section>
       <button class="primary-button settings-done-button" data-close-settings type="button">Done</button>
+    </dialog>
+
+    <dialog
+      class="game-dialog tutorial-menu-dialog"
+      id="tutorialMenuDialog"
+      aria-labelledby="tutorialMenuTitle"
+      aria-describedby="tutorialMenuIntro"
+    >
+      <button class="dialog-close" data-close-tutorial-menu type="button" aria-label="Close tutorial menu">×</button>
+      <p class="eyebrow">TRAINING GROUNDS</p>
+      <h2 id="tutorialMenuTitle">Choose Your Lesson</h2>
+      <p class="tutorial-menu-intro" id="tutorialMenuIntro">
+        Complete the full training path, or practise one section without replaying everything before it.
+      </p>
+      <div class="tutorial-menu-options" id="tutorialMenuOptions">
+        <button class="tutorial-menu-option tutorial-menu-complete" data-tutorial-path="complete" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">ALL</span>
+          <span>
+            <strong>Complete Training</strong>
+            <small>Interface tour followed by every scripted lesson in order.</small>
+            <em>Recommended for first-time players</em>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-path="tour" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">0</span>
+          <span>
+            <strong>Training Grounds Tour</strong>
+            <small>Learn the interface, trophies, lane matchups, formations, and reference buttons.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="0" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">1</span>
+          <span>
+            <strong>Element Edge</strong>
+            <small>Learn the element cycle and how a winning element earns Edge +2.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="1" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">2</span>
+          <span>
+            <strong>Focus</strong>
+            <small>Learn why committing fewer cards grants extra power to paired lanes.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="2" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">3</span>
+          <span>
+            <strong>Formation Roles</strong>
+            <small>Practise Vanguard, Link, Finisher, placement, and Role +1.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="3" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">4</span>
+          <span>
+            <strong>Overwhelm</strong>
+            <small>See how a three-card formation punishes a lone commitment.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="4" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">5</span>
+          <span>
+            <strong>Pressure</strong>
+            <small>Learn how extra committed cards break a tied round.</small>
+          </span>
+        </button>
+      </div>
+      <button class="tutorial-menu-return" data-close-tutorial-menu type="button">Return to Main Menu</button>
     </dialog>
 
     <dialog

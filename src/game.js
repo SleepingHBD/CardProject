@@ -78,6 +78,14 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
   music: 0.12,
   effects: 1,
 });
+const TUTORIAL_MODES = Object.freeze(["complete", "tour", "lesson"]);
+const TUTORIAL_SECTION_NAMES = Object.freeze([
+  "Element Edge",
+  "Focus",
+  "Formation Roles",
+  "Overwhelm",
+  "Pressure",
+]);
 const TUTORIAL_TOUR_STEPS = Object.freeze([
   Object.freeze({
     id: "round-score",
@@ -404,6 +412,8 @@ const state = {
 };
 const tutorial = {
   active: false,
+  mode: "complete",
+  entryLessonIndex: 0,
   lessonIndex: 0,
   tourStep: 0,
   introStep: 0,
@@ -453,6 +463,8 @@ const ui = {
   archiveResetFilters: document.querySelector("#archiveResetFilters"),
   resultDialog: document.querySelector("#resultDialog"),
   difficultyDialog: document.querySelector("#difficultyDialog"),
+  tutorialMenuDialog: document.querySelector("#tutorialMenuDialog"),
+  tutorialMenuOptions: document.querySelector("#tutorialMenuOptions"),
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
   mainMenuTutorialButton: document.querySelector("#mainMenuTutorialButton"),
@@ -484,7 +496,12 @@ const ui = {
   tutorialVisual: document.querySelector("#tutorialVisual"),
   tutorialCoachText: document.querySelector("#tutorialCoachText"),
   tutorialObjective: document.querySelector("#tutorialObjective"),
+  tutorialBackButton: document.querySelector("#tutorialBackButton"),
   tutorialActionButton: document.querySelector("#tutorialActionButton"),
+  tutorialCompletionActions: document.querySelector("#tutorialCompletionActions"),
+  tutorialRetryButton: document.querySelector("#tutorialRetryButton"),
+  tutorialMenuButton: document.querySelector("#tutorialMenuButton"),
+  tutorialMainMenuButton: document.querySelector("#tutorialMainMenuButton"),
 };
 let draggedCardId = null;
 let settingsReturnTarget = "main";
@@ -524,6 +541,11 @@ function currentTutorialIntroPage() {
 
 function currentTutorialTourStep() {
   return TUTORIAL_TOUR_STEPS[tutorial.tourStep] || null;
+}
+
+function currentTutorialSectionName() {
+  if (tutorial.mode === "tour") return "Training Grounds Tour";
+  return TUTORIAL_SECTION_NAMES[tutorial.lessonIndex] || "Tutorial Section";
 }
 
 function createTutorialCard(art, side, index) {
@@ -628,6 +650,14 @@ function applyTutorialHighlights() {
 
 function getTutorialCoachAnchorContext() {
   if (!tutorial.active) return null;
+
+  if (tutorial.phase === "section-complete") {
+    return {
+      element: null,
+      key: `section-complete:${tutorial.mode}:${tutorial.entryLessonIndex}`,
+      unanchored: true,
+    };
+  }
 
   if (tutorial.phase === "tour") {
     const tourStep = currentTutorialTourStep();
@@ -891,6 +921,8 @@ function renderTutorialCoach() {
     return;
   }
 
+  ui.tutorialCompletionActions.hidden = true;
+
   if (tutorial.phase === "tour") {
     const tourStep = currentTutorialTourStep();
     if (!tourStep) return;
@@ -902,12 +934,39 @@ function renderTutorialCoach() {
     ui.tutorialCoachTitle.textContent = tourStep.title;
     ui.tutorialCoachText.textContent = tourStep.text;
     ui.tutorialObjective.textContent = tourStep.objective;
+    ui.tutorialBackButton.hidden = false;
+    ui.tutorialBackButton.disabled =
+      tutorial.tourStep === 0 && tutorial.mode === "complete";
     ui.tutorialActionButton.hidden = false;
-    ui.tutorialActionButton.textContent = finalTourStep ? "Begin Lesson 1" : "Next";
+    ui.tutorialActionButton.textContent = finalTourStep
+      ? tutorial.mode === "tour"
+        ? "Finish Tour"
+        : "Begin Lesson 1"
+      : "Next";
     window.requestAnimationFrame(() => {
       applyTutorialHighlights();
       positionTutorialCoach();
     });
+    return;
+  }
+
+  if (tutorial.phase === "section-complete") {
+    const sectionName = currentTutorialSectionName();
+    ui.tutorialCoach.hidden = false;
+    ui.tutorialProgress.textContent = "SECTION COMPLETE";
+    ui.tutorialConcept.textContent = "Practice complete";
+    ui.tutorialCoachTitle.textContent = `${sectionName} complete`;
+    ui.tutorialCoachText.textContent =
+      `You completed the ${sectionName} section without needing to replay the full training path.`;
+    ui.tutorialObjective.textContent =
+      "Retry this section for more practice, choose another lesson, or return to the main menu.";
+    ui.tutorialBackButton.hidden = true;
+    ui.tutorialActionButton.hidden = true;
+    ui.tutorialCompletionActions.hidden = false;
+    ui.tutorialRetryButton.textContent =
+      tutorial.mode === "tour" ? "Retry Tour" : "Retry Lesson";
+    clearTutorialHighlights();
+    window.requestAnimationFrame(positionTutorialCoach);
     return;
   }
 
@@ -919,8 +978,12 @@ function renderTutorialCoach() {
   const finalLesson = tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1;
 
   ui.tutorialCoach.hidden = false;
-  ui.tutorialProgress.textContent = `Lesson ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
+  ui.tutorialProgress.textContent = tutorial.mode === "lesson"
+    ? "SECTION PRACTICE"
+    : `Lesson ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
   ui.tutorialConcept.textContent = lesson.concept;
+  ui.tutorialBackButton.hidden = true;
+  ui.tutorialBackButton.disabled = true;
   ui.tutorialActionButton.hidden = false;
 
   if (tutorial.phase === "intro") {
@@ -928,16 +991,24 @@ function renderTutorialCoach() {
     const introPage = currentTutorialIntroPage();
     const finalIntroPage = tutorial.introStep === introPages.length - 1;
     if (introPages.length > 1) {
-      ui.tutorialProgress.textContent =
-        `Lesson ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
+      ui.tutorialProgress.textContent = tutorial.mode === "lesson"
+        ? `Step ${tutorial.introStep + 1} of ${introPages.length}`
+        : `Lesson ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
     }
     ui.tutorialCoachTitle.textContent = introPage.title;
     renderTutorialVisual(introPage.visual);
     ui.tutorialCoachText.textContent = introPage.text;
     ui.tutorialObjective.textContent = introPage.objective;
+    ui.tutorialBackButton.hidden = false;
+    ui.tutorialBackButton.disabled =
+      tutorial.introStep === 0
+      && tutorial.mode === "complete"
+      && tutorial.lessonIndex > 0;
     ui.tutorialActionButton.textContent = finalIntroPage ? "Start Lesson" : "Next";
   } else if (tutorial.phase === "play") {
     ui.tutorialActionButton.hidden = true;
+    ui.tutorialBackButton.hidden = selected.length > 0;
+    ui.tutorialBackButton.disabled = false;
     if (validFormation) {
       ui.tutorialCoachTitle.textContent = "Formation ready";
       ui.tutorialCoachText.textContent =
@@ -992,10 +1063,14 @@ function renderTutorialCoach() {
 function configureGameMenu() {
   ui.gameMenuTitle.textContent = tutorial.active ? "Training is paused" : "The duel is paused";
   ui.gameMenuNote.textContent = tutorial.active
-    ? "Resume this lesson, restart the complete tutorial, adjust settings, or return to the main menu."
+    ? tutorial.mode === "complete"
+      ? "Resume this lesson, restart the complete training path, adjust settings, or return to the main menu."
+      : "Resume this section, restart it from the beginning, adjust settings, or return to the main menu."
     : "Restarting, changing difficulty, or returning to the main menu will end this duel.";
   ui.resumeGameButton.textContent = tutorial.active ? "Resume Training" : "Resume Duel";
-  ui.restartGameButton.textContent = tutorial.active ? "Restart Tutorial" : "Restart Duel";
+  ui.restartGameButton.textContent = tutorial.active
+    ? tutorial.mode === "complete" ? "Restart Tutorial" : "Restart Section"
+    : "Restart Duel";
   ui.changeDifficultyButton.hidden = tutorial.active;
 }
 
@@ -1013,13 +1088,16 @@ function stopTutorialMode() {
   configureGameMenu();
 }
 
-function startTutorialTour() {
+function startTutorialTour(initialStep = 0) {
   if (!tutorial.active) return;
   const previewLesson = TUTORIAL_LESSONS[0];
   clearCinematicRemains();
   clearTrophyClaim();
   tutorial.lessonIndex = 0;
-  tutorial.tourStep = 0;
+  tutorial.tourStep = Math.min(
+    Math.max(0, initialStep),
+    TUTORIAL_TOUR_STEPS.length - 1,
+  );
   tutorial.phase = "tour";
   state.round = 1;
   state.locked = true;
@@ -1040,7 +1118,8 @@ function startTutorialTour() {
   ui.aiPlayZone.innerHTML = tutorialOpponentLaneGuideMarkup();
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("Training Grounds Tour", "Learn where the game keeps its most important information.");
+  const tourStep = currentTutorialTourStep();
+  setMessage(tourStep.title, tourStep.objective);
   renderOpponentTells();
   renderHand();
   renderFormationBuilder();
@@ -1058,6 +1137,12 @@ function startTutorialTour() {
 function advanceTutorialTour() {
   if (!tutorial.active || tutorial.phase !== "tour") return;
   if (tutorial.tourStep >= TUTORIAL_TOUR_STEPS.length - 1) {
+    if (tutorial.mode === "tour") {
+      state.locked = true;
+      tutorial.phase = "section-complete";
+      renderTutorialCoach();
+      return;
+    }
     loadTutorialLesson(0);
     return;
   }
@@ -1076,7 +1161,7 @@ function loadTutorialLesson(index) {
   tutorial.lessonIndex = index;
   tutorial.introStep = 0;
   tutorial.phase = "intro";
-  state.round = index + 1;
+  state.round = tutorial.mode === "lesson" ? 1 : index + 1;
   state.locked = true;
   state.dealing = false;
   state.selectedCardIds = [];
@@ -1092,13 +1177,13 @@ function loadTutorialLesson(index) {
   ui.menuButton.disabled = false;
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
-  ui.playerPlayZone.innerHTML = placeholder("Lesson formation");
-  ui.aiPlayZone.innerHTML = placeholder("Training plan sealed");
+  ui.aiPlayZone.innerHTML = tutorialOpponentLaneGuideMarkup(state.aiPlan.length);
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
   setMessage(lesson.title, "Read your coach’s instructions, then begin the lesson.");
   renderOpponentTells();
   renderHand();
+  renderFormationBuilder();
   renderRound();
   renderRoundScore();
   renderTutorialCoach();
@@ -1127,6 +1212,49 @@ function advanceTutorialIntro() {
   renderTutorialCoach();
 }
 
+function retreatTutorialInstruction() {
+  if (!tutorial.active) return;
+
+  if (tutorial.phase === "tour") {
+    if (tutorial.tourStep > 0) {
+      tutorial.tourStep -= 1;
+      const tourStep = currentTutorialTourStep();
+      setMessage(tourStep.title, tourStep.objective);
+      renderTutorialCoach();
+    } else if (tutorial.mode === "tour") {
+      showTutorialMenu();
+    }
+    return;
+  }
+
+  if (tutorial.phase === "intro") {
+    if (tutorial.introStep > 0) {
+      tutorial.introStep -= 1;
+      const introPage = currentTutorialIntroPage();
+      setMessage(introPage.title, introPage.objective);
+      renderTutorialCoach();
+      return;
+    }
+    if (tutorial.mode === "lesson") {
+      showTutorialMenu();
+    } else if (tutorial.lessonIndex === 0) {
+      startTutorialTour(TUTORIAL_TOUR_STEPS.length - 1);
+    }
+    return;
+  }
+
+  if (tutorial.phase === "play" && state.selectedCardIds.length === 0) {
+    tutorial.phase = "intro";
+    tutorial.introStep = currentTutorialIntroPages().length - 1;
+    state.locked = true;
+    const introPage = currentTutorialIntroPage();
+    setMessage(introPage.title, introPage.objective);
+    renderHand();
+    renderFormationBuilder();
+    renderTutorialCoach();
+  }
+}
+
 function finishTutorialLesson() {
   state.locked = true;
   ui.menuButton.disabled = false;
@@ -1134,9 +1262,11 @@ function finishTutorialLesson() {
   ui.playSelectedButton.hidden = true;
   ui.nextRoundButton.hidden = true;
   ui.nextRoundButton.disabled = true;
-  tutorial.phase = tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1
-    ? "complete"
-    : "aftermath";
+  tutorial.phase = tutorial.mode === "lesson"
+    ? "section-complete"
+    : tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1
+      ? "complete"
+      : "aftermath";
   renderTutorialCoach();
 }
 
@@ -1198,10 +1328,18 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
   finishTutorialLesson();
 }
 
-async function startTutorial() {
-  tutorial.runId += 1;
+async function startTutorial(mode = "complete", lessonIndex = 0) {
+  const selectedMode = TUTORIAL_MODES.includes(mode) ? mode : "complete";
+  const selectedLessonIndex = Math.min(
+    Math.max(0, Number(lessonIndex) || 0),
+    TUTORIAL_LESSONS.length - 1,
+  );
+  const runId = tutorial.runId + 1;
+  tutorial.runId = runId;
   tutorial.active = true;
-  tutorial.lessonIndex = 0;
+  tutorial.mode = selectedMode;
+  tutorial.entryLessonIndex = selectedMode === "lesson" ? selectedLessonIndex : 0;
+  tutorial.lessonIndex = tutorial.entryLessonIndex;
   tutorial.tourStep = 0;
   tutorial.introStep = 0;
   tutorial.phase = "opening";
@@ -1219,6 +1357,7 @@ async function startTutorial() {
   clearCinematicRemains();
   closeDialog(ui.gameMenuDialog);
   closeDialog(ui.difficultyDialog);
+  closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
   ui.mainMenuScreen.hidden = true;
   document.body.classList.remove("main-menu-active");
@@ -1237,13 +1376,23 @@ async function startTutorial() {
   ui.tutorialCoach.hidden = true;
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
+  const sectionName = selectedMode === "tour"
+    ? "Training Grounds Tour"
+    : TUTORIAL_SECTION_NAMES[tutorial.entryLessonIndex];
   setMessage(
     "Entering the Training Grounds...",
-    "Begin with a quick interface tour, then complete five scripted lessons.",
+    selectedMode === "complete"
+      ? "Begin with a quick interface tour, then complete five scripted lessons."
+      : `Preparing the ${sectionName} section.`,
   );
   await playDeckTransition("opening");
+  if (!tutorial.active || tutorial.runId !== runId) return;
   state.dealing = false;
-  startTutorialTour();
+  if (selectedMode === "lesson") {
+    loadTutorialLesson(tutorial.entryLessonIndex);
+  } else {
+    startTutorialTour();
+  }
 }
 
 function clampClashScorePosition(left, top) {
@@ -1755,16 +1904,22 @@ function placeholder(label) {
   return `<div class="card-placeholder"><span class="paw">◆</span><small>${label}</small></div>`;
 }
 
-function tutorialOpponentLaneGuideMarkup() {
+function tutorialOpponentLaneGuideMarkup(commitmentCount = MAX_PLAY_SIZE) {
   return `
     <div class="formation-builder tutorial-lane-guide" aria-label="Professor Paws’ formation lanes">
-      ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => `
-        <div class="formation-slot empty-slot">
-          <span>LANE ${index + 1}</span>
-          <b>SEALED</b>
-          <small>FACES YOUR LANE ${index + 1}</small>
-        </div>
-      `).join("")}
+      ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => {
+        const isCommitted = index < commitmentCount;
+        return `
+          <div
+            class="formation-slot empty-slot${isCommitted ? "" : " waiting-slot"}"
+            aria-label="Professor Paws lane ${index + 1}, ${isCommitted ? "committed card sealed" : "no card committed"}"
+          >
+            <span>LANE ${index + 1}</span>
+            <b>${isCommitted ? "SEALED" : "EMPTY"}</b>
+            <small>${isCommitted ? `FACES YOUR LANE ${index + 1}` : "NO CARD COMMITTED"}</small>
+          </div>
+        `;
+      }).join("")}
     </div>
   `;
 }
@@ -1893,7 +2048,8 @@ function renderFormationBuilder() {
     <div class="formation-builder" aria-label="Your formation lanes">
       ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => {
         const card = selectedCards[index];
-        const isNextSlot = index === selectedCards.length;
+        const isLockedSlot = state.locked && !card;
+        const isNextSlot = !state.locked && index === selectedCards.length;
         if (card) {
           const bonusPreview = getFormationBonusPreview(selectedCards, index);
           return `
@@ -1905,13 +2061,13 @@ function renderFormationBuilder() {
         }
         return `
           <div
-            class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}"
+            class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}${isLockedSlot ? " locked-slot" : ""}"
             data-drop-lane="${index}"
-            aria-label="Lane ${index + 1}${isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
+            aria-label="Lane ${index + 1}${isLockedSlot ? ", locked until the lesson starts" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
           >
             <span>LANE ${index + 1}</span>
-            <b>${isNextSlot ? "DROP CARD" : "WAITING"}</b>
-            <small>${isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
+            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
+            <small>${isLockedSlot ? "START THE LESSON" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
           </div>
         `;
       }).join("")}
@@ -2891,10 +3047,16 @@ function showMainMenu() {
   audio.startMainMenuMusic();
   closeDialog(ui.gameMenuDialog);
   closeDialog(ui.difficultyDialog);
+  closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
   setGameMenuVisibility(false);
   ui.mainMenuScreen.hidden = false;
   document.body.classList.add("main-menu-active");
+}
+
+function showTutorialMenu() {
+  showMainMenu();
+  if (!ui.tutorialMenuDialog.open) ui.tutorialMenuDialog.showModal();
 }
 
 function showDifficultyChooser() {
@@ -3119,9 +3281,21 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
   showDifficultyChooser();
 });
 ui.mainMenuPlayButton.addEventListener("click", showDifficultyChooser);
-ui.mainMenuTutorialButton.addEventListener("click", startTutorial);
+ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
+ui.tutorialMenuOptions.addEventListener("click", (event) => {
+  const option = event.target.closest("[data-tutorial-path], [data-tutorial-lesson]");
+  if (!option) return;
+  if (option.dataset.tutorialLesson !== undefined) {
+    startTutorial("lesson", Number(option.dataset.tutorialLesson));
+    return;
+  }
+  startTutorial(option.dataset.tutorialPath);
+});
+document.querySelectorAll("[data-close-tutorial-menu]").forEach((button) => {
+  button.addEventListener("click", () => closeDialog(ui.tutorialMenuDialog));
+});
 ui.menuButton.addEventListener("click", () => {
   if (!ui.menuButton.disabled && !ui.gameMenuDialog.open) {
     ui.gameMenuDialog.showModal();
@@ -3132,7 +3306,7 @@ ui.resumeGameButton.addEventListener("click", () => ui.gameMenuDialog.close());
 ui.restartGameButton.addEventListener("click", () => {
   ui.gameMenuDialog.close();
   if (tutorial.active) {
-    startTutorial();
+    startTutorial(tutorial.mode, tutorial.entryLessonIndex);
   } else {
     startGame();
   }
@@ -3140,6 +3314,12 @@ ui.restartGameButton.addEventListener("click", () => {
 ui.changeDifficultyButton.addEventListener("click", showDifficultyChooser);
 ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
+ui.tutorialBackButton.addEventListener("click", retreatTutorialInstruction);
+ui.tutorialRetryButton.addEventListener("click", () => {
+  startTutorial(tutorial.mode, tutorial.entryLessonIndex);
+});
+ui.tutorialMenuButton.addEventListener("click", showTutorialMenu);
+ui.tutorialMainMenuButton.addEventListener("click", showMainMenu);
 ui.tutorialActionButton.addEventListener("click", () => {
   if (!tutorial.active) return;
   if (tutorial.phase === "tour") {

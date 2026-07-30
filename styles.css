@@ -721,6 +721,10 @@ h1 {
   opacity: .45;
 }
 
+.tutorial-active .formation-slot.locked-slot {
+  opacity: .72;
+}
+
 .formation-slot.drag-over {
   z-index: 8;
   background-color: #f2d887;
@@ -3205,6 +3209,156 @@ footer {
   overflow-y: auto;
 }
 
+.tutorial-menu-dialog {
+  width: min(860px, calc(100vw - 30px));
+  max-height: 92dvh;
+  padding: 28px 34px 30px;
+  overflow-y: auto;
+}
+
+.tutorial-menu-dialog h2 {
+  margin-bottom: 7px;
+}
+
+.tutorial-menu-intro {
+  max-width: 650px;
+  margin: 0 auto 18px;
+  color: #654a34;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.42;
+}
+
+.tutorial-menu-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tutorial-menu-option {
+  position: relative;
+  min-height: 92px;
+  padding: 13px 14px;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: #3d291f;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.34), transparent 48%),
+    rgba(255,247,218,.48);
+  border: 2px solid #8c663c;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,246,204,.68);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.tutorial-menu-option:hover,
+.tutorial-menu-option:focus-visible {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.5), transparent 48%),
+    rgba(247,225,169,.72);
+  border-color: #4f3426;
+  transform: translateY(-2px);
+}
+
+.tutorial-menu-option:focus-visible {
+  outline: 3px solid #8b542f;
+  outline-offset: 2px;
+}
+
+.tutorial-menu-complete {
+  grid-column: 1 / -1;
+  min-height: 100px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.22), transparent 48%),
+    linear-gradient(90deg, #513126, #754634 48%, #513126);
+  border-color: #c79a4f;
+  color: #f5e3b3;
+  box-shadow:
+    inset 0 0 0 2px #2d1b16,
+    inset 0 0 0 3px rgba(239,198,104,.52);
+}
+
+.tutorial-menu-complete:hover,
+.tutorial-menu-complete:focus-visible {
+  color: #fff1c3;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.25), transparent 48%),
+    linear-gradient(90deg, #67402f, #89543b 48%, #67402f);
+  border-color: #e2bc68;
+}
+
+.tutorial-menu-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #f1d58b;
+  background: #4d3025;
+  border: 2px solid #2c1a15;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(225,181,91,.44);
+  font-family: "Cinzel", serif;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.tutorial-menu-complete .tutorial-menu-icon {
+  font-size: 12px;
+  letter-spacing: .05em;
+}
+
+.tutorial-menu-option strong,
+.tutorial-menu-option small,
+.tutorial-menu-option em {
+  display: block;
+}
+
+.tutorial-menu-option strong {
+  font-family: "Cinzel", serif;
+  font-size: 14px;
+}
+
+.tutorial-menu-option small {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.32;
+}
+
+.tutorial-menu-option em {
+  margin-top: 5px;
+  color: #eacb7b;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.tutorial-menu-return {
+  min-height: 40px;
+  margin-top: 14px;
+  padding: 8px 18px;
+  color: #553729;
+  background: rgba(255,247,218,.4);
+  border: 1px solid #8c663c;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tutorial-menu-return:hover,
+.tutorial-menu-return:focus-visible {
+  color: #2f1c16;
+  background: #f2dfad;
+}
+
 .difficulty-dialog h2 {
   margin-bottom: 8px;
 }
@@ -4441,9 +4595,23 @@ footer {
   .element-cycle { gap: 4px; }
   .element-cycle span { padding-inline: 5px; font-size: 8px; }
   .element-cycle i { font-size: 7px; }
-  .difficulty-dialog { padding: 22px 13px 18px; }
+  .difficulty-dialog,
+  .tutorial-menu-dialog { padding: 22px 13px 18px; }
   .difficulty-dialog h2 { margin-bottom: 6px; font-size: 21px; }
   .difficulty-intro { margin-bottom: 13px; font-size: 12px; }
+  .tutorial-menu-dialog h2 { font-size: 21px; }
+  .tutorial-menu-intro { margin-bottom: 13px; font-size: 12px; }
+  .tutorial-menu-options { grid-template-columns: 1fr; gap: 8px; }
+  .tutorial-menu-complete { grid-column: auto; }
+  .tutorial-menu-option {
+    min-height: 80px;
+    padding: 10px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 9px;
+  }
+  .tutorial-menu-icon { width: 40px; height: 40px; font-size: 18px; }
+  .tutorial-menu-option strong { font-size: 12px; }
+  .tutorial-menu-option small { font-size: 10px; }
   .difficulty-option {
     min-height: 88px;
     padding: 11px 10px;
@@ -4960,7 +5128,7 @@ footer {
 .tutorial-coach-actions {
   padding: 0 13px 13px;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
   gap: 10px;
 }
 
@@ -4973,11 +5141,52 @@ footer {
   font-weight: 900;
 }
 
+.tutorial-back-button {
+  color: #4d3025;
+  background: #ead7aa;
+  border: 2px solid #795038;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255, 248, 210, .68);
+  cursor: pointer;
+}
+
+.tutorial-back-button:hover:not(:disabled),
+.tutorial-back-button:focus-visible:not(:disabled) {
+  color: #2d1b15;
+  background: #f4e3b6;
+  border-color: #4d3025;
+}
+
+.tutorial-back-button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.tutorial-back-button[hidden],
 .tutorial-action-button[hidden] {
   display: none;
 }
 
-.tutorial-coach-actions:has(.tutorial-action-button[hidden]) {
+.tutorial-coach-actions:has(.tutorial-back-button[hidden]) .tutorial-action-button,
+.tutorial-coach-actions:has(.tutorial-action-button[hidden]) .tutorial-back-button {
+  grid-column: 1 / -1;
+}
+
+.tutorial-completion-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+}
+
+.tutorial-completion-actions[hidden] {
+  display: none;
+}
+
+.tutorial-completion-actions .tutorial-back-button {
+  width: 100%;
+}
+
+.tutorial-coach-actions:has(.tutorial-back-button[hidden]):has(.tutorial-action-button[hidden]):has(.tutorial-completion-actions[hidden]) {
   display: none;
 }
 
