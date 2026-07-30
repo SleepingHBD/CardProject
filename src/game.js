@@ -180,6 +180,7 @@ const TUTORIAL_LESSONS = Object.freeze([
           "Ember counters Gust, Gust counters Tide, and Tide counters Ember. A countering card earns Element Edge +2 when the lane is paired.",
         objective:
           "Element Edge strengthens the card’s total, but it does not guarantee victory. Printed Power and every other active bonus still matter.",
+        visual: "element-cycle",
         targets: Object.freeze([".rules-strip"]),
         anchor: ".rules-strip",
         preferredSide: "top",
@@ -447,6 +448,7 @@ const ui = {
   tutorialProgress: document.querySelector("#tutorialProgress"),
   tutorialConcept: document.querySelector("#tutorialConcept"),
   tutorialCoachTitle: document.querySelector("#tutorialCoachTitle"),
+  tutorialVisual: document.querySelector("#tutorialVisual"),
   tutorialCoachText: document.querySelector("#tutorialCoachText"),
   tutorialObjective: document.querySelector("#tutorialObjective"),
   tutorialActionButton: document.querySelector("#tutorialActionButton"),
@@ -776,7 +778,55 @@ function positionTutorialCoach() {
   ui.tutorialCoach.classList.add("is-anchored");
 }
 
+function renderTutorialVisual(type = null) {
+  if (type !== "element-cycle") {
+    ui.tutorialVisual.hidden = true;
+    ui.tutorialVisual.innerHTML = "";
+    return;
+  }
+
+  ui.tutorialVisual.hidden = false;
+  ui.tutorialVisual.innerHTML = `
+    <div
+      class="element-edge-cycle"
+      role="img"
+      aria-label="Element Edge cycle: Ember beats Gust, Gust beats Tide, and Tide beats Ember. A winning elemental counter adds two points."
+    >
+      <svg class="element-cycle-arrows" viewBox="0 0 320 190" aria-hidden="true">
+        <defs>
+          <marker id="element-cycle-arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
+        <path d="M 186 46 C 228 65, 250 91, 261 124"></path>
+        <path d="M 232 151 C 189 169, 131 169, 88 151"></path>
+        <path d="M 59 124 C 70 90, 94 64, 135 46"></path>
+      </svg>
+      <span class="element-cycle-beats beats-ember-gust" aria-hidden="true">BEATS</span>
+      <span class="element-cycle-beats beats-gust-tide" aria-hidden="true">BEATS</span>
+      <span class="element-cycle-beats beats-tide-ember" aria-hidden="true">BEATS</span>
+      <div class="element-cycle-node cycle-ember">
+        <i aria-hidden="true">${ELEMENTS.ember.icon}</i>
+        <b>EMBER</b>
+      </div>
+      <div class="element-cycle-node cycle-gust">
+        <i aria-hidden="true">${ELEMENTS.gust.icon}</i>
+        <b>GUST</b>
+      </div>
+      <div class="element-cycle-node cycle-tide">
+        <i aria-hidden="true">${ELEMENTS.tide.icon}</i>
+        <b>TIDE</b>
+      </div>
+      <div class="element-cycle-edge" aria-hidden="true">
+        <b>+${ELEMENT_EDGE_BONUS}</b>
+        <span>EDGE</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderTutorialCoach() {
+  renderTutorialVisual();
   if (!tutorial.active) {
     ui.tutorialCoach.hidden = true;
     clearTutorialHighlights();
@@ -829,6 +879,7 @@ function renderTutorialCoach() {
         `Lesson ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
     }
     ui.tutorialCoachTitle.textContent = introPage.title;
+    renderTutorialVisual(introPage.visual);
     ui.tutorialCoachText.textContent = introPage.text;
     ui.tutorialObjective.textContent = introPage.objective;
     ui.tutorialActionButton.textContent = finalIntroPage ? "Start Lesson" : "Next";
