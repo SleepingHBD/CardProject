@@ -236,7 +236,7 @@ const TUTORIAL_LESSONS = Object.freeze([
     concept: "Lesson 3 · Tactic roles",
     title: "Build a three-role formation",
     intro:
-      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before it has a different element. Finisher earns +1 as the last paired card in a two- or three-card formation.",
+      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. Finisher earns +1 as the last paired card in a two- or three-card formation.",
     objective:
       "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Tactics.",
     introPages: Object.freeze([
@@ -253,7 +253,7 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Link: check the card directly before it",
         text:
-          "A Link card can earn Link +1 in Lane 2 or Lane 3. In Lane 2, it checks your card in Lane 1. In Lane 3, it checks your card in Lane 2. The two elements must be different.",
+          "A Link card can earn Link +1 in Lane 2 or Lane 3. In Lane 2, the Link checks your card in Lane 1. In Lane 3, the Link checks your card in Lane 2. It gains +1 only when that preceding card has a different element from the Link card itself.",
         objective:
           "Link cannot activate in Lane 1 because no card comes before it. A Tide Link after Ember earns +1; a Tide Link after Tide earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
@@ -291,9 +291,9 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Connect with Link",
         text:
-          "Bubble Bengal is a Tide Link. In Lane 2, she checks the card directly before her: Candle Pounce in Lane 1. Tide and Ember are different elements, so Link +1 will activate. A Link can also activate in Lane 3 by checking Lane 2.",
+          "Bubble Bengal is a Tide Link. In Lane 2, she checks the card directly before her: Candle Pounce in Lane 1. The card before the Link is Ember, which differs from Bubble Bengal’s Tide element, so Link +1 will activate. A Link can also activate in Lane 3 by checking Lane 2.",
         objective:
-          "Place Bubble Bengal in Lane 2. Because the card directly before her has a different element, she receives Link +1.",
+          "Place Bubble Bengal in Lane 2. Because the card directly before the Link has a different element from her Tide element, she receives Link +1.",
       }),
       Object.freeze({
         title: "Close with Finisher",
@@ -304,14 +304,14 @@ const TUTORIAL_LESSONS = Object.freeze([
       }),
     ]),
     readyText:
-      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because Lane 2 follows a different element, and Finisher +1 because Lane 3 is last and paired.",
+      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Lane 3 is last and paired.",
     readyObjective:
       "Confirm all three Tactic +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aftermath:
-      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card directly before her had a different element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation and faced Lane 3. Changing their order could disable these bonuses.",
+      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Tide element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation and faced Lane 3. Changing their order could disable these bonuses.",
     trophyChoice: true,
   }),
   Object.freeze({

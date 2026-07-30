@@ -18,7 +18,7 @@ const TACTICS = Object.freeze({
   link: Object.freeze({
     icon: "chain",
     label: "Link",
-    description: "Link: +1 in Lane 2 or 3 when the card directly before it has a different element.",
+    description: "Link: +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card.",
   }),
   finisher: Object.freeze({
     icon: "sword",
