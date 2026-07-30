@@ -26,7 +26,7 @@ const TACTICS = Object.freeze({
     description: "Finisher: +1 when committed last in a 2- or 3-card formation and facing an opposing card in the same lane.",
   }),
 });
-const DIFFICULTY_MODES = Object.freeze(["guided", "veiled", "instinct", "blind"]);
+const DIFFICULTY_MODES = Object.freeze(["guided", "instinct", "blind"]);
 const AI_MOTIVE_TRAITS = Object.freeze([
   Object.freeze({
     id: "trophy-hunter",
@@ -99,10 +99,10 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     description: "Usually commits 2 cards, balancing reliability against card cost.",
   }),
   Object.freeze({
-    id: "pressure-gambler",
+    id: "full-formation",
     category: "commitment",
-    label: "Pressure Gambler",
-    description: "Usually commits 3 cards to threaten Pressure.",
+    label: "Full Formation",
+    description: "Usually commits 3 cards for maximum lane coverage and extra-card points.",
   }),
   Object.freeze({
     id: "score-reader",
@@ -125,24 +125,22 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
 ]);
 
 const LANE_WIN_POINTS = 2;
-const PRESSURE_CARD_POINTS = 1;
+const EXTRA_CARD_POINTS = 1;
 
 function buildTellClues(
   cardCount,
-  difficulty = "veiled",
-  random = Math.random,
+  difficulty = "guided",
 ) {
   const safeDifficulty = DIFFICULTY_MODES.includes(difficulty)
     ? difficulty
-    : "veiled";
+    : "guided";
   const safeCount = Math.min(MAX_COMMITMENT, Math.max(0, cardCount));
 
   return Array.from({ length: MAX_COMMITMENT }, (_, index) => {
     if (safeDifficulty === "instinct") return "sealed";
     if (index >= safeCount) return "empty";
     if (safeDifficulty === "guided") return "full";
-    if (safeDifficulty === "blind") return "sealed";
-    return random() < 0.5 ? "element" : "power";
+    return "sealed";
   });
 }
 
@@ -458,7 +456,7 @@ function chooseAiCommitment(
     commitment = roll < 0.52 ? 1 : roll < 0.9 ? 2 : 3;
   } else if (hasAiTrait(traits, "measured-planner")) {
     commitment = roll < 0.1 ? 1 : roll < 0.82 ? 2 : 3;
-  } else if (hasAiTrait(traits, "pressure-gambler")) {
+  } else if (hasAiTrait(traits, "full-formation")) {
     commitment = roll < 0.06 ? 1 : roll < 0.35 ? 2 : 3;
   } else if (hasAiTrait(traits, "score-reader")) {
     if (trophyGap > 0) {
@@ -530,19 +528,19 @@ function resolveClashes(playerCards, aiCards) {
     },
     { player: 0, ai: 0, draw: 0 },
   );
-  const pressure = {
+  const extraCardPoints = {
     player: Math.max(0, playerCommitment - aiCommitment)
-      * PRESSURE_CARD_POINTS,
+      * EXTRA_CARD_POINTS,
     ai: Math.max(0, aiCommitment - playerCommitment)
-      * PRESSURE_CARD_POINTS,
+      * EXTRA_CARD_POINTS,
   };
   const lanePoints = {
     player: laneWins.player * LANE_WIN_POINTS,
     ai: laneWins.ai * LANE_WIN_POINTS,
   };
   const score = {
-    player: lanePoints.player + pressure.player,
-    ai: lanePoints.ai + pressure.ai,
+    player: lanePoints.player + extraCardPoints.player,
+    ai: lanePoints.ai + extraCardPoints.ai,
     draw: laneWins.draw,
   };
 
@@ -553,7 +551,7 @@ function resolveClashes(playerCards, aiCards) {
     const winnerLanePoints = lanePoints[winner];
     const loser = winner === "player" ? "ai" : "player";
     decidedBy = winnerLanePoints <= lanePoints[loser]
-      ? "pressure"
+      ? "extra-cards"
       : "clashes";
   }
 
@@ -562,7 +560,7 @@ function resolveClashes(playerCards, aiCards) {
     score,
     laneWins,
     lanePoints,
-    pressure,
+    extraCardPoints,
     lanes,
     winner,
     decidedBy,
@@ -578,7 +576,7 @@ function getFormationRewardOptions(playerCards, aiCards, resolution) {
   if (winner === "draw") return [];
 
   const winningCards = winner === "player" ? playerCards : aiCards;
-  if (resolution.decidedBy === "pressure") {
+  if (resolution.decidedBy === "extra-cards") {
     const rewardIndex = Math.min(playerCards.length, aiCards.length);
     const card = winningCards[rewardIndex] || winningCards[0] || null;
     return card ? [{ winner, card, lane: rewardIndex, fixed: true }] : [];
@@ -622,7 +620,7 @@ global.ClawRules = Object.freeze({
   ELEMENT_EDGE_BONUS,
   TACTIC_BONUS,
   LANE_WIN_POINTS,
-  PRESSURE_CARD_POINTS,
+  EXTRA_CARD_POINTS,
   MAX_COMMITMENT,
   TROPHIES_PER_ELEMENT,
   DIFFICULTY_MODES,

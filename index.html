@@ -155,7 +155,8 @@
             <h1 id="gameTitle">Trial of the Elements</h1>
           </div>
           <div class="round-status">
-            <div class="round-score" id="roundScore" aria-live="polite" aria-label="Round score: You 0, Professor Paws 0">
+            <div class="round-score" id="roundScore" aria-live="polite" aria-label="Rounds won: You 0, Professor Paws 0">
+              <small>ROUNDS WON</small>
               <span>YOU <b id="playerRoundScore">0</b></span>
               <i aria-hidden="true">–</i>
               <span><b id="aiRoundScore">0</b> PAWS</span>
@@ -197,7 +198,7 @@
             <div class="play-zone player-zone" id="playerPlayZone">
               <div class="card-placeholder">
                 <span class="paw">◆</span>
-                <small>Choose commitment first</small>
+                <small>Build your formation</small>
               </div>
             </div>
             <div class="score-label score-player">YOUR PLAY</div>
@@ -224,27 +225,16 @@
         <section class="hand-section">
           <div class="control-panel">
             <div class="turn-message" id="turnMessage" aria-live="polite">
-              <strong>Commitment Phase</strong>
-              <span>Choose your formation size before Professor Paws reveals his plan.</span>
+              <strong>Build Your Formation</strong>
+              <span>Place one to three cards, then commit when you are ready.</span>
             </div>
             <section class="tactics-board" aria-labelledby="tacticsTitle">
               <div class="tactics-heading">
                 <span class="scout-seal" aria-hidden="true">&#10022;</span>
                 <div>
                   <p id="tacticsTitle">Professor's Plan</p>
-                  <small id="commitmentHint">Professor commitment revealed.</small>
+                  <small id="commitmentHint">Professor's formation is ready.</small>
                   <div class="opponent-habits" id="opponentHabits" aria-label="Professor Paws' known habits" aria-live="polite" hidden></div>
-                </div>
-              </div>
-              <div class="commitment-phase" id="commitmentPhase" aria-labelledby="commitmentPhaseTitle" hidden>
-                <div>
-                  <strong id="commitmentPhaseTitle">Choose your commitment</strong>
-                  <small>Lock your formation size before Professor Paws reveals his plan.</small>
-                </div>
-                <div class="commitment-options" aria-label="Choose how many cards to commit">
-                  <button type="button" data-player-commitment="1" aria-label="Commit 1 card: efficient but least reliable"><b>1</b></button>
-                  <button type="button" data-player-commitment="2" aria-label="Commit 2 cards: balanced reliability and cost"><b>2</b></button>
-                  <button type="button" data-player-commitment="3" aria-label="Commit 3 cards: maximum coverage at the highest cost"><b>3</b></button>
                 </div>
               </div>
               <div class="opponent-tells" id="opponentTells" aria-label="Professor Paws' planned lanes"></div>
@@ -275,8 +265,8 @@
                 <div class="clash-score-panel" id="clashScorePanel">
                   <div class="clash-score-panel-heading" id="clashScoreDragHandle">
                     <div>
-                      <p>Clash &amp; Formation Scores</p>
-                      <strong>Power + active bonuses = total</strong>
+                      <p>Scoring Desk</p>
+                      <strong>Clash Total wins a lane. Round Points win the round.</strong>
                     </div>
                     <span class="clash-score-drag-hint">Drag to move</span>
                     <button
@@ -286,34 +276,46 @@
                       aria-label="Close Score Guide"
                     >×</button>
                   </div>
-                  <dl class="clash-score-parts">
-                    <div>
-                      <dt>Power</dt>
-                      <dd>The number printed on the card.</dd>
-                    </div>
-                    <div>
-                      <dt>Edge +2</dt>
-                      <dd>Your committed card's element counters the opposing element.</dd>
-                    </div>
-                    <div>
-                      <dt>Lane win +2</dt>
-                      <dd>Every paired lane you win adds 2 Formation Points.</dd>
-                    </div>
-                    <div class="tactic-score-part">
-                      <dt>Role +1</dt>
-                      <dd>Earned when that card's exact Formation Role condition is met.</dd>
-                      <ul>
-                        <li><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-shield"></use></svg></b><span><strong>Vanguard</strong> +1 when committed to Lane 1.</span></li>
-                        <li><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-chain"></use></svg></b><span><strong>Link</strong> +1 in Lane 2 or 3 when the card committed directly before the Link has a different element from the Link card.</span></li>
-                        <li><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-sword"></use></svg></b><span><strong>Finisher</strong> +1 when it is the final card you commit in a two- or three-card formation and it faces an opposing card.</span></li>
-                      </ul>
-                      <p class="tactic-placement-note"><strong>Formation Roles do not restrict placement.</strong> Any card may be committed in any available lane. If its condition is not met, it still clashes normally but receives no Role +1.</p>
-                    </div>
-                  </dl>
-                  <p class="pressure-score-note">
-                    <strong>Pressure is not a clash bonus.</strong>
-                    Every extra, unpaired card adds 1 Formation Point. Highest Formation Score wins.
-                  </p>
+                  <div class="score-guide-columns">
+                    <section class="score-guide-block clash-guide-block" aria-labelledby="scoreGuideClash">
+                      <span class="score-guide-kicker">1 · Score each contested lane</span>
+                      <h3 id="scoreGuideClash">Clash Total</h3>
+                      <p class="score-guide-formula">Power + Edge + Role = Clash Total</p>
+                      <dl class="score-guide-key">
+                        <div><dt>Power</dt><dd>The printed number.</dd></div>
+                        <div><dt>Edge +2</dt><dd>Your element beats the opposing element.</dd></div>
+                        <div><dt>Role +1</dt><dd>Your card meets its Role condition.</dd></div>
+                      </dl>
+                      <div class="score-guide-role-grid" aria-label="Formation Role reminders">
+                        <p><b><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-shield"></use></svg> Vanguard</b><span>+1 in Lane 1.</span></p>
+                        <p><b><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-chain"></use></svg> Link</b><span>+1 after a different element.</span></p>
+                        <p><b><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg> Finisher</b><span>+1 when last, in a 2–3 card formation, and opposed.</span></p>
+                      </div>
+                      <p class="score-guide-verdict"><b>Higher Clash Total wins that lane.</b> Equal totals draw. Roles never restrict placement.</p>
+                    </section>
+
+                    <section class="score-guide-block round-guide-block" aria-labelledby="scoreGuideRound">
+                      <span class="score-guide-kicker">2 · Score the whole formation</span>
+                      <h3 id="scoreGuideRound">Round Points</h3>
+                      <div class="formation-guide-formula" aria-label="Number of won lanes times two, plus number of extra cards times one, equals Round Points">
+                        <span><b>Won lanes</b><em>× 2</em></span>
+                        <i>+</i>
+                        <span><b>Extra cards</b><em>× 1</em></span>
+                        <i>=</i>
+                        <strong>Round Points</strong>
+                      </div>
+                      <dl class="score-guide-key round-score-key">
+                        <div><dt>Won lane</dt><dd>A lane where your Clash Total was higher.</dd></div>
+                        <div><dt>Extra card</dt><dd>Your card has no opposing card in its lane.</dd></div>
+                      </dl>
+                      <div class="score-guide-examples" aria-label="Common Round Point examples">
+                        <p><span>1 vs 1</span><b>Win lane = 2–0</b></p>
+                        <p><span>1 vs 2</span><b>Win lane = 2–1</b></p>
+                        <p><span>1 vs 3</span><b>Win lane = 2–2</b></p>
+                      </div>
+                      <p class="score-guide-verdict"><b>More Round Points wins the round.</b> Equal points draw. Extra cards never clash or alter Clash Total.</p>
+                    </section>
+                  </div>
                 </div>
               </details>
             </div>
@@ -326,9 +328,9 @@
         <span class="rules-title">ROUND</span>
         <span class="rule-chip ember"><b>LANE</b> Every lane win scores 2</span>
         <span class="rule-arrow">·</span>
-        <span class="rule-chip gust"><b>PRESSURE</b> Every extra card scores 1</span>
+        <span class="rule-chip gust"><b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point</span>
         <span class="rule-arrow">·</span>
-        <span class="rule-chip tide"><b>CLAIM</b> Choose a lane-winning trophy</span>
+        <span class="rule-chip tide"><b>TROPHY</b> A round win awards one played card</span>
       </section>
       <footer>
         <p>Sealed beneath the moon by the Circle of Nine Lives.</p>
@@ -565,8 +567,8 @@
         <button class="tutorial-menu-option" data-tutorial-lesson="1" type="button">
           <span class="tutorial-menu-icon" aria-hidden="true">2</span>
           <span>
-            <strong>Commitment Phase</strong>
-            <small>Lock your formation size, then compare lane points against Pressure.</small>
+            <strong>Round Points</strong>
+            <small>Learn how won lanes and extra cards combine to decide the round.</small>
           </span>
         </button>
         <button class="tutorial-menu-option" data-tutorial-lesson="3" type="button">
@@ -574,13 +576,6 @@
           <span>
             <strong>Formation Roles</strong>
             <small>Practise Vanguard, Link, Finisher, placement, and Role +1.</small>
-          </span>
-        </button>
-        <button class="tutorial-menu-option" data-tutorial-lesson="4" type="button">
-          <span class="tutorial-menu-icon" aria-hidden="true">4</span>
-          <span>
-            <strong>Pressure</strong>
-            <small>Learn how every extra committed card adds 1 Pressure point.</small>
           </span>
         </button>
       </div>
@@ -594,10 +589,10 @@
       aria-describedby="difficultyIntro"
     >
       <p class="eyebrow">CHOOSE YOUR TRIAL</p>
-      <h2 id="difficultyTitle">How Much Will You Scout?</h2>
+      <h2 id="difficultyTitle">How Will You Read Your Rival?</h2>
       <p class="difficulty-intro" id="difficultyIntro">
-        Both sides choose their commitment before the plan appears. Guided, Veiled, and Blind then reveal
-        the professor's commitment; Instinct conceals it and replaces it with behavioral knowledge.
+        Every mode lets you build one to three cards directly.
+        Guided and Blind reveal Professor Paws' formation size; Instinct hides it and gives you his known habits instead.
       </p>
       <div class="difficulty-options">
         <button class="difficulty-option guided-option" data-difficulty="guided" type="button">
@@ -608,29 +603,21 @@
             <em>Best for learning and relaxed matches.</em>
           </span>
         </button>
-        <button class="difficulty-option veiled-option" data-difficulty="veiled" type="button">
+        <button class="difficulty-option instinct-option" data-difficulty="instinct" type="button">
           <span class="recommended-ribbon">RECOMMENDED</span>
-          <span class="difficulty-icon" aria-hidden="true">◈</span>
+          <span class="difficulty-icon" aria-hidden="true">♞</span>
           <span>
-            <strong>Veiled</strong>
-            <small>Each planned card reveals <b>either its element or power range</b>, never both.</small>
-            <em>Partial information with meaningful risk.</em>
+            <strong>Instinct</strong>
+            <small>Hides every card and the formation size—but reveals <b>three persistent habits</b>.</small>
+            <em>Build one to three cards directly and read his behavior.</em>
           </span>
         </button>
         <button class="difficulty-option blind-option" data-difficulty="blind" type="button">
           <span class="difficulty-icon" aria-hidden="true">?</span>
           <span>
             <strong>Blind</strong>
-            <small>Shows the commitment count, but <b>seals all card details</b> until the clash.</small>
+            <small>Shows the formation size, but <b>seals all card details</b> until the clash.</small>
             <em>For experienced duelists who enjoy uncertainty.</em>
-          </span>
-        </button>
-        <button class="difficulty-option instinct-option" data-difficulty="instinct" type="button">
-          <span class="difficulty-icon" aria-hidden="true">♞</span>
-          <span>
-            <strong>Instinct</strong>
-            <small>Hides every card, the commitment count, and Pressure—but reveals <b>three persistent habits</b>.</small>
-            <em>Read motives, formation patterns, and commitment behavior.</em>
           </span>
         </button>
       </div>
@@ -719,20 +706,63 @@
     <dialog class="game-dialog" id="howDialog">
       <button class="dialog-close" data-close-dialog type="button" aria-label="Close">×</button>
       <p class="eyebrow">THE DUEL CODEX</p>
-      <h2>Laws of the Duel</h2>
-      <div class="dialog-grid">
-        <div><span>1</span><p><b>Goal:</b> A round win turns one of your played cards into a trophy. Collect two Ember, two Gust, and two Tide trophies.</p></div>
-        <div><span>2</span><p><b>Commitment Phase:</b> Choose one, two, or three cards before Professor Paws reveals his plan. Your chosen size locks for the round.</p></div>
-        <div><span>3</span><p><b>Power:</b> Add active bonuses. Element Edge gives +2: Ember beats Gust, Gust beats Tide, and Tide beats Ember.</p></div>
-        <div><span>4</span><p><b>Formation Score:</b> A won paired lane adds 2 points. Every extra, unpaired card adds 1 Pressure point.</p></div>
-        <div><span>5</span><p><b>Formation Role placement:</b> Roles never restrict placement. An unmet Role simply gives no Role +1.</p></div>
-        <div><span>6</span><p><b>Vanguard +1:</b> Activates when the Vanguard is committed in Lane 1.</p></div>
-        <div><span>7</span><p><b>Link +1:</b> Activates in Lane 2 or Lane 3 when the card committed directly before the Link has a different element from the Link card.</p></div>
-        <div><span>8</span><p><b>Finisher +1:</b> Activates when the Finisher is your last committed card in a two- or three-card formation and faces an opposing card.</p></div>
-        <div><span>9</span><p><b>Pressure:</b> Extra cards do not clash; each adds 1 Formation Point. Highest Formation Score wins, and equal scores draw.</p></div>
-        <div><span>10</span><p><b>Reshuffle:</b> Non-trophy cards enter the discard pile and return when the draw pile runs out.</p></div>
+      <h2>Quick Duel Reference</h2>
+      <p class="codex-intro">Use this for reminders during play. Open the Rulebook for complete explanations and examples.</p>
+      <section class="codex-goal" aria-label="Match objective">
+        <b>Win the match</b>
+        <span>Collect 2 Ember + 2 Gust + 2 Tide trophies before Professor Paws.</span>
+      </section>
+      <div class="codex-grid">
+        <section class="codex-card">
+          <span class="codex-number">1</span>
+          <h3>Build</h3>
+          <p>Commit 1–3 cards in order. They fill Lane 1, then Lane 2, then Lane 3. You may reorder them before committing.</p>
+        </section>
+        <section class="codex-card">
+          <span class="codex-number">2</span>
+          <h3>Clash by lane</h3>
+          <p>Lane 1 fights Lane 1, Lane 2 fights Lane 2, and Lane 3 fights Lane 3. Cards never combine into one formation total.</p>
+        </section>
+        <section class="codex-card codex-card-wide">
+          <span class="codex-number">3</span>
+          <h3>Calculate Clash Total</h3>
+          <p class="codex-formula">Power + Element Edge + Role = Clash Total</p>
+          <div class="codex-cycle" aria-label="Element cycle">
+            <span class="element-ember">🔥 Ember</span><i>beats</i>
+            <span class="element-gust">🍃 Gust</span><i>beats</i>
+            <span class="element-tide">💧 Tide</span><i>beats</i>
+            <span class="element-ember">🔥 Ember</span>
+          </div>
+          <p>Element Edge gives +2. Higher Clash Total wins the lane; equal totals draw.</p>
+        </section>
+        <section class="codex-card codex-role-card">
+          <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-shield"></use></svg>
+          <h3>Vanguard +1</h3>
+          <p>Commit the Vanguard in Lane 1.</p>
+        </section>
+        <section class="codex-card codex-role-card">
+          <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-chain"></use></svg>
+          <h3>Link +1</h3>
+          <p>Commit the Link in Lane 2 or 3 after a card of a different element.</p>
+        </section>
+        <section class="codex-card codex-role-card">
+          <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg>
+          <h3>Finisher +1</h3>
+          <p>Make it your final card in a 2–3 card formation, with an opposing card in its lane.</p>
+        </section>
+        <p class="codex-role-note"><b>Roles do not restrict placement.</b> A card that misses its condition still clashes normally; it simply receives no Role +1.</p>
+        <section class="codex-card">
+          <span class="codex-number">4</span>
+          <h3>Count Round Points</h3>
+          <p><b>Won lane = 2.</b> <b>Extra card with no opponent = 1.</b> More Round Points wins; equal points draw.</p>
+        </section>
+        <section class="codex-card">
+          <span class="codex-number">5</span>
+          <h3>Claim and continue</h3>
+          <p>Claim a trophy after winning. Other committed cards are discarded, hands refill to 6, and the discard pile reshuffles when needed.</p>
+        </section>
       </div>
-      <button class="primary-button" data-close-dialog type="button">Got it!</button>
+      <button class="primary-button" data-close-dialog type="button">Return</button>
     </dialog>
 
     <dialog
@@ -746,7 +776,7 @@
         <p class="eyebrow">THE WHISKERKEEP RULEBOOK</p>
         <h2 id="rulebookTitle">How to Play Project: Prowl</h2>
         <p id="rulebookIntro">
-          The complete laws of an elemental duel, from your opening hand to the final trophy.
+          The complete rules of an elemental duel, from reading your first card to claiming the sixth trophy.
         </p>
       </header>
 
@@ -764,44 +794,43 @@
           <span class="element-tide"><b>💧</b><i></i><i></i><small>2 Tide</small></span>
         </div>
         <p class="rulebook-note">
-          The round score records your victories, but it does not complete the match. Your six elemental trophy slots do.
+          The Rounds Won display records your victories, but it does not complete the match. Your six elemental trophy slots do.
         </p>
       </section>
 
       <div class="rulebook-sections">
         <section class="rulebook-section" aria-labelledby="rulebookSetup">
           <span class="rulebook-number" aria-hidden="true">1</span>
-          <h3 id="rulebookSetup">Match setup</h3>
+          <h3 id="rulebookSetup">Objective and match structure</h3>
           <ul>
-            <li>The shared draw pile starts with 36 cards: two copies of every card in the archive.</li>
-            <li>You and Professor Paws each draw up to six cards.</li>
-            <li>You and Professor Paws independently choose a one-, two-, or three-card commitment.</li>
-            <li>Your chosen size locks before the professor's plan or commitment is revealed.</li>
-            <li>His commitment becomes visible in Guided, Veiled, and Blind, but remains concealed in Instinct.</li>
+            <li>A match is a series of rounds against Professor Paws.</li>
+            <li>Winning a round awards exactly one trophy. A drawn round awards none.</li>
+            <li>Win the match by collecting two Ember, two Gust, and two Tide trophies.</li>
+            <li>The Rounds Won score is a match record only. It is not a separate win condition.</li>
           </ul>
         </section>
 
         <section class="rulebook-section" aria-labelledby="rulebookDifficulty">
           <span class="rulebook-number" aria-hidden="true">2</span>
-          <h3 id="rulebookDifficulty">Difficulty and scouting</h3>
+          <h3 id="rulebookDifficulty">Deck, hand, and difficulty</h3>
+          <p>The shared draw pile contains 36 cards: two copies of each of the 18 cards in the archive. Both duelists draw up to six cards.</p>
           <dl class="rulebook-definitions">
             <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
-            <div><dt>Veiled</dt><dd>Shows either the element or power range of each card.</dd></div>
-            <div><dt>Blind</dt><dd>Reveals the locked commitment count but seals all individual card clues.</dd></div>
-            <div><dt>Instinct</dt><dd>Conceals the commitment and Pressure while revealing one motive, one formation habit, and one commitment habit. Habits persist for the duel and are tendencies, not guarantees.</dd></div>
+            <div><dt>Blind</dt><dd>Shows Professor Paws' formation size but seals all individual card clues.</dd></div>
+            <div><dt>Instinct</dt><dd>Hides his cards and formation size. Instead, it reveals one motive, one formation habit, and one commitment habit that persist for the match.</dd></div>
           </dl>
-          <p>Difficulty changes the information you receive, not the scoring rules or Professor Paws' card strength.</p>
+          <p>Habits are tendencies, not guarantees. Difficulty changes available information, never the scoring rules or card strength.</p>
         </section>
 
         <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookCards">
           <span class="rulebook-number" aria-hidden="true">3</span>
-          <h3 id="rulebookCards">Reading a card</h3>
+          <h3 id="rulebookCards">Read every part of a card</h3>
           <div class="rulebook-card-facts">
-            <p><b>Power</b><span>The card's starting clash score.</span></p>
-            <p><b>Element</b><span>Determines whether the card earns Element Edge.</span></p>
-            <p><b>Formation Role</b><span>Shows how to earn the card's Role +1 placement bonus.</span></p>
-            <p><b>Rarity</b><span>Changes the outer frame, but gives no automatic combat bonus.</span></p>
-            <p><b>Move and lore</b><span>Give the character personality; they do not add hidden effects.</span></p>
+            <p><b>Power</b><span>The printed number and starting value of its Clash Total.</span></p>
+            <p><b>Element</b><span>Ember, Gust, or Tide. It determines Element Edge and the trophy's element.</span></p>
+            <p><b>Formation Role</b><span>Vanguard, Link, or Finisher. Meeting its condition adds Role +1.</span></p>
+            <p><b>Rarity</b><span>Common through Legendary. Rarity changes the frame, not the rules or scoring.</span></p>
+            <p><b>Move and lore</b><span>Character flavor only. Cards have no unlisted abilities or hidden effects.</span></p>
           </div>
           <div class="element-cycle" aria-label="Element cycle: Ember beats Gust, Gust beats Tide, Tide beats Ember">
             <span class="element-ember">🔥 Ember</span><i>beats</i>
@@ -813,100 +842,151 @@
 
         <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookTurn">
           <span class="rulebook-number" aria-hidden="true">4</span>
-          <h3 id="rulebookTurn">How to play a round</h3>
+          <h3 id="rulebookTurn">Play a round from start to finish</h3>
           <ol class="rulebook-steps">
-            <li><b>Declare.</b> Choose one, two, or three cards during the Commitment Phase. Both sides lock their size independently.</li>
-            <li><b>Scout.</b> After locking, read the professor's revealed commitment and card clues—or, in Instinct, use his three known habits.</li>
-            <li><b>Build.</b> Drag or click exactly the number of cards you declared into your lanes. You may return or reorder them before committing.</li>
-            <li><b>Preview.</b> Check the displayed bonus and forecast for each paired lane.</li>
-            <li><b>Commit.</b> Lock your formation. Every committed card will be spent after the round.</li>
-            <li><b>Clash.</b> Paired cards resolve from Lane 1 to Lane 3. Every won lane adds 2 Formation Points; every extra card adds 1 Pressure point.</li>
-            <li><b>Claim.</b> After a normal win with multiple winning lanes, choose which winning card becomes your trophy. Pressure trophies remain automatic.</li>
-            <li><b>Review.</b> Study every total and trophy result, then press <b>Next Round</b>.</li>
+            <li><b>Read.</b> Study the plan or habits revealed by the chosen difficulty.</li>
+            <li><b>Build.</b> Drag or click 1–3 cards into consecutive lanes. The first card enters Lane 1.</li>
+            <li><b>Order.</b> Return cards to your hand or rearrange them until the formation works as intended.</li>
+            <li><b>Preview.</b> Review known bonuses and totals. Hidden information remains unknown until the clash.</li>
+            <li><b>Commit.</b> Lock the formation. Every committed card is spent this round.</li>
+            <li><b>Resolve.</b> Score each contested lane, then calculate Round Points for the whole formation.</li>
+            <li><b>Claim and review.</b> Award a trophy if someone won, inspect the aftermath, then press <b>Next Round</b>.</li>
           </ol>
+          <p class="rulebook-callout"><b>Lane matching is direct:</b> Lane 1 fights Lane 1, Lane 2 fights Lane 2, and Lane 3 fights Lane 3. This is not one combined 3v3 battle.</p>
         </section>
 
-        <section class="rulebook-section" aria-labelledby="rulebookScoring">
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookScoring">
           <span class="rulebook-number" aria-hidden="true">5</span>
-          <h3 id="rulebookScoring">Clash scoring</h3>
+          <h3 id="rulebookScoring">Calculate a card's Clash Total</h3>
           <p class="score-formula">Power + Element Edge + Role = Clash Total</p>
-          <ul>
-            <li><b>Element Edge +2:</b> awarded when your element beats the opposing element.</li>
-            <li class="rulebook-tactic"><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-shield"></use></svg><span><b>Vanguard +1:</b> Play it in Lane 1.</span></li>
-            <li class="rulebook-tactic"><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-chain"></use></svg><span><b>Link +1:</b> A Link can activate in Lane 2 or Lane 3. It gains +1 when the card committed directly before the Link has a different element from the Link card itself.</span></li>
-            <li class="rulebook-tactic"><svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg><span><b>Finisher +1:</b> Play it last in a two- or three-card formation. It must face an opposing card.</span></li>
-          </ul>
-          <p><b>Formation Roles do not restrict placement.</b> You may commit any card in any available lane. If its Role condition is not met, the card still clashes normally but receives no Role +1.</p>
-          <p>The higher total wins the lane. Equal totals draw that lane. Element Edge is helpful, but never an automatic win.</p>
-        </section>
-
-        <section class="rulebook-section" aria-labelledby="rulebookRoundWinner">
-          <span class="rulebook-number" aria-hidden="true">6</span>
-          <h3 id="rulebookRoundWinner">Winning the round</h3>
-          <ul>
-            <li>Every paired lane victory adds 2 Formation Points; drawn lanes add nothing.</li>
-            <li>Every extra, unpaired card adds 1 Pressure point.</li>
-            <li>Add lane points and Pressure. The higher Formation Score wins the round.</li>
-            <li>If Formation Scores are equal, the round draws and awards no trophy.</li>
-          </ul>
-          <p><b>One card can beat two.</b> A lane victory scores 2 points against one extra card's 1 Pressure point.</p>
-          <p><b>One card cannot beat three through only one lane.</b> Its 2 lane points meet 2 Pressure points, producing a round draw.</p>
-        </section>
-
-        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookPressure">
-          <span class="rulebook-number" aria-hidden="true">7</span>
-          <h3 id="rulebookPressure">Understanding Pressure</h3>
-          <p>
-            Pressure converts every extra, unpaired committed card into 1 Formation Point.
-            Pressure never changes an individual card's Clash Total.
-          </p>
-          <div class="rulebook-card-facts">
-            <p><b>How it scores</b><span>One extra card adds 1 Pressure point; two extra cards add 2.</span></p>
-            <p><b>What it rewards</b><span>If Pressure produces the winning score, the first extra card becomes the trophy.</span></p>
-            <p><b>What it cannot do</b><span>Pressure does not alter a paired card's Power, Edge, Role, or Clash Total.</span></p>
-            <p><b>What it costs</b><span>Every extra card is spent after the round.</span></p>
+          <div class="rulebook-score-keys">
+            <p><b>Power</b><span>Begin with the printed number.</span></p>
+            <p><b>Element Edge +2</b><span>Add 2 when the card's element beats the opposing card's element.</span></p>
+            <p><b>Role +1</b><span>Add 1 when the card meets its Formation Role condition.</span></p>
+            <p><b>Lane result</b><span>Higher Clash Total wins. Equal Clash Totals draw that lane.</span></p>
           </div>
-          <p class="score-formula">
-            Example: You commit two cards and Professor Paws commits one. The paired lane draws for 0 points.
-            Your extra card supplies 1 Pressure point, so you win the Formation Score 1–0.
+          <p class="rulebook-callout"><b>Element Edge is a bonus, not an automatic win.</b> A high-Power card can still defeat a card that has Element Edge.</p>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookRoles">
+          <span class="rulebook-number" aria-hidden="true">6</span>
+          <h3 id="rulebookRoles">Formation Roles</h3>
+          <div class="rulebook-role-grid">
+            <article>
+              <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-shield"></use></svg>
+              <div><b>Vanguard +1</b><p>Activate it by committing the Vanguard in Lane 1.</p></div>
+            </article>
+            <article>
+              <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-chain"></use></svg>
+              <div><b>Link +1</b><p>Activate it in Lane 2 or 3 when the card committed directly before the Link has a different element from the Link card.</p></div>
+            </article>
+            <article>
+              <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg>
+              <div><b>Finisher +1</b><p>Activate it when the Finisher is your last committed card in a 2–3 card formation and an opposing card is in that lane.</p></div>
+            </article>
+          </div>
+          <p class="rulebook-callout"><b>Roles never restrict placement.</b> You may commit any card in any available lane. If its Role condition is not met, the card still clashes normally but receives no Role +1.</p>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookRoundWinner">
+          <span class="rulebook-number" aria-hidden="true">7</span>
+          <h3 id="rulebookRoundWinner">Calculate Round Points</h3>
+          <p class="round-points-intro">
+            <b>Clash Total decides each contested lane. Round Points decide who wins the round.</b>
+          </p>
+          <div class="formation-rulebook-formula" aria-label="Round Points equal the number of won lanes times two plus the number of extra cards times one">
+            <span><b>Number of won lanes</b><em>× 2 Round Points</em></span>
+            <i>+</i>
+            <span><b>Number of extra cards</b><em>× 1 Round Point</em></span>
+            <i>=</i>
+            <strong>Round Points</strong>
+          </div>
+          <ol class="formation-rulebook-steps">
+            <li>
+              <b>Resolve contested lanes</b>
+              <span>A contested lane has one card from each side. Each won lane earns 2 Round Points. Drawn and lost lanes earn 0.</span>
+            </li>
+            <li>
+              <b>Count extra cards</b>
+              <span>An extra card is a committed card with no opposing card in its lane. Each extra card adds 1 Round Point.</span>
+            </li>
+            <li>
+              <b>Compare the totals</b>
+              <span>Add all Round Points. More Round Points wins the round. Equal Round Points produce a draw and no trophy.</span>
+            </li>
+          </ol>
+          <h4 class="formation-examples-title">Common outcomes</h4>
+          <div class="round-points-examples">
+            <article>
+              <span>1 card vs 1 card</span>
+              <strong>2–0 · Win</strong>
+              <p>Your card wins the only contested lane. There are no extra cards.</p>
+            </article>
+            <article>
+              <span>1 card vs 2 cards</span>
+              <strong>2–1 · Win</strong>
+              <p>Your card wins its lane for 2. The opponent's extra card adds 1.</p>
+            </article>
+            <article>
+              <span>1 card vs 3 cards</span>
+              <strong>2–2 · Draw</strong>
+              <p>Your card wins its lane for 2. The opponent's two extra cards also add 2.</p>
+            </article>
+            <article>
+              <span>2 cards vs 1 card</span>
+              <strong>1–0 · Win</strong>
+              <p>The contested lane draws. Your extra card adds the round's only point.</p>
+            </article>
+          </div>
+          <p class="extra-card-trophy-note">
+            <b>Keep the two scores separate:</b> an extra card adds 1 Round Point, but it never clashes and never changes Power, Element Edge, Role, or Clash Total.
           </p>
         </section>
 
         <section class="rulebook-section" aria-labelledby="rulebookTrophies">
           <span class="rulebook-number" aria-hidden="true">8</span>
-          <h3 id="rulebookTrophies">Trophies and card flow</h3>
+          <h3 id="rulebookTrophies">Award the trophy</h3>
           <ul>
-            <li>On a normal round win, choose one of your lane-winning cards as the trophy. If only one card won a lane, it is claimed automatically.</li>
-            <li>On a Pressure win, your first extra, unpaired card becomes your trophy.</li>
-            <li>A trophy leaves circulation and fills its matching elemental slot.</li>
-            <li>All other committed cards enter the discard pile; unplayed cards remain in hand.</li>
-            <li>Hands refill toward six cards. When the draw pile runs out, the discard pile is shuffled back in.</li>
+            <li>If your won lanes decide the round, claim one of your lane-winning cards.</li>
+            <li>If you have several lane-winning cards, you choose which becomes the trophy. If there is only one, it is claimed automatically.</li>
+            <li>If points from extra cards decide the round, your first extra card becomes the trophy automatically.</li>
+            <li>A drawn round awards no trophy.</li>
           </ul>
         </section>
 
-        <section class="rulebook-section" aria-labelledby="rulebookWin">
+        <section class="rulebook-section" aria-labelledby="rulebookFlow">
           <span class="rulebook-number" aria-hidden="true">9</span>
-          <h3 id="rulebookWin">Complete win conditions</h3>
-          <p>You win immediately after a round in which your collection contains at least:</p>
+          <h3 id="rulebookFlow">Discard, draw, and continue</h3>
           <ul>
-            <li>Two Ember trophies</li>
-            <li>Two Gust trophies</li>
-            <li>Two Tide trophies</li>
+            <li>The trophy leaves the deck and enters the winner's collection.</li>
+            <li>Every other committed card enters the discard pile.</li>
+            <li>Unplayed cards remain in hand.</li>
+            <li>Each hand refills toward six cards before the next round.</li>
+            <li>When the draw pile runs out, the discard pile is shuffled back into it.</li>
           </ul>
-          <p>Extra trophies of one element do not replace a missing element. Professor Paws wins under the same condition.</p>
+        </section>
+
+        <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookWin">
+          <span class="rulebook-number" aria-hidden="true">10</span>
+          <h3 id="rulebookWin">End the match</h3>
+          <div class="rulebook-win-grid">
+            <p><b>Required collection</b><span>2 Ember + 2 Gust + 2 Tide trophies.</span></p>
+            <p><b>Extra trophies</b><span>A third trophy of one element is allowed, but it cannot replace a missing element.</span></p>
+            <p><b>Professor Paws</b><span>He wins under exactly the same trophy condition.</span></p>
+            <p><b>Rounds Won</b><span>This display tracks round results only and never replaces the trophy goal.</span></p>
+          </div>
         </section>
 
         <section class="rulebook-section rulebook-section-wide strategy-section" aria-labelledby="rulebookStrategy">
-          <span class="rulebook-number" aria-hidden="true">10</span>
+          <span class="rulebook-number" aria-hidden="true">11</span>
           <h3 id="rulebookStrategy">Subtle strategy</h3>
           <div class="strategy-grid">
-            <p><b>Plan the trophy.</b><span>Win with more than one element to choose the trophy afterward. For Pressure, make the needed element your first extra card.</span></p>
-            <p><b>Read the commitment tradeoff.</b><span>One card is efficient, two are reliable, and three create the most Pressure and lane coverage.</span></p>
-            <p><b>Activate Formation Roles.</b><span>Start with Vanguard, place Link after a card whose element differs from the Link card, and end a longer play with Finisher.</span></p>
-            <p><b>Risk the Finisher.</b><span>Finisher gains +1 only when an opposing card is there to clash with it.</span></p>
-            <p><b>Read the range.</b><span>Against a hidden exact power, compare your lowest and highest possible totals before risking a valuable card.</span></p>
-            <p><b>Avoid empty progress.</b><span>A third trophy of one element is allowed, but it does not fill one of your remaining elemental slots.</span></p>
-            <p><b>Declare deliberately.</b><span>Lock your size before seeing the plan. Consider your hand, trophy needs, and Professor Paws' known habits.</span></p>
+            <p><b>Choose size with a purpose.</b><span>One card conserves resources. More cards cover more lanes and may score as extra cards, but every committed card is spent.</span></p>
+            <p><b>Order before committing.</b><span>Formation order determines lanes and can activate or disable Vanguard, Link, and Finisher bonuses.</span></p>
+            <p><b>Plan the trophy element.</b><span>When several cards win lanes, arrange to give yourself a useful trophy choice. For an extra-card win, the first extra card is fixed.</span></p>
+            <p><b>Respect printed Power.</b><span>Element Edge helps, but a two-point bonus does not always overcome a much stronger card.</span></p>
+            <p><b>Read hidden information.</b><span>In Guided and Blind, use the shown formation size. In Instinct, use all three persistent habits together.</span></p>
+            <p><b>Track the real goal.</b><span>Do not spend valuable cards collecting a third trophy of an element when another element is still missing.</span></p>
           </div>
         </section>
       </div>

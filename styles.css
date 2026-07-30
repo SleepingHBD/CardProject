@@ -369,6 +369,15 @@ h1 {
   gap: 4px;
 }
 
+.round-score > small {
+  padding-right: 7px;
+  color: #d4b973;
+  border-right: 1px solid rgba(212,185,115,.45);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
 .round-score b {
   color: #fff0bd;
   font-size: 17px;
@@ -827,7 +836,7 @@ h1 {
 .clash-card.result-win .lane-result,
 .clash-card.result-loss .lane-result,
 .clash-card.result-draw .lane-result,
-.clash-card.result-pressure .lane-result {
+.clash-card.result-extra-card .lane-result {
   opacity: 1;
   transform: translateX(-50%) scale(1);
 }
@@ -850,13 +859,13 @@ h1 {
   border-color: #b2a27f;
 }
 
-.clash-card.result-pressure .lane-result {
+.clash-card.result-extra-card .lane-result {
   color: #3b291b;
   background: #e0bd68;
   border-color: #5c3d24;
 }
 
-.clash-card.result-pressure .game-card {
+.clash-card.result-extra-card .game-card {
   filter: saturate(.78);
   box-shadow: 0 7px 0 var(--rarity-dark), 0 0 0 3px #d9b45e, 0 12px 20px rgba(30,19,13,.3);
 }
@@ -1067,6 +1076,23 @@ h1 {
     inset 0 0 0 1px #8f693b,
     inset 0 0 22px rgba(0,0,0,.28),
     0 3px 0 rgba(27,16,11,.4);
+}
+
+.tactics-board:has(.opponent-habits:not([hidden])) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+}
+
+.tactics-board:has(.opponent-habits:not([hidden])) .tactics-heading {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: 0;
+  border-bottom: 1px solid #795631;
+}
+
+.tactics-board:has(.opponent-habits:not([hidden])) .matchup-forecast {
+  grid-column: 1;
+  grid-row: 2;
 }
 
 .clash-score-guide {
@@ -1320,8 +1346,7 @@ h1 {
   font-size: 10px;
 }
 
-.tactic-placement-note,
-.pressure-score-note {
+.tactic-placement-note {
   margin: 8px 0 0;
   padding: 7px 9px;
   color: #d9c7a1;
@@ -1333,8 +1358,263 @@ h1 {
   line-height: 1.3;
 }
 
-.tactic-placement-note strong,
-.pressure-score-note strong {
+.tactic-placement-note strong {
+  color: #f1d488;
+}
+
+.clash-score-parts .round-points-guide-part {
+  grid-column: 1 / -1;
+}
+
+.formation-guide-formula {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.2fr);
+  align-items: stretch;
+  gap: 5px;
+}
+
+.formation-guide-formula > span,
+.formation-guide-formula > strong {
+  min-width: 0;
+  padding: 5px 6px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: rgba(102,72,39,.44);
+  border: 1px solid rgba(214,172,87,.48);
+  border-radius: 3px;
+}
+
+.formation-guide-formula b,
+.formation-guide-formula em,
+.formation-guide-formula strong {
+  display: block;
+  font-style: normal;
+}
+
+.formation-guide-formula b,
+.formation-guide-formula strong {
+  color: #f2d78d;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.formation-guide-formula em {
+  margin-top: 2px;
+  color: #d9c49b;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.formation-guide-formula > i {
+  align-self: center;
+  color: #e5c879;
+  font-family: "Cinzel", serif;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.formation-guide-steps {
+  margin: 7px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  list-style: none;
+  counter-reset: formation-guide-step;
+}
+
+.formation-guide-steps li {
+  min-width: 0;
+  padding: 6px 7px;
+  color: #cfbea0;
+  background: rgba(12,8,7,.28);
+  border: 1px solid rgba(181,140,74,.3);
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.25;
+  counter-increment: formation-guide-step;
+}
+
+.formation-guide-steps li b {
+  display: block;
+  margin-bottom: 2px;
+  color: #efd58d;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+}
+
+.formation-guide-steps li b::before {
+  content: counter(formation-guide-step) " · ";
+}
+
+.formation-guide-extra,
+.formation-guide-examples {
+  margin: 5px 0 0;
+  padding: 5px 7px;
+  color: #d3c19e;
+  background: rgba(126,86,41,.22);
+  border-left: 2px solid #bd8d49;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.formation-guide-extra b,
+.formation-guide-examples b {
+  color: #f1d488;
+}
+
+.score-guide-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.score-guide-block {
+  min-width: 0;
+  padding: 10px;
+  background:
+    linear-gradient(145deg, rgba(129,88,43,.14), transparent 55%),
+    rgba(13,9,7,.3);
+  border: 1px solid rgba(190,148,75,.42);
+  border-radius: 3px;
+}
+
+.score-guide-kicker {
+  display: block;
+  color: #bca476;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.score-guide-block h3 {
+  margin: 2px 0 6px;
+  color: #f2d98f;
+  font-family: "Cinzel", serif;
+  font-size: 14px;
+}
+
+.score-guide-formula {
+  margin: 0;
+  padding: 7px 8px;
+  color: #f4dfaa;
+  background: #4b3028;
+  border: 1px solid #bb8e4b;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.score-guide-key {
+  margin: 7px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.score-guide-key > div {
+  min-width: 0;
+  padding: 6px;
+  background: rgba(14,9,7,.32);
+  border: 1px solid rgba(181,139,73,.3);
+  border-radius: 2px;
+}
+
+.score-guide-key dt {
+  color: #efd58d;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.score-guide-key dd {
+  margin: 2px 0 0;
+  color: #cdbd9c;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.22;
+}
+
+.round-score-key {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.score-guide-role-grid,
+.score-guide-examples {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.score-guide-role-grid p,
+.score-guide-examples p {
+  min-width: 0;
+  margin: 0;
+  padding: 6px;
+  color: #cdbd9c;
+  background: rgba(111,76,39,.2);
+  border: 1px solid rgba(181,139,73,.3);
+  border-radius: 2px;
+  font-size: 8px;
+  font-weight: 750;
+  line-height: 1.22;
+}
+
+.score-guide-role-grid b,
+.score-guide-role-grid span,
+.score-guide-examples span,
+.score-guide-examples b {
+  display: block;
+}
+
+.score-guide-role-grid b,
+.score-guide-examples b {
+  color: #efdaa1;
+  font-family: "Cinzel", serif;
+  font-size: 8px;
+}
+
+.score-guide-role-grid span,
+.score-guide-examples b {
+  margin-top: 2px;
+}
+
+.score-guide-role-grid .tactic-icon {
+  width: 11px;
+  height: 11px;
+  vertical-align: -2px;
+}
+
+.score-guide-examples span {
+  color: #bca476;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.score-guide-verdict {
+  margin: 7px 0 0;
+  padding: 6px 7px;
+  color: #d8c7a3;
+  background: rgba(126,86,41,.22);
+  border-left: 2px solid #bd8d49;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.28;
+}
+
+.score-guide-verdict b {
   color: #f1d488;
 }
 
@@ -1383,95 +1663,10 @@ h1 {
   line-height: 1.25;
 }
 
-.commitment-phase {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(135px, .85fr) minmax(0, 1.5fr);
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background:
-    radial-gradient(circle at 48% 40%, rgba(213, 172, 91, .13), transparent 46%),
-    rgba(18, 13, 11, .4);
-  border-bottom: 1px solid #9f7843;
-  box-shadow: inset 0 -1px 0 rgba(244, 214, 144, .16);
-}
-
-.commitment-phase[hidden] {
-  display: none;
-}
-
 .opponent-tells[hidden],
 .matchup-forecast[hidden] {
   display: none;
 }
-
-.commitment-phase strong,
-.commitment-phase small {
-  display: block;
-}
-
-.commitment-phase strong {
-  color: #f1d488;
-  font-family: "Cinzel", serif;
-  font-size: 15px;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-
-.commitment-phase small {
-  margin-top: 3px;
-  color: #c7b695;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.commitment-options {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.commitment-options button {
-  min-width: 0;
-  min-height: 62px;
-  display: grid;
-  place-items: center;
-  padding: 5px 4px;
-  color: #f5e3b4;
-  background:
-    linear-gradient(rgba(120, 80, 45, .28), rgba(42, 27, 21, .75)),
-    #38241c;
-  border: 1px solid #ad8148;
-  border-radius: 4px;
-  box-shadow:
-    inset 0 0 0 1px rgba(244, 214, 144, .18),
-    0 2px 0 rgba(0, 0, 0, .35);
-  cursor: pointer;
-}
-
-.commitment-options button:hover,
-.commitment-options button:focus-visible {
-  color: #2c1c15;
-  background: linear-gradient(#f0d894, #c99a4f);
-  border-color: #f2d58d;
-  outline: none;
-  transform: translateY(-1px);
-}
-
-.commitment-options b {
-  display: block;
-}
-
-.commitment-options b {
-  font-family: "Cinzel", serif;
-  font-size: 28px;
-  line-height: 1;
-}
-
 .opponent-habits {
   margin-top: 5px;
   display: grid;
@@ -1495,7 +1690,7 @@ h1 {
   display: block;
 }
 
-.formation-score-summary {
+.round-points-summary {
   grid-column: 1 / -1;
   border-color: #d1aa59;
   background:
@@ -1544,17 +1739,14 @@ h1 {
 .opponent-tell.element-ember { --tell-color: #d55d3c; }
 .opponent-tell.element-gust { --tell-color: #79a95d; }
 .opponent-tell.element-tide { --tell-color: #5795ba; }
-.opponent-tell.clue-power { --tell-color: #9b7d4d; }
 .opponent-tell.clue-sealed { --tell-color: #6f6672; }
 
-.clue-power .tell-element,
 .clue-sealed .tell-element {
   color: #ead8a8;
   background: #413731;
   border-color: #8c7048;
 }
 
-.clue-power b,
 .clue-sealed b {
   font-size: 10px;
 }
@@ -1739,19 +1931,12 @@ h1 {
 }
 .forecast-power b { color: #efd488; }
 
-.forecast-pressure {
+.forecast-extra-card {
   background: linear-gradient(100deg, rgba(128, 91, 42, .58), #29211e);
   border-color: #c89d51;
 }
 
-.forecast-pressure b { color: #f2d98f; }
-
-.forecast-clue {
-  background: linear-gradient(100deg, rgba(61, 91, 111, .55), #29231e);
-  border-color: #668eaa;
-}
-
-.forecast-clue b { color: #c9e1eb; }
+.forecast-extra-card b { color: #f2d98f; }
 
 .forecast-sealed {
   background: linear-gradient(100deg, rgba(74, 64, 78, .62), #272125);
@@ -2040,7 +2225,7 @@ h1 {
   animation: bonus-badge-pop .34s ease both;
 }
 
-.card-bonus-badge.pressure-badge {
+.card-bonus-badge.extra-card-badge {
   color: #3b291b;
   background: #e0bd68;
   box-shadow: inset 0 0 0 2px #f8dea0, 0 2px 0 rgba(37,22,16,.4);
@@ -3261,6 +3446,296 @@ footer {
   text-align: center;
 }
 
+.rulebook-score-keys,
+.rulebook-win-grid {
+  margin-top: 9px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.rulebook-score-keys p,
+.rulebook-win-grid p {
+  margin: 0;
+  padding: 9px 10px;
+  background: rgba(222,198,143,.35);
+  border: 1px solid #b09265;
+  border-radius: 2px;
+}
+
+.rulebook-score-keys b,
+.rulebook-score-keys span,
+.rulebook-win-grid b,
+.rulebook-win-grid span {
+  display: block;
+}
+
+.rulebook-score-keys b,
+.rulebook-win-grid b {
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+}
+
+.rulebook-score-keys span,
+.rulebook-win-grid span {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.rulebook-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rulebook-role-grid article {
+  min-width: 0;
+  padding: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(222,198,143,.35);
+  border: 1px solid #b09265;
+  border-radius: 2px;
+}
+
+.rulebook-role-grid .tactic-icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  color: #f0dba3;
+  background: #5b3c30;
+  border-radius: 50%;
+}
+
+.rulebook-role-grid b {
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+}
+
+.rulebook-role-grid p {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.rulebook-callout {
+  padding: 8px 10px;
+  background: rgba(113,83,48,.14);
+  border: 1px solid #aa8151;
+  border-left: 4px solid #6f4937;
+  border-radius: 3px;
+}
+
+.round-points-intro {
+  margin-top: 0 !important;
+  font-size: 13px !important;
+  text-align: center;
+}
+
+.formation-rulebook-formula {
+  margin-top: 10px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.15fr);
+  align-items: stretch;
+  gap: 8px;
+  color: #f1dda8;
+  background: #3d2927;
+  border: 2px solid #2c1a20;
+  border-radius: 3px;
+}
+
+.formation-rulebook-formula > span,
+.formation-rulebook-formula > strong {
+  min-width: 0;
+  padding: 7px 8px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: rgba(242,220,164,.08);
+  border: 1px solid rgba(225,190,112,.35);
+  border-radius: 2px;
+}
+
+.formation-rulebook-formula b,
+.formation-rulebook-formula em,
+.formation-rulebook-formula strong {
+  display: block;
+  font-style: normal;
+}
+
+.formation-rulebook-formula b,
+.formation-rulebook-formula strong {
+  color: #f2d893;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.formation-rulebook-formula em {
+  margin-top: 3px;
+  color: #d5c199;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.formation-rulebook-formula > i {
+  align-self: center;
+  color: #e6c778;
+  font-family: "Cinzel", serif;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.formation-rulebook-steps {
+  margin: 11px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  counter-reset: formation-rule-step;
+}
+
+.formation-rulebook-steps li {
+  position: relative;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 10px 10px 10px 43px;
+  background: rgba(222,198,143,.35);
+  border: 1px solid #b09265;
+  border-radius: 2px;
+  counter-increment: formation-rule-step;
+}
+
+.formation-rulebook-steps li::before {
+  content: counter(formation-rule-step);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: #f2dca4;
+  background: #59402f;
+  border-radius: 50%;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.formation-rulebook-steps b,
+.formation-rulebook-steps span {
+  display: block;
+}
+
+.formation-rulebook-steps b {
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+}
+
+.formation-rulebook-steps span {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.extra-card-clarifier {
+  margin-top: 10px;
+  padding: 9px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  background: rgba(74,41,52,.08);
+  border: 1px solid #9d754d;
+  border-radius: 3px;
+}
+
+.extra-card-clarifier > div {
+  min-width: 0;
+  padding: 7px 8px;
+  background: rgba(255,247,218,.48);
+  border-left: 3px solid #7a5140;
+}
+
+.extra-card-clarifier strong {
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 10px;
+}
+
+.extra-card-clarifier p {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.formation-examples-title {
+  margin: 13px 0 7px;
+  color: #3e2930;
+  font-family: "Cinzel", serif;
+  font-size: 13px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.round-points-examples {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.round-points-examples article {
+  min-width: 0;
+  padding: 9px 10px;
+  background: linear-gradient(145deg, rgba(108,72,43,.1), rgba(255,247,218,.38));
+  border: 1px solid #a88051;
+  border-radius: 3px;
+  text-align: center;
+}
+
+.round-points-examples span,
+.round-points-examples strong {
+  display: block;
+  font-family: "Cinzel", serif;
+  font-weight: 900;
+}
+
+.round-points-examples span {
+  color: #6b4a35;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.round-points-examples strong {
+  margin-top: 3px;
+  color: #4a2934;
+  font-size: 14px;
+}
+
+.round-points-examples p {
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.extra-card-trophy-note {
+  padding: 8px 10px;
+  background: rgba(113,83,48,.14);
+  border: 1px solid #aa8151;
+  border-radius: 3px;
+  text-align: center;
+}
+
 .strategy-section {
   background:
     linear-gradient(110deg, rgba(81,102,58,.13), transparent 60%),
@@ -3527,11 +4002,6 @@ footer {
   letter-spacing: .03em;
 }
 
-.veiled-option {
-  border-color: #61415f;
-  box-shadow: inset 0 0 0 2px rgba(95, 61, 89, .22);
-}
-
 .instinct-option {
   border-color: #526a5b;
   box-shadow: inset 0 0 0 2px rgba(71, 106, 84, .2);
@@ -3606,6 +4076,226 @@ footer {
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
+}
+
+#howDialog {
+  width: min(820px, calc(100vw - 30px));
+  max-height: 92dvh;
+  padding: 22px 26px 20px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+#howDialog > .eyebrow,
+#howDialog > h2,
+#howDialog > .codex-intro {
+  text-align: center;
+}
+
+#howDialog > h2 {
+  margin-bottom: 5px;
+}
+
+.codex-intro {
+  max-width: 610px;
+  margin: 0 auto 12px;
+  color: #654a34;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.codex-goal {
+  margin-bottom: 9px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 9px;
+  color: #efdaa3;
+  background: #4a2934;
+  border: 2px solid #291912;
+  border-radius: 3px;
+  text-align: center;
+}
+
+.codex-goal b {
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+}
+
+.codex-goal span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.codex-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.codex-card {
+  position: relative;
+  min-width: 0;
+  grid-column: span 3;
+  padding: 9px 10px 8px 42px;
+  background: rgba(255,247,218,.44);
+  border: 1px solid #9a7546;
+  border-radius: 2px;
+}
+
+.codex-card-wide,
+.codex-role-note {
+  grid-column: span 6;
+}
+
+.codex-card h3 {
+  margin: 0 0 3px;
+  color: #4a2934;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+}
+
+.codex-card p {
+  margin: 0;
+  color: #49372b;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.codex-number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  color: #f2dca4;
+  background: #4a2934;
+  border-radius: 3px 3px 9px 9px;
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.codex-formula {
+  padding: 6px 8px;
+  color: #f1dda8 !important;
+  background: #4a2934;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  font-size: 10px !important;
+  text-align: center;
+}
+
+.codex-cycle {
+  margin: 7px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.codex-cycle span {
+  padding: 3px 7px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  font-family: "Cinzel", serif;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.codex-cycle .element-ember { color: #9f3726; }
+.codex-cycle .element-gust { color: #47773d; }
+.codex-cycle .element-tide { color: #326d8e; }
+
+.codex-cycle i {
+  color: #775a39;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.codex-role-card {
+  grid-column: span 2;
+  padding-left: 43px;
+}
+
+.codex-role-card .tactic-icon {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  color: #f0dba3;
+  background: #5b3c30;
+  border-radius: 50%;
+}
+
+.codex-role-note {
+  margin: 0;
+  padding: 7px 9px;
+  color: #563d2d;
+  background: rgba(116,81,43,.12);
+  border: 1px solid #a88251;
+  border-left: 4px solid #6f4937;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+#howDialog > .primary-button {
+  display: block;
+  margin-top: 11px;
+  margin-inline: auto;
+}
+
+@media (min-width: 641px) and (max-height: 680px) {
+  #howDialog {
+    max-height: 96dvh;
+    padding: 14px 22px 11px;
+  }
+
+  #howDialog > h2 {
+    margin-bottom: 2px;
+    font-size: 21px;
+  }
+
+  .codex-intro {
+    margin-bottom: 6px;
+    font-size: 10px;
+  }
+
+  .codex-goal {
+    margin-bottom: 5px;
+    padding: 6px 9px;
+  }
+
+  .codex-grid {
+    gap: 4px;
+  }
+
+  .codex-card {
+    padding-block: 6px;
+  }
+
+  .codex-cycle {
+    margin-block: 4px;
+  }
+
+  .codex-role-note {
+    padding-block: 4px;
+  }
+
+  #howDialog > .primary-button {
+    margin-top: 6px;
+    padding-block: 7px;
+  }
 }
 
 .primary-button {
@@ -4185,10 +4875,6 @@ footer {
     grid-column: 1;
     grid-row: 2;
   }
-  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .commitment-phase {
-    grid-column: 1;
-    grid-row: 2 / span 2;
-  }
   .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .matchup-forecast {
     grid-column: 1;
     grid-row: 3;
@@ -4421,14 +5107,6 @@ footer {
   .hand { gap: 6px; }
   .tactics-board { grid-template-columns: 190px minmax(0, 1fr); }
   .tactics-heading { padding: 10px; }
-  .commitment-phase {
-    grid-template-columns: minmax(112px, .8fr) minmax(0, 1.4fr);
-    gap: 8px;
-    padding: 8px;
-  }
-  .commitment-phase strong { font-size: 13px; }
-  .commitment-phase small { font-size: 9px; }
-  .commitment-options button { min-height: 54px; }
   .scout-seal { display: none; }
   .opponent-tell { padding-left: 33px; }
   .tell-element { left: 4px; width: 25px; height: 25px; font-size: 12px; }
@@ -4591,19 +5269,6 @@ footer {
 
   .tactics-heading p { font-size: 13px; }
   .tactics-heading small { font-size: 10px; }
-  .commitment-phase {
-    grid-column: 1;
-    grid-row: auto;
-    grid-template-columns: 1fr;
-    gap: 7px;
-    padding: 8px;
-  }
-  .commitment-phase > div:first-child { text-align: center; }
-  .commitment-phase strong { font-size: 13px; }
-  .commitment-phase small { font-size: 10px; }
-  .commitment-options button { min-height: 48px; }
-  .commitment-options b { font-size: 20px; }
-  .commitment-options span { font-size: 8px; }
   .opponent-tells { padding: 6px 5px 3px; gap: 3px; }
   .opponent-tell {
     height: 45px;
@@ -4703,9 +5368,35 @@ footer {
   .rulebook-section li,
   .rulebook-section dd { font-size: 11px; }
   .rulebook-card-facts,
-  .strategy-grid { grid-template-columns: 1fr; }
+  .strategy-grid,
+  .rulebook-score-keys,
+  .rulebook-win-grid,
+  .rulebook-role-grid { grid-template-columns: 1fr; }
   .rulebook-steps { grid-template-columns: 1fr; }
   .rulebook-steps li { min-height: 0; }
+  .formation-rulebook-formula { gap: 4px; padding: 6px; }
+  .formation-rulebook-formula > span,
+  .formation-rulebook-formula > strong { padding: 6px 4px; }
+  .formation-rulebook-formula b,
+  .formation-rulebook-formula strong { font-size: 9px; }
+  .formation-rulebook-formula em { font-size: 8px; }
+  .formation-rulebook-formula > i { font-size: 13px; }
+  .formation-rulebook-steps,
+  .extra-card-clarifier,
+  .round-points-examples { grid-template-columns: 1fr; }
+  .formation-rulebook-steps li { padding-block: 9px; }
+  #howDialog {
+    width: calc(100vw - 16px);
+    padding: 23px 11px 22px;
+    border-width: 5px;
+  }
+  #howDialog > h2 { font-size: 20px; }
+  .codex-goal { align-items: center; flex-direction: column; gap: 2px; }
+  .codex-grid { grid-template-columns: 1fr; }
+  .codex-card,
+  .codex-card-wide,
+  .codex-role-card,
+  .codex-role-note { grid-column: auto; }
   .element-cycle { gap: 4px; }
   .element-cycle span { padding-inline: 5px; font-size: 8px; }
   .element-cycle i { font-size: 7px; }
@@ -6267,6 +6958,52 @@ footer {
     overflow: visible;
   }
 
+  .score-guide-columns {
+    gap: 5px;
+  }
+
+  .score-guide-block {
+    padding: 7px;
+  }
+
+  .score-guide-block h3 {
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .score-guide-kicker,
+  .score-guide-key dt,
+  .score-guide-key dd,
+  .score-guide-role-grid p,
+  .score-guide-role-grid b,
+  .score-guide-examples span,
+  .score-guide-examples b,
+  .score-guide-verdict {
+    font-size: 7px;
+  }
+
+  .score-guide-formula {
+    padding: 5px;
+    font-size: 8px;
+  }
+
+  .score-guide-key,
+  .score-guide-role-grid,
+  .score-guide-examples {
+    gap: 3px;
+  }
+
+  .score-guide-key > div,
+  .score-guide-role-grid p,
+  .score-guide-examples p {
+    padding: 4px;
+  }
+
+  .score-guide-verdict {
+    margin-top: 5px;
+    padding: 4px 5px;
+  }
+
   .clash-score-parts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6281,8 +7018,7 @@ footer {
   }
 
   .clash-score-parts dd,
-  .tactic-placement-note,
-  .pressure-score-note {
+  .tactic-placement-note {
     font-size: 10px;
   }
 
@@ -6290,10 +7026,36 @@ footer {
     margin-top: 5px;
   }
 
-  .tactic-placement-note,
-  .pressure-score-note {
+  .tactic-placement-note {
     margin-top: 5px;
     padding: 5px 7px;
+  }
+
+  .formation-guide-formula {
+    gap: 3px;
+  }
+
+  .formation-guide-formula > span,
+  .formation-guide-formula > strong {
+    padding: 4px 3px;
+  }
+
+  .formation-guide-formula b,
+  .formation-guide-formula strong,
+  .formation-guide-formula em,
+  .formation-guide-steps li,
+  .formation-guide-steps li b,
+  .formation-guide-extra,
+  .formation-guide-examples {
+    font-size: 8px;
+  }
+
+  .formation-guide-steps {
+    gap: 3px;
+  }
+
+  .formation-guide-steps li {
+    padding: 5px;
   }
 
   .main-menu-actions {

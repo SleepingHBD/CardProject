@@ -17,7 +17,7 @@ const {
   scoreClash,
   chooseTrophyReward,
   LANE_WIN_POINTS,
-  PRESSURE_CARD_POINTS,
+  EXTRA_CARD_POINTS,
   TROPHIES_PER_ELEMENT,
 } = globalThis.ClawRules;
 const audio = globalThis.ClawAudio;
@@ -36,7 +36,7 @@ const CARD_LIBRARY = [
   ["gust", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "vanguard", "kitewhisker"],
   ["gust", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "finisher", "dandelion-dash"],
   ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "vanguard", "puddle-pouncer"],
-  ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance under pressure.", "rare", "link", "bubble-bengal"],
+  ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance with every ripple.", "rare", "link", "bubble-bengal"],
   ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "link", "moonpool-mouser"],
   ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "finisher", "empress-ebb"],
   ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "vanguard", "wellwater-wisp"],
@@ -57,7 +57,6 @@ const HAND_SIZE = 6;
 const MAX_PLAY_SIZE = 3;
 const DIFFICULTIES = {
   guided: { label: "Guided" },
-  veiled: { label: "Veiled" },
   instinct: { label: "Instinct" },
   blind: { label: "Blind" },
 };
@@ -80,10 +79,10 @@ const DEFAULT_AUDIO_VOLUMES = Object.freeze({
 const TUTORIAL_MODES = Object.freeze(["complete", "tour", "lesson"]);
 const TUTORIAL_SECTION_NAMES = Object.freeze([
   "Element Edge",
-  "Commitment Phase",
-  "Commitment Phase",
+  "Round Points",
+  "Round Points",
   "Formation Roles",
-  "Pressure",
+  "Round Points",
 ]);
 const TUTORIAL_TOUR_STEPS = Object.freeze([
   Object.freeze({
@@ -91,9 +90,9 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Track round wins",
     text:
-      "This score records how many rounds you and Professor Paws have won during the current duel.",
+      "This display records how many rounds you and Professor Paws have won during the current duel.",
     objective:
-      "Round wins help explain who is performing better, but the score itself does not complete the match.",
+      "Rounds Won tracks duel performance, but it does not complete the match. Only the six required trophies do.",
     targets: Object.freeze(["#roundScore"]),
     anchor: "#roundScore",
     preferredSide: "bottom",
@@ -115,9 +114,9 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Read Professor Paws",
     text:
-      "The Commitment Phase locks both formation sizes first. Professor’s Plan then shows his commitment and any clues your difficulty allows.",
+      "This panel gives you the rival information allowed by your difficulty. Guided and Blind show his formation size immediately; Instinct shows his habits instead.",
     objective:
-      "After locking your size, check this panel before choosing exact cards. Instinct keeps the commitment hidden.",
+      "Use the visible plan in Guided and Blind. In Instinct, read the habits while his cards and formation size remain hidden.",
     targets: Object.freeze([".tactics-board"]),
     anchor: ".tactics-board",
     preferredSide: "left",
@@ -129,7 +128,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "Cards do not combine into one 3v3 total. Lane 1 only clashes with Lane 1, Lane 2 with Lane 2, and Lane 3 with Lane 3.",
     objective:
-      "Each paired lane calculates its own clash score. A won lane adds 2 Formation Points; every unpaired card adds 1 Pressure point.",
+      "Each lane where both sides committed a card calculates its own Clash Total. Winning that lane adds 2 Round Points; every extra card with no opposing card adds 1 Round Point.",
     targets: Object.freeze(["#aiPlayZone", "#playerPlayZone"]),
     anchor: "#playerPlayZone",
     preferredSide: "right",
@@ -151,7 +150,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Build your formation",
     text:
-      "After the Commitment Phase locks your formation size, your chosen cards enter Lane 1, Lane 2, and Lane 3 in the order you place them.",
+      "Your chosen cards enter Lane 1, Lane 2, and Lane 3 in the order you place them. In every mode, you may stop after one, two, or three cards.",
     objective:
       "Order matters because Vanguard, Link, and Finisher Role bonuses activate under different conditions.",
     targets: Object.freeze(["#playerPlayZone"]),
@@ -196,7 +195,7 @@ const TUTORIAL_LESSONS = Object.freeze([
       Object.freeze({
         title: "Element Edge follows the cycle",
         text:
-          "Ember beats Gust, Gust beats Tide, and Tide beats Ember. A card that beats the opposing element earns Element Edge +2 when the lane is paired.",
+          "Ember beats Gust, Gust beats Tide, and Tide beats Ember. A card that beats the opposing element earns Element Edge +2 when it faces a card in the same lane.",
         objective:
           "Element Edge strengthens the card’s total, but it does not guarantee victory. Printed Power and every other active bonus still matter.",
         visual: "element-cycle",
@@ -222,35 +221,35 @@ const TUTORIAL_LESSONS = Object.freeze([
     aiCards: Object.freeze(["dandelion-dash"]),
     expected: Object.freeze(["cinder-kit"]),
     aftermath:
-      "Cinder Kit’s Power 4 gained Element Edge +2 and Vanguard +1 for a total of 7. Equal commitments created no Pressure, so its lane victory supplied the winning 2 Formation Points.",
+      "Cinder Kit’s Power 4 gained Element Edge +2 and Vanguard +1 for a total of 7. The formations had no extra cards, so its lane victory supplied the winning 2 Round Points.",
   }),
   Object.freeze({
     id: "commitment-one-vs-two",
-    concept: "Commitment Phase · Scenario 1 of 2",
-    title: "A precise one-card commitment",
+    concept: "Round Points · Scenario 1 of 3",
+    title: "One card against two",
     intro:
-      "Both duelists lock their formation size before the plan is revealed. A lane victory is worth 2 Formation Points, while every extra unpaired card is worth 1 Pressure point.",
+      "A lane victory where both sides committed a card earns 2 Round Points. Every extra card with no opposing card adds 1 Round Point. This scripted scenario gives you one card against two.",
     objective:
-      "Choose a one-card commitment, then play Sir Squall. His lane victory will score 2 points against the professor's 1 Pressure point.",
+      "Play Sir Squall. His lane victory will earn 2 Round Points against the professor's 1 Round Point from his extra card.",
     playerCards: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
     aiCards: Object.freeze(["empress-ebb", "bubble-bengal"]),
     expected: Object.freeze(["sir-squall"]),
     aftermath:
-      "Sir Squall won Lane 1 for 2 Formation Points. Professor Paws' extra card added 1 Pressure point, so your precise one-card commitment won the round 2–1.",
+      "Sir Squall won Lane 1 for 2 Round Points. Professor Paws' extra card added 1 Round Point, so your one-card formation won the round 2–1.",
   }),
   Object.freeze({
     id: "commitment-one-vs-three",
-    concept: "Commitment Phase · Scenario 2 of 2",
+    concept: "Round Points · Scenario 2 of 3",
     title: "Know when one card is not enough",
     intro:
-      "One card can defeat two by winning its paired lane: 2 points beat 1 Pressure point. Against three cards, one lane victory meets 2 Pressure points and the round draws.",
+      "One card can defeat two by winning the lane where both sides played a card: 2 Round Points beat the extra card's 1 Round Point. Against three cards, one lane victory meets 2 Round Points from two extra cards and the round draws.",
     objective:
-      "Choose one card and play Sir Squall again. Watch a won lane become a 2–2 Formation Score against three cards.",
+      "Play Sir Squall again. Watch the Round Points become tied 2–2 against three cards.",
     playerCards: Object.freeze(["sir-squall", "bubble-bengal", "moonpool-mouser"]),
     aiCards: Object.freeze(["empress-ebb", "bubble-bengal", "moonpool-mouser"]),
     expected: Object.freeze(["sir-squall"]),
     aftermath:
-      "Sir Squall still won Lane 1 for 2 Formation Points, but Professor Paws' two extra cards supplied 2 Pressure points. The 2–2 Formation Score produced a round draw and no trophy.",
+      "Sir Squall still won Lane 1 for 2 Round Points, but Professor Paws' two extra cards supplied 2 Round Points. Round Points were tied 2–2, producing a draw and no trophy.",
   }),
   Object.freeze({
     id: "tactics",
@@ -286,7 +285,7 @@ const TUTORIAL_LESSONS = Object.freeze([
         text:
           "A Finisher gets Finisher +1 only when all three conditions are true: you commit at least two cards, the Finisher is your last committed card, and Professor Paws committed a card in that same lane.",
         objective:
-          "With two cards, the Finisher belongs in Lane 2. With three cards, it belongs in Lane 3. A lone Finisher or an unpaired extra Finisher earns no bonus.",
+          "With two cards, the Finisher belongs in Lane 2. With three cards, it belongs in Lane 3. A lone Finisher or a Finisher with no opposing card earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -325,7 +324,7 @@ const TUTORIAL_LESSONS = Object.freeze([
       }),
     ]),
     readyText:
-      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Lane 3 is last and paired.",
+      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Lane 3 is last and has an opposing card.",
     readyObjective:
       "Confirm all three Role +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
@@ -336,19 +335,19 @@ const TUTORIAL_LESSONS = Object.freeze([
     trophyChoice: true,
   }),
   Object.freeze({
-    id: "pressure",
-    concept: "Scenario 5 · Pressure",
+    id: "extra-card-points",
+    concept: "Round Points · Scenario 3 of 3",
     title: "Break a tied round",
     intro:
-      "Pressure is not a clash bonus. Every extra, unpaired card adds 1 Formation Point after the paired lanes resolve.",
+      "Every extra card with no opposing card adds 1 Round Point. It does not change any card's Clash Total.",
     objective:
-      "Order Comet Claw first and Bubble Bengal second. The two Comet Claws will draw; Bubble Bengal will provide the winning Pressure point.",
+      "Order Comet Claw first and Bubble Bengal second. The two Comet Claws will draw; Bubble Bengal will provide the winning Round Point as an extra card.",
     playerCards: Object.freeze(["comet-claw", "bubble-bengal", "cinder-kit"]),
     aiCards: Object.freeze(["comet-claw"]),
     expected: Object.freeze(["comet-claw", "bubble-bengal"]),
     aftermath:
-      "The paired Comet Claws drew and scored 0 lane points. Bubble Bengal was unpaired, added 1 Pressure point, and became the automatic trophy from your 1–0 Formation Score victory.",
-    pressureTrophy: true,
+      "The Comet Claws faced each other in Lane 1 and drew for 0 Round Points. Bubble Bengal had no opposing card, added 1 Round Point, and became the automatic trophy from your 1–0 Round Points win.",
+    extraCardTrophy: true,
   }),
 ]);
 
@@ -391,7 +390,6 @@ const state = {
   aiPlan: [],
   aiTellClues: [],
   aiTraits: [],
-  playerCommitment: null,
   previousPlayerCommitment: null,
   previousAiCommitment: null,
   selectedCardIds: [],
@@ -432,8 +430,7 @@ const ui = {
   aiCollection: document.querySelector("#aiCollection"),
   turnMessage: document.querySelector("#turnMessage"),
   commitmentHint: document.querySelector("#commitmentHint"),
-  commitmentPhase: document.querySelector("#commitmentPhase"),
-  commitmentOptions: document.querySelectorAll("[data-player-commitment]"),
+  tacticsTitle: document.querySelector("#tacticsTitle"),
   opponentHabits: document.querySelector("#opponentHabits"),
   opponentTells: document.querySelector("#opponentTells"),
   matchupForecast: document.querySelector("#matchupForecast"),
@@ -520,6 +517,13 @@ const tutorialCoachDrag = {
   manual: false,
 };
 
+function getPlayerFormationLimit() {
+  if (tutorial.active && tutorial.phase !== "tour") {
+    return currentTutorialLesson()?.expected.length || MAX_PLAY_SIZE;
+  }
+  return Math.min(MAX_PLAY_SIZE, state.playerHand.length);
+}
+
 function currentTutorialLesson() {
   return TUTORIAL_LESSONS[tutorial.lessonIndex] || null;
 }
@@ -560,8 +564,17 @@ function tutorialSectionScenarioIndexes(lessonIndex = tutorial.lessonIndex) {
 }
 
 function tutorialContinuesCurrentSection() {
-  return TUTORIAL_SECTION_NAMES[tutorial.lessonIndex + 1]
-    === TUTORIAL_SECTION_NAMES[tutorial.lessonIndex];
+  const indexes = tutorialSectionScenarioIndexes();
+  return indexes.indexOf(tutorial.lessonIndex) < indexes.length - 1;
+}
+
+function adjacentTutorialLessonIndex(direction) {
+  if (tutorial.mode !== "lesson") {
+    return tutorial.lessonIndex + direction;
+  }
+  const indexes = tutorialSectionScenarioIndexes();
+  const position = indexes.indexOf(tutorial.lessonIndex);
+  return indexes[position + direction];
 }
 
 function createTutorialCard(art, side, index) {
@@ -653,11 +666,6 @@ function applyTutorialHighlights() {
     return;
   }
 
-  if (tutorial.phase === "declare") {
-    ui.commitmentPhase.classList.add("tutorial-highlight-target");
-    return;
-  }
-
   if (tutorial.phase === "claim") {
     ui.trophyClaim.classList.add("tutorial-highlight-target");
     return;
@@ -707,14 +715,6 @@ function getTutorialCoachAnchorContext() {
       element: document.querySelector(introPage?.anchor || ".tactics-board"),
       key: `lesson:${lesson.id}:intro:${tutorial.introStep}`,
       preferredSide: introPage?.preferredSide || "left",
-    };
-  }
-
-  if (tutorial.phase === "declare") {
-    return {
-      element: ui.commitmentPhase,
-      key: `lesson:${lesson.id}:commitment`,
-      preferredSide: "left",
     };
   }
 
@@ -902,7 +902,7 @@ function renderTutorialVisual(type = null) {
     <div
       class="element-edge-cycle"
       role="img"
-      aria-label="Element Edge cycle: Ember beats Gust, Gust beats Tide, and Tide beats Ember. A winning elemental counter adds two points."
+      aria-label="Element Edge cycle: Ember beats Gust, Gust beats Tide, and Tide beats Ember. A winning elemental counter adds Element Edge plus two to that card's Clash Total."
     >
       <svg class="element-cycle-arrows" viewBox="0 0 320 190" aria-hidden="true">
         <defs>
@@ -1039,13 +1039,6 @@ function renderTutorialCoach() {
       && tutorial.mode === "complete"
       && tutorial.lessonIndex > 0;
     ui.tutorialActionButton.textContent = finalIntroPage ? "Start Scenario" : "Next";
-  } else if (tutorial.phase === "declare") {
-    ui.tutorialCoachTitle.textContent = "Lock your commitment";
-    ui.tutorialCoachText.textContent =
-      "Both duelists choose their formation size before Professor Paws reveals his plan.";
-    ui.tutorialObjective.textContent =
-      `Choose ${lesson.expected.length} ${lesson.expected.length === 1 ? "card" : "cards"} for this scripted scenario.`;
-    ui.tutorialActionButton.hidden = true;
   } else if (tutorial.phase === "play") {
     ui.tutorialActionButton.hidden = true;
     ui.tutorialBackButton.hidden = selected.length > 0;
@@ -1143,7 +1136,6 @@ function startTutorialTour(initialStep = 0) {
   state.round = 1;
   state.locked = true;
   state.dealing = false;
-  state.playerCommitment = previewLesson.expected.length;
   state.selectedCardIds = [];
   state.deck = [];
   state.discardPile = [];
@@ -1163,7 +1155,7 @@ function startTutorialTour(initialStep = 0) {
   const tourStep = currentTutorialTourStep();
   setMessage(tourStep.title, tourStep.objective);
   renderOpponentTells();
-  renderCommitmentPhase();
+  renderFormationControls();
   renderHand();
   renderFormationBuilder();
   ui.matchupForecast.style.gridTemplateColumns = "";
@@ -1204,12 +1196,12 @@ function loadTutorialLesson(index) {
   tutorial.lessonIndex = index;
   tutorial.introStep = 0;
   tutorial.phase = "intro";
+  const sectionLessonIndexes = tutorialSectionScenarioIndexes(index);
   state.round = tutorial.mode === "lesson"
-    ? index - tutorial.entryLessonIndex + 1
+    ? sectionLessonIndexes.indexOf(index) + 1
     : index + 1;
   state.locked = true;
   state.dealing = false;
-  state.playerCommitment = null;
   state.selectedCardIds = [];
   state.deck = [];
   state.discardPile = [];
@@ -1228,7 +1220,7 @@ function loadTutorialLesson(index) {
   ui.versusBadge.className = "versus-badge";
   setMessage(lesson.title, "Read your coach’s instructions, then begin the scenario.");
   renderOpponentTells();
-  renderCommitmentPhase();
+  renderFormationControls();
   renderHand();
   renderFormationBuilder();
   renderRound();
@@ -1239,11 +1231,18 @@ function loadTutorialLesson(index) {
 function beginTutorialLesson() {
   if (!tutorial.active || tutorial.phase !== "intro") return;
   const lesson = currentTutorialLesson();
-  beginCommitmentPhase();
+  state.selectedCardIds = [];
+  state.locked = false;
+  tutorial.phase = "play";
+  renderFormationControls();
+  renderOpponentTells();
+  renderHand();
+  renderFormationBuilder();
   setMessage(
     lesson.title,
-    `Choose the scripted ${lesson.expected.length}-card commitment to begin.`,
+    `Build the scripted ${lesson.expected.length}-card formation shown by your coach.`,
   );
+  renderTutorialCoach();
 }
 
 function advanceTutorialIntro() {
@@ -1283,8 +1282,9 @@ function retreatTutorialInstruction() {
       return;
     }
     if (tutorial.mode === "lesson") {
-      if (tutorial.lessonIndex > tutorial.entryLessonIndex) {
-        loadTutorialLesson(tutorial.lessonIndex - 1);
+      const previousLessonIndex = adjacentTutorialLessonIndex(-1);
+      if (previousLessonIndex !== undefined) {
+        loadTutorialLesson(previousLessonIndex);
       } else {
         showTutorialMenu();
       }
@@ -1300,8 +1300,7 @@ function retreatTutorialInstruction() {
     state.locked = true;
     const introPage = currentTutorialIntroPage();
     setMessage(introPage.title, introPage.objective);
-    state.playerCommitment = null;
-    renderCommitmentPhase();
+    renderFormationControls();
     renderHand();
     renderFormationBuilder();
     renderTutorialCoach();
@@ -1356,14 +1355,14 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
   }
 
   const resultLabel = winner === "player"
-    ? decidedBy === "pressure"
-      ? `Your Pressure wins the Formation Score ${score.player}–${score.ai}!`
-      : `You win the Formation Score ${score.player}–${score.ai}!`
+    ? decidedBy === "extra-cards"
+      ? `Your extra cards win the round, ${score.player}–${score.ai} Round Points!`
+      : `You win with ${score.player}–${score.ai} Round Points!`
     : winner === "ai"
-      ? decidedBy === "pressure"
-        ? `Professor Paws' Pressure wins ${score.ai}–${score.player}.`
-        : `Professor Paws wins the Formation Score ${score.ai}–${score.player}.`
-      : `The Formation Score is tied ${score.player}–${score.ai}.`;
+      ? decidedBy === "extra-cards"
+        ? `Professor Paws' extra cards win ${score.ai}–${score.player}.`
+        : `Professor Paws wins with ${score.ai}–${score.player} Round Points.`
+      : `Round Points are tied ${score.player}–${score.ai}.`;
   setMessage(resultLabel, lesson.aftermath);
   renderAftermathBreakdown(playerCards, resolution);
   restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
@@ -1378,7 +1377,7 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
     return;
   }
 
-  if (lesson.pressureTrophy && rewardOptions[0]?.card) {
+  if (lesson.extraCardTrophy && rewardOptions[0]?.card) {
     state.playerWins.push(rewardOptions[0].card);
     renderCollection(ui.playerCollection, state.playerWins);
   }
@@ -1407,7 +1406,6 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   state.aiRoundWins = 0;
   state.pendingMatchWinner = null;
   state.pendingTrophyClaim = null;
-  state.playerCommitment = null;
   state.locked = true;
   state.dealing = true;
   renderOpponentHabits();
@@ -1441,7 +1439,7 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
   setMessage(
     "Entering the Training Grounds...",
     selectedMode === "complete"
-      ? "Begin with a quick interface tour, then complete four sections across five scripted scenarios."
+      ? "Begin with a quick interface tour, then complete three sections across five scripted scenarios."
       : `Preparing the ${sectionName} section.`,
   );
   await playDeckTransition("opening");
@@ -1474,6 +1472,21 @@ function moveClashScorePanel(left, top) {
   ui.clashScorePanel.style.left = `${position.left}px`;
   ui.clashScorePanel.style.top = `${position.top}px`;
   ui.clashScorePanel.style.right = "auto";
+}
+
+function resetClashScorePanelPosition() {
+  ui.clashScorePanel.style.removeProperty("left");
+  ui.clashScorePanel.style.removeProperty("top");
+  ui.clashScorePanel.style.removeProperty("right");
+}
+
+function syncClashScorePanelPosition() {
+  if (window.matchMedia("(max-width: 640px)").matches) {
+    resetClashScorePanelPosition();
+    return;
+  }
+  const panelRect = ui.clashScorePanel.getBoundingClientRect();
+  moveClashScorePanel(panelRect.left, panelRect.top);
 }
 
 function stopClashScoreDrag(event) {
@@ -1613,32 +1626,34 @@ function renderOpponentHabits() {
 }
 
 function renderOpponentTells() {
-  const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Veiled";
+  const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Guided";
   const concealsCommitment = state.difficulty === "instinct";
-  const playerCommitment = state.playerCommitment || 0;
-  const aiPressure = Math.max(0, state.aiPlan.length - playerCommitment);
-  const playerPressure = Math.max(0, playerCommitment - state.aiPlan.length);
-  const formationStatus = aiPressure
-    ? `${aiPressure} Pressure ${aiPressure === 1 ? "point" : "points"}`
-    : playerPressure
-      ? `You hold ${playerPressure} Pressure ${playerPressure === 1 ? "point" : "points"}`
-      : "Equal commitment";
-  ui.commitmentHint.textContent = concealsCommitment
-    ? "Instinct · Commitment and Pressure concealed"
-    : `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationStatus}`;
+  ui.tacticsTitle.textContent = concealsCommitment
+    ? "Professor's Habits"
+    : "Professor's Plan";
   renderOpponentHabits();
+
+  if (concealsCommitment) {
+    ui.commitmentHint.textContent = "Instinct · Formation size and cards concealed";
+    ui.opponentTells.innerHTML = "";
+    ui.opponentTells.hidden = true;
+    return;
+  }
+
+  const playerCardCount = state.selectedCardIds.length;
+  const aiExtraCards = Math.max(0, state.aiPlan.length - playerCardCount);
+  const playerExtraCards = Math.max(0, playerCardCount - state.aiPlan.length);
+  const formationStatus = playerCardCount === 0
+    ? "Build 1–3 cards"
+    : aiExtraCards
+      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}`
+      : playerExtraCards
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraCards} Round ${playerExtraCards === 1 ? "Point" : "Points"}`
+        : "Equal formation size";
+  ui.commitmentHint.textContent =
+    `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationStatus}`;
   const laneLabels = ["1", "2", "3"];
   ui.opponentTells.innerHTML = laneLabels.map((lane, index) => {
-    if (concealsCommitment) {
-      return `
-        <div class="opponent-tell clue-sealed possible-tell" aria-label="Lane ${lane}: occupancy and card details concealed">
-          <span class="tell-lane">LANE ${lane}</span>
-          <span class="tell-element" aria-hidden="true">?</span>
-          <b>Possible card</b>
-          <small>Occupancy hidden</small>
-        </div>
-      `;
-    }
     const card = state.aiPlan[index];
     if (!card) {
       return `
@@ -1653,29 +1668,20 @@ function renderOpponentTells() {
     const element = ELEMENTS[card.element];
     const tier = getPowerTier(card.power);
     const clue = state.aiTellClues[index] || "sealed";
-    const showsElement = clue === "full" || clue === "element";
-    const showsPower = clue === "full" || clue === "power";
-    const title = showsElement
+    const showsFullClue = clue === "full";
+    const title = showsFullClue
       ? element.label
-      : clue === "sealed"
-        ? "Sealed card"
-        : "Element hidden";
-    const detail = showsPower
+      : "Sealed card";
+    const detail = showsFullClue
       ? `Power <em>${tier.range}</em>`
-      : clue === "sealed"
-        ? "No card clues"
-        : "Power hidden";
-    const accessibleClue = clue === "full"
+      : "No card clues";
+    const accessibleClue = showsFullClue
       ? `${element.label}, power ${tier.range}`
-      : clue === "element"
-        ? `${element.label}, power hidden`
-        : clue === "power"
-          ? `element hidden, power ${tier.range}`
-          : "card details sealed";
+      : "card details sealed";
     return `
-      <div class="opponent-tell clue-${clue}${showsElement ? ` element-${card.element}` : ""}" aria-label="Lane ${lane}: ${accessibleClue}">
+      <div class="opponent-tell clue-${clue}${showsFullClue ? ` element-${card.element}` : ""}" aria-label="Lane ${lane}: ${accessibleClue}">
         <span class="tell-lane">LANE ${lane}</span>
-        <span class="tell-element" aria-hidden="true">${showsElement ? element.icon : "?"}</span>
+        <span class="tell-element" aria-hidden="true">${showsFullClue ? element.icon : "?"}</span>
         <b>${title}</b>
         <small>${detail}</small>
       </div>
@@ -1683,88 +1689,46 @@ function renderOpponentTells() {
   }).join("");
 }
 
-function renderCommitmentPhase() {
+function renderFormationControls() {
   if (state.dealing) {
-    ui.commitmentPhase.hidden = true;
     ui.opponentTells.hidden = true;
     ui.matchupForecast.hidden = true;
     ui.selectionCount.hidden = true;
     ui.playSelectedButton.hidden = true;
     return;
   }
-  const commitmentPending = state.playerCommitment === null && !state.dealing;
-  const choosingCommitment = commitmentPending
-    && (!tutorial.active || tutorial.phase === "declare");
-  ui.commitmentPhase.hidden = !choosingCommitment;
-  ui.opponentTells.hidden = commitmentPending;
-  ui.matchupForecast.hidden = commitmentPending;
-  ui.selectionCount.hidden = commitmentPending;
-  ui.playSelectedButton.hidden = commitmentPending;
-  if (!commitmentPending && ui.nextRoundButton.hidden && ui.trophyClaim.hidden) {
+  ui.opponentTells.hidden = state.difficulty === "instinct";
+  ui.matchupForecast.hidden = false;
+  if (ui.nextRoundButton.hidden && ui.trophyClaim.hidden) {
     ui.selectionCount.hidden = false;
     ui.playSelectedButton.hidden = false;
   }
-  if (!choosingCommitment) return;
-
-  ui.commitmentHint.textContent = tutorial.active
-    ? "Training plan sealed until you choose the scripted commitment"
-    : "Plan sealed until you lock your commitment";
-  ui.commitmentOptions.forEach((button) => {
-    const count = Number(button.dataset.playerCommitment);
-    button.disabled = count > state.playerHand.length;
-  });
 }
 
-function beginCommitmentPhase() {
-  state.playerCommitment = null;
+function beginFormationBuilding() {
   state.selectedCardIds = [];
-  state.locked = true;
-  if (tutorial.active) tutorial.phase = "declare";
-  renderOpponentHabits();
-  renderCommitmentPhase();
+  state.locked = false;
+  renderOpponentTells();
+  renderFormationControls();
   renderHand();
   renderFormationBuilder();
+  const hidesFormation = state.difficulty === "instinct";
   setMessage(
-    "Commitment Phase",
-    "Choose one, two, or three cards before Professor Paws reveals his plan.",
+    hidesFormation ? "Read the habits. Build your formation." : "Study the plan. Build your formation.",
+    hidesFormation
+      ? "Place one to three cards. Professor Paws' formation stays hidden until the clash."
+      : "Place one to three cards in order, review the forecast, then commit when ready.",
   );
-  if (tutorial.active) renderTutorialCoach();
 }
 
-function lockPlayerCommitment(count) {
-  const safeCount = Number(count);
-  if (
-    state.playerCommitment !== null
-    || !Number.isInteger(safeCount)
-    || safeCount < 1
-    || safeCount > Math.min(MAX_PLAY_SIZE, state.playerHand.length)
-  ) return;
-
-  const lesson = currentTutorialLesson();
-  if (tutorial.active && safeCount !== lesson?.expected.length) {
-    setMessage(
-      `Choose ${lesson.expected.length} ${lesson.expected.length === 1 ? "card" : "cards"} for this scenario.`,
-      "The Training Grounds uses a scripted commitment so the rule demonstration resolves correctly.",
-    );
-    audio.denied();
-    return;
-  }
-
-  state.playerCommitment = safeCount;
-  state.locked = false;
-  if (tutorial.active && tutorial.phase === "declare") tutorial.phase = "play";
-  audio.buttonPress();
-  renderCommitmentPhase();
-  renderOpponentTells();
-  renderHand();
-  renderFormationBuilder();
-  setMessage(
-    `${safeCount}-card commitment locked.`,
-    state.difficulty === "instinct"
-      ? "Professor Paws' commitment remains hidden. Use his habits, then build exactly the formation size you chose."
-      : `Professor Paws committed ${state.aiPlan.length}. Build exactly ${safeCount} ${safeCount === 1 ? "card" : "cards"} using the available clues.`,
+function getKnownPlayerTacticBonus(cards, index) {
+  const card = cards[index];
+  if (state.difficulty === "instinct" && card?.tactic === "finisher") return 0;
+  return getTacticBonus(
+    cards,
+    index,
+    state.difficulty === "instinct" ? MAX_PLAY_SIZE : state.aiPlan.length,
   );
-  if (tutorial.active) renderTutorialCoach();
 }
 
 function renderMatchupForecast() {
@@ -1807,11 +1771,7 @@ function renderMatchupForecast() {
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
     const opponentCard = state.aiPlan[index];
-    const playerTactic = getTacticBonus(
-      selectedCards,
-      index,
-      concealsCommitment ? MAX_PLAY_SIZE : state.aiPlan.length,
-    );
+    const playerTactic = getKnownPlayerTacticBonus(selectedCards, index);
     const knownPlayerScore = playerCard.power
       + playerTactic;
     const knownBonusTotal = playerTactic;
@@ -1824,28 +1784,32 @@ function renderMatchupForecast() {
       : "No known bonus";
 
     if (concealsCommitment) {
-      const maximumHiddenBonus = knownBonusTotal
-        + ELEMENT_EDGE_BONUS;
-      const hiddenWarning = "Foe presence, Pressure, and Element Edge hidden";
+      const roleWarning = playerCard.tactic !== "finisher"
+        ? `${TACTICS[playerCard.tactic].label} is fully known`
+        : selectedCards.length < 2
+          ? "Finisher needs a two- or three-card formation"
+          : index !== selectedCards.length - 1
+            ? "Finisher is not your final card"
+            : "Finisher +1 depends on a hidden opposing card";
       return `
         <span class="forecast-chip forecast-sealed">
           <i>${index + 1}</i>
-          <b>? POSSIBLE CLASH · ${knownPlayerScore}–${playerCard.power + maximumHiddenBonus}</b>
+          <b>YOUR KNOWN TOTAL · ${knownPlayerScore}</b>
           <span class="forecast-equation">
-            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${maximumHiddenBonus} IF IT CLASHES</strong>
+            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal} KNOWN ROLE</strong><span>=</span><strong>${knownPlayerScore}</strong>
           </span>
-          <small>${knownBonusDetail} · ${hiddenWarning}</small>
+          <small>${knownBonusDetail} · ${roleWarning} · Opposing card and Element Edge revealed at clash</small>
         </span>
       `;
     }
 
     if (!opponentCard) {
       return `
-        <span class="forecast-chip forecast-pressure">
+        <span class="forecast-chip forecast-extra-card">
           <i>${index + 1}</i>
-          <b>◆ PRESSURE +${PRESSURE_CARD_POINTS}</b>
-          <span class="forecast-equation"><strong>+${PRESSURE_CARD_POINTS} FORMATION POINT</strong></span>
-          <small>Unpaired card; it does not clash</small>
+          <b>◆ EXTRA CARD +${EXTRA_CARD_POINTS}</b>
+          <span class="forecast-equation"><strong>+${EXTRA_CARD_POINTS} ROUND POINT</strong></span>
+          <small>No opposing card; adds 1 Round Point instead of clashing</small>
         </span>
       `;
     }
@@ -1870,41 +1834,6 @@ function renderMatchupForecast() {
             <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${knownBonusTotal + 2} BONUS</strong>
           </span>
           <small>${knownBonusDetail} · Element Edge hidden</small>
-        </span>
-      `;
-    }
-
-    if (clue === "power") {
-      const powerRange = getPowerTier(opponentCard.power).range;
-      return `
-        <span class="forecast-chip forecast-clue">
-          <i>${index + 1}</i>
-          <b>◆ FOE ${powerRange} · YOUR TOTAL ${knownPlayerScore}–${knownPlayerScore + 2}</b>
-          <span class="forecast-equation">
-            <em>${playerCard.power} BASE</em><span>+</span><strong>${knownBonusTotal}–${knownBonusTotal + 2} BONUS</strong>
-          </span>
-          <small>${knownBonusDetail} · Element Edge hidden</small>
-        </span>
-      `;
-    }
-
-    if (clue === "element") {
-      const elementRead = scoring.player.edge
-        ? { icon: "+", title: "YOUR EDGE +2", className: "advantage" }
-        : scoring.ai.edge
-          ? { icon: "!", title: "FOE EDGE +2", className: "danger" }
-          : { icon: "=", title: "SAME ELEMENT", className: "power" };
-      if (scoring.player.edge) knownBonuses.push(`Element Edge +${scoring.player.edge}`);
-      const totalBonus = getBonusBreakdown(scoring.player).total;
-      const bonusDetail = knownBonuses.length ? knownBonuses.join(" · ") : "No bonuses";
-      return `
-        <span class="forecast-chip forecast-${elementRead.className}">
-          <i>${index + 1}</i>
-          <b>${elementRead.icon} ${elementRead.title} · TOTAL ${scoring.player.total}</b>
-          <span class="forecast-equation">
-            <em>${playerCard.power} BASE</em><span>+</span><strong>${totalBonus} BONUS</strong><span>=</span><strong>${scoring.player.total}</strong>
-          </span>
-          <small>${bonusDetail} · Foe power hidden</small>
         </span>
       `;
     }
@@ -1942,14 +1871,14 @@ function renderMatchupForecast() {
 function renderAftermathBreakdown(playerCards, resolution) {
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${Math.max(1, resolution.lanes.length)}, minmax(0, 1fr))`;
   const summary = `
-    <span class="forecast-chip formation-score-summary">
-      <b>FORMATION SCORE · ${resolution.score.player}–${resolution.score.ai}</b>
+    <span class="forecast-chip round-points-summary">
+      <b>ROUND POINTS · ${resolution.score.player}–${resolution.score.ai}</b>
       <span class="forecast-equation">
         <em>${resolution.laneWins.player} LANE ${resolution.laneWins.player === 1 ? "WIN" : "WINS"} × ${LANE_WIN_POINTS}</em>
         <span>+</span>
-        <strong>${resolution.pressure.player} PRESSURE</strong>
+        <strong>${resolution.extraCardPoints.player} FROM EXTRA ${resolution.extraCardPoints.player === 1 ? "CARD" : "CARDS"}</strong>
       </span>
-      <small>Professor: ${resolution.laneWins.ai} × ${LANE_WIN_POINTS} lane points + ${resolution.pressure.ai} Pressure</small>
+      <small>Professor: ${resolution.laneWins.ai} won ${resolution.laneWins.ai === 1 ? "lane" : "lanes"} × ${LANE_WIN_POINTS} + ${resolution.extraCardPoints.ai} from extra ${resolution.extraCardPoints.ai === 1 ? "card" : "cards"}</small>
     </span>
   `;
   const laneBreakdown = resolution.lanes.map((lane, index) => {
@@ -1986,23 +1915,23 @@ function cardMarkup(
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
-  const isPressureCard = displayMode === "pressure";
+  const isExtraCard = displayMode === "extra-card";
   const interactionLabel = isFormationCard
     ? `Remove ${card.name} from lane ${selectedIndex + 1}`
     : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
-      <span class="card-bonus-badge preview-badge${formationBonus.pressure ? " pressure-badge" : ""}" aria-label="${formationBonus.label}">
-        <small>${formationBonus.pressure ? "ROLE" : "BONUS"}</small>
+      <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}">
+        <small>${formationBonus.extraCard ? "EXTRA" : "BONUS"}</small>
         <b>${formationBonus.text}</b>
       </span>
     `
     : "";
-  const resolvedBonusBadge = isPlayedCard || isPressureCard
+  const resolvedBonusBadge = isPlayedCard || isExtraCard
     ? `
-      <span class="card-bonus-badge${isPressureCard ? " pressure-badge" : ""}" aria-label="${isPressureCard ? `Pressure card; adds ${PRESSURE_CARD_POINTS} Formation Point` : "Bonus not yet resolved"}">
-        <small>${isPressureCard ? "ROLE" : "BONUS"}</small>
-        <b>${isPressureCard ? `P+${PRESSURE_CARD_POINTS}` : "+?"}</b>
+      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? `Extra card with no opposing card; adds ${EXTRA_CARD_POINTS} Round Point` : "Bonus not yet resolved"}">
+        <small>${isExtraCard ? "EXTRA" : "BONUS"}</small>
+        <b>${isExtraCard ? `+${EXTRA_CARD_POINTS}` : "+?"}</b>
       </span>
     `
     : "";
@@ -2111,33 +2040,39 @@ function bindCardInteractions(container) {
 
 function getFormationBonusPreview(selectedCards, index) {
   const playerCard = selectedCards[index];
-  const tactic = getTacticBonus(
-    selectedCards,
-    index,
-    state.difficulty === "instinct" ? MAX_PLAY_SIZE : state.aiPlan.length,
-  );
+  const tactic = getKnownPlayerTacticBonus(selectedCards, index);
   const knownBonus = tactic;
   if (state.difficulty === "instinct") {
-    const maximumBonus = knownBonus
-      + ELEMENT_EDGE_BONUS;
+    const finisherUnknown = playerCard.tactic === "finisher"
+      && selectedCards.length > 1
+      && index === selectedCards.length - 1;
+    const roleDetail = playerCard.tactic !== "finisher"
+      ? `${TACTICS[playerCard.tactic].label} is fully known`
+      : selectedCards.length < 2
+        ? "Finisher needs a two- or three-card formation"
+        : index !== selectedCards.length - 1
+          ? "Finisher is not your final card"
+          : "Finisher depends on a hidden opposing card";
     return {
-      text: `+${knownBonus}–${maximumBonus}`,
-      label: `If paired, bonus ranges from plus ${knownBonus} to plus ${maximumBonus}; opposing card presence and Element Edge are hidden`,
-      pressure: false,
+      text: `+${knownBonus}`,
+      label: finisherUnknown
+        ? `Known bonus plus ${knownBonus}; Finisher and Element Edge are revealed at clash`
+        : `Known bonus plus ${knownBonus}; ${roleDetail}; Element Edge is revealed at clash`,
+      extraCard: false,
     };
   }
 
   const opponentCard = state.aiPlan[index];
   if (!opponentCard) {
     return {
-      text: `P+${PRESSURE_CARD_POINTS}`,
-      label: `Pressure card; adds ${PRESSURE_CARD_POINTS} Formation Point instead of clashing`,
-      pressure: true,
+      text: `+${EXTRA_CARD_POINTS}`,
+      label: `Extra card with no opposing card; adds ${EXTRA_CARD_POINTS} Round Point instead of clashing`,
+      extraCard: true,
     };
   }
 
   const clue = state.aiTellClues[index] || "sealed";
-  const edgeKnown = clue === "full" || clue === "element";
+  const edgeKnown = clue === "full";
   const edge = edgeKnown
     && ELEMENTS[playerCard.element].beats === opponentCard.element
     ? ELEMENT_EDGE_BONUS
@@ -2150,7 +2085,7 @@ function getFormationBonusPreview(selectedCards, index) {
     return {
       text: `+${knownBonus}–${knownBonus + ELEMENT_EDGE_BONUS}`,
       label: `Bonus ranges from plus ${knownBonus} to plus ${knownBonus + ELEMENT_EDGE_BONUS}; Element Edge is hidden`,
-      pressure: false,
+      extraCard: false,
     };
   }
 
@@ -2158,7 +2093,7 @@ function getFormationBonusPreview(selectedCards, index) {
   return {
     text: `+${total}`,
     label: `Total bonus plus ${total}: ${knownParts.length ? knownParts.join(", ") : "No bonuses"}`,
-    pressure: false,
+    extraCard: false,
   };
 }
 
@@ -2166,14 +2101,13 @@ function renderFormationBuilder() {
   const selectedCards = state.selectedCardIds
     .map((instanceId) => state.playerHand.find((card) => card.instanceId === instanceId))
     .filter(Boolean);
-  const commitmentLimit = state.playerCommitment || 0;
+  const commitmentLimit = getPlayerFormationLimit();
 
   ui.playerPlayZone.innerHTML = `
     <div class="formation-builder" aria-label="Your formation lanes">
       ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => {
         const card = selectedCards[index];
-        const isOutsideCommitment = commitmentLimit > 0 && index >= commitmentLimit;
-        const isLockedSlot = (state.locked || commitmentLimit === 0 || isOutsideCommitment) && !card;
+        const isLockedSlot = (state.locked || commitmentLimit === 0) && !card;
         const isNextSlot = !state.locked
           && index < commitmentLimit
           && index === selectedCards.length;
@@ -2190,11 +2124,11 @@ function renderFormationBuilder() {
           <div
             class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}${isLockedSlot ? " locked-slot" : ""}"
             data-drop-lane="${index}"
-            aria-label="Lane ${index + 1}${isOutsideCommitment ? ", not included in your commitment" : isLockedSlot ? ", locked until the commitment is chosen" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
+            aria-label="Lane ${index + 1}${isLockedSlot ? ", unavailable" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
           >
             <span>LANE ${index + 1}</span>
-            <b>${isOutsideCommitment ? "NOT DECLARED" : isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
-            <small>${isOutsideCommitment ? "OUTSIDE YOUR COMMITMENT" : isLockedSlot ? "CHOOSE COMMITMENT FIRST" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
+            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
+            <small>${isLockedSlot ? "FORMATION UNAVAILABLE" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
           </div>
         `;
       }).join("")}
@@ -2207,7 +2141,7 @@ function renderFormationBuilder() {
     slot.addEventListener("dragover", (event) => {
       if (
         state.locked
-        || laneIndex >= (state.playerCommitment || 0)
+        || laneIndex >= getPlayerFormationLimit()
         || laneIndex > state.selectedCardIds.length
       ) return;
       event.preventDefault();
@@ -2228,11 +2162,11 @@ function renderFormationBuilder() {
 
 function placeCardInLane(instanceId, laneIndex) {
   if (state.locked || !state.playerHand.some((card) => card.instanceId === instanceId)) return;
-  const commitmentLimit = state.playerCommitment || 0;
+  const commitmentLimit = getPlayerFormationLimit();
   const currentIndex = state.selectedCardIds.indexOf(instanceId);
   if (currentIndex < 0 && state.selectedCardIds.length >= commitmentLimit) {
     setMessage(
-      `${commitmentLimit}-card commitment reached.`,
+      `${commitmentLimit}-card formation limit reached.`,
       "Return a card to your hand before adding another.",
     );
     audio.denied();
@@ -2250,40 +2184,39 @@ function placeCardInLane(instanceId, laneIndex) {
 
 function updateFormationMessage() {
   const count = state.selectedCardIds.length;
-  const commitment = state.playerCommitment || 0;
   const title = count === 0
     ? "Build your formation."
     : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
-  const playerPressure = Math.max(0, commitment - state.aiPlan.length);
-  const aiPressure = Math.max(0, state.aiPlan.length - commitment);
-  const detail = count === 0
-    ? `Choose exactly ${commitment} ${commitment === 1 ? "card" : "cards"} for your locked commitment.`
-    : state.difficulty === "instinct"
-      ? "Each lane win is worth 2 Formation Points. Professor Paws' commitment and Pressure remain concealed."
-      : playerPressure
-        ? `Your ${playerPressure} extra ${playerPressure === 1 ? "card adds" : "cards add"} ${playerPressure} Pressure ${playerPressure === 1 ? "point" : "points"}.`
-        : aiPressure
-          ? `Professor Paws has ${aiPressure} extra ${aiPressure === 1 ? "card" : "cards"} worth ${aiPressure} Pressure ${aiPressure === 1 ? "point" : "points"}.`
-          : "Equal commitments create no Pressure; only paired lane victories score.";
+  const playerExtraCards = Math.max(0, count - state.aiPlan.length);
+  const aiExtraCards = Math.max(0, state.aiPlan.length - count);
+  const detail = state.difficulty === "instinct"
+    ? count === 0
+      ? "Choose one to three cards. His commitment habit is your only clue to his hidden formation size."
+      : "Your current formation is ready to commit. Professor Paws' cards and formation size remain concealed."
+    : count === 0
+      ? "Choose one to three cards using Professor Paws' visible plan."
+      : playerExtraCards
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraCards} Round ${playerExtraCards === 1 ? "Point" : "Points"}.`
+        : aiExtraCards
+          ? `Professor Paws has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}.`
+          : "Equal formation sizes mean there are no extra cards; only victories in lanes where both sides committed a card score.";
   setMessage(title, detail);
+  renderOpponentTells();
 }
 
 function updateSelectionControls() {
   const count = state.selectedCardIds.length;
-  const commitment = state.playerCommitment || 0;
-  const remaining = Math.max(0, commitment - count);
   ui.selectionCount.textContent = count
-    ? `${count} of ${commitment} placed${remaining ? ` · ${remaining} remaining` : " · ready"}`
-    : commitment
-      ? `0 of ${commitment} placed`
-      : "Choose commitment first";
+    ? `${count} ${count === 1 ? "card" : "cards"} placed · ready · up to ${MAX_PLAY_SIZE}`
+    : `0 placed · choose 1–${MAX_PLAY_SIZE} cards`;
   const tutorialFormationReady = !tutorial.active || isTutorialSelectionValid();
   ui.playSelectedButton.disabled = state.locked
-    || count !== commitment
+    || count < 1
+    || count > getPlayerFormationLimit()
     || !tutorialFormationReady;
-  ui.playSelectedButton.textContent = commitment === 1
+  ui.playSelectedButton.textContent = count === 1
     ? "Commit 1 Card"
-    : `Commit ${commitment || 0} Cards`;
+    : `Commit ${count || 0} Cards`;
   renderMatchupForecast();
   if (tutorial.active) renderTutorialCoach();
 }
@@ -2297,13 +2230,13 @@ function toggleCardSelection(instanceId) {
     state.selectedCardIds.splice(selectedIndex, 1);
     changed = true;
     audio.cardFlip(false, selectedIndex + 1);
-  } else if (state.selectedCardIds.length < (state.playerCommitment || 0)) {
+  } else if (state.selectedCardIds.length < getPlayerFormationLimit()) {
     state.selectedCardIds.push(instanceId);
     changed = true;
     audio.cardFlip(true, state.selectedCardIds.length);
   } else {
     setMessage(
-      `${state.playerCommitment}-card commitment reached.`,
+      `${getPlayerFormationLimit()}-card formation limit reached.`,
       "Deselect a card before choosing another.",
     );
     audio.denied();
@@ -2318,9 +2251,9 @@ function playedCardsMarkup(cards, side, clashCount = cards.length) {
   return `
     <div class="played-cards ${side}-formation">
       ${cards.map((card, index) => `
-        <div class="clash-card${index >= clashCount ? " result-pressure" : ""}" data-clash-index="${index}">
-          ${cardMarkup(card, false, index, index >= clashCount ? "pressure" : "played")}
-          <span class="lane-result">${index >= clashCount ? "PRESSURE" : ""}</span>
+        <div class="clash-card${index >= clashCount ? " result-extra-card" : ""}" data-clash-index="${index}">
+          ${cardMarkup(card, false, index, index >= clashCount ? "extra-card" : "played")}
+          <span class="lane-result">${index >= clashCount ? "EXTRA +1" : ""}</span>
         </div>
       `).join("")}
     </div>
@@ -2441,7 +2374,7 @@ function renderRoundScore() {
   ui.aiRoundScore.textContent = state.aiRoundWins;
   ui.roundScore.setAttribute(
     "aria-label",
-    `${tutorial.active ? "Training score" : "Round score"}: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
+    `${tutorial.active ? "Training rounds won" : "Rounds won"}: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
   );
 }
 
@@ -2828,10 +2761,11 @@ async function animateClashes(playerCards, aiCards) {
 }
 
 function playRound() {
+  const selectedCount = state.selectedCardIds.length;
   if (
     state.locked
-    || state.playerCommitment === null
-    || state.selectedCardIds.length !== state.playerCommitment
+    || selectedCount < 1
+    || selectedCount > getPlayerFormationLimit()
   ) return;
   if (tutorial.active && !isTutorialSelectionValid()) {
     setMessage("That formation does not match the scenario.", "Follow the highlighted order, then commit again.");
@@ -2878,7 +2812,7 @@ function playRound() {
     ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount);
     setMessage(
       `${playerCards.length} cards against ${aiCards.length}!`,
-      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; extra cards create Pressure.`,
+      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point.`,
     );
     audio.reveal(aiCards.length);
     const resolution = await animateClashes(playerCards, aiCards);
@@ -2958,22 +2892,22 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
 
   if (winner === "player") {
     state.playerRoundWins += 1;
-    if (decidedBy === "pressure") {
+    if (decidedBy === "extra-cards") {
       reward = rewardOptions[0] || null;
       setMessage(
-        `Your Pressure wins the Formation Score ${score.player}–${score.ai}!`,
+        `Your extra cards win the round, ${score.player}–${score.ai} Round Points!`,
         `${reward.card.name}, your first extra card, becomes the round trophy.`,
       );
     } else if (rewardOptions.length > 1) {
       awaitsPlayerClaim = true;
       setMessage(
-        `You win the Formation Score ${score.player}–${score.ai}!`,
+        `You win with ${score.player}–${score.ai} Round Points!`,
         "Choose which lane-winning card becomes your trophy.",
       );
     } else {
       reward = rewardOptions[0] || null;
       setMessage(
-        `You win the Formation Score ${score.player}–${score.ai}!`,
+        `You win with ${score.player}–${score.ai} Round Points!`,
         `Lane ${reward.lane + 1}'s ${reward.card.name} becomes your round trophy.`,
       );
     }
@@ -2981,17 +2915,17 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     audio.roundResult("win");
   } else if (winner === "ai") {
     state.aiRoundWins += 1;
-    reward = decidedBy === "pressure"
+    reward = decidedBy === "extra-cards"
       ? rewardOptions[0] || null
       : chooseTrophyReward(rewardOptions, state.aiWins);
-    if (decidedBy === "pressure") {
+    if (decidedBy === "extra-cards") {
       setMessage(
-        `Professor Paws' Pressure wins ${score.ai}–${score.player}.`,
+        `Professor Paws' extra cards win ${score.ai}–${score.player}.`,
         `${reward.card.name}, the first extra card, becomes the professor's trophy.`,
       );
     } else {
       setMessage(
-        `Professor Paws wins the Formation Score ${score.ai}–${score.player}.`,
+        `Professor Paws wins with ${score.ai}–${score.player} Round Points.`,
         `The professor claims ${reward.card.name} from lane ${reward.lane + 1}.`,
       );
     }
@@ -2999,9 +2933,9 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     audio.roundResult("loss");
   } else {
     const drawDetail = score.draw
-      ? `${score.draw} ${score.draw === 1 ? "lane ended" : "lanes ended"} in a draw. The final Formation Score is ${score.player}–${score.ai}.`
-      : `The Formation Score is tied ${score.player}–${score.ai}. No trophy is claimed.`;
-    setMessage("The Formation Score is tied!", drawDetail);
+      ? `${score.draw} ${score.draw === 1 ? "lane ended" : "lanes ended"} in a draw. Round Points finish tied ${score.player}–${score.ai}.`
+      : `Round Points are tied ${score.player}–${score.ai}. No trophy is claimed.`;
+    setMessage("Round Points are tied!", drawDetail);
     audio.roundResult("draw");
   }
 
@@ -3040,14 +2974,13 @@ async function nextRound() {
   state.round += 1;
   state.locked = true;
   state.dealing = true;
-  state.playerCommitment = null;
   ui.menuButton.disabled = true;
   state.selectedCardIds = [];
   prepareAiPlan();
-  renderCommitmentPhase();
+  renderFormationControls();
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
-  ui.playerPlayZone.innerHTML = placeholder("Commitment pending");
+  ui.playerPlayZone.innerHTML = placeholder("Preparing formation");
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
@@ -3063,7 +2996,7 @@ async function nextRound() {
   await animateHandDraw(drawnCardCount);
   state.dealing = false;
   ui.menuButton.disabled = false;
-  beginCommitmentPhase();
+  beginFormationBuilding();
 }
 
 async function endGame(winner) {
@@ -3078,7 +3011,7 @@ async function endGame(winner) {
     ? "You claimed two trophies from every element."
     : "Professor Paws completed all six elemental trophy slots first.";
   document.querySelector("#resultText").textContent =
-    `${resultSummary} Final round score: ${state.playerRoundWins}–${state.aiRoundWins}.`;
+    `${resultSummary} Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
   document.querySelector("#resultCards").textContent = getTrophyProgress(state.playerWins);
   await playDeckTransition("ending");
@@ -3201,7 +3134,6 @@ async function startGame() {
   state.aiTellClues = [];
   state.aiTraits = state.difficulty === "instinct" ? createAiTraits() : [];
   renderOpponentHabits();
-  state.playerCommitment = null;
   state.previousPlayerCommitment = null;
   state.previousAiCommitment = null;
   state.selectedCardIds = [];
@@ -3219,8 +3151,8 @@ async function startGame() {
   ui.battlefield.classList.remove("is-clashing");
   refillHands();
   prepareAiPlan();
-  renderCommitmentPhase();
-  ui.playerPlayZone.innerHTML = placeholder("Commitment pending");
+  renderFormationControls();
+  ui.playerPlayZone.innerHTML = placeholder("Preparing formation");
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
@@ -3236,7 +3168,7 @@ async function startGame() {
   await animateHandDraw(state.playerHand.length, true);
   state.dealing = false;
   ui.menuButton.disabled = false;
-  beginCommitmentPhase();
+  beginFormationBuilding();
 }
 
 document.querySelector("#howButton").addEventListener("click", () => ui.howDialog.showModal());
@@ -3326,6 +3258,9 @@ ui.clashScoreClose.addEventListener("click", (event) => {
   event.stopPropagation();
   if (ui.clashScoreGuide.open) closeClashScoreGuide();
 });
+ui.clashScoreGuide.addEventListener("toggle", () => {
+  if (ui.clashScoreGuide.open) syncClashScorePanelPosition();
+});
 ui.tutorialCoachDragHandle.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
   const panelRect = ui.tutorialCoach.getBoundingClientRect();
@@ -3354,17 +3289,11 @@ ui.tutorialCoachDragHandle.addEventListener("lostpointercapture", () => {
 });
 window.addEventListener("resize", () => {
   if (ui.clashScoreGuide.open) {
-    const panelRect = ui.clashScorePanel.getBoundingClientRect();
-    moveClashScorePanel(panelRect.left, panelRect.top);
+    syncClashScorePanelPosition();
   }
   if (tutorial.active && !ui.tutorialCoach.hidden) {
     positionTutorialCoach();
   }
-});
-ui.commitmentOptions.forEach((button) => {
-  button.addEventListener("click", () => {
-    lockPlayerCommitment(button.dataset.playerCommitment);
-  });
 });
 ui.playSelectedButton.addEventListener("click", playRound);
 ui.trophyClaimOptions.addEventListener("click", (event) => {
@@ -3451,7 +3380,7 @@ ui.tutorialActionButton.addEventListener("click", () => {
   } else if (tutorial.phase === "intro") {
     advanceTutorialIntro();
   } else if (tutorial.phase === "aftermath") {
-    loadTutorialLesson(tutorial.lessonIndex + 1);
+    loadTutorialLesson(adjacentTutorialLessonIndex(1));
   } else if (tutorial.phase === "complete") {
     showMainMenu();
   }
