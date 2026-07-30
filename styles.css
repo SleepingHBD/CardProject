@@ -1171,12 +1171,11 @@ h1 {
 .clash-score-panel {
   z-index: 1;
   position: fixed;
-  top: 132px;
+  top: 96px;
   right: 16px;
-  width: min(540px, calc(100vw - 36px));
-  max-height: min(480px, calc(100vh - 130px));
+  width: min(720px, calc(100vw - 36px));
   padding: 12px;
-  overflow-y: auto;
+  overflow: visible;
   color: #eadbb5;
   background:
     linear-gradient(135deg, rgba(184,133,59,.16), transparent 42%),
@@ -6137,25 +6136,49 @@ footer {
   }
 
   .clash-score-panel {
-    top: 132px;
+    top: 96px;
     right: 16px;
-    width: min(500px, calc(100vw - 36px));
-    max-height: 380px;
+    width: min(720px, calc(100vw - 36px));
   }
 }
 
 @media (max-width: 640px) {
   .clash-score-panel {
-    top: 76px;
+    top: 62px;
     right: 8px;
     left: 8px;
     width: auto;
-    max-height: calc(100dvh - 92px);
+    padding: 9px;
+    overflow: visible;
   }
 
-  .clash-score-parts,
+  .clash-score-parts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .clash-score-panel-heading {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+  }
+
+  .clash-score-parts > div {
+    padding: 5px 6px;
+  }
+
+  .clash-score-parts dd,
+  .tactic-placement-note,
+  .pressure-score-note {
+    font-size: 10px;
+  }
+
   .tactic-score-part ul {
-    grid-template-columns: 1fr;
+    margin-top: 5px;
+  }
+
+  .tactic-placement-note,
+  .pressure-score-note {
+    margin-top: 5px;
+    padding: 5px 7px;
   }
 
   .main-menu-actions {
