@@ -74,6 +74,20 @@ test("Previous Rounds History is shared by normal duels and training", () => {
   );
 });
 
+test("Previous Rounds History uses an aligned tactical lane table instead of full cards", () => {
+  const historyMarkupSource = gameSource.match(
+    /function historyLaneCellMarkup\([\s\S]*?\n}\n\nfunction renderPreviousRoundsHistory/,
+  )?.[0];
+
+  assert.ok(historyMarkupSource, "history lane-table renderer should be declared");
+  assert.match(historyMarkupSource, /history-lane-grid/);
+  assert.match(historyMarkupSource, /history-cell-element/);
+  assert.match(historyMarkupSource, /history-cell-power/);
+  assert.match(historyMarkupSource, /history-cell-role/);
+  assert.match(historyMarkupSource, /history-cell-math/);
+  assert.doesNotMatch(historyMarkupSource, /cardMarkup\(card\)/);
+});
+
 test("Blind conceals live information while using persistent hidden habits", () => {
   assert.match(
     gameSource,
