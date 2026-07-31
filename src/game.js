@@ -32,7 +32,7 @@ const CARD_LIBRARY = [
   ["ember", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "finisher", "comet-claw"],
   ["ember", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "vanguard", "cinder-kit"],
   ["ember", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "link", "teapot-tabby"],
-  ["ember", 4, "Ovenpaw Osric", "Last Loaf", "One final batch. Stand well back.", "common", "finisher", "ovenpaw-osric"],
+  ["ember", 4, "Flaskfoot Felix", "Final Formula", "One last drop. What could go wrong?", "common", "finisher", "flaskfoot-felix"],
   ["ember", 5, "Beacon Burmilla", "Cresset Charge", "Where the beacon leads, brave paws follow.", "uncommon", "vanguard", "beacon-burmilla"],
   ["gust", 8, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "epic", "link", "gale-groomer"],
   ["gust", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "finisher", "leafy-loaf"],
