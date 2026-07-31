@@ -32,18 +32,24 @@ const CARD_LIBRARY = [
   ["ember", 9, "Comet Claw", "Starfall Swipe", "Makes an entrance from orbit.", "legendary", "finisher", "comet-claw"],
   ["ember", 4, "Cinder Kit", "Hearth Hop", "Soot first. Questions later.", "common", "vanguard", "cinder-kit"],
   ["ember", 3, "Teapot Tabby", "Scalding Service", "Tea is served dangerously hot.", "common", "link", "teapot-tabby"],
+  ["ember", 4, "Ovenpaw Osric", "Last Loaf", "One final batch. Stand well back.", "common", "finisher", "ovenpaw-osric"],
+  ["ember", 5, "Beacon Burmilla", "Cresset Charge", "Where the beacon leads, brave paws follow.", "uncommon", "vanguard", "beacon-burmilla"],
   ["gust", 8, "Gale Groomer", "Captain's Roar", "Every breeze follows orders.", "epic", "link", "gale-groomer"],
   ["gust", 6, "Leafy Loaf", "Nap Cyclone", "Rest is a tactical maneuver.", "rare", "finisher", "leafy-loaf"],
   ["gust", 5, "Whisker Whirl", "Ribbon Twister", "Forecast: fabulous.", "uncommon", "link", "whisker-whirl"],
   ["gust", 9, "Sir Squall", "Galeguard Charge", "Even the wind rallies behind his shield.", "legendary", "vanguard", "sir-squall"],
   ["gust", 4, "Kitewhisker", "Banner Breeze", "Every gust deserves a flag.", "common", "vanguard", "kitewhisker"],
   ["gust", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "finisher", "dandelion-dash"],
+  ["gust", 4, "Windlass Whiskers", "Pulley Puff", "If it has a rope, he can move it.", "common", "link", "windlass-whiskers"],
+  ["gust", 5, "Belfry Bobtail", "Last Toll", "The final bell is always the loudest.", "uncommon", "finisher", "belfry-bobtail"],
   ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "vanguard", "puddle-pouncer"],
   ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance with every ripple.", "rare", "link", "bubble-bengal"],
   ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "link", "moonpool-mouser"],
   ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "finisher", "empress-ebb"],
   ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "vanguard", "wellwater-wisp"],
   ["tide", 3, "Mizzle Motley", "Ripple Rattle", "Three bells. No dry seats.", "common", "finisher", "mizzle-motley"],
+  ["tide", 3, "Rivertow Ragdoll", "Crosscurrent Tow", "No paw gets left on the wrong bank.", "common", "link", "rivertow-ragdoll"],
+  ["tide", 5, "Moatgate Mau", "Floodgate First", "First paw on the lever. Last one to flinch.", "uncommon", "vanguard", "moatgate-mau"],
 ].map(([element, power, name, move, lore, rarity, tactic, art], index) => ({
   id: `card-${index}`,
   element,
@@ -58,6 +64,13 @@ const CARD_LIBRARY = [
 
 const HAND_SIZE = 6;
 const MAX_PLAY_SIZE = 3;
+const DECK_COPIES_BY_RARITY = Object.freeze({
+  common: 2,
+  uncommon: 2,
+  rare: 1,
+  epic: 1,
+  legendary: 1,
+});
 const DIFFICULTIES = {
   guided: { label: "Guided" },
   instinct: { label: "Instinct" },
@@ -1693,12 +1706,15 @@ function shuffle(items) {
 }
 
 function freshDeck() {
-  return shuffle(
-    [...CARD_LIBRARY, ...CARD_LIBRARY].map((card, index) => ({
-      ...card,
-      instanceId: `${card.id}-${index}-${Date.now()}`,
-    })),
-  );
+  const deckStamp = Date.now();
+  return shuffle(CARD_LIBRARY.flatMap((card) =>
+    Array.from(
+      { length: DECK_COPIES_BY_RARITY[card.rarity] || 1 },
+      (_, copyIndex) => ({
+        ...card,
+        instanceId: `${card.id}-${copyIndex}-${deckStamp}`,
+      }),
+    )));
 }
 
 function drawCard() {

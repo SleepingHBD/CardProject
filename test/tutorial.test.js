@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
@@ -86,6 +86,57 @@ test("Previous Rounds History uses an aligned tactical lane table instead of ful
   assert.match(historyMarkupSource, /history-cell-role/);
   assert.match(historyMarkupSource, /history-cell-math/);
   assert.doesNotMatch(historyMarkupSource, /cardMarkup\(card\)/);
+});
+
+test("the shared deck repeats Common and Uncommon cards while premium cards are singletons", () => {
+  const librarySource = gameSource.match(
+    /const CARD_LIBRARY = \[([\s\S]*?)\]\.map/,
+  )?.[1];
+  const cards = [...(librarySource || "").matchAll(
+    /^\s*\["(ember|gust|tide)",\s*(\d+),\s*"([^"]+)",\s*"[^"]+",\s*"[^"]+",\s*"(common|uncommon|rare|epic|legendary)",\s*"(vanguard|link|finisher)",\s*"([^"]+)"\],?$/gm,
+  )].map((match) => ({
+    element: match[1],
+    power: Number(match[2]),
+    name: match[3],
+    rarity: match[4],
+    tactic: match[5],
+    art: match[6],
+  }));
+  const copies = { common: 2, uncommon: 2, rare: 1, epic: 1, legendary: 1 };
+  const physicalDeck = cards.flatMap((card) =>
+    Array.from({ length: copies[card.rarity] }, () => card));
+  const countBy = (property) => physicalDeck.reduce((counts, card) => ({
+    ...counts,
+    [card[property]]: (counts[card[property]] || 0) + 1,
+  }), {});
+
+  assert.equal(cards.length, 24);
+  assert.equal(physicalDeck.length, 39);
+  assert.deepEqual(countBy("element"), { ember: 13, gust: 13, tide: 13 });
+  assert.deepEqual(countBy("tactic"), { link: 13, vanguard: 13, finisher: 13 });
+  assert.deepEqual(countBy("rarity"), {
+    epic: 3,
+    rare: 3,
+    uncommon: 12,
+    legendary: 3,
+    common: 18,
+  });
+  cards.forEach((card) => {
+    assert.ok(
+      existsSync(new URL(`../assets/cards/${card.art}.webp`, import.meta.url)),
+      `${card.name} should have card art`,
+    );
+  });
+
+  assert.match(
+    gameSource,
+    /const DECK_COPIES_BY_RARITY = Object\.freeze\(\{\s*common: 2,\s*uncommon: 2,\s*rare: 1,\s*epic: 1,\s*legendary: 1,/,
+  );
+  assert.match(gameSource, /CARD_LIBRARY\.flatMap\(\(card\) =>/);
+  assert.match(
+    pageSource,
+    /shared draw pile contains 39 cards[\s\S]*two copies of every Common and Uncommon card[\s\S]*one copy of every Rare, Epic, and Legendary card/,
+  );
 });
 
 test("Blind conceals live information while using persistent hidden habits", () => {

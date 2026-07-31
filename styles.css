@@ -1909,6 +1909,11 @@ h1 {
   text-overflow: ellipsis;
 }
 
+.card-gallery .art-windlass-whiskers .card-info strong {
+  font-size: 13px;
+  letter-spacing: -0.035em;
+}
+
 .card-info small {
   display: block;
   margin-top: 1px;
