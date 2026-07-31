@@ -2560,6 +2560,10 @@ function snapshotHistoryCard(card) {
     element: card.element,
     power: card.power,
     tactic: card.tactic,
+    rarity: card.rarity,
+    art: card.art,
+    move: card.move,
+    lore: card.lore,
   };
 }
 
@@ -2623,18 +2627,14 @@ function historyFormationMarkup(entry, side) {
           const total = isExtra
             ? "No opposing card"
             : `Clash Total ${side === "player" ? lane?.playerTotal : lane?.aiTotal}`;
-          const element = ELEMENTS[card.element];
-          const role = TACTICS[card.tactic]?.label || "Role";
           return `
-            <article class="history-card element-${card.element}">
-              <span class="history-lane">LANE ${index + 1}</span>
-              <span class="history-element" aria-hidden="true">${element.icon}</span>
-              <div>
-                <strong>${card.name}</strong>
-                <small>${element.label} · Power ${card.power} · ${role}</small>
+            <article class="history-card-visual">
+              <div class="history-card-heading">
+                <span>LANE ${index + 1}</span>
+                <em class="history-outcome history-outcome-${outcome.split(" ")[0].toLowerCase()}">${outcome}</em>
               </div>
-              <em class="history-outcome history-outcome-${outcome.split(" ")[0].toLowerCase()}">${outcome}</em>
-              <small class="history-total">${total}</small>
+              ${cardMarkup(card)}
+              <small class="history-card-total">${total}</small>
             </article>
           `;
         }).join("")}

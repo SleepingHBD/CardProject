@@ -2743,7 +2743,6 @@ footer {
 
 .history-formations {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
 }
 
@@ -2756,75 +2755,54 @@ footer {
 }
 
 .history-formation h4 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   color: #efd58d;
   font-family: "Cinzel", serif;
-  font-size: 11px;
+  font-size: 12px;
+  text-align: center;
 }
 
 .history-formation-cards {
-  display: grid;
-  gap: 5px;
+  padding: 5px 4px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-color: #a57d46 rgba(10,7,6,.32);
+  scrollbar-width: thin;
 }
 
-.history-card {
-  min-width: 0;
-  padding: 6px;
-  display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    "lane element name outcome"
-    "lane element total total";
+.history-card-visual {
+  flex: 0 0 178px;
+  width: 178px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.history-card-heading {
+  min-height: 25px;
+  margin-bottom: 5px;
+  padding: 4px 5px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 2px 6px;
-  background: #ebd8a7;
-  border: 1px solid #8c6539;
-  border-left: 4px solid #a05a3e;
+  gap: 5px;
+  color: #ddc795;
+  background: rgba(10,7,6,.46);
+  border: 1px solid rgba(190,148,75,.5);
   border-radius: 3px;
-  color: #3d2a20;
 }
 
-.history-card.element-ember { border-left-color: #b84932; }
-.history-card.element-gust { border-left-color: #3f7b55; }
-.history-card.element-tide { border-left-color: #3f7099; }
-
-.history-lane {
-  grid-area: lane;
-  color: #6a4a31;
+.history-card-heading > span {
   font-family: "Cinzel", serif;
   font-size: 8px;
   font-weight: 900;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-
-.history-element {
-  grid-area: element;
-  font-size: 18px;
-}
-
-.history-card > div {
-  grid-area: name;
-  min-width: 0;
-}
-
-.history-card strong {
-  display: block;
-  overflow: hidden;
-  font-family: "Cinzel", serif;
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.history-card small {
-  color: #654a34;
-  font-size: 8px;
-  font-weight: 750;
+  letter-spacing: .04em;
 }
 
 .history-outcome {
-  grid-area: outcome;
   padding: 3px 5px;
   color: #fff3c4;
   background: #655044;
@@ -2838,8 +2816,35 @@ footer {
 .history-outcome-loss { background: #83463d; }
 .history-outcome-extra { background: #4b6783; }
 
-.history-total {
-  grid-area: total;
+.history-card-visual .game-card {
+  width: 178px;
+  height: 248px;
+  padding: 5px;
+  animation: none;
+  box-shadow:
+    0 5px 0 var(--rarity-dark),
+    0 8px 14px rgba(9,6,5,.35),
+    inset 0 0 0 2px var(--rarity-light);
+}
+
+.history-card-visual .card-info strong {
+  font-size: 12px;
+}
+
+.history-card-total {
+  min-height: 27px;
+  margin-top: 9px;
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  color: #f0d797;
+  background: #4b382c;
+  border: 1px solid #a77d43;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  font-size: 8px;
+  font-weight: 900;
+  text-align: center;
 }
 
 .previous-round-entry > .history-trophy {
@@ -5367,6 +5372,10 @@ footer {
 
   .history-formations {
     grid-template-columns: 1fr;
+  }
+
+  .history-formation-cards {
+    justify-content: flex-start;
   }
 
   .previous-round-entry {
