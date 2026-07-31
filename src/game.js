@@ -83,7 +83,7 @@ const usesPersistentAiHabits = (difficulty = state.difficulty) =>
 const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
 const RARITY_SORT_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 const ARCHIVE_SORT_SUMMARIES = {
-  element: "Grouped by Ember, Gust, then Tide.",
+  element: "Ember, Gust, then Tide; Common through Legendary within each element.",
   rarity: "Legendary cards first, then Epic, Rare, Uncommon, and Common.",
   power: "Highest base power first.",
   name: "Alphabetical from A to Z.",
@@ -2468,7 +2468,10 @@ function renderGallery() {
     sortedCards.sort((a, b) => a.name.localeCompare(b.name));
   } else {
     sortedCards.sort((a, b) =>
-      ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]);
+      ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]
+      || RARITY_SORT_ORDER[a.rarity] - RARITY_SORT_ORDER[b.rarity]
+      || a.power - b.power
+      || a.name.localeCompare(b.name));
   }
 
   ui.galleryIntro.textContent = sortedCards.length === CARD_LIBRARY.length
