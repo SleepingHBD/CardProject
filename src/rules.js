@@ -102,12 +102,12 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "full-formation",
     category: "commitment",
     label: "Full Formation",
-    description: "Usually commits 3 cards for maximum lane coverage and extra-card points.",
+    description: "Usually commits 3 cards for maximum lane coverage and a chance to earn extra-card points.",
   }),
   Object.freeze({
     id: "score-reader",
     category: "commitment",
-    label: "Score Reader",
+    label: "Trophy Reader",
     description: "Commits more cards when behind in trophies; fewer when ahead.",
   }),
   Object.freeze({

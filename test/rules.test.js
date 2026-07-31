@@ -361,7 +361,7 @@ test("commitment habits create distinct card-count tendencies", () => {
   );
 });
 
-test("Score Reader adjusts commitment to the public trophy score", () => {
+test("Trophy Reader adjusts commitment to the public trophy score", () => {
   const scoreReader = [{ id: "score-reader", category: "commitment" }];
 
   assert.equal(
