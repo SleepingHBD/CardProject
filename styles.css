@@ -2683,7 +2683,7 @@ footer {
 }
 
 .previous-round-entry {
-  padding: 8px;
+  padding: 10px;
   color: #eadbb5;
   background:
     linear-gradient(145deg, rgba(161,111,49,.15), transparent 46%),
@@ -2709,7 +2709,7 @@ footer {
 }
 
 .history-round-number {
-  padding: 2px 6px;
+  padding: 3px 7px;
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
@@ -2719,20 +2719,20 @@ footer {
   border-radius: 3px;
   box-shadow: 0 2px 0 #6c431e;
   font-family: "Cinzel", serif;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 950;
   letter-spacing: .07em;
 }
 
 .history-round-number strong {
   color: #30160e;
-  font-size: 15px;
+  font-size: 19px;
   line-height: .9;
 }
 
 .history-mode {
   color: #c9b584;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -2742,7 +2742,7 @@ footer {
   margin: 3px 0 0;
   color: #f0d797;
   font-family: "Cinzel", serif;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .history-scoreline {
@@ -2753,13 +2753,13 @@ footer {
 
 .history-scoreline span {
   color: #cdb783;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: .06em;
 }
 
 .history-scoreline b {
   color: #ffe295;
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .history-scoreline i {
@@ -2770,43 +2770,43 @@ footer {
 .history-scoreline small {
   margin-left: 3px;
   color: #9f8b66;
-  font-size: 6px;
+  font-size: 8px;
   letter-spacing: .07em;
 }
 
 .history-round-result {
   flex: 0 0 auto;
-  padding: 4px 7px;
+  padding: 5px 8px;
   color: #f2e2b8;
   background: #5d4630;
   border: 1px solid #b38a4d;
   border-radius: 3px;
   font-family: "Cinzel", serif;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .history-round-result-player { background: #36513a; border-color: #7aa66f; }
 .history-round-result-ai { background: #643832; border-color: #b36858; }
 
 .history-progress-before {
-  margin: 4px 0;
+  margin: 6px 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   color: #cbb68c;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 850;
 }
 
 .history-progress-label {
   color: #a99368;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: .08em;
 }
 
 .history-progress {
-  padding: 3px 5px;
+  padding: 4px 7px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -2839,8 +2839,8 @@ footer {
   min-width: 0;
   padding: 4px;
   display: grid;
-  grid-template-columns: 52px repeat(3, minmax(0, 1fr));
-  gap: 3px;
+  grid-template-columns: 60px repeat(3, minmax(0, 1fr));
+  gap: 4px;
   background: rgba(8,6,5,.2);
   border: 1px solid rgba(181,139,73,.36);
   border-radius: 3px;
@@ -2852,12 +2852,12 @@ footer {
 
 .history-grid-corner,
 .history-grid-lane {
-  min-height: 14px;
+  min-height: 18px;
   display: grid;
   place-items: center;
   color: #a79168;
   font-family: "Cinzel", serif;
-  font-size: 6px;
+  font-size: 8px;
   font-weight: 900;
   letter-spacing: .05em;
   text-align: center;
@@ -2865,11 +2865,11 @@ footer {
 
 .history-grid-corner {
   color: #7f6b4f;
-  font-size: 5px;
+  font-size: 7px;
 }
 
 .history-grid-side {
-  min-height: 49px;
+  min-height: 63px;
   display: grid;
   place-content: center;
   gap: 1px;
@@ -2882,23 +2882,23 @@ footer {
 }
 
 .history-grid-side strong {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .history-grid-side small {
   color: #a99368;
-  font-size: 5px;
+  font-size: 7px;
 }
 
 .history-lane-cell {
   --history-element: #9c7a52;
   --history-element-light: #e5c48d;
   position: relative;
-  min-height: 49px;
-  padding: 13px 3px 3px;
+  min-height: 63px;
+  padding: 17px 4px 4px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: 19px 13px;
+  grid-template-rows: 23px 16px;
   align-items: center;
   gap: 2px;
   color: #f3dfac;
@@ -2914,11 +2914,11 @@ footer {
   position: absolute;
   top: 2px;
   right: 3px;
-  padding: 1px 3px;
+  padding: 2px 4px;
   color: #fff3c4;
   background: #655044;
   border-radius: 2px;
-  font-size: 5.5px;
+  font-size: 8px;
   font-style: normal;
   font-weight: 950;
 }
@@ -2931,8 +2931,8 @@ footer {
 .history-cell-element,
 .history-cell-power,
 .history-cell-role {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   justify-self: center;
   display: grid;
   place-items: center;
@@ -2943,7 +2943,7 @@ footer {
   color: #fff1c3;
   background: color-mix(in srgb, var(--history-element) 74%, #20140f);
   border: 1px solid var(--history-element-light);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .history-cell-power {
@@ -2951,7 +2951,7 @@ footer {
   background: linear-gradient(#f7dfa0, #c49143);
   border: 1px solid #ffe9ad;
   font-family: "Cinzel", serif;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .history-cell-role {
@@ -2961,16 +2961,16 @@ footer {
 }
 
 .history-cell-role .tactic-icon {
-  width: 12px;
-  height: 12px;
+  width: 15px;
+  height: 15px;
 }
 
 .history-cell-math {
   grid-column: 1 / -1;
   width: 100%;
   min-width: 0;
-  height: 13px;
-  padding-inline: 3px;
+  height: 16px;
+  padding-inline: 4px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -2979,16 +2979,16 @@ footer {
   background: rgba(8,6,5,.36);
   border-radius: 2px;
   font-family: "Cinzel", serif;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
 }
 
-.history-cell-math small { font-size: 6px; }
+.history-cell-math small { font-size: 8px; }
 .history-cell-math i { color: #7f6e52; font-style: normal; }
-.history-cell-math b { color: #ffe190; font-size: 9px; }
+.history-cell-math b { color: #ffe190; font-size: 11px; }
 
 .history-cell-extra .history-cell-math {
   justify-content: center;
@@ -2999,7 +2999,7 @@ footer {
 }
 
 .history-lane-empty {
-  min-height: 49px;
+  min-height: 63px;
   display: grid;
   place-items: center;
   color: #6f604b;
@@ -3007,11 +3007,11 @@ footer {
   border: 1px dashed rgba(154,125,80,.22);
   border-radius: 3px;
   font-family: "Cinzel", serif;
-  font-size: 14px;
+  font-size: 18px;
 }
 .previous-round-entry > .history-trophy {
-  margin-top: 4px;
-  padding: 3px 6px;
+  margin-top: 6px;
+  padding: 5px 8px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -3019,13 +3019,13 @@ footer {
   background: rgba(126,86,41,.24);
   border: 1px solid rgba(205,155,76,.45);
   font-family: inherit;
-  font-size: 9px;
+  font-size: 11px;
   text-align: left;
 }
 
 .history-trophy-summary {
   --history-element: #9c7a52;
-  padding: 2px 5px;
+  padding: 3px 6px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -3040,8 +3040,8 @@ footer {
 }
 
 .history-trophy-summary .tactic-icon {
-  width: 13px;
-  height: 13px;
+  width: 17px;
+  height: 17px;
 }
 
 .previous-rounds-history-dialog > .primary-button {
@@ -5561,7 +5561,7 @@ footer {
   }
 
   .history-lane-grid {
-    grid-template-columns: 46px repeat(3, minmax(0, 1fr));
+    grid-template-columns: 52px repeat(3, minmax(0, 1fr));
   }
 
   .history-lane-cell {
@@ -5569,7 +5569,7 @@ footer {
   }
 
   .previous-round-entry {
-    padding: 7px;
+    padding: 8px;
   }
 
   .previous-round-entry > header {
@@ -5577,11 +5577,21 @@ footer {
   }
 
   .previous-round-entry > header h3 {
-    font-size: 12px;
+    font-size: 13px;
+  }
+
+  .history-scoreline {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .history-scoreline small {
+    flex-basis: 100%;
+    margin-left: 0;
   }
 
   .history-round-result {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .history-progress-before {
