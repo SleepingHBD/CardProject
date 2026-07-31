@@ -290,7 +290,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Formation Roles",
     title: "Build a three-role formation",
     intro:
-      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. Finisher earns +1 when it is your final committed card in a two- or three-card formation and faces an opposing card.",
+      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. The bonus activates only if Professor Paws also committed a card to the Finisher's lane.",
     objective:
       "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Formation Role bonuses.",
     introPages: Object.freeze([
@@ -300,9 +300,9 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
           "A Vanguard card gets Vanguard +1 only when it is committed in Lane 1. If you commit that Vanguard in Lane 2 or Lane 3, it still battles normally but receives no Vanguard bonus.",
         objective:
           "Look for the shield symbol. A Vanguard may be committed in any lane, but it earns Vanguard +1 only in Lane 1.",
-        targets: Object.freeze(["#playerHand"]),
-        anchor: "#playerHand",
-        preferredSide: "top",
+        targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
+        anchor: "#playerPlayZone",
+        preferredSide: "right",
       }),
       Object.freeze({
         title: "Link: check the card directly before it",
@@ -317,7 +317,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Finisher: commit it last and face a card",
         text:
-          "A Finisher gets Finisher +1 only when all three conditions are true: you commit at least two cards, the Finisher is your last committed card, and Professor Paws committed a card in that same lane.",
+          "To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. The bonus activates only if Professor Paws also committed a card to the Finisher's lane.",
         objective:
           "With two cards, the Finisher belongs in Lane 2. With three cards, it belongs in Lane 3. A lone Finisher or a Finisher with no opposing card earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
@@ -352,20 +352,20 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Close with Finisher",
         text:
-          "Dandelion Dash is a Finisher. You will commit three cards, he will be your last committed card in Lane 3, and Professor Paws has a card in Lane 3. All three Finisher conditions are met.",
+          "Dandelion Dash is a Finisher. You will commit him last in a three-card formation, and Professor Paws committed a card to his lane, so Finisher +1 will activate.",
         objective:
-          "Place Dandelion Dash in Lane 3. Because he is last and faces an opposing card, he receives Finisher +1.",
+          "Place Dandelion Dash in Lane 3. Because he is your final card and Professor Paws committed a card to that lane, he receives Finisher +1.",
       }),
     ]),
     readyText:
-      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Lane 3 is last and has an opposing card.",
+      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Dandelion Dash is your final card and Professor Paws committed a card to his lane.",
     readyObjective:
       "Confirm all three Role +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aftermath:
-      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Tide element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation and faced Lane 3. Changing their order could disable these bonuses.",
+      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Tide element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation and Professor Paws committed a card to his lane. Changing their order could disable these bonuses.",
     trophyChoice: true,
   }),
   Object.freeze({
@@ -1170,16 +1170,11 @@ function renderTutorialCoach() {
   const validFormation = isTutorialSelectionValid();
   const prefixFormation = isTutorialSelectionPrefix();
   const finalLesson = tutorial.lessonIndex === TUTORIAL_LESSONS.length - 1;
-  const sectionScenarioIndexes = tutorialSectionScenarioIndexes();
-  const sectionScenarioPosition =
-    sectionScenarioIndexes.indexOf(tutorial.lessonIndex) + 1;
 
   ui.tutorialCoach.hidden = false;
   ui.tutorialProgress.textContent = tutorial.mode === "lesson"
-    ? sectionScenarioIndexes.length > 1
-      ? `Scenario ${sectionScenarioPosition} of ${sectionScenarioIndexes.length}`
-      : "SECTION PRACTICE"
-    : `Scenario ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
+    ? "SECTION PRACTICE"
+    : `Lesson ${tutorial.lessonIndex + 1} of ${TUTORIAL_LESSONS.length}`;
   ui.tutorialConcept.textContent = lesson.concept;
   ui.tutorialBackButton.hidden = true;
   ui.tutorialBackButton.disabled = false;
@@ -1192,7 +1187,7 @@ function renderTutorialCoach() {
     if (introPages.length > 1) {
       ui.tutorialProgress.textContent = tutorial.mode === "lesson"
         ? `Step ${tutorial.introStep + 1} of ${introPages.length}`
-        : `Scenario ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
+        : `Lesson ${tutorial.lessonIndex + 1}/${TUTORIAL_LESSONS.length} · Step ${tutorial.introStep + 1}/${introPages.length}`;
     }
     ui.tutorialCoachTitle.textContent = introPage.title;
     renderTutorialVisual(introPage.visual);
@@ -2540,7 +2535,7 @@ function renderRound() {
       : sectionName;
   } else if (tutorial.active) {
     ui.roundLabel.textContent =
-      `SCENARIO ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`;
+      `LESSON ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`;
   } else {
     ui.roundLabel.textContent = `ROUND ${state.round}`;
   }

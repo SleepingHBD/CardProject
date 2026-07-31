@@ -23,7 +23,7 @@ const TACTICS = Object.freeze({
   finisher: Object.freeze({
     icon: "sword",
     label: "Finisher",
-    description: "Finisher: +1 when committed last in a 2- or 3-card formation and facing an opposing card in the same lane.",
+    description: "Finisher: Commit it last in a 2- or 3-card formation. It gains +1 only if Professor Paws also committed a card to its lane.",
   }),
 });
 const DIFFICULTY_MODES = Object.freeze(["guided", "instinct", "blind"]);

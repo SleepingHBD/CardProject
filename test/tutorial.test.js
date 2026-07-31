@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
-test("the tutorial curriculum covers all seven scenarios in teaching order", () => {
+test("the tutorial curriculum covers all seven lessons in teaching order", () => {
   const expectedOrder = [
     "TUTORIAL_LESSON_LIBRARY[0]",
     "TUTORIAL_LESSON_LIBRARY[3]",
@@ -26,6 +26,10 @@ test("the tutorial curriculum covers all seven scenarios in teaching order", () 
     assert.ok(position > previousPosition, `${entry} should appear in curriculum order`);
     previousPosition = position;
   });
+
+  assert.match(pageSource, /id="tutorialProgress">Lesson 1 of 7</);
+  assert.match(gameSource, /`Lesson \$\{tutorial\.lessonIndex \+ 1\} of \$\{TUTORIAL_LESSONS\.length\}`/);
+  assert.match(gameSource, /concept: "Round Points · Scenario 1 of 3"/);
 });
 
 test("the tutorial includes card flow and a genuine free-choice Instinct lesson", () => {
