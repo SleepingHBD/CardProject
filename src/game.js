@@ -48,7 +48,7 @@ const CARD_LIBRARY = [
   ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "finisher", "empress-ebb"],
   ["tide", 4, "Wellwater Wisp", "Bucket Splash", "One pail. Zero dry paws.", "common", "vanguard", "wellwater-wisp"],
   ["tide", 3, "Mizzle Motley", "Ripple Rattle", "Three bells. No dry seats.", "common", "finisher", "mizzle-motley"],
-  ["tide", 3, "Rivertow Ragdoll", "Crosscurrent Tow", "No paw gets left on the wrong bank.", "common", "link", "rivertow-ragdoll"],
+  ["tide", 4, "Rivertow Ragdoll", "Crosscurrent Tow", "No paw gets left on the wrong bank.", "common", "link", "rivertow-ragdoll"],
   ["tide", 5, "Moatgate Mau", "Floodgate First", "First paw on the lever. Last one to flinch.", "uncommon", "vanguard", "moatgate-mau"],
 ].map(([element, power, name, move, lore, rarity, tactic, art], index) => ({
   id: `card-${index}`,
