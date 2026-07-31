@@ -112,7 +112,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Know the match goal",
     text:
-      "The elemental crests beside each duelist track trophies collected from winning rounds.",
+      "The elemental crests beneath each duelist icon track the trophies they have collected from winning rounds.",
     objective:
       "Win the match by collecting two Ember, two Gust, and two Tide trophies before Professor Paws.",
     targets: Object.freeze(["#playerCollection", "#aiCollection"]),
