@@ -4682,6 +4682,7 @@ footer {
     text-align: center;
     transform: translateX(-50%);
   }
+
   .score-ai { top: 3px; }
   .score-player { bottom: 3px; }
   .versus-badge { width: 38px; height: 38px; border-width: 3px; font-size: 13px; }
@@ -5522,6 +5523,910 @@ footer {
     grid-template-columns: repeat(2, 126px);
     gap: 12px;
     padding-inline: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive polish layer
+
+   The game has grown through several interface passes. These final rules keep
+   one consistent sizing system across desktop monitors, laptops, tablets, and
+   phones without forcing important card text below a readable size.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --page-gutter: clamp(8px, 1.35vw, 22px);
+  --app-header-height: clamp(56px, 7.2dvh, 68px);
+  --duel-card-width: clamp(104px, 12.2dvh, 128px);
+  --duel-card-height: clamp(142px, 17.2dvh, 180px);
+  --hand-card-width: clamp(124px, 15dvh, 164px);
+  --hand-card-height: clamp(180px, 20dvh, 216px);
+}
+
+html {
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+select,
+input {
+  touch-action: manipulation;
+}
+
+.game-dialog {
+  max-width: calc(100vw - (var(--page-gutter) * 2));
+  max-height: calc(100dvh - (var(--page-gutter) * 2));
+}
+
+.dialog-close {
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.gallery-dialog,
+.rulebook-dialog,
+.previous-rounds-history-dialog,
+.settings-dialog,
+.difficulty-dialog,
+.tutorial-menu-dialog {
+  overscroll-behavior: contain;
+}
+
+.card-gallery {
+  will-change: auto;
+}
+
+.main-menu-screen {
+  min-height: 100svh;
+  min-height: 100dvh;
+  padding-top: max(clamp(28px, 6dvh, 72px), env(safe-area-inset-top));
+  padding-right: max(clamp(18px, 5vw, 72px), env(safe-area-inset-right));
+  padding-bottom: max(clamp(42px, 7dvh, 78px), env(safe-area-inset-bottom));
+  padding-left: max(clamp(18px, 5vw, 72px), env(safe-area-inset-left));
+}
+
+.main-menu-logo {
+  width: min(620px, 72vw, 94%);
+}
+
+.main-menu-actions {
+  width: min(300px, 84vw);
+  margin-top: clamp(24px, 5dvh, 58px);
+  gap: clamp(8px, 1.3dvh, 13px);
+}
+
+.main-menu-play-button {
+  min-height: clamp(52px, 7dvh, 62px);
+}
+
+.main-menu-option-button {
+  min-height: clamp(40px, 5.4dvh, 46px);
+}
+
+@media (min-width: 900px) {
+  html,
+  body {
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: var(--app-header-height);
+    padding-inline: var(--page-gutter);
+  }
+
+  .brand-logo {
+    width: clamp(168px, 14.5vw, 220px);
+  }
+
+  .top-actions {
+    gap: clamp(5px, .65vw, 10px);
+  }
+
+  .icon-button,
+  .archive-button,
+  .how-button,
+  .rulebook-button {
+    height: clamp(34px, 4.6dvh, 40px);
+    font-size: clamp(11px, .9vw, 13px);
+  }
+
+  main {
+    height: calc(100dvh - var(--app-header-height));
+    padding: 7px var(--page-gutter) 5px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) clamp(30px, 3.8dvh, 38px);
+    gap: 5px 10px;
+  }
+
+  .game-shell {
+    width: min(1760px, 100%);
+    grid-template-columns: minmax(520px, 1.17fr) minmax(370px, .83fr);
+    grid-template-rows:
+      clamp(46px, 6.2dvh, 60px)
+      minmax(0, 1fr)
+      clamp(190px, 24.5dvh, 232px);
+  }
+
+  .round-bar {
+    height: auto;
+    min-height: 0;
+    padding: clamp(5px, .8dvh, 9px) clamp(13px, 1.2vw, 20px);
+  }
+
+  .round-bar .eyebrow {
+    display: block;
+    font-size: clamp(7px, .62vw, 10px);
+  }
+
+  .round-bar h1 {
+    font-size: clamp(17px, 1.45vw, 23px);
+  }
+
+  .round-status {
+    gap: clamp(6px, .8vw, 12px);
+    font-size: clamp(10px, .82vw, 13px);
+  }
+
+  .round-score {
+    padding: 4px 8px;
+    font-size: clamp(8px, .62vw, 10px);
+  }
+
+  .round-score > small {
+    font-size: 8px;
+  }
+
+  .round-score b {
+    font-size: clamp(15px, 1.18vw, 19px);
+  }
+
+  .arena {
+    min-height: 0;
+    padding: clamp(5px, .8dvh, 10px) clamp(7px, .8vw, 13px);
+    grid-template-columns:
+      clamp(76px, 8vw, 118px)
+      minmax(320px, 1fr)
+      clamp(76px, 8vw, 118px);
+    gap: clamp(2px, .45vw, 8px);
+  }
+
+  .avatar,
+  .avatar-player {
+    width: clamp(68px, 7.2vw, 104px);
+    height: clamp(68px, 7.2vw, 104px);
+    margin-bottom: clamp(12px, 1.7dvh, 19px);
+  }
+
+  .avatar-level {
+    bottom: -9px;
+    font-size: clamp(8px, .52vw, 9px);
+  }
+
+  .player-copy h2 {
+    font-size: clamp(11px, .9vw, 14px);
+  }
+
+  .collection {
+    width: min(150px, 100%);
+    min-height: 31px;
+  }
+
+  .collection::before {
+    font-size: 8px;
+  }
+
+  .trophy-goal {
+    padding: 3px 2px 4px;
+  }
+
+  .trophy-goal > b {
+    font-size: clamp(10px, .85vw, 13px);
+  }
+
+  .trophy-slots i {
+    width: clamp(8px, .7vw, 11px);
+    height: clamp(6px, .48vw, 8px);
+  }
+
+  .battlefield {
+    width: 100%;
+    height: min(100%, 520px);
+    min-height: calc((var(--duel-card-height) * 2) + 20px);
+  }
+
+  .play-zone {
+    width: min(100%, calc((var(--duel-card-width) * 3) + 16px));
+    height: var(--duel-card-height);
+  }
+
+  .played-cards,
+  .formation-builder {
+    gap: clamp(4px, .5vw, 8px);
+  }
+
+  .clash-card,
+  .formation-slot {
+    width: var(--duel-card-width);
+    max-width: var(--duel-card-width);
+    height: var(--duel-card-height);
+    flex-basis: var(--duel-card-width);
+  }
+
+  .play-zone .game-card {
+    width: var(--duel-card-width);
+    height: var(--duel-card-height);
+    padding: 3px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 31px 35px;
+  }
+
+  .play-zone .card-art {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .play-zone .card-info {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 4px 3px 3px;
+  }
+
+  .play-zone .card-info strong {
+    font-size: clamp(10px, .78vw, 12px);
+  }
+
+  .play-zone .card-info small {
+    font-size: 8px;
+  }
+
+  .play-zone .card-ability {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    padding: 3px;
+  }
+
+  .play-zone .card-ability > i {
+    flex: 0 0 19px;
+    height: 19px;
+  }
+
+  .play-zone .card-ability b {
+    font-size: clamp(8px, .65vw, 10px);
+  }
+
+  .play-zone .card-ability small {
+    display: none;
+  }
+
+  .play-zone .card-element {
+    width: 27px;
+    height: 27px;
+    font-size: 14px;
+  }
+
+  .play-zone .card-power {
+    width: 30px;
+    height: 33px;
+  }
+
+  .play-zone .card-power b {
+    font-size: 19px;
+  }
+
+  .play-zone :is(.selection-order, .lane-order-badge) {
+    top: 33px;
+  }
+
+  .play-zone .card-bonus-badge {
+    top: 33px;
+  }
+
+  .card-placeholder {
+    width: clamp(118px, 12dvh, 150px);
+    height: var(--duel-card-height);
+  }
+
+  .score-label {
+    width: 100%;
+    left: 50%;
+    font-size: clamp(9px, .66vw, 11px);
+    text-align: center;
+    transform: translateX(-50%);
+  }
+
+  .score-ai {
+    top: -8px;
+  }
+
+  .control-panel {
+    padding: clamp(5px, .75dvh, 9px) clamp(8px, .8vw, 13px);
+    gap: clamp(3px, .55dvh, 7px);
+    align-content: center;
+  }
+
+  .control-panel .turn-message {
+    width: min(440px, 100%);
+    padding: 5px 12px 6px;
+  }
+
+  .control-panel .turn-message strong {
+    font-size: clamp(15px, 1.2vw, 19px);
+  }
+
+  .control-panel .turn-message span {
+    font-size: clamp(10px, .78vw, 12px);
+  }
+
+  .control-panel .tactics-heading {
+    padding: clamp(4px, .6dvh, 7px) 9px;
+  }
+
+  .control-panel .scout-seal {
+    width: clamp(28px, 3dvh, 34px);
+    height: clamp(28px, 3dvh, 34px);
+    flex-basis: clamp(28px, 3dvh, 34px);
+  }
+
+  .control-panel .tactics-heading p {
+    font-size: clamp(12px, .96vw, 15px);
+  }
+
+  .control-panel .tactics-heading small {
+    font-size: clamp(10px, .76vw, 12px);
+  }
+
+  .control-panel .opponent-habit {
+    padding: 5px 7px;
+  }
+
+  .control-panel .opponent-habit b {
+    font-size: clamp(11px, .82vw, 13px);
+  }
+
+  .control-panel .opponent-habit span {
+    font-size: clamp(10px, .76vw, 12px);
+    line-height: 1.22;
+  }
+
+  .control-panel .opponent-tell {
+    height: clamp(40px, 5.2dvh, 49px);
+  }
+
+  .control-panel .tell-lane {
+    font-size: 8px;
+  }
+
+  .control-panel .opponent-tell b {
+    font-size: clamp(10px, .82vw, 13px);
+  }
+
+  .control-panel .opponent-tell small {
+    font-size: clamp(8px, .68vw, 11px);
+  }
+
+  .control-panel .matchup-forecast {
+    min-height: clamp(38px, 5dvh, 50px);
+  }
+
+  .control-panel .forecast-instruction {
+    font-size: clamp(10px, .78vw, 12px);
+  }
+
+  .control-panel .forecast-chip b {
+    font-size: clamp(9px, .72vw, 11px);
+  }
+
+  .control-panel .forecast-chip small {
+    font-size: clamp(8px, .66vw, 10px);
+  }
+
+  .control-panel .forecast-equation {
+    font-size: clamp(7px, .56vw, 9px);
+  }
+
+  .control-panel .selection-count,
+  .control-panel .commit-button {
+    min-width: 128px;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: clamp(10px, .78vw, 12px);
+  }
+
+  .control-panel .deck-status {
+    gap: 7px;
+    font-size: clamp(10px, .78vw, 12px);
+  }
+
+  .previous-rounds-history-button {
+    min-height: 29px;
+    font-size: clamp(8px, .65vw, 10px);
+  }
+
+  .hand {
+    min-height: 0;
+    padding: clamp(5px, .7dvh, 9px) clamp(9px, 1vw, 16px) clamp(7px, .9dvh, 11px);
+    gap: clamp(6px, .72vw, 12px);
+  }
+
+  .hand .game-card {
+    flex: 0 1 var(--hand-card-width);
+    width: var(--hand-card-width);
+    min-width: 0;
+    max-width: var(--hand-card-width);
+    height: var(--hand-card-height);
+    aspect-ratio: auto;
+    padding: 4px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 37px 43px;
+  }
+
+  .hand .card-art {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .hand .card-info {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 5px 4px 4px;
+  }
+
+  .hand .card-info strong {
+    font-size: clamp(11px, .92vw, 14px);
+  }
+
+  .hand .card-info small {
+    font-size: clamp(8px, .56vw, 9px);
+  }
+
+  .hand .card-ability {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    padding: 4px;
+  }
+
+  .hand .card-ability > i {
+    flex: 0 0 22px;
+    height: 22px;
+  }
+
+  .hand .card-ability b {
+    font-size: clamp(9px, .72vw, 11px);
+  }
+
+  .hand .card-ability small {
+    display: block;
+    font-size: 8px;
+  }
+
+  .hand .card-element {
+    width: 29px;
+    height: 29px;
+    font-size: 15px;
+  }
+
+  .hand .card-power {
+    width: 32px;
+    height: 35px;
+  }
+
+  .hand .card-power b {
+    font-size: 21px;
+  }
+
+  .hand .selection-order {
+    top: 39px;
+  }
+
+  .rules-strip {
+    height: auto;
+    min-height: 30px;
+    padding: 3px 10px;
+    gap: clamp(5px, .7vw, 10px);
+    font-size: clamp(9px, .74vw, 12px);
+  }
+
+  .rules-title {
+    font-size: clamp(8px, .6vw, 10px);
+  }
+
+  .rule-chip b {
+    font-size: clamp(13px, 1vw, 16px);
+  }
+
+  footer {
+    height: auto;
+    min-height: 30px;
+    font-size: clamp(8px, .62vw, 10px);
+  }
+}
+
+@media (min-width: 900px) and (max-height: 760px) {
+  :root {
+    --duel-card-width: clamp(102px, 14.2dvh, 112px);
+    --duel-card-height: clamp(138px, 19.5dvh, 148px);
+    --hand-card-width: clamp(130px, 18dvh, 136px);
+    --hand-card-height: clamp(178px, 25dvh, 188px);
+  }
+
+  .game-shell {
+    grid-template-rows: 46px minmax(0, 1fr) clamp(188px, 26.5dvh, 198px);
+  }
+
+  .round-bar .eyebrow {
+    display: none;
+  }
+
+  .arena {
+    grid-template-columns: 90px minmax(310px, 1fr) 90px;
+  }
+
+  .control-panel .scout-seal {
+    display: none;
+  }
+
+  .control-panel .tactics-heading {
+    padding-block: 3px;
+  }
+
+  .control-panel .opponent-habits {
+    gap: 3px;
+  }
+
+  .control-panel .opponent-habit {
+    padding-block: 3px;
+  }
+
+  .control-panel .opponent-tell {
+    height: 38px;
+    padding-top: 9px;
+  }
+
+  .control-panel .matchup-forecast {
+    min-height: 36px;
+  }
+
+  .hand .game-card {
+    grid-template-rows: minmax(0, 1fr) 34px 39px;
+  }
+
+  .hand .card-info strong {
+    font-size: 11px;
+  }
+
+  .hand .card-ability b {
+    font-size: 9px;
+  }
+
+  .hand .card-ability small {
+    font-size: 8px;
+  }
+
+  .deck-status {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 1440px) and (min-height: 850px) {
+  :root {
+    --duel-card-width: 128px;
+    --duel-card-height: 180px;
+    --hand-card-width: 164px;
+    --hand-card-height: 216px;
+  }
+
+  .player-copy p {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .character-quip {
+    display: block;
+    margin-top: 10px;
+    font-size: 9px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 899px) {
+  .game-shell {
+    max-width: 860px;
+  }
+
+  .arena {
+    grid-template-columns: clamp(104px, 16vw, 135px) minmax(390px, 1fr) clamp(104px, 16vw, 135px);
+    padding-inline: clamp(8px, 1.8vw, 16px);
+  }
+
+  .avatar {
+    width: clamp(92px, 13vw, 112px);
+    height: clamp(92px, 13vw, 112px);
+  }
+
+  .hand {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 18px;
+  }
+
+  .hand .game-card {
+    flex-basis: clamp(132px, 18vw, 150px);
+    width: clamp(132px, 18vw, 150px);
+    height: clamp(194px, 26vw, 216px);
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .topbar {
+    height: auto;
+    min-height: 64px;
+    padding-top: max(6px, env(safe-area-inset-top));
+    padding-bottom: 6px;
+  }
+
+  .top-actions {
+    min-width: 0;
+  }
+
+  .game-shell {
+    border-radius: 10px;
+  }
+
+  .round-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .round-bar > div:first-child {
+    min-width: 0;
+  }
+
+  .round-bar h1 {
+    font-size: clamp(16px, 5vw, 20px);
+    line-height: 1.05;
+  }
+
+  .round-status > span {
+    font-size: 10px;
+  }
+
+  .battlefield {
+    min-width: 0;
+  }
+
+  .play-zone {
+    min-width: 0;
+  }
+
+  .formation-slot {
+    min-width: 0;
+  }
+
+  .formation-builder {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .formation-slot.empty-slot span,
+  .formation-slot.empty-slot small {
+    font-size: 8px;
+  }
+
+  .hand {
+    scrollbar-color: #c39a50 rgba(37, 22, 16, .38);
+    scrollbar-width: thin;
+  }
+
+  .hand::after {
+    content: "Swipe to see every card";
+    flex: 0 0 86px;
+    align-self: center;
+    color: rgba(244, 220, 164, .78);
+    font-family: "Cinzel", serif;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1.35;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .game-dialog {
+    max-width: calc(100vw - 12px);
+  }
+
+  .archive-toolbar,
+  .archive-filters {
+    position: relative;
+  }
+
+  .card-gallery {
+    grid-template-columns: repeat(2, minmax(0, 126px));
+    gap: 14px 10px;
+  }
+
+  .card-gallery .game-card {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 3;
+    padding: 3px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 35px 40px;
+  }
+
+  .card-gallery .card-art,
+  .card-gallery .card-info,
+  .card-gallery .card-ability {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .card-gallery .card-art,
+  .card-gallery .card-ability {
+    height: auto;
+  }
+
+  .previous-rounds-history-dialog {
+    height: calc(100dvh - 12px);
+  }
+
+  .previous-rounds-history-list {
+    overscroll-behavior: contain;
+  }
+
+  .tutorial-coach {
+    max-height: min(78dvh, 540px);
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar {
+    padding-inline: 5px;
+  }
+
+  .brand-logo {
+    width: clamp(68px, 22vw, 88px);
+  }
+
+  .top-actions {
+    gap: 2px;
+  }
+
+  .icon-button,
+  .archive-button,
+  .how-button,
+  .rulebook-button,
+  .menu-button {
+    height: 34px;
+  }
+
+  .icon-button {
+    width: 29px;
+  }
+
+  .archive-button {
+    width: 42px;
+  }
+
+  .how-button {
+    width: 45px;
+  }
+
+  .rulebook-button {
+    width: 49px;
+  }
+
+  .menu-button {
+    width: 30px;
+  }
+
+  .main-menu-logo {
+    width: min(360px, 96%);
+  }
+
+  .main-menu-subtitle {
+    font-size: 10px;
+    letter-spacing: .13em;
+  }
+
+  .main-menu-actions {
+    width: min(270px, 84vw);
+  }
+
+  .main-menu-music-credit {
+    font-size: 7px;
+  }
+
+  .archive-sort-field {
+    align-items: stretch;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .archive-sort-field select {
+    width: 100%;
+  }
+
+  .tutorial-coach-heading {
+    flex-wrap: wrap;
+  }
+
+  .tutorial-drag-hint {
+    display: none;
+  }
+}
+
+@media (max-height: 650px) {
+  .main-menu-logo {
+    width: min(480px, 62vw, 90%);
+    margin-top: 6px;
+  }
+
+  .main-menu-subtitle {
+    margin-top: 5px;
+  }
+
+  .main-menu-actions {
+    margin-top: 18px;
+    gap: 7px;
+  }
+
+  .main-menu-play-button {
+    min-height: 48px;
+    font-size: 18px;
+  }
+
+  .main-menu-option-button {
+    min-height: 36px;
+    font-size: 11px;
+  }
+
+  .main-menu-music-credit {
+    bottom: 10px;
+    font-size: 8px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 899px) {
+  .main-menu-screen {
+    grid-template-columns: minmax(250px, 1fr) minmax(220px, 320px);
+    grid-template-rows: auto auto auto;
+    column-gap: 7vw;
+  }
+
+  .main-menu-ornament,
+  .main-menu-logo,
+  .main-menu-subtitle {
+    grid-column: 1;
+  }
+
+  .main-menu-actions {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+    margin-top: 0;
+  }
+
+  .main-menu-music-credit {
+    width: min(520px, calc(100% - 40px));
   }
 }
 
