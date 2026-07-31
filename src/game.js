@@ -2675,7 +2675,10 @@ function renderPreviousRoundsHistory() {
         <article class="previous-round-entry">
           <header>
             <div>
-              <span>ROUND ${entry.round} · ${DIFFICULTIES[entry.difficulty]?.label || "Training"}</span>
+              <div class="history-entry-labels">
+                <span class="history-round-number">ROUND <strong>${entry.round}</strong></span>
+                <span class="history-mode">${DIFFICULTIES[entry.difficulty]?.label || "Training"}</span>
+              </div>
               <h3>${winnerLabel} · ${entry.score.player}–${entry.score.ai} Round Points</h3>
             </div>
             <b class="history-round-result history-round-result-${entry.winner}">${winnerLabel}</b>
