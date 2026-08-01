@@ -602,6 +602,7 @@ const ui = {
   archiveResetFilters: document.querySelector("#archiveResetFilters"),
   resultDialog: document.querySelector("#resultDialog"),
   difficultyDialog: document.querySelector("#difficultyDialog"),
+  difficultyBackButton: document.querySelector("#difficultyBackButton"),
   tutorialMenuDialog: document.querySelector("#tutorialMenuDialog"),
   tutorialMenuOptions: document.querySelector("#tutorialMenuOptions"),
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
@@ -644,6 +645,8 @@ const ui = {
 };
 let draggedCardId = null;
 let settingsReturnTarget = "main";
+let difficultyReturnTarget = "main";
+let difficultyPreviousLockedState = true;
 const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
@@ -3503,7 +3506,9 @@ function showTutorialMenu() {
   if (!ui.tutorialMenuDialog.open) ui.tutorialMenuDialog.showModal();
 }
 
-function showDifficultyChooser() {
+function showDifficultyChooser(returnTarget = "main") {
+  difficultyReturnTarget = returnTarget;
+  difficultyPreviousLockedState = state.locked;
   stopTutorialMode();
   state.locked = true;
   ui.mainMenuScreen.hidden = true;
@@ -3511,6 +3516,18 @@ function showDifficultyChooser() {
   closeDialog(ui.gameMenuDialog);
   setGameMenuVisibility(false);
   if (!ui.difficultyDialog.open) ui.difficultyDialog.showModal();
+}
+
+function leaveDifficultyChooser() {
+  closeDialog(ui.difficultyDialog);
+  if (difficultyReturnTarget === "game") {
+    state.locked = difficultyPreviousLockedState;
+    setGameMenuVisibility(true);
+    if (!ui.gameMenuDialog.open) ui.gameMenuDialog.showModal();
+    ui.menuButton.setAttribute("aria-expanded", "true");
+    return;
+  }
+  showMainMenu();
 }
 
 async function startGame() {
@@ -3732,9 +3749,9 @@ ui.nextRoundButton.addEventListener("click", () => {
 });
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
-  showDifficultyChooser();
+  showDifficultyChooser("main");
 });
-ui.mainMenuPlayButton.addEventListener("click", showDifficultyChooser);
+ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("main"));
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
@@ -3765,7 +3782,7 @@ ui.restartGameButton.addEventListener("click", () => {
     startGame();
   }
 });
-ui.changeDifficultyButton.addEventListener("click", showDifficultyChooser);
+ui.changeDifficultyButton.addEventListener("click", () => showDifficultyChooser("game"));
 ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
 ui.tutorialBackButton.addEventListener("click", retreatTutorialInstruction);
@@ -3859,7 +3876,9 @@ document.querySelectorAll("[data-difficulty]").forEach((button) => {
 });
 ui.difficultyDialog.addEventListener("cancel", (event) => {
   event.preventDefault();
+  leaveDifficultyChooser();
 });
+ui.difficultyBackButton.addEventListener("click", leaveDifficultyChooser);
 ui.soundButton.addEventListener("click", () => {
   state.soundOn = !state.soundOn;
   audio.setEnabled(state.soundOn);
