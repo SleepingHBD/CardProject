@@ -290,7 +290,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Formation Roles",
     title: "Build a three-role formation",
     intro:
-      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. The bonus activates only if Professor Paws also committed a card to the Finisher's lane.",
+      "Vanguard earns +1 in Lane 1. Link earns +1 in Lane 2 or 3 when the card directly before the Link has a different element from the Link card. Finisher earns +1 when committed as the final card in a two- or three-card formation.",
     objective:
       "Order Candle Pounce, Bubble Bengal, then Dandelion Dash to activate all three Formation Role bonuses.",
     introPages: Object.freeze([
@@ -315,11 +315,11 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
         preferredSide: "right",
       }),
       Object.freeze({
-        title: "Finisher: commit it last and face a card",
+        title: "Finisher: commit it last",
         text:
-          "To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. The bonus activates only if Professor Paws also committed a card to the Finisher's lane.",
+          "To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. Professor Paws does not need to commit a card to that lane for the Role to activate.",
         objective:
-          "With two cards, the Finisher belongs in Lane 2. With three cards, it belongs in Lane 3. A lone Finisher or a Finisher with no opposing card earns no bonus.",
+          "With two cards, commit the Finisher second in Lane 2. With three cards, commit it third in Lane 3. A lone Finisher earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -352,20 +352,20 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Close with Finisher",
         text:
-          "Dandelion Dash is a Finisher. You will commit him last in a three-card formation, and Professor Paws committed a card to his lane, so Finisher +1 will activate.",
+          "Dandelion Dash is a Finisher. Commit him last in this three-card formation to activate Finisher +1.",
         objective:
-          "Place Dandelion Dash in Lane 3. Because he is your final card and Professor Paws committed a card to that lane, he receives Finisher +1.",
+          "Place Dandelion Dash in Lane 3. Because he is your final card in a three-card formation, he receives Finisher +1.",
       }),
     ]),
     readyText:
-      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Dandelion Dash is your final card and Professor Paws committed a card to his lane.",
+      "The preview shows why each bonus activated: Vanguard +1 for Lane 1, Link +1 because the card before the Link has a different element from the Link card, and Finisher +1 because Dandelion Dash is your final card in a three-card formation.",
     readyObjective:
       "Confirm all three Role +1 bonuses in the forecast, then commit the formation.",
     playerCards: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aftermath:
-      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Tide element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation and Professor Paws committed a card to his lane. Changing their order could disable these bonuses.",
+      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Tide element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation. Changing their order could disable these bonuses.",
     trophyChoice: true,
   }),
   Object.freeze({
@@ -1889,13 +1889,7 @@ function beginFormationBuilding() {
 }
 
 function getKnownPlayerTacticBonus(cards, index) {
-  const card = cards[index];
-  if (concealsOpponentFormation() && card?.tactic === "finisher") return 0;
-  return getTacticBonus(
-    cards,
-    index,
-    concealsOpponentFormation() ? MAX_PLAY_SIZE : state.aiPlan.length,
-  );
+  return getTacticBonus(cards, index);
 }
 
 function renderMatchupForecast() {
@@ -1951,13 +1945,7 @@ function renderMatchupForecast() {
       : "No known bonus";
 
     if (concealsCommitment) {
-      const roleWarning = playerCard.tactic !== "finisher"
-        ? `${TACTICS[playerCard.tactic].label} is fully known`
-        : selectedCards.length < 2
-          ? "Finisher needs a two- or three-card formation"
-          : index !== selectedCards.length - 1
-            ? "Finisher is not your final card"
-            : "Finisher +1 depends on a hidden opposing card";
+      const roleWarning = `${TACTICS[playerCard.tactic].label} is fully known`;
       return `
         <span class="forecast-chip forecast-sealed">
           <i>${index + 1}</i>
@@ -1980,11 +1968,7 @@ function renderMatchupForecast() {
         </span>
       `;
     }
-    const opponentTactic = getTacticBonus(
-      state.aiPlan,
-      index,
-      selectedCards.length,
-    );
+    const opponentTactic = getTacticBonus(state.aiPlan, index);
     const clue = state.aiTellClues[index] || "sealed";
     const scoring = scoreClash(
       playerCard,
@@ -2088,7 +2072,7 @@ function cardMarkup(
     : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
-      <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}${formationBonus.pending ? " pending-bonus-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
+      <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
         <small>${formationBonus.extraCard ? "EXTRA" : "BONUS"}</small>
         <b>${formationBonus.text}</b>
       </span>
@@ -2210,23 +2194,10 @@ function getFormationBonusPreview(selectedCards, index) {
   const tactic = getKnownPlayerTacticBonus(selectedCards, index);
   const knownBonus = tactic;
   if (concealsOpponentFormation()) {
-    const finisherUnknown = playerCard.tactic === "finisher"
-      && selectedCards.length > 1
-      && index === selectedCards.length - 1;
-    const roleDetail = playerCard.tactic !== "finisher"
-      ? `${TACTICS[playerCard.tactic].label} is fully known`
-      : selectedCards.length < 2
-        ? "Finisher needs a two- or three-card formation"
-        : index !== selectedCards.length - 1
-          ? "Finisher is not your final card"
-          : "Finisher depends on a hidden opposing card";
     return {
-      text: finisherUnknown ? "+?" : `+${knownBonus}`,
-      label: finisherUnknown
-        ? "Finisher bonus pending: gains +1 only if Professor Paws committed a card to this lane; revealed at clash"
-        : `Known bonus plus ${knownBonus}; ${roleDetail}; Element Edge is revealed at clash`,
+      text: `+${knownBonus}`,
+      label: `Known bonus plus ${knownBonus}; ${TACTICS[playerCard.tactic].label} is fully known; Element Edge is revealed at clash`,
       extraCard: false,
-      pending: finisherUnknown,
     };
   }
 

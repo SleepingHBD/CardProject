@@ -23,7 +23,7 @@ const TACTICS = Object.freeze({
   finisher: Object.freeze({
     icon: "sword",
     label: "Finisher",
-    description: "Finisher: Commit it last in a 2- or 3-card formation. It gains +1 only if Professor Paws also committed a card to its lane.",
+    description: "Finisher: Commit it last in a 2- or 3-card formation to gain +1.",
   }),
 });
 const DIFFICULTY_MODES = Object.freeze(["guided", "instinct", "blind"]);
@@ -176,11 +176,7 @@ function hasAiTrait(traits, id) {
   return traits.some((trait) => trait.id === id);
 }
 
-function getTacticBonus(
-  cards,
-  index,
-  opponentCommitmentCount = cards.length,
-) {
+function getTacticBonus(cards, index) {
   const card = cards[index];
   if (!card || !TACTICS[card.tactic]) return 0;
 
@@ -195,7 +191,6 @@ function getTacticBonus(
   }
   return cards.length > 1
     && index === cards.length - 1
-    && index < opponentCommitmentCount
     ? TACTIC_BONUS
     : 0;
 }
@@ -385,7 +380,7 @@ function orderAiFormation(cards, random = Math.random, traits = []) {
     .map((formation) => {
       const tacticScore = formation.reduce(
         (total, _, index) =>
-          total + getTacticBonus(formation, index, formation.length),
+          total + getTacticBonus(formation, index),
         0,
       );
       let score = tacticScore * tacticWeight + random() * 1.2;
@@ -505,8 +500,8 @@ function resolveClashes(playerCards, aiCards) {
   const clashCount = Math.min(playerCommitment, aiCommitment);
   const lanes = playerCards.slice(0, clashCount).map((playerCard, index) => {
     const aiCard = aiCards[index];
-    const playerTactic = getTacticBonus(playerCards, index, aiCommitment);
-    const aiTactic = getTacticBonus(aiCards, index, playerCommitment);
+    const playerTactic = getTacticBonus(playerCards, index);
+    const aiTactic = getTacticBonus(aiCards, index);
     const scoring = scoreClash(
       playerCard,
       aiCard,

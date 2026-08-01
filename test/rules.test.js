@@ -81,16 +81,15 @@ test("card Tactics reward different formation positions", () => {
   ];
   assert.equal(TACTIC_BONUS, 1);
   assert.equal(TACTICS.vanguard.label, "Vanguard");
-  assert.equal(getTacticBonus(formation, 0, 3), 1);
-  assert.equal(getTacticBonus(formation, 1, 3), 1);
-  assert.equal(getTacticBonus(formation, 2, 3), 1);
-  assert.equal(getTacticBonus(formation, 2, 2), 0);
+  assert.equal(getTacticBonus(formation, 0), 1);
+  assert.equal(getTacticBonus(formation, 1), 1);
+  assert.equal(getTacticBonus(formation, 2), 1);
   assert.equal(
-    getTacticBonus([card("ember", 5, "link"), card("gust", 5, "vanguard")], 1, 2),
+    getTacticBonus([card("ember", 5, "link"), card("gust", 5, "vanguard")], 1),
     0,
   );
   assert.equal(
-    getTacticBonus([card("ember", 5, "vanguard"), card("ember", 5, "link")], 1, 2),
+    getTacticBonus([card("ember", 5, "vanguard"), card("ember", 5, "link")], 1),
     0,
   );
   assert.equal(compareCards(card("tide", 5), card("tide", 5), 1, 0), "player");
@@ -299,7 +298,7 @@ test("Tactic Planner orders cards to activate positional Tactics", () => {
   ]);
   assert.equal(
     ordered.reduce(
-      (total, _, index) => total + getTacticBonus(ordered, index, 3),
+      (total, _, index) => total + getTacticBonus(ordered, index),
       0,
     ),
     3,
@@ -545,6 +544,20 @@ test("one won lane beats one opposing extra card", () => {
   assert.deepEqual(resolution.score, { player: 2, ai: 1, draw: 0 });
   assert.equal(resolution.winner, "player");
   assert.equal(resolution.decidedBy, "clashes");
+});
+
+test("an unopposed Finisher still adds only one extra-card Round Point", () => {
+  const playerCards = [
+    card("ember", 5, "vanguard"),
+    card("tide", 9, "finisher"),
+  ];
+  const aiCards = [card("gust", 5, "vanguard")];
+  const resolution = resolveClashes(playerCards, aiCards);
+
+  assert.equal(getTacticBonus(playerCards, 1), 1);
+  assert.equal(resolution.lanes.length, 1);
+  assert.deepEqual(resolution.extraCardPoints, { player: 1, ai: 0 });
+  assert.deepEqual(resolution.score, { player: 3, ai: 0, draw: 0 });
 });
 
 test("one won lane meets two opposing extra cards in a round draw", () => {

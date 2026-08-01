@@ -1708,12 +1708,6 @@ h1 {
   box-shadow: inset 0 0 0 2px #f8dea0, 0 2px 0 rgba(37,22,16,.4);
 }
 
-.card-bonus-badge.pending-bonus-badge {
-  color: #fff0bd;
-  background: #675138;
-  box-shadow: inset 0 0 0 2px #d6b66d, 0 2px 0 rgba(37,22,16,.4);
-}
-
 .game-card.rarity-legendary::after,
 .game-card.rarity-epic::after {
   display: none;
