@@ -2088,7 +2088,7 @@ function cardMarkup(
     : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
-      <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}">
+      <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}${formationBonus.pending ? " pending-bonus-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
         <small>${formationBonus.extraCard ? "EXTRA" : "BONUS"}</small>
         <b>${formationBonus.text}</b>
       </span>
@@ -2221,11 +2221,12 @@ function getFormationBonusPreview(selectedCards, index) {
           ? "Finisher is not your final card"
           : "Finisher depends on a hidden opposing card";
     return {
-      text: `+${knownBonus}`,
+      text: finisherUnknown ? "+?" : `+${knownBonus}`,
       label: finisherUnknown
-        ? `Known bonus plus ${knownBonus}; Finisher and Element Edge are revealed at clash`
+        ? "Finisher bonus pending: gains +1 only if Professor Paws committed a card to this lane; revealed at clash"
         : `Known bonus plus ${knownBonus}; ${roleDetail}; Element Edge is revealed at clash`,
       extraCard: false,
+      pending: finisherUnknown,
     };
   }
 
