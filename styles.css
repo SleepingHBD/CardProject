@@ -8138,3 +8138,1031 @@ input {
   }
 
 }
+
+/* --------------------------------------------------------------------------
+   Landscape play surfaces
+
+   Short touch screens need a height-led layout instead of the portrait page
+   flow. The arena and controls share the middle row while the complete hand
+   stays visible on a compact shelf below them. Roomier landscape tablets keep
+   the desktop composition, with larger touch targets and safe-area spacing.
+   -------------------------------------------------------------------------- */
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 600px) {
+  :root {
+    --landscape-header-height: calc(44px + env(safe-area-inset-top));
+    --landscape-duel-card-width: clamp(54px, 8.2vw, 72px);
+    --landscape-hand-card-width: clamp(70px, 13.2vw, 102px);
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    padding: 0;
+  }
+
+  .topbar {
+    height: var(--landscape-header-height);
+    min-height: var(--landscape-header-height);
+    padding-top: env(safe-area-inset-top);
+    padding-right: max(6px, env(safe-area-inset-right));
+    padding-bottom: 0;
+    padding-left: max(6px, env(safe-area-inset-left));
+    border-bottom-width: 3px;
+  }
+
+  .brand-logo {
+    width: clamp(82px, 13.5vw, 118px);
+  }
+
+  .top-actions {
+    min-width: 0;
+    gap: clamp(2px, .55vw, 5px);
+  }
+
+  .icon-button,
+  .archive-button,
+  .how-button,
+  .rulebook-button,
+  .menu-button {
+    height: 38px;
+    min-height: 38px;
+    padding-inline: clamp(4px, .8vw, 8px);
+    font-size: clamp(8px, 1.25vw, 10px);
+    white-space: nowrap;
+  }
+
+  .icon-button {
+    width: 34px;
+    min-width: 34px;
+    padding-inline: 0;
+  }
+
+  main {
+    width: 100%;
+    height: calc(100dvh - var(--landscape-header-height));
+    padding-top: 4px;
+    padding-right: max(4px, env(safe-area-inset-right));
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+    padding-left: max(4px, env(safe-area-inset-left));
+    display: block;
+    overflow: hidden;
+  }
+
+  .game-shell {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(330px, 1.18fr) minmax(220px, .82fr);
+    grid-template-rows: 30px minmax(0, 1fr) clamp(104px, 29dvh, 116px);
+    overflow: hidden;
+    border-width: 3px;
+    border-radius: 7px;
+    outline-width: 1px;
+    box-shadow:
+      inset 0 0 0 1px #a87839,
+      0 3px 0 #241712,
+      0 6px 14px rgba(19, 12, 10, .4);
+  }
+
+  .round-bar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    height: 30px;
+    min-height: 0;
+    padding: 2px 8px;
+    border-bottom-width: 2px;
+  }
+
+  .round-bar .eyebrow {
+    display: none;
+  }
+
+  .round-bar h1 {
+    font-size: clamp(12px, 2vw, 16px);
+    line-height: 1;
+  }
+
+  .round-status {
+    display: flex;
+    gap: 5px;
+    font-size: clamp(8px, 1.25vw, 10px);
+    text-align: left;
+  }
+
+  .round-status > span {
+    font-size: inherit;
+  }
+
+  .round-score {
+    margin: 0;
+    padding: 2px 5px;
+    gap: 4px;
+    font-size: 7px;
+  }
+
+  .round-score > small {
+    display: none;
+  }
+
+  .round-score b {
+    font-size: 13px;
+  }
+
+  .arena {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 3px 4px;
+    display: grid;
+    grid-template-columns: clamp(54px, 8vw, 68px) minmax(210px, 1fr) clamp(54px, 8vw, 68px);
+    gap: 2px;
+    border-right: 3px solid #39251c;
+    border-bottom: 0;
+  }
+
+  .arena::before,
+  .arena::after {
+    width: 28px;
+    height: 66px;
+    opacity: .2;
+  }
+
+  .arena::before {
+    left: 2px;
+  }
+
+  .arena::after {
+    right: 2px;
+  }
+
+  .player-panel {
+    min-width: 0;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 3px;
+  }
+
+  .avatar,
+  .avatar-player {
+    width: clamp(42px, 6.6vw, 56px);
+    height: clamp(42px, 6.6vw, 56px);
+    margin: 0 auto 8px;
+    padding: 2px;
+    border-width: 2px;
+    transform: none;
+  }
+
+  .portrait-rank {
+    top: -7px;
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+    font-size: 8px;
+  }
+
+  .avatar-level {
+    bottom: -7px;
+    padding: 2px 3px;
+    border-width: 1px;
+    font-size: 5px;
+    letter-spacing: .02em;
+  }
+
+  .player-copy,
+  .character-quip {
+    display: none;
+  }
+
+  .collection {
+    width: min(58px, 100%);
+    min-height: 25px;
+    gap: 2px;
+  }
+
+  .collection::before {
+    display: none;
+  }
+
+  .trophy-goal {
+    padding: 2px 1px 3px;
+  }
+
+  .trophy-goal > b {
+    font-size: 9px;
+  }
+
+  .trophy-goal > small {
+    display: none;
+  }
+
+  .trophy-slots {
+    gap: 1px;
+  }
+
+  .trophy-slots i {
+    width: 6px;
+    height: 5px;
+  }
+
+  .battlefield {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    align-self: stretch;
+  }
+
+  .play-zone {
+    width: min(100%, calc((var(--landscape-duel-card-width) * 3) + 8px));
+    height: calc((100% - 14px) / 2);
+    min-width: 0;
+  }
+
+  .played-cards,
+  .formation-builder {
+    width: 100%;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .clash-card,
+  .formation-slot {
+    width: var(--landscape-duel-card-width);
+    max-width: var(--landscape-duel-card-width);
+    height: 100%;
+    flex: 1 1 0;
+  }
+
+  .formation-slot.empty-slot {
+    gap: 1px;
+    border-width: 2px;
+  }
+
+  .formation-slot.empty-slot span,
+  .formation-slot.empty-slot small {
+    font-size: 6px;
+  }
+
+  .formation-slot.empty-slot b {
+    font-size: 8px;
+  }
+
+  .play-zone .game-card {
+    width: 100%;
+    height: 100%;
+    padding: 2px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 20px 21px;
+    border-width: 2px;
+    border-radius: 4px;
+    box-shadow:
+      0 3px 0 var(--rarity-dark),
+      0 5px 8px rgba(34, 21, 16, .18),
+      inset 0 0 0 1px var(--rarity-light);
+  }
+
+  .play-zone .card-art {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    border-width: 1px;
+  }
+
+  .play-zone .card-info {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin-top: 1px;
+    padding: 2px;
+  }
+
+  .play-zone .card-info strong {
+    font-size: clamp(6px, 1.08vw, 9px);
+  }
+
+  .play-zone .card-info small {
+    margin-top: 0;
+    font-size: 5px;
+  }
+
+  .play-zone .card-ability {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .play-zone .card-ability > i {
+    flex: 0 0 14px;
+    height: 14px;
+    font-size: 7px;
+  }
+
+  .play-zone .card-ability b {
+    font-size: clamp(6px, .95vw, 8px);
+  }
+
+  .play-zone .card-ability small {
+    display: none;
+  }
+
+  .play-zone .card-element {
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-width: 1px;
+    font-size: 11px;
+  }
+
+  .play-zone .card-power {
+    top: 3px;
+    right: 3px;
+    width: 23px;
+    height: 25px;
+    border-width: 1px;
+  }
+
+  .play-zone .card-power small {
+    display: none;
+  }
+
+  .play-zone .card-power b {
+    font-size: 15px;
+  }
+
+  .play-zone :is(.selection-order, .lane-order-badge) {
+    top: 25px;
+    right: 3px;
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    font-size: 7px;
+  }
+
+  .play-zone .card-bonus-badge {
+    top: 25px;
+    right: 2px;
+    width: 27px;
+    height: 21px;
+    border-width: 1px;
+  }
+
+  .play-zone .card-bonus-badge small {
+    font-size: 4px;
+  }
+
+  .play-zone .card-bonus-badge b {
+    font-size: 10px;
+  }
+
+  .card-placeholder {
+    width: var(--landscape-duel-card-width);
+    height: 100%;
+    min-height: 0;
+  }
+
+  .card-placeholder .paw {
+    font-size: 14px;
+  }
+
+  .card-placeholder small {
+    font-size: 7px;
+  }
+
+  .versus-badge {
+    width: 27px;
+    height: 27px;
+    border-width: 2px;
+    font-size: 9px;
+  }
+
+  .score-label {
+    display: none;
+  }
+
+  .hand-section {
+    display: contents;
+  }
+
+  .control-panel {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    min-height: 0;
+    padding: 3px 5px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    align-content: stretch;
+    gap: 3px;
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, rgba(220, 178, 91, .06), transparent 35%),
+      linear-gradient(#3c2a20, #281b16);
+  }
+
+  .control-panel .turn-message {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 3px 7px;
+    border-width: 1px;
+    box-shadow: 0 2px 0 rgba(28, 17, 12, .32);
+  }
+
+  .control-panel .turn-message strong {
+    overflow: hidden;
+    font-size: clamp(10px, 1.55vw, 13px);
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .control-panel .turn-message span {
+    display: none;
+  }
+
+  .control-panel .tactics-board {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .control-panel .tactics-heading,
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .tactics-heading {
+    grid-column: 1;
+    grid-row: auto;
+    padding: 3px 5px;
+    gap: 4px;
+    border-right: 0;
+    border-bottom: 1px solid #795631;
+  }
+
+  .control-panel .scout-seal {
+    display: none;
+  }
+
+  .control-panel .tactics-heading p {
+    font-size: clamp(9px, 1.35vw, 11px);
+  }
+
+  .control-panel .tactics-heading small {
+    margin-top: 1px;
+    font-size: clamp(7px, 1.05vw, 9px);
+    line-height: 1.12;
+  }
+
+  .control-panel .opponent-habits {
+    margin-top: 3px;
+    gap: 3px;
+  }
+
+  .control-panel .opponent-habit {
+    padding: 3px 4px;
+  }
+
+  .control-panel .opponent-habit b {
+    font-size: clamp(8px, 1.2vw, 10px);
+  }
+
+  .control-panel .opponent-habit span {
+    margin-top: 1px;
+    font-size: clamp(7px, 1.05vw, 9px);
+    line-height: 1.1;
+  }
+
+  .control-panel .opponent-tells {
+    grid-column: 1;
+    grid-row: auto;
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .control-panel .opponent-tell {
+    height: 29px;
+    padding: 8px 3px 2px 22px;
+  }
+
+  .control-panel .tell-element {
+    left: 3px;
+    top: 7px;
+    width: 16px;
+    height: 16px;
+    border-width: 1px;
+    font-size: 8px;
+  }
+
+  .control-panel .tell-lane {
+    font-size: 5px;
+  }
+
+  .control-panel .opponent-tell b {
+    font-size: 7px;
+  }
+
+  .control-panel .opponent-tell small {
+    font-size: 6px;
+  }
+
+  .control-panel .matchup-forecast,
+  .control-panel .tactics-board:has(.opponent-habits:not([hidden])) .matchup-forecast {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 27px;
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .control-panel .forecast-instruction {
+    min-height: 25px;
+    font-size: 8px;
+  }
+
+  .control-panel .forecast-chip {
+    min-height: 27px;
+    padding: 3px 3px 3px 21px;
+  }
+
+  .control-panel .forecast-chip i {
+    left: 3px;
+    width: 15px;
+    height: 15px;
+    font-size: 7px;
+  }
+
+  .control-panel .forecast-chip b,
+  .control-panel .forecast-chip small {
+    font-size: 6px;
+  }
+
+  .control-panel .forecast-equation {
+    display: none;
+  }
+
+  .control-panel .selection-bar {
+    width: 100%;
+    min-width: 0;
+    min-height: 36px;
+    margin: 0;
+    gap: 4px;
+  }
+
+  .control-panel .selection-count,
+  .control-panel .commit-button {
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 7px;
+    font-size: clamp(8px, 1.18vw, 10px);
+  }
+
+  .control-panel .selection-count {
+    flex: 1 1 auto;
+  }
+
+  .control-panel .commit-button {
+    flex: 0 1 132px;
+  }
+
+  .control-panel .trophy-claim {
+    gap: 2px;
+  }
+
+  .control-panel .trophy-claim > strong {
+    font-size: 8px;
+  }
+
+  .control-panel .trophy-claim-option {
+    min-height: 30px;
+    padding: 3px 4px;
+    font-size: 7px;
+  }
+
+  .control-panel .deck-status {
+    min-width: 0;
+    min-height: 25px;
+    margin: 0;
+    flex-wrap: nowrap;
+    gap: 4px;
+    font-size: clamp(7px, 1vw, 9px);
+  }
+
+  .control-panel .mini-deck {
+    width: 13px;
+    height: 17px;
+    border-width: 1px;
+  }
+
+  .control-panel .previous-rounds-history-button {
+    min-width: 0;
+    min-height: 28px;
+    padding: 3px 4px;
+    gap: 3px;
+    overflow: hidden;
+    font-size: clamp(6px, .9vw, 8px);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .control-panel .previous-rounds-history-button span {
+    min-width: 17px;
+    height: 16px;
+    padding-inline: 3px;
+    font-size: 8px;
+  }
+
+  .hand {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 3px 6px 5px;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(3px, .65vw, 6px);
+    overflow: hidden;
+    background:
+      repeating-linear-gradient(3deg, rgba(255, 255, 255, .025) 0 2px, transparent 2px 9px),
+      linear-gradient(#68412a, #45291d);
+    border-top: 2px solid #b17b3c;
+  }
+
+  .hand::after {
+    display: none;
+  }
+
+  .hand .game-card {
+    flex: 0 1 var(--landscape-hand-card-width);
+    width: var(--landscape-hand-card-width);
+    min-width: 0;
+    max-width: var(--landscape-hand-card-width);
+    height: min(100%, 110px);
+    padding: 2px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 24px 27px;
+    border-width: 2px;
+    border-radius: 4px;
+    box-shadow:
+      0 3px 0 var(--rarity-dark),
+      0 5px 8px rgba(34, 21, 16, .2),
+      inset 0 0 0 1px var(--rarity-light);
+  }
+
+  .hand .card-art {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    border-width: 1px;
+  }
+
+  .hand .card-info {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin-top: 1px;
+    padding: 3px 2px 2px;
+  }
+
+  .hand .card-info strong {
+    font-size: clamp(8px, 1.3vw, 10px);
+  }
+
+  .hand .card-info small {
+    margin-top: 0;
+    font-size: clamp(5px, .82vw, 7px);
+  }
+
+  .hand .card-ability {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 2px;
+    gap: 3px;
+  }
+
+  .hand .card-ability > i {
+    flex: 0 0 16px;
+    height: 16px;
+    font-size: 8px;
+  }
+
+  .hand .card-ability b {
+    font-size: clamp(7px, 1.06vw, 9px);
+  }
+
+  .hand .card-ability small {
+    display: none;
+  }
+
+  .hand .card-element {
+    top: 3px;
+    left: 3px;
+    width: 21px;
+    height: 21px;
+    border-width: 1px;
+    font-size: 11px;
+  }
+
+  .hand .card-power {
+    top: 3px;
+    right: 3px;
+    width: 24px;
+    height: 27px;
+    border-width: 1px;
+  }
+
+  .hand .card-power small {
+    display: none;
+  }
+
+  .hand .card-power b {
+    font-size: 16px;
+  }
+
+  .hand .selection-order {
+    top: 27px;
+    right: 3px;
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    font-size: 8px;
+  }
+
+  .hand .game-card:hover:not(:disabled) {
+    transform: translateY(-3px);
+  }
+
+  .hand .game-card.selected,
+  .hand .game-card.selected:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 0 var(--rarity-dark), 0 0 0 2px #efd17a, 0 5px 8px rgba(31, 19, 14, .3);
+  }
+
+  .rules-strip,
+  footer {
+    display: none;
+  }
+
+  .game-dialog {
+    max-width: calc(100vw - max(12px, env(safe-area-inset-left) + env(safe-area-inset-right)));
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+    padding: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .dialog-close {
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .tutorial-coach {
+    right: max(6px, env(safe-area-inset-right));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: min(390px, 48vw);
+    max-height: calc(100dvh - 12px);
+    overflow-y: auto;
+  }
+
+  .main-menu-screen {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 300px);
+    grid-template-rows: auto auto auto;
+    column-gap: clamp(16px, 5vw, 58px);
+    padding-top: max(18px, env(safe-area-inset-top));
+    padding-right: max(18px, env(safe-area-inset-right));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(18px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+
+  .main-menu-ornament,
+  .main-menu-logo,
+  .main-menu-subtitle {
+    grid-column: 1;
+  }
+
+  .main-menu-logo {
+    width: min(440px, 52vw, 96%);
+  }
+
+  .main-menu-actions {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+    width: min(100%, 300px);
+    margin-top: 0;
+    gap: clamp(5px, 1.4dvh, 9px);
+  }
+
+  .main-menu-play-button {
+    min-height: clamp(42px, 12dvh, 52px);
+  }
+
+  .main-menu-option-button {
+    min-height: clamp(34px, 9dvh, 42px);
+  }
+
+  .main-menu-music-credit {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(5px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    width: auto;
+    font-size: 7px;
+  }
+
+  .gallery-dialog,
+  .rulebook-dialog,
+  .previous-rounds-history-dialog {
+    width: calc(100vw - max(12px, env(safe-area-inset-left) + env(safe-area-inset-right)));
+    height: calc(100dvh - max(12px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+  }
+
+  .card-gallery {
+    grid-template-columns: repeat(auto-fit, minmax(104px, 126px));
+    justify-content: center;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 640px) and (max-height: 600px) {
+  .archive-button,
+  .menu-button {
+    font-size: 0;
+  }
+
+  .archive-button::after {
+    content: "Cards";
+    font-size: 8px;
+  }
+
+  .menu-button::after {
+    content: "Menu";
+    font-size: 8px;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 420px) {
+  :root {
+    --landscape-header-height: calc(40px + env(safe-area-inset-top));
+    --landscape-duel-card-width: clamp(50px, 8vw, 66px);
+    --landscape-hand-card-width: clamp(66px, 12.8vw, 94px);
+  }
+
+  .topbar {
+    height: var(--landscape-header-height);
+    min-height: var(--landscape-header-height);
+  }
+
+  .brand-logo {
+    width: clamp(76px, 12.5vw, 104px);
+  }
+
+  .icon-button,
+  .archive-button,
+  .how-button,
+  .rulebook-button,
+  .menu-button {
+    height: 31px;
+    min-height: 31px;
+  }
+
+  .game-shell {
+    grid-template-rows: 27px minmax(0, 1fr) 96px;
+  }
+
+  .round-bar {
+    height: 27px;
+  }
+
+  .round-bar h1 {
+    font-size: 12px;
+  }
+
+  .avatar,
+  .avatar-player {
+    width: 40px;
+    height: 40px;
+  }
+
+  .control-panel .turn-message {
+    display: none;
+  }
+
+  .control-panel {
+    grid-template-rows: minmax(0, 1fr) auto auto;
+  }
+
+  .control-panel .mini-deck {
+    display: none;
+  }
+
+  .hand .game-card {
+    height: min(100%, 91px);
+    grid-template-rows: minmax(0, 1fr) 21px 23px;
+  }
+
+  .hand .card-info strong {
+    font-size: clamp(7px, 1.22vw, 9px);
+  }
+
+  .hand .card-ability b {
+    font-size: clamp(6px, 1vw, 8px);
+  }
+}
+
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 601px) and (max-width: 1366px) {
+  :root {
+    --app-header-height: 60px;
+    --duel-card-width: clamp(106px, 10.8vw, 124px);
+    --duel-card-height: clamp(148px, 20dvh, 176px);
+    --hand-card-width: clamp(130px, 14.2vw, 156px);
+    --hand-card-height: clamp(184px, 24dvh, 212px);
+  }
+
+  .topbar {
+    padding-top: env(safe-area-inset-top);
+    padding-right: max(var(--page-gutter), env(safe-area-inset-right));
+    padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  }
+
+  main {
+    padding-right: max(var(--page-gutter), env(safe-area-inset-right));
+    padding-bottom: max(5px, env(safe-area-inset-bottom));
+    padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  }
+
+  .game-shell {
+    grid-template-columns: minmax(520px, 1.15fr) minmax(340px, .85fr);
+  }
+
+  .top-actions button,
+  .commit-button,
+  .previous-rounds-history-button,
+  .trophy-claim-option {
+    min-height: 40px;
+  }
+
+  .hand .game-card:hover:not(:disabled) {
+    transform: translateY(-8px);
+  }
+
+  .hand .game-card.selected,
+  .hand .game-card.selected:hover {
+    transform: translateY(-6px);
+  }
+}
+
+@media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  .game-card,
+  button,
+  select,
+  input {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .top-actions button,
+  .commit-button,
+  .previous-rounds-history-button,
+  .trophy-claim-option,
+  .main-menu-screen button,
+  .game-menu-dialog button,
+  .settings-dialog button {
+    touch-action: manipulation;
+  }
+
+  .hand .game-card:hover:not(:disabled),
+  .hand .game-card.selected,
+  .hand .game-card.selected:hover {
+    transform: none;
+  }
+}
