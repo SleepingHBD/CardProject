@@ -646,6 +646,7 @@ const ui = {
   tutorialMainMenuButton: document.querySelector("#tutorialMainMenuButton"),
 };
 let draggedCardId = null;
+const touchFirstInput = window.matchMedia?.("(hover: none) and (pointer: coarse)");
 let settingsReturnTarget = "main";
 let difficultyReturnTarget = "main";
 let difficultyPreviousLockedState = true;
@@ -2169,6 +2170,14 @@ function bindCardInteractions(container) {
   const isPlayerHand = container === ui.playerHand;
 
   container.querySelectorAll("[data-card-id]").forEach((button) => {
+    button.draggable = !touchFirstInput?.matches;
+    button.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") {
+        button.draggable = false;
+      } else if (!touchFirstInput?.matches) {
+        button.draggable = true;
+      }
+    });
     if (isPlayerHand) {
       button.addEventListener("pointerenter", (event) => {
         if (event.pointerType !== "touch") audio.cardHover();
@@ -2190,6 +2199,12 @@ function bindCardInteractions(container) {
     });
   });
 }
+
+touchFirstInput?.addEventListener?.("change", () => {
+  document.querySelectorAll(".game-card[data-card-id]").forEach((card) => {
+    card.draggable = !touchFirstInput.matches;
+  });
+});
 
 function getFormationBonusPreview(selectedCards, index) {
   const playerCard = selectedCards[index];

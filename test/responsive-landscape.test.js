@@ -42,4 +42,7 @@ test("landscape tablets preserve the roomy board and coarse-pointer controls", (
     /@media \(orientation: landscape\) and \(hover: none\) and \(pointer: coarse\)/,
   );
   assert.match(styleSource, /-webkit-tap-highlight-color: transparent;/);
+  assert.match(styleSource, /\.top-actions button,[\s\S]*?min-height: 44px;/);
+  assert.match(styleSource, /\.hand \.game-card\[data-card-id\],[\s\S]*?touch-action: manipulation;/);
+  assert.match(styleSource, /-webkit-user-drag: none;/);
 });

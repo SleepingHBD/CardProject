@@ -28,3 +28,11 @@ test("fullscreen controls follow browser state and expose unsupported browsers",
   assert.match(gameSource, /document\.addEventListener\("webkitfullscreenchange"/);
   assert.match(gameSource, /document\.addEventListener\("fullscreenerror"/);
 });
+
+test("touch-first tablets disable native card dragging so slight finger movement still taps", () => {
+  assert.match(gameSource, /const touchFirstInput = window\.matchMedia/);
+  assert.match(gameSource, /button\.draggable = !touchFirstInput\?\.matches/);
+  assert.match(gameSource, /event\.pointerType === "touch"[\s\S]*?button\.draggable = false/);
+  assert.match(gameSource, /card\.draggable = !touchFirstInput\.matches/);
+  assert.match(gameSource, /touchFirstInput\?\.addEventListener\?\.\("change"/);
+});
