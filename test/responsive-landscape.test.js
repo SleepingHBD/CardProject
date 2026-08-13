@@ -46,3 +46,14 @@ test("landscape tablets preserve the roomy board and coarse-pointer controls", (
   assert.match(styleSource, /\.hand \.game-card\[data-card-id\],[\s\S]*?touch-action: manipulation;/);
   assert.match(styleSource, /-webkit-user-drag: none;/);
 });
+
+test("short landscape menus keep music credits out of the action column", () => {
+  const landscapeRules = styleSource.match(
+    /\/\* -+\n   Landscape play surfaces[\s\S]*$/,
+  )?.[0];
+
+  assert.ok(landscapeRules, "landscape play-surface rules should exist");
+  assert.match(landscapeRules, /\.main-menu-screen \{[\s\S]*?grid-template-rows: auto auto auto auto;/);
+  assert.match(landscapeRules, /\.main-menu-actions \{[\s\S]*?grid-column: 2;[\s\S]*?grid-row: 1 \/ span 4;/);
+  assert.match(landscapeRules, /\.main-menu-music-credit \{[\s\S]*?position: relative;[\s\S]*?grid-column: 1;[\s\S]*?grid-row: 4;/);
+});
