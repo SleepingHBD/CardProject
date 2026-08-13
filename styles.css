@@ -2247,8 +2247,30 @@ footer {
 }
 
 .game-menu-dialog {
+  position: relative;
   width: min(500px, calc(100vw - 30px));
+  margin: 0;
   padding: 34px;
+}
+
+.game-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding:
+    max(15px, env(safe-area-inset-top))
+    max(15px, env(safe-area-inset-right))
+    max(15px, env(safe-area-inset-bottom))
+    max(15px, env(safe-area-inset-left));
+  overflow: auto;
+  background: rgba(24, 16, 13, .78);
+  backdrop-filter: blur(4px);
+}
+
+.game-menu-overlay[hidden] {
+  display: none;
 }
 
 .game-menu-dialog h2 {

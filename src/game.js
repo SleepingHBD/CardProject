@@ -611,6 +611,7 @@ const ui = {
   mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
   mainMenuFullscreenButton: document.querySelector("#mainMenuFullscreenButton"),
+  gameMenuOverlay: document.querySelector("#gameMenuOverlay"),
   gameMenuDialog: document.querySelector("#gameMenuDialog"),
   gameMenuTitle: document.querySelector("#gameMenuTitle"),
   gameMenuNote: document.querySelector("#gameMenuNote"),
@@ -650,6 +651,7 @@ const touchFirstInput = window.matchMedia?.("(hover: none) and (pointer: coarse)
 let settingsReturnTarget = "main";
 let difficultyReturnTarget = "main";
 let difficultyPreviousLockedState = true;
+let gameMenuPreviousFocus = null;
 const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
@@ -1623,7 +1625,7 @@ async function startTutorial(mode = "complete", lessonIndex = 0) {
 
   audio.startDuelMusic();
   clearCinematicRemains();
-  closeDialog(ui.gameMenuDialog);
+  closeGameMenu({ restoreFocus: false });
   closeDialog(ui.difficultyDialog);
   closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
@@ -3412,6 +3414,55 @@ function closeDialog(dialog) {
   if (dialog.open) dialog.close();
 }
 
+function isGameMenuOpen() {
+  return !ui.gameMenuOverlay.hidden;
+}
+
+function openGameMenu() {
+  if (isGameMenuOpen()) return;
+  gameMenuPreviousFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  configureGameMenu();
+  ui.gameMenuOverlay.hidden = false;
+  ui.menuButton.setAttribute("aria-expanded", "true");
+  ui.resumeGameButton.focus({ preventScroll: true });
+}
+
+function closeGameMenu({ restoreFocus = true } = {}) {
+  if (!isGameMenuOpen()) return;
+  ui.gameMenuOverlay.hidden = true;
+  ui.menuButton.setAttribute("aria-expanded", "false");
+
+  const focusTarget = gameMenuPreviousFocus;
+  gameMenuPreviousFocus = null;
+  if (restoreFocus && focusTarget?.isConnected && !focusTarget.hidden) {
+    focusTarget.focus({ preventScroll: true });
+  }
+}
+
+function trapGameMenuFocus(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeGameMenu();
+    return;
+  }
+  if (event.key !== "Tab") return;
+
+  const focusable = [...ui.gameMenuDialog.querySelectorAll("button:not([disabled]):not([hidden])")];
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 function fullscreenElement() {
   return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
@@ -3466,17 +3517,12 @@ async function toggleFullscreen() {
 }
 
 async function toggleGameFullscreen() {
-  const reopenMenuOnFailure = ui.gameMenuDialog.open;
-
-  // A modal dialog and its backdrop both live in the browser's top layer.
-  // Remove them before changing fullscreen state so a mobile browser cannot
-  // leave the old backdrop above the resized game and intercept every tap.
-  closeDialog(ui.gameMenuDialog);
+  const reopenMenuOnFailure = isGameMenuOpen();
+  closeGameMenu({ restoreFocus: false });
   const fullscreenChanged = await toggleFullscreen();
 
-  if (reopenMenuOnFailure && !fullscreenChanged && !ui.gameMenuDialog.open) {
-    ui.gameMenuDialog.showModal();
-    ui.menuButton.setAttribute("aria-expanded", "true");
+  if (reopenMenuOnFailure && !fullscreenChanged && !isGameMenuOpen()) {
+    openGameMenu();
   }
 }
 
@@ -3538,7 +3584,7 @@ function showSettingsPanel(panelName) {
 
 function openSettings(returnTarget) {
   settingsReturnTarget = returnTarget;
-  if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
+  closeGameMenu({ restoreFocus: false });
   renderSettings();
   showSettingsPanel("audio");
   if (!ui.settingsDialog.open) ui.settingsDialog.showModal();
@@ -3548,7 +3594,7 @@ function showMainMenu() {
   state.locked = true;
   stopTutorialMode();
   audio.startMainMenuMusic();
-  closeDialog(ui.gameMenuDialog);
+  closeGameMenu({ restoreFocus: false });
   closeDialog(ui.difficultyDialog);
   closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
@@ -3570,7 +3616,7 @@ function showDifficultyChooser(returnTarget = "main") {
   state.locked = true;
   ui.mainMenuScreen.hidden = true;
   document.body.classList.remove("main-menu-active");
-  closeDialog(ui.gameMenuDialog);
+  closeGameMenu({ restoreFocus: false });
   setGameMenuVisibility(false);
   if (!ui.difficultyDialog.open) ui.difficultyDialog.showModal();
 }
@@ -3580,8 +3626,7 @@ function leaveDifficultyChooser() {
   if (difficultyReturnTarget === "game") {
     state.locked = difficultyPreviousLockedState;
     setGameMenuVisibility(true);
-    if (!ui.gameMenuDialog.open) ui.gameMenuDialog.showModal();
-    ui.menuButton.setAttribute("aria-expanded", "true");
+    openGameMenu();
     return;
   }
   showMainMenu();
@@ -3826,14 +3871,11 @@ document.querySelectorAll("[data-close-tutorial-menu]").forEach((button) => {
   button.addEventListener("click", () => closeDialog(ui.tutorialMenuDialog));
 });
 ui.menuButton.addEventListener("click", () => {
-  if (!ui.menuButton.disabled && !ui.gameMenuDialog.open) {
-    ui.gameMenuDialog.showModal();
-    ui.menuButton.setAttribute("aria-expanded", "true");
-  }
+  if (!ui.menuButton.disabled && !isGameMenuOpen()) openGameMenu();
 });
-ui.resumeGameButton.addEventListener("click", () => ui.gameMenuDialog.close());
+ui.resumeGameButton.addEventListener("click", () => closeGameMenu());
 ui.restartGameButton.addEventListener("click", () => {
-  ui.gameMenuDialog.close();
+  closeGameMenu({ restoreFocus: false });
   if (tutorial.active) {
     startTutorial(tutorial.mode, tutorial.entryLessonIndex);
   } else {
@@ -3875,13 +3917,7 @@ ui.tutorialActionButton.addEventListener("click", () => {
     showMainMenu();
   }
 });
-ui.gameMenuDialog.addEventListener("cancel", (event) => {
-  event.preventDefault();
-  ui.gameMenuDialog.close();
-});
-ui.gameMenuDialog.addEventListener("close", () => {
-  ui.menuButton.setAttribute("aria-expanded", "false");
-});
+ui.gameMenuOverlay.addEventListener("keydown", trapGameMenuFocus);
 document.querySelectorAll("[data-close-settings]").forEach((button) => {
   button.addEventListener("click", () => ui.settingsDialog.close());
 });
@@ -3917,11 +3953,10 @@ ui.settingsDialog.addEventListener("close", () => {
   if (
     returnTarget === "game"
     && !ui.menuButton.hidden
-    && !ui.gameMenuDialog.open
+    && !isGameMenuOpen()
     && !ui.resultDialog.open
   ) {
-    ui.gameMenuDialog.showModal();
-    ui.menuButton.setAttribute("aria-expanded", "true");
+    openGameMenu();
   }
 });
 document.querySelectorAll("[data-difficulty]").forEach((button) => {

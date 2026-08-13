@@ -16,12 +16,21 @@ test("the in-game menu leaves the top layer before fullscreen changes", () => {
   assert.match(gameSource, /async function toggleGameFullscreen\(\)/);
   assert.match(
     gameSource,
-    /closeDialog\(ui\.gameMenuDialog\);[\s\S]*?await toggleFullscreen\(\)/,
+    /closeGameMenu\(\{ restoreFocus: false \}\);[\s\S]*?await toggleFullscreen\(\)/,
   );
   assert.match(
     gameSource,
-    /reopenMenuOnFailure && !fullscreenChanged && !ui\.gameMenuDialog\.open/,
+    /reopenMenuOnFailure && !fullscreenChanged && !isGameMenuOpen\(\)/,
   );
+});
+
+test("the in-game menu uses a controlled overlay instead of a native modal", () => {
+  assert.match(pageSource, /class="game-menu-overlay" id="gameMenuOverlay" hidden/);
+  assert.match(pageSource, /id="gameMenuDialog"[\s\S]*?role="dialog"[\s\S]*?aria-modal="true"/);
+  assert.doesNotMatch(pageSource, /<dialog[\s\S]*?id="gameMenuDialog"/);
+  assert.match(gameSource, /function openGameMenu\(\)/);
+  assert.match(gameSource, /function closeGameMenu\(\{ restoreFocus = true \} = \{\}\)/);
+  assert.match(gameSource, /ui\.gameMenuOverlay\.addEventListener\("keydown", trapGameMenuFocus\)/);
 });
 
 test("fullscreen behavior supports entering, exiting, and browser-prefixed fallbacks", () => {

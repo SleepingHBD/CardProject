@@ -358,46 +358,51 @@
       </p>
     </section>
 
-    <dialog
-      class="game-dialog game-menu-dialog"
-      id="gameMenuDialog"
-      aria-labelledby="gameMenuTitle"
-      aria-describedby="gameMenuNote"
-    >
-      <p class="eyebrow">DUEL MENU</p>
-      <h2 id="gameMenuTitle">The duel is paused</h2>
-      <p class="game-menu-note" id="gameMenuNote">
-        Restarting, changing difficulty, or returning to the main menu will end this duel.
-      </p>
-      <div class="game-menu-actions">
-        <button class="primary-button" id="resumeGameButton" type="button">Resume Duel</button>
-        <button class="primary-button" id="restartGameButton" type="button">Restart Duel</button>
-        <button class="primary-button" id="changeDifficultyButton" type="button">
-          Change Difficulty
-        </button>
-        <button
-          class="primary-button"
-          id="gameSettingsButton"
-          type="button"
-          aria-haspopup="dialog"
-          aria-controls="settingsDialog"
-        >
-          Settings
-        </button>
-        <button
-          class="primary-button fullscreen-button"
-          id="gameFullscreenButton"
-          type="button"
-          aria-pressed="false"
-          title="Hide the browser controls and use the whole screen"
-        >
-          Fullscreen
-        </button>
-        <button class="menu-option-button return-menu-button" id="returnMainMenuButton" type="button">
-          Return to Main Menu
-        </button>
-      </div>
-    </dialog>
+    <div class="game-menu-overlay" id="gameMenuOverlay" hidden>
+      <section
+        class="game-dialog game-menu-dialog"
+        id="gameMenuDialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gameMenuTitle"
+        aria-describedby="gameMenuNote"
+        tabindex="-1"
+      >
+        <p class="eyebrow">DUEL MENU</p>
+        <h2 id="gameMenuTitle">The duel is paused</h2>
+        <p class="game-menu-note" id="gameMenuNote">
+          Restarting, changing difficulty, or returning to the main menu will end this duel.
+        </p>
+        <div class="game-menu-actions">
+          <button class="primary-button" id="resumeGameButton" type="button">Resume Duel</button>
+          <button class="primary-button" id="restartGameButton" type="button">Restart Duel</button>
+          <button class="primary-button" id="changeDifficultyButton" type="button">
+            Change Difficulty
+          </button>
+          <button
+            class="primary-button"
+            id="gameSettingsButton"
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="settingsDialog"
+          >
+            Settings
+          </button>
+          <button
+            class="primary-button fullscreen-button"
+            id="gameFullscreenButton"
+            type="button"
+            aria-pressed="false"
+            title="Hide the browser controls and use the whole screen"
+          >
+            Fullscreen
+          </button>
+          <button class="menu-option-button return-menu-button" id="returnMainMenuButton" type="button">
+            Return to Main Menu
+          </button>
+        </div>
+      </section>
+    </div>
 
     <dialog
       class="game-dialog settings-dialog"
