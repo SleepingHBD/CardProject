@@ -2276,6 +2276,20 @@ footer {
   margin-top: 0;
 }
 
+.fullscreen-button[aria-pressed="true"] {
+  color: #2f2018;
+  background:
+    linear-gradient(rgba(255, 255, 255, .24), transparent 45%),
+    linear-gradient(#e7c66f, #bd8437);
+  border-color: #5e3c25;
+}
+
+.fullscreen-button:disabled {
+  opacity: .56;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .menu-option-button {
   min-height: 46px;
   padding: 9px 18px;

@@ -610,6 +610,7 @@ const ui = {
   mainMenuTutorialButton: document.querySelector("#mainMenuTutorialButton"),
   mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
+  mainMenuFullscreenButton: document.querySelector("#mainMenuFullscreenButton"),
   gameMenuDialog: document.querySelector("#gameMenuDialog"),
   gameMenuTitle: document.querySelector("#gameMenuTitle"),
   gameMenuNote: document.querySelector("#gameMenuNote"),
@@ -624,6 +625,7 @@ const ui = {
   restartGameButton: document.querySelector("#restartGameButton"),
   changeDifficultyButton: document.querySelector("#changeDifficultyButton"),
   gameSettingsButton: document.querySelector("#gameSettingsButton"),
+  gameFullscreenButton: document.querySelector("#gameFullscreenButton"),
   returnMainMenuButton: document.querySelector("#returnMainMenuButton"),
   deckTransition: document.querySelector("#deckTransition"),
   deckTransitionLabel: document.querySelector("#deckTransitionLabel"),
@@ -3395,6 +3397,57 @@ function closeDialog(dialog) {
   if (dialog.open) dialog.close();
 }
 
+function fullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
+function fullscreenAvailable() {
+  const root = document.documentElement;
+  const standardAvailable = typeof root.requestFullscreen === "function"
+    && document.fullscreenEnabled !== false;
+  return standardAvailable || typeof root.webkitRequestFullscreen === "function";
+}
+
+function renderFullscreenControls(statusMessage = "") {
+  const active = Boolean(fullscreenElement());
+  const available = fullscreenAvailable();
+  const label = active ? "Exit Fullscreen" : "Fullscreen";
+  const defaultTitle = active
+    ? "Return to the normal browser window"
+    : "Hide the browser controls and use the whole screen";
+
+  [ui.mainMenuFullscreenButton, ui.gameFullscreenButton].forEach((button) => {
+    button.textContent = available ? label : "Fullscreen Unavailable";
+    button.disabled = !available;
+    button.setAttribute("aria-pressed", String(active));
+    button.title = available
+      ? statusMessage || defaultTitle
+      : "This browser does not allow webpages to enter fullscreen";
+  });
+}
+
+async function toggleFullscreen() {
+  try {
+    if (fullscreenElement()) {
+      if (typeof document.exitFullscreen === "function") {
+        await document.exitFullscreen();
+      } else if (typeof document.webkitExitFullscreen === "function") {
+        await Promise.resolve(document.webkitExitFullscreen());
+      }
+    } else {
+      const root = document.documentElement;
+      if (typeof root.requestFullscreen === "function") {
+        await root.requestFullscreen({ navigationUI: "hide" });
+      } else if (typeof root.webkitRequestFullscreen === "function") {
+        await Promise.resolve(root.webkitRequestFullscreen());
+      }
+    }
+    renderFullscreenControls();
+  } catch {
+    renderFullscreenControls("Fullscreen was blocked. Tap the button to try again.");
+  }
+}
+
 function saveClashStyle(clashStyle) {
   try {
     window.localStorage.setItem(CLASH_STYLE_STORAGE_KEY, clashStyle);
@@ -3727,6 +3780,7 @@ ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("mai
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
+ui.mainMenuFullscreenButton.addEventListener("click", toggleFullscreen);
 ui.tutorialMenuOptions.addEventListener("click", (event) => {
   const option = event.target.closest("[data-tutorial-path], [data-tutorial-lesson]");
   if (!option) return;
@@ -3756,6 +3810,7 @@ ui.restartGameButton.addEventListener("click", () => {
 });
 ui.changeDifficultyButton.addEventListener("click", () => showDifficultyChooser("game"));
 ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
+ui.gameFullscreenButton.addEventListener("click", toggleFullscreen);
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
 ui.tutorialBackButton.addEventListener("click", retreatTutorialInstruction);
 ui.tutorialRetryButton.addEventListener("click", () => {
@@ -3858,6 +3913,12 @@ ui.soundButton.addEventListener("click", () => {
   ui.soundButton.setAttribute("aria-label", state.soundOn ? "Mute sound" : "Unmute sound");
 });
 
+document.addEventListener("fullscreenchange", () => renderFullscreenControls());
+document.addEventListener("webkitfullscreenchange", () => renderFullscreenControls());
+document.addEventListener("fullscreenerror", () => {
+  renderFullscreenControls("Fullscreen was blocked. Tap the button to try again.");
+});
+
 document.addEventListener("click", (event) => {
   const button = event.target.closest?.("button");
   if (!button || button.disabled || button.classList.contains("game-card")) return;
@@ -3871,4 +3932,5 @@ renderSettings(
   saveClashStyle(state.clashStyle),
   saveAudioVolumes(state.audioVolumes),
 );
+renderFullscreenControls();
 showMainMenu();
