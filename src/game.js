@@ -3458,8 +3458,25 @@ async function toggleFullscreen() {
       }
     }
     renderFullscreenControls();
+    return true;
   } catch {
     renderFullscreenControls("Fullscreen was blocked. Tap the button to try again.");
+    return false;
+  }
+}
+
+async function toggleGameFullscreen() {
+  const reopenMenuOnFailure = ui.gameMenuDialog.open;
+
+  // A modal dialog and its backdrop both live in the browser's top layer.
+  // Remove them before changing fullscreen state so a mobile browser cannot
+  // leave the old backdrop above the resized game and intercept every tap.
+  closeDialog(ui.gameMenuDialog);
+  const fullscreenChanged = await toggleFullscreen();
+
+  if (reopenMenuOnFailure && !fullscreenChanged && !ui.gameMenuDialog.open) {
+    ui.gameMenuDialog.showModal();
+    ui.menuButton.setAttribute("aria-expanded", "true");
   }
 }
 
@@ -3825,7 +3842,7 @@ ui.restartGameButton.addEventListener("click", () => {
 });
 ui.changeDifficultyButton.addEventListener("click", () => showDifficultyChooser("game"));
 ui.gameSettingsButton.addEventListener("click", () => openSettings("game"));
-ui.gameFullscreenButton.addEventListener("click", toggleFullscreen);
+ui.gameFullscreenButton.addEventListener("click", toggleGameFullscreen);
 ui.returnMainMenuButton.addEventListener("click", showMainMenu);
 ui.tutorialBackButton.addEventListener("click", retreatTutorialInstruction);
 ui.tutorialRetryButton.addEventListener("click", () => {

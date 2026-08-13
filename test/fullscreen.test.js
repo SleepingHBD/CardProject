@@ -9,7 +9,19 @@ test("fullscreen can be toggled from the main menu and the in-game menu", () => 
   assert.match(pageSource, /id="mainMenuFullscreenButton"[\s\S]*?aria-pressed="false"/);
   assert.match(pageSource, /id="gameFullscreenButton"[\s\S]*?aria-pressed="false"/);
   assert.match(gameSource, /ui\.mainMenuFullscreenButton\.addEventListener\("click", toggleFullscreen\)/);
-  assert.match(gameSource, /ui\.gameFullscreenButton\.addEventListener\("click", toggleFullscreen\)/);
+  assert.match(gameSource, /ui\.gameFullscreenButton\.addEventListener\("click", toggleGameFullscreen\)/);
+});
+
+test("the in-game menu leaves the top layer before fullscreen changes", () => {
+  assert.match(gameSource, /async function toggleGameFullscreen\(\)/);
+  assert.match(
+    gameSource,
+    /closeDialog\(ui\.gameMenuDialog\);[\s\S]*?await toggleFullscreen\(\)/,
+  );
+  assert.match(
+    gameSource,
+    /reopenMenuOnFailure && !fullscreenChanged && !ui\.gameMenuDialog\.open/,
+  );
 });
 
 test("fullscreen behavior supports entering, exiting, and browser-prefixed fallbacks", () => {
