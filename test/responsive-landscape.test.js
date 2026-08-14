@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+const viewportSource = readFileSync(new URL("../src/viewport.js", import.meta.url), "utf8");
 
 test("the page opts into notched-device safe areas", () => {
   assert.match(
@@ -30,6 +31,20 @@ test("short landscape screens use a height-led gameplay grid", () => {
   assert.match(landscapeRules, /\.control-panel \{[\s\S]*?grid-column: 2;[\s\S]*?grid-row: 2;/);
   assert.match(landscapeRules, /\.hand \{[\s\S]*?grid-column: 1 \/ -1;[\s\S]*?grid-row: 3;/);
   assert.match(landscapeRules, /grid-template-rows: 27px minmax\(0, 1fr\) 96px;/);
+});
+
+test("the duel follows the live iOS viewport instead of leaving unused space", () => {
+  assert.match(pageSource, /<script defer src="\.\/src\/viewport\.js"><\/script>/);
+  assert.match(styleSource, /--app-viewport-height: 100dvh;/);
+  assert.match(styleSource, /html \{\s*background: #3e423f;/);
+  assert.match(
+    styleSource,
+    /html,\s*body \{[\s\S]*?height: var\(--app-viewport-height, 100dvh\);[\s\S]*?overscroll-behavior: none;/,
+  );
+  assert.match(styleSource, /body \{[\s\S]*?display: flex;[\s\S]*?flex-direction: column;/);
+  assert.match(styleSource, /main \{[\s\S]*?flex: 1 1 auto;[\s\S]*?height: auto;/);
+  assert.match(viewportSource, /Math\.max\([\s\S]*?window\.innerHeight[\s\S]*?root\.clientHeight[\s\S]*?viewport\?\.height/);
+  assert.match(viewportSource, /viewport\?\.addEventListener\("resize", queueViewportUpdate/);
 });
 
 test("landscape tablets preserve the roomy board and coarse-pointer controls", () => {
