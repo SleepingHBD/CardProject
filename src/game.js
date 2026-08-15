@@ -3483,7 +3483,8 @@ function renderFullscreenControls(statusMessage = "") {
     : "Hide the browser controls and use the whole screen";
 
   [ui.mainMenuFullscreenButton, ui.gameFullscreenButton].forEach((button) => {
-    button.textContent = available ? label : "Fullscreen Unavailable";
+    button.hidden = !available;
+    button.textContent = label;
     button.disabled = !available;
     button.setAttribute("aria-pressed", String(active));
     button.title = available

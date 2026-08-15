@@ -41,10 +41,12 @@ test("fullscreen behavior supports entering, exiting, and browser-prefixed fallb
   assert.match(gameSource, /document\.webkitExitFullscreen\(\)/);
 });
 
-test("fullscreen controls follow browser state and expose unsupported browsers", () => {
+test("fullscreen controls follow browser state and hide on unsupported browsers", () => {
   assert.match(gameSource, /function renderFullscreenControls\(statusMessage = ""\)/);
   assert.match(gameSource, /button\.setAttribute\("aria-pressed", String\(active\)\)/);
+  assert.match(gameSource, /button\.hidden = !available/);
   assert.match(gameSource, /button\.disabled = !available/);
+  assert.doesNotMatch(gameSource, /button\.textContent = available \? label : "Fullscreen Unavailable"/);
   assert.match(gameSource, /document\.addEventListener\("fullscreenchange"/);
   assert.match(gameSource, /document\.addEventListener\("webkitfullscreenchange"/);
   assert.match(gameSource, /document\.addEventListener\("fullscreenerror"/);

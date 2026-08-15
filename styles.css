@@ -2317,6 +2317,10 @@ footer {
   transform: none;
 }
 
+.fullscreen-button[hidden] {
+  display: none !important;
+}
+
 .menu-option-button {
   min-height: 46px;
   padding: 9px 18px;
