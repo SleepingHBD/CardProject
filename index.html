@@ -327,6 +327,16 @@
           Rulebook
         </button>
         <button
+          class="main-menu-option-button main-menu-chronicle-button"
+          id="mainMenuChronicleButton"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="worldChronicleScreen"
+          aria-expanded="false"
+        >
+          World Chronicle
+        </button>
+        <button
           class="main-menu-option-button"
           id="mainMenuSettingsButton"
           type="button"
@@ -356,6 +366,453 @@
         </a>
         (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)
       </p>
+    </section>
+
+    <section
+      class="chronicle-screen"
+      id="worldChronicleScreen"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="chronicleScreenTitle"
+      tabindex="-1"
+      hidden
+    >
+      <div class="chronicle-ambient" aria-hidden="true"></div>
+      <header class="chronicle-toolbar">
+        <div class="chronicle-toolbar-title">
+          <span>World Chronicle</span>
+          <strong id="chronicleScreenTitle">The Threefold Realm</strong>
+        </div>
+        <div class="chronicle-toolbar-actions">
+          <button
+            class="chronicle-toolbar-button"
+            id="chronicleContentsButton"
+            type="button"
+            aria-controls="chronicleContents"
+            aria-expanded="false"
+          >
+            Contents
+          </button>
+          <button class="chronicle-toolbar-button chronicle-return-button" id="chronicleCloseButton" type="button">
+            Return
+          </button>
+        </div>
+      </header>
+
+      <aside class="chronicle-contents" id="chronicleContents" aria-label="Chronicle contents" hidden>
+        <div class="chronicle-contents-heading">
+          <p>Archivist’s Index</p>
+          <button id="chronicleContentsClose" type="button" aria-label="Close contents">×</button>
+        </div>
+        <ol>
+          <li><button type="button" data-chronicle-target="0"><span>Frontispiece</span><small>Begin the volume</small></button></li>
+          <li><button type="button" data-chronicle-target="1"><span>I · Felden</span><small>The Threefold Realm</small></button></li>
+          <li><button type="button" data-chronicle-target="2"><span>II · The Living Cycle</span><small>Ember, Gust and Tide</small></button></li>
+          <li><button type="button" data-chronicle-target="3"><span>III · Hearthmarch</span><small>Realm of Ember</small></button></li>
+          <li><button type="button" data-chronicle-target="4"><span>IV · Galecrest</span><small>Realm of Gust</small></button></li>
+          <li><button type="button" data-chronicle-target="5"><span>V · Moonmere</span><small>Realm of Tide</small></button></li>
+          <li><button type="button" data-chronicle-target="6"><span>VI · The Severed Cycle</span><small>War and remembrance</small></button></li>
+          <li><button type="button" data-chronicle-target="7"><span>VII · The Nine</span><small>The Circle and its Hall</small></button></li>
+          <li><button type="button" data-chronicle-target="8"><span>VIII · The Present Age</span><small>Disturbances in Felden</small></button></li>
+        </ol>
+        <p class="chronicle-contents-note">This public edition contains no sealed testimony.</p>
+      </aside>
+
+      <div class="chronicle-stage">
+        <div class="chronicle-book" id="chronicleBook">
+          <article class="chronicle-spread chronicle-spread-cover" data-chronicle-page data-title="Frontispiece">
+            <div class="chronicle-cover">
+              <div class="chronicle-cover-rule" aria-hidden="true"></div>
+              <p class="chronicle-cover-overline">A record of lands, lives and disputed histories</p>
+              <h2>The Threefold Realm</h2>
+              <p class="chronicle-cover-subtitle">An Illustrated History of Felden</p>
+              <div class="chronicle-cover-seal" aria-hidden="true"><span>9</span><i></i></div>
+              <blockquote>“No flame stands without air; no river travels without wind; no memory endures without change.”</blockquote>
+              <p class="chronicle-cover-credit">Compiled at Ninefold Hall<br />under the ninth moon of the present age</p>
+              <div class="chronicle-cover-rule chronicle-cover-rule-bottom" aria-hidden="true"></div>
+            </div>
+          </article>
+
+          <article class="chronicle-spread" data-chronicle-page data-title="Felden, the Threefold Realm" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book I · The Known Realm</p>
+              <h2>Felden, the Threefold Realm</h2>
+              <p class="chronicle-lede"><span>F</span>elden is commonly drawn as one country. It has never behaved as one.</p>
+              <p>Three territories share its roads, rivers and oldest wounds. Hearthmarch keeps the western furnaces. Galecrest watches the northern heights. Moonmere holds the eastern deltas and the long coast below them.</p>
+              <p>Their borders meet at Ninefold Hall, where no crown is permitted to fly above another. Merchants call this meeting place the heart of Felden. Soldiers, less sentimentally, call it the hinge.</p>
+              <aside class="chronicle-marginalia"><b>Archivist’s note</b> No surviving map from before the Accord agrees on where one realm ended and the next began.</aside>
+              <p class="chronicle-page-folio">I</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate">
+              <figure class="chronicle-map-figure">
+                <div class="chronicle-map-art">
+                  <img src="./assets/chronicle/felden-map-plate-card-style.webp" alt="A cartoon storybook map of Felden, with Hearthmarch in the west, Galecrest across the northern highlands, Moonmere along the eastern waters, and Ninefold Hall where the territories meet"/>
+                  <span class="chronicle-map-art-label chronicle-map-art-hearth">Hearthmarch</span>
+                  <span class="chronicle-map-art-label chronicle-map-art-gale">Galecrest</span>
+                  <span class="chronicle-map-art-label chronicle-map-art-tide">Moonmere</span>
+                  <span class="chronicle-map-art-label chronicle-map-art-hall">Ninefold Hall</span>
+                </div>
+                <svg class="chronicle-map" viewBox="0 0 760 520" role="img" aria-labelledby="feldenMapTitle feldenMapDescription" hidden aria-hidden="true">
+                  <title id="feldenMapTitle">Map of Felden</title>
+                  <desc id="feldenMapDescription">Hearthmarch lies to the west, Galecrest to the north, Moonmere to the east, and Ninefold Hall where their borders meet.</desc>
+                  <defs>
+                    <linearGradient id="mapParchment" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f3e2af"/><stop offset=".48" stop-color="#dec48a"/><stop offset="1" stop-color="#caa468"/></linearGradient>
+                    <linearGradient id="mapHearthWash" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d9956b"/><stop offset="1" stop-color="#a85143"/></linearGradient>
+                    <linearGradient id="mapGaleWash" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a5ad79"/><stop offset="1" stop-color="#5e785c"/></linearGradient>
+                    <linearGradient id="mapTideWash" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8eb2bc"/><stop offset="1" stop-color="#4d758b"/></linearGradient>
+                    <pattern id="mapHatch" width="13" height="13" patternUnits="userSpaceOnUse"><path d="M-3 13 13-3M5 21 21 5" stroke="#4b301f" stroke-opacity=".11" stroke-width="1.2"/></pattern>
+                    <pattern id="mapSeaStipple" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M2 14c5-5 10-5 16 0" fill="none" stroke="#765840" stroke-opacity=".16" stroke-width="1.5"/></pattern>
+                    <filter id="mapInkSoft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#4b2d1c" flood-opacity=".28"/></filter>
+                    <clipPath id="feldenCoastClip"><path d="M76 204C52 164 84 114 134 94c51-20 94-9 133-35 48-32 115-22 156-3 50 23 82 9 128 35 55 32 69 66 120 96 44 26 49 73 21 106 22 41 9 97-28 118-29 54-86 72-139 58-49 29-106 4-150 20-53 17-109-9-158-15-54-6-95-31-114-67-48-30-65-82-39-124-19-32-14-60 12-79Z"/></clipPath>
+                    <symbol id="mapPine" viewBox="0 0 30 42"><path d="m15 1 10 15h-6l9 12h-9v11h-8V28H2l9-12H5Z"/><path d="M15 8v27" fill="none"/></symbol>
+                    <symbol id="mapPeak" viewBox="0 0 52 44"><path d="M2 40 22 5l9 16 7-11 12 30Z"/><path d="m15 17 7-12 5 9 4 7M7 40l15-15 10 15" fill="none"/></symbol>
+                    <symbol id="mapTown" viewBox="0 0 52 48"><path d="M7 41V22l10-8 9 7 10-13 10 11v22Z"/><path d="M4 41h44M15 41V28h8v13m8 0V25h7v16" fill="none"/></symbol>
+                  </defs>
+                  <rect class="map-frame" x="8" y="8" width="744" height="504" rx="20"/>
+                  <rect class="map-inner-frame" x="20" y="20" width="720" height="480" rx="14"/>
+                  <path class="map-corner map-corner-nw" d="M36 85V36h49M42 66l24-24m-11 0h11v11"/>
+                  <path class="map-corner map-corner-ne" d="M675 36h49v49m-30-43 24 24m0-11v11h-11"/>
+                  <path class="map-corner map-corner-sw" d="M36 435v49h49m-43-30 24 24m-11 0h11v-11"/>
+                  <path class="map-corner map-corner-se" d="M675 484h49v-49m-30 43 24-24m0 11v-11h-11"/>
+                  <rect class="map-sea-field" x="28" y="68" width="704" height="420" rx="10"/>
+                  <g class="map-sea-marks" aria-hidden="true">
+                    <path d="M82 153c15-10 30-10 45 0m-59 15c11-7 22-7 33 0M620 132c17-11 34-11 51 0m-39 20c12-8 24-8 36 0M640 430c14-9 28-9 42 0M93 405c13-8 26-8 39 0"/>
+                    <path d="M57 264c12-8 24-8 36 0m570 66c12-8 24-8 36 0"/>
+                  </g>
+                  <path class="map-land-shadow" d="M76 204C52 164 84 114 134 94c51-20 94-9 133-35 48-32 115-22 156-3 50 23 82 9 128 35 55 32 69 66 120 96 44 26 49 73 21 106 22 41 9 97-28 118-29 54-86 72-139 58-49 29-106 4-150 20-53 17-109-9-158-15-54-6-95-31-114-67-48-30-65-82-39-124-19-32-14-60 12-79Z"/>
+                  <g clip-path="url(#feldenCoastClip)">
+                    <path class="map-region map-hearth" d="M18 42h307c23 65 30 147 63 233-15 69-18 142-8 236H18Z"/>
+                    <path class="map-region map-gale" d="M314 42h428v207c-126 8-242 25-354 26-34-82-50-163-74-233Z"/>
+                    <path class="map-region map-tide" d="M388 275c114-4 231-21 354-26v262H380c-10-91-7-166 8-236Z"/>
+                    <rect class="map-hatching" x="38" y="42" width="684" height="454"/>
+                  </g>
+                  <path class="map-coast" d="M76 204C52 164 84 114 134 94c51-20 94-9 133-35 48-32 115-22 156-3 50 23 82 9 128 35 55 32 69 66 120 96 44 26 49 73 21 106 22 41 9 97-28 118-29 54-86 72-139 58-49 29-106 4-150 20-53 17-109-9-158-15-54-6-95-31-114-67-48-30-65-82-39-124-19-32-14-60 12-79Z"/>
+                  <g class="map-borders" aria-hidden="true">
+                    <path d="M323 50c17 59 30 148 65 225"/>
+                    <path d="M388 275c102-2 206-17 307-25"/>
+                    <path d="M388 275c-14 67-18 139-10 210"/>
+                  </g>
+                  <g class="map-rivers" aria-hidden="true">
+                    <path d="M438 88c-35 40-23 72-5 101 17 28 3 60-45 86-29 16-37 53-24 88 11 29 3 64-22 98"/>
+                    <path d="M433 188c54 9 67 45 83 77 18 37 53 61 112 74"/>
+                    <path class="map-river-small" d="M516 265c35-5 63-24 81-51M365 363c-39 3-71 21-95 53"/>
+                  </g>
+                  <g class="map-roads" aria-hidden="true">
+                    <path d="M173 289C248 270 306 268 388 275S517 309 576 352"/>
+                    <path d="M390 274c27-53 49-90 74-128M389 278c-27 57-47 98-80 137"/>
+                  </g>
+                  <g class="map-relief map-relief-gale" aria-hidden="true">
+                    <use href="#mapPeak" x="282" y="86" width="64" height="54"/><use href="#mapPeak" x="330" y="70" width="74" height="63"/><use href="#mapPeak" x="390" y="82" width="64" height="54"/><use href="#mapPeak" x="448" y="93" width="58" height="49"/>
+                  </g>
+                  <g class="map-elevation-contours" aria-hidden="true">
+                    <path d="M282 157c23-52 77-82 135-77 54 4 101 34 129 77"/>
+                    <path d="M316 154c20-36 59-56 101-52 39 3 73 22 95 52"/>
+                    <path d="M352 151c15-21 39-31 65-28 24 2 46 12 61 28"/>
+                    <path d="M382 147c9-8 21-12 34-11 12 1 23 5 32 11"/>
+                  </g>
+                  <g class="map-forest map-forest-hearth" aria-hidden="true">
+                    <use href="#mapPine" x="102" y="178" width="27" height="38"/><use href="#mapPine" x="127" y="162" width="30" height="42"/><use href="#mapPine" x="151" y="181" width="25" height="36"/><use href="#mapPine" x="188" y="407" width="28" height="40"/><use href="#mapPine" x="214" y="393" width="31" height="43"/><use href="#mapPine" x="243" y="410" width="26" height="37"/>
+                  </g>
+                  <g class="map-marsh" aria-hidden="true">
+                    <path d="M566 395q10-29 20 0m-4 0q10-29 20 0m-4 0q10-29 20 0M535 420q10-29 20 0m-4 0q10-29 20 0"/>
+                  </g>
+                  <g class="map-settlements" aria-hidden="true">
+                    <g transform="translate(151 292)"><use href="#mapTown" width="43" height="40"/><circle cx="22" cy="43" r="3"/></g>
+                    <g transform="translate(456 157)"><use href="#mapTown" width="43" height="40"/><circle cx="22" cy="43" r="3"/></g>
+                    <g transform="translate(559 342)"><use href="#mapTown" width="43" height="40"/><circle cx="22" cy="43" r="3"/></g>
+                  </g>
+                  <g class="map-region-sigil map-region-sigil-hearth" transform="translate(177 252)"><circle r="26"/><path d="M0 16c-13-8-14-20-5-31 1 8 7 7 8 15 6-6 8-13 5-20 14 11 17 28 5 37C9 20 4 22 0 22c-7 0-11-3-13-7 4 2 8 3 13 1Z"/></g>
+                  <g class="map-region-sigil map-region-sigil-gale" transform="translate(504 173)"><circle r="26"/><path d="M-16-3c7-13 25-14 33-3-9-5-18-2-18 4 0 5 7 6 11 2-3 12-19 15-28 6 6 2 13 0 13-4 0-4-6-6-11-2 4-3 8-4 11-1Z"/></g>
+                  <g class="map-region-sigil map-region-sigil-tide" transform="translate(563 374)"><circle r="26"/><path d="M0-19c10 14 17 22 17 31 0 10-7 17-17 17s-17-7-17-17C-17 3-10-5 0-19Zm-10 31c2 7 7 10 14 9"/></g>
+                  <g class="map-hall" transform="translate(388 275)"><circle r="31"/><circle r="24"/><path d="M-13 12v-25L0-25l13 12v25M-20 13h40M-8-7h5v8h-5m11-8h5v8H3"/></g>
+                  <g class="map-label-plaque map-label-hearth" transform="translate(91 338)"><path d="M0 0h208l12 15-12 15H0L10 15Z"/><text class="map-label" x="110" y="21">HEARTHMARCH</text></g>
+                  <g class="map-label-plaque map-label-gale" transform="translate(333 204)"><path d="M0 0h194l12 15-12 15H0L10 15Z"/><text class="map-label" x="103" y="21">GALECREST</text></g>
+                  <g class="map-label-plaque map-label-tide" transform="translate(495 426)"><path d="M0 0h174l12 15-12 15H0L10 15Z"/><text class="map-label" x="93" y="21">MOONMERE</text></g>
+                  <g class="map-simple-labels">
+                    <text class="map-realm-name" x="184" y="285" text-anchor="middle">HEARTHMARCH</text>
+                    <text class="map-realm-note" x="184" y="305" text-anchor="middle">the western furnaces</text>
+                    <text class="map-realm-name" x="500" y="178" text-anchor="middle">GALECREST</text>
+                    <text class="map-realm-note" x="500" y="198" text-anchor="middle">the northern heights</text>
+                    <text class="map-realm-name" x="560" y="378" text-anchor="middle">MOONMERE</text>
+                    <text class="map-realm-note" x="560" y="398" text-anchor="middle">the eastern waters</text>
+                  </g>
+                  <text class="map-hall-label" x="388" y="320" text-anchor="middle">NINEFOLD HALL</text>
+                  <path class="map-title-ribbon" d="M258 24h244l18 18-18 18H258l-18-18Z"/>
+                  <text class="map-title" x="380" y="48" text-anchor="middle">THE THREEFOLD REALM</text>
+                  <text class="map-plate-title" x="380" y="48" text-anchor="middle">FELDEN</text>
+                  <text class="map-plate-subtitle" x="380" y="66" text-anchor="middle">SURVEYED IN THE PRESENT AGE</text>
+                  <g class="map-compass" transform="translate(94 119) scale(.72)"><circle class="map-compass-outer" r="41"/><circle class="map-compass-inner" r="31"/><path class="map-compass-star" d="M0-34 8-8 34 0 8 8 0 34-8 8-34 0-8-8Z"/><path class="map-compass-needle" d="M0-27 5-5 0 0-5-5ZM0 27l-5-22L0 0l5 5Z"/><text y="-47" text-anchor="middle">N</text></g>
+                </svg>
+                <figcaption><b>Plate I.</b> A modern survey of Felden. Borders remain ceremonial in several disputed valleys.</figcaption>
+              </figure>
+              <p class="chronicle-page-folio">II</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread" data-chronicle-page data-title="The Living Cycle" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book II · Natural Philosophy</p>
+              <h2>The Living Cycle</h2>
+              <p class="chronicle-lede"><span>T</span>he elements are not kingdoms in the soil. They are habits of the world.</p>
+              <p>Ember transforms. Gust carries. Tide preserves and reshapes. Every settlement depends upon all three, even where one is honoured above the others.</p>
+              <p>Scholars disagree on whether the elements possess intention. A flame leans toward air; a river remembers its course; a wind returns to a familiar pass. Whether this is thought or merely nature remains a favourite argument of comfortable academics.</p>
+              <blockquote class="chronicle-pullquote">Balance was never stillness. It was movement held in trust.</blockquote>
+              <p class="chronicle-page-folio">III</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-cycle-plate">
+              <figure class="chronicle-element-plate">
+                <img src="./assets/chronicle/elements-triptych-plate-card-style.webp" alt="A cartoon storybook triptych: living flame and a smith's hammer for Ember, wind carrying a feather and leaves for Gust, and a cresting wave sheltering a pearl for Tide"/>
+                <div class="chronicle-element-art-legend" aria-label="The three elemental philosophies">
+                  <span><b>Ember</b><em>transforms</em></span>
+                  <span><b>Gust</b><em>carries</em></span>
+                  <span><b>Tide</b><em>preserves · reshapes</em></span>
+                </div>
+                <svg viewBox="0 0 680 500" role="img" aria-labelledby="elementPlateTitle elementPlateDescription" hidden aria-hidden="true">
+                  <title id="elementPlateTitle">Ember, Gust and Tide</title>
+                  <desc id="elementPlateDescription">Three restrained illuminated emblems form a continuous cycle: Ember transforms, Gust carries, and Tide preserves and reshapes.</desc>
+                  <defs>
+                    <filter id="elementPlateShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#4a2c1c" flood-opacity=".22"/></filter>
+                    <radialGradient id="elementEmberWash"><stop stop-color="#c87958"/><stop offset="1" stop-color="#8e4338"/></radialGradient>
+                    <radialGradient id="elementGustWash"><stop stop-color="#91a276"/><stop offset="1" stop-color="#526f56"/></radialGradient>
+                    <radialGradient id="elementTideWash"><stop stop-color="#80a9b6"/><stop offset="1" stop-color="#456b80"/></radialGradient>
+                  </defs>
+                  <rect class="element-plate-frame" x="28" y="24" width="624" height="448" rx="12"/>
+                  <path class="element-plate-corner" d="M49 90V48h42M589 48h42v42M49 410v42h42m498 0h42v-42"/>
+                  <g class="element-concord-lines" aria-hidden="true">
+                    <circle cx="340" cy="250" r="154"/>
+                    <circle class="element-concord-thread" cx="340" cy="250" r="141"/>
+                  </g>
+                  <g class="element-emblem element-emblem-ember" transform="translate(340 96)">
+                    <circle class="element-emblem-outer" r="70"/><circle class="element-emblem-field" r="60"/>
+                    <path class="element-emblem-icon" d="M1-41c3 19-11 25-5 42 8-7 11-14 9-22 21 16 27 42 12 58-8 8-20 11-32 7-23-8-29-38-9-59-1 13 6 21 15 24-5-18 8-29 10-50Z"/>
+                  </g>
+                  <text class="element-name" x="340" y="188" text-anchor="middle">EMBER</text>
+                  <text class="element-quality" x="340" y="210" text-anchor="middle">transforms</text>
+                  <g class="element-emblem element-emblem-gust" transform="translate(207 327)">
+                    <circle class="element-emblem-outer" r="70"/><circle class="element-emblem-field" r="60"/>
+                    <path class="element-emblem-icon" d="M-43-8c20-25 61-26 82-2-18-9-42-8-51 4-6 8 2 16 12 13 9-2 13-9 8-15 21 7 19 31 2 40-18 9-42 2-52-13 15 10 35 10 44 0-18 5-37-3-44-17H5c15 0 25-10 23-23-18-7-44-2-71 13Z"/>
+                  </g>
+                  <text class="element-name" x="207" y="421" text-anchor="middle">GUST</text>
+                  <text class="element-quality" x="207" y="444" text-anchor="middle">carries</text>
+                  <g class="element-emblem element-emblem-tide" transform="translate(473 327)">
+                    <circle class="element-emblem-outer" r="70"/><circle class="element-emblem-field" r="60"/>
+                    <path class="element-emblem-icon" d="M0-45c-21 29-37 46-37 67 0 20 16 33 37 33s37-13 37-33C37 1 21-16 0-45Zm-22 66c8 10 18 11 28 5 8-6 16-6 24 0-4 13-14 20-29 20-13 0-23-9-23-25Z"/>
+                  </g>
+                  <text class="element-name" x="473" y="421" text-anchor="middle">TIDE</text>
+                  <text class="element-quality" x="473" y="444" text-anchor="middle">preserves · reshapes</text>
+                  <g class="element-concord-mark" transform="translate(340 250)" aria-hidden="true">
+                    <circle r="31"/>
+                    <path class="element-concord-petal element-concord-petal-ember" d="M0-21c9 9 9 19 0 29-9-10-9-20 0-29Z"/>
+                    <path class="element-concord-petal element-concord-petal-gust" d="M-18 10c13-4 22 1 26 14-13 4-22-1-26-14Z"/>
+                    <path class="element-concord-petal element-concord-petal-tide" d="M18 10c4 13-1 22-14 26-4-13 1-22 14-26Z"/>
+                  </g>
+                </svg>
+              </figure>
+              <div class="chronicle-element-grid" hidden aria-hidden="true">
+                <article class="chronicle-element-card chronicle-element-ember"><span class="chronicle-element-sigil" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M33 5c2 12-7 15-3 25 5-4 7-9 6-14 13 10 19 23 14 34-4 8-11 12-19 12-13 0-23-9-23-22 0-10 6-18 15-27-1 8 2 13 7 16-2-9 4-15 3-24Z"/><path class="sigil-cut" d="M31 56c-7-2-11-7-10-14 1-5 4-8 8-12 0 6 5 7 5 12 3-3 5-6 5-10 5 6 6 13 3 18-2 4-6 6-11 6Z"/></svg></span><h3>Ember</h3><p>Conviction, craft and transformation.</p><small>Its danger is consuming what it meant to warm.</small></article>
+                <article class="chronicle-element-card chronicle-element-gust"><span class="chronicle-element-sigil" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M8 22c12-14 37-15 48-1-10-6-27-6-32 2-3 5 2 9 8 8 5-1 7-6 4-9 12 4 11 19 1 24-10 5-24 1-29-8 8 6 20 6 25 0-11 3-22-2-25-10h26c9 0 15-6 14-13-10-5-25-2-40 7Z"/><path class="sigil-cut" d="M16 42c8 8 20 10 30 4-6 11-23 15-34 6Z"/></svg></span><h3>Gust</h3><p>Freedom, motion and possibility.</p><small>Its danger is fleeing every duty it cannot move.</small></article>
+                <article class="chronicle-element-card chronicle-element-tide"><span class="chronicle-element-sigil" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 4C20 21 10 31 10 43c0 12 10 19 22 19s22-7 22-19C54 31 44 21 32 4Z"/><path class="sigil-cut" d="M18 43c5 7 11 8 17 3 5-4 10-4 15 0-2 8-9 12-18 12-8 0-14-5-14-15Z"/></svg></span><h3>Tide</h3><p>Memory, patience and adaptation.</p><small>Its danger is preserving what should have changed.</small></article>
+              </div>
+              <div class="chronicle-cycle-illumination" hidden aria-hidden="true">
+                <svg viewBox="0 0 520 320" role="img" aria-labelledby="livingCycleTitle livingCycleDescription">
+                  <title id="livingCycleTitle">The Living Cycle</title>
+                  <desc id="livingCycleDescription">Ember, Gust, and Tide form an unbroken illuminated cycle around the seal of the Accord.</desc>
+                  <defs>
+                    <filter id="cycleShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#3d281d" flood-opacity=".3"/></filter>
+                    <linearGradient id="cycleEmber" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d88b58"/><stop offset="1" stop-color="#8e3a35"/></linearGradient>
+                    <linearGradient id="cycleGust" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a5b67d"/><stop offset="1" stop-color="#4f7255"/></linearGradient>
+                    <linearGradient id="cycleTide" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#82b4c6"/><stop offset="1" stop-color="#3f637e"/></linearGradient>
+                    <marker id="cycleArrowEmber" viewBox="0 0 16 16" refX="12" refY="8" markerWidth="11" markerHeight="11" orient="auto"><path d="M1 1 15 8 1 15l4-7Z" fill="#934039" stroke="#eed79d" stroke-width=".8"/></marker>
+                    <marker id="cycleArrowTide" viewBox="0 0 16 16" refX="12" refY="8" markerWidth="11" markerHeight="11" orient="auto"><path d="M1 1 15 8 1 15l4-7Z" fill="#436b82" stroke="#eed79d" stroke-width=".8"/></marker>
+                    <marker id="cycleArrowGust" viewBox="0 0 16 16" refX="12" refY="8" markerWidth="11" markerHeight="11" orient="auto"><path d="M1 1 15 8 1 15l4-7Z" fill="#547257" stroke="#eed79d" stroke-width=".8"/></marker>
+                  </defs>
+                  <g class="cycle-ornament" aria-hidden="true">
+                    <path d="M48 160c0-69 41-124 98-143M472 160c0-69-41-124-98-143M48 160c0 69 41 124 98 143M472 160c0 69-41 124-98 143"/>
+                    <path d="M77 92q-29 6-35-20 26 1 35 20Zm366 0q29 6 35-20-26 1-35 20ZM77 228q-29-6-35 20 26-1 35-20Zm366 0q29-6 35 20-26-1-35-20Z"/>
+                  </g>
+                  <circle class="cycle-outer-ring" cx="260" cy="160" r="137"/>
+                  <circle class="cycle-inner-ring" cx="260" cy="160" r="123"/>
+                  <g class="cycle-bands" aria-hidden="true">
+                    <path class="cycle-band cycle-band-ember" d="M276 54C356 64 412 114 424 185" marker-end="url(#cycleArrowEmber)"/>
+                    <path class="cycle-band cycle-band-tide" d="M412 211c-48 68-126 88-196 62" marker-end="url(#cycleArrowTide)"/>
+                    <path class="cycle-band cycle-band-gust" d="M185 261c-64-46-87-126-48-195" marker-end="url(#cycleArrowGust)"/>
+                  </g>
+                  <g class="cycle-node cycle-node-ember" transform="translate(260 48)">
+                    <circle class="cycle-node-shadow" r="49"/><circle class="cycle-node-medallion" r="43"/><path class="cycle-node-icon" d="M0-26c2 14-8 17-3 28 5-4 7-9 6-14 13 11 16 29 5 38-5 4-13 5-20 1-13-7-14-24-2-37-1 8 4 12 9 14-3-12 6-19 5-30Z"/><text y="63" text-anchor="middle">EMBER</text>
+                  </g>
+                  <g class="cycle-node cycle-node-tide" transform="translate(416 225)">
+                    <circle class="cycle-node-shadow" r="49"/><circle class="cycle-node-medallion" r="43"/><path class="cycle-node-icon" d="M0-28c-13 18-23 29-23 42 0 13 10 21 23 21s23-8 23-21C23 1 13-10 0-28Zm-13 42c5 6 11 7 17 3 5-4 10-4 15 0-2 8-9 13-18 13-8 0-14-6-14-16Z"/><text y="63" text-anchor="middle">TIDE</text>
+                  </g>
+                  <g class="cycle-node cycle-node-gust" transform="translate(104 225)">
+                    <circle class="cycle-node-shadow" r="49"/><circle class="cycle-node-medallion" r="43"/><path class="cycle-node-icon" d="M-27-5c13-16 40-17 53-1-12-6-27-5-33 2-4 5 1 10 8 8 5-1 8-6 5-10 13 5 12 21 1 26-11 6-27 1-33-9 10 7 23 7 29 0-12 3-24-2-29-11H5c10 0 16-7 15-15-12-4-30-1-47 10Z"/><text y="63" text-anchor="middle">GUST</text>
+                  </g>
+                  <g class="cycle-heart" transform="translate(260 164)" filter="url(#cycleShadow)">
+                    <path class="cycle-heart-star" d="M0-59 14-42l22-7 5 22 22 5-8 21 16 15-16 15 8 21-22 5-5 22-22-7L0 87l-14-17-22 7-5-22-22-5 8-21-16-15 16-15-8-21 22-5 5-22 22 7Z"/>
+                    <circle class="cycle-heart-ring" r="45"/>
+                    <path class="cycle-heart-mark" d="M0-27 8-8l20 8-20 8-8 20-8-20-20-8 20-8Z"/>
+                    <text y="36" text-anchor="middle">ACCORD</text>
+                  </g>
+                </svg>
+              </div>
+              <p class="chronicle-figure-caption"><b>Plate II.</b> The three philosophies as rendered in the Hall of Accord.</p>
+              <p class="chronicle-page-folio">IV</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread chronicle-spread-ember" data-chronicle-page data-title="Hearthmarch" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book III · The Western Furnaces</p>
+              <h2>Hearthmarch</h2>
+              <p class="chronicle-lede"><span>H</span>earthmarch announces itself first by warmth, then by noise.</p>
+              <p>Its brick cities climb around furnaces older than their ruling houses. Glass roofs catch the afternoon sun, beacon towers speak across the hills, and public arguments are conducted with the enthusiasm of festivals.</p>
+              <p>Its people admire invention and emotional honesty. A grievance spoken is considered repairable; a grievance hidden is treated with suspicion.</p>
+              <p>Yet conviction has its shadow. Hearthmarch has produced Felden’s boldest reformers—and many of the commanders who prolonged the Severed War.</p>
+              <aside class="chronicle-marginalia"><b>Common saying</b> “A covered ember chooses its own hour.”</aside>
+              <p class="chronicle-page-folio">V</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-portrait-plate">
+              <div class="chronicle-portrait-grid">
+                <figure class="chronicle-portrait-major"><img src="./assets/cards/comet-claw.webp" alt="Comet Claw, a black feline astronomer and explorer"/><figcaption><b>Comet Claw</b><span>Astronomer, trespasser and inconvenient witness.</span></figcaption></figure>
+                <figure><img src="./assets/cards/sizzle-mittens.webp" alt="Sizzle Mittens, an Ember textile artisan"/><figcaption><b>Sizzle Mittens</b><span>Master of the fireproof looms.</span></figcaption></figure>
+                <figure><img src="./assets/cards/candle-pounce.webp" alt="Candle Pounce, keeper of ceremonial flames"/><figcaption><b>Candle Pounce</b><span>Keeper of the western lights.</span></figcaption></figure>
+              </div>
+              <p class="chronicle-figure-caption"><b>Plate III.</b> Three contemporary figures of Hearthmarch. All are believed to be living at the time of publication.</p>
+              <p class="chronicle-page-folio">VI</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread chronicle-spread-gust" data-chronicle-page data-title="Galecrest" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book IV · The Northern Heights</p>
+              <h2>Galecrest</h2>
+              <p class="chronicle-lede"><span>G</span>alecrest is joined less by roads than by agreements not to look down.</p>
+              <p>Rope bridges, wind lifts and narrow ridgeways connect its forest settlements to citadels cut into the mountains. Couriers and millers are afforded the respect other realms reserve for nobles, for both keep isolated communities alive.</p>
+              <p>Galecrest prizes independence, quick judgement and the freedom to change one’s course. Its oldest dispute concerns how much discipline freedom can endure before it becomes obedience.</p>
+              <p>Sir Squall has become the living centre of that argument.</p>
+              <aside class="chronicle-marginalia"><b>Road notice</b> When the third bell sounds, clear the western lift. The wind does not negotiate.</aside>
+              <p class="chronicle-page-folio">VII</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-portrait-plate">
+              <div class="chronicle-portrait-grid">
+                <figure class="chronicle-portrait-major"><img src="./assets/cards/sir-squall.webp" alt="Sir Squall, an armoured knight of Galecrest"/><figcaption><b>Sir Squall</b><span>Knight-commander of the high roads.</span></figcaption></figure>
+                <figure><img src="./assets/cards/gale-groomer.webp" alt="Gale Groomer, an experienced Galecrest captain"/><figcaption><b>Gale Groomer</b><span>Captain of the scattered watch.</span></figcaption></figure>
+                <figure><img src="./assets/cards/dandelion-dash.webp" alt="Dandelion Dash, a young courier of Galecrest"/><figcaption><b>Dandelion Dash</b><span>Courier of the unofficial paths.</span></figcaption></figure>
+              </div>
+              <p class="chronicle-figure-caption"><b>Plate IV.</b> Defenders and messengers of Galecrest, where information often travels faster than law.</p>
+              <p class="chronicle-page-folio">VIII</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread chronicle-spread-tide" data-chronicle-page data-title="Moonmere" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book V · The Eastern Waters</p>
+              <h2>Moonmere</h2>
+              <p class="chronicle-lede"><span>M</span>oonmere builds downward, as though history were a foundation one could visit.</p>
+              <p>Its canal cities stand above flooded streets from earlier ages. Libraries descend below the waterline behind gates maintained with ceremonial care. Records are treated not as possessions, but as obligations to those who cannot speak.</p>
+              <p>Its people esteem patience, memory and collective responsibility. Outsiders often mistake restraint for coldness. Moonmere’s inhabitants might answer that a river does not cease moving because its surface appears calm.</p>
+              <aside class="chronicle-marginalia"><b>Court maxim</b> “Remember fully. Judge slowly. Act once.”</aside>
+              <p class="chronicle-page-folio">IX</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-portrait-plate">
+              <div class="chronicle-portrait-grid">
+                <figure class="chronicle-portrait-major"><img src="./assets/cards/empress-ebb.webp" alt="Empress Ebb, sovereign of Moonmere"/><figcaption><b>Empress Ebb</b><span>Sovereign and guardian of the drowned archive.</span></figcaption></figure>
+                <figure><img src="./assets/cards/puddle-pouncer.webp" alt="Puddle Pouncer, a Tide scout"/><figcaption><b>Puddle Pouncer</b><span>Scout of the shifting waterways.</span></figcaption></figure>
+                <figure><img src="./assets/cards/bubble-bengal.webp" alt="Bubble Bengal, a Moonmere cultural ambassador"/><figcaption><b>Bubble Bengal</b><span>Performer between courts.</span></figcaption></figure>
+              </div>
+              <p class="chronicle-figure-caption"><b>Plate V.</b> The court and its less official eyes. Moonmere has always valued more than one kind of witness.</p>
+              <p class="chronicle-page-folio">X</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread chronicle-spread-history" data-chronicle-page data-title="The War of the Severed Cycle" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book VI · A Disputed History</p>
+              <h2>The War of the Severed Cycle</h2>
+              <p class="chronicle-lede"><span>N</span>o territory agrees on who began the war. This is the first fact every honest history must preserve.</p>
+              <p>Hearthmarch records an attack upon its western beacons. Galecrest remembers soldiers crossing a pass that had never accepted borders. Moonmere’s oldest surviving ledger begins three weeks later with a single line: <em>The river is carrying ash.</em></p>
+              <p>The conflict endured until victory had lost any useful meaning. Crops failed beyond the battlefields. Winds carried furnace smoke across Felden. Floodgates were opened against towns that no longer housed armies.</p>
+              <p>Nine survivors eventually met without banners. What they promised there became the Accord.</p>
+              <p class="chronicle-page-folio">XI</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-timeline-plate">
+              <figure class="chronicle-war-art">
+                <img src="./assets/chronicle/severed-cycle-war-card-style-v7.webp" alt="An Ember soldier in flame-edged forged armour lifts a fallen beam while a Tide soldier in wave-scale armour diverts floodwater from the lightly armoured Gust soldier trapped beneath it" />
+              </figure>
+              <p class="chronicle-figure-caption"><b>Plate VI.</b> No surviving account names a victor. Later artists instead depicted the moment Felden itself became the casualty.</p>
+              <div class="chronicle-war-milestones" aria-label="Milestones of the War of the Severed Cycle">
+                <article><span>Year 0</span><h3>The First Crossing</h3><p>Three official histories describe three different aggressors.</p></article>
+                <article><span>Year 4</span><h3>The Ashen Rains</h3><p>The elements cease respecting the territories that claim them.</p></article>
+                <article><span>Year 7</span><h3>The Bannerless Meeting</h3><p>Nine survivors enter the ruined hall at the border.</p></article>
+                <article><span>Year 8</span><h3>The Accord</h3><p>The war ends. Several records disappear before peace is announced.</p></article>
+              </div>
+              <div class="chronicle-redaction"><span>ARCHIVAL ABSENCE</span><p>Testimony covering the final winter remains sealed by unanimous order of the first Circle.</p></div>
+              <p class="chronicle-page-folio">XII</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread chronicle-spread-circle" data-chronicle-page data-title="The Circle of Nine Lives" hidden>
+            <section class="chronicle-leaf chronicle-copy">
+              <p class="chronicle-entry-number">Book VII · The Accord</p>
+              <h2>The Circle of Nine Lives</h2>
+              <p class="chronicle-lede"><span>T</span>he Circle governs no territory. Nevertheless, every territory has learned to fear its silence.</p>
+              <p>Three seats answer to Ember, three to Gust and three to Tide. Together they mediate disputes, maintain shared roads, preserve dangerous histories and train envoys capable of crossing borders without carrying a crown’s authority.</p>
+              <p>Ninefold Hall is their seat and Felden’s neutral ground. Its public chambers are crowded with petitioners, apprentices and visiting scholars. Its lower chambers do not appear on any approved plan.</p>
+              <p>The Circle’s seal promises impartiality. It does not promise honesty.</p>
+              <p class="chronicle-page-folio">XIII</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-seal-plate">
+              <figure class="chronicle-circle-art">
+                <img src="./assets/chronicle/circle-nine-lives-council-card-style.webp" alt="The council chamber of Ninefold Hall, with three red Ember seats, three green Gust seats, and three blue Tide seats arranged around an intentionally empty centre"/>
+              </figure>
+              <div class="chronicle-nine-seal" aria-label="Seal of the Circle of Nine Lives" hidden aria-hidden="true">
+                <span></span><span></span><span></span><span></span><b>IX</b><span></span><span></span><span></span><span></span>
+              </div>
+              <blockquote class="chronicle-seal-oath">“Let no single flame, current or wind name itself the whole world.”</blockquote>
+              <dl class="chronicle-seal-legend"><div><dt>3</dt><dd>Voices of Ember</dd></div><div><dt>3</dt><dd>Voices of Gust</dd></div><div><dt>3</dt><dd>Voices of Tide</dd></div></dl>
+              <p class="chronicle-figure-caption"><b>Plate VI.</b> The council chamber of Ninefold Hall. Its open centre represents authority intentionally left unclaimed.</p>
+              <p class="chronicle-page-folio">XIV</p>
+            </section>
+          </article>
+
+          <article class="chronicle-spread chronicle-spread-present" data-chronicle-page data-title="The Present Age" hidden>
+            <section class="chronicle-leaf chronicle-copy chronicle-present-copy">
+              <p class="chronicle-entry-number">Book VIII · Addendum, Present Age</p>
+              <h2>The Present Age</h2>
+              <p class="chronicle-lede"><span>T</span>his edition closes during a season of small impossibilities.</p>
+              <div class="chronicle-incident-list">
+                <p><b>Hearthmarch</b><span>Seven beacon flames observed producing light without warmth.</span></p>
+                <p><b>Galecrest</b><span>The western lift remained still beneath a documented northern gale.</span></p>
+                <p><b>Moonmere</b><span>A sealed pool repeated testimony one day before it was given.</span></p>
+              </div>
+              <p>The Circle considers these events unrelated. This archivist records that sentence only because someone has taken considerable care to make it official.</p>
+              <p class="chronicle-page-folio">XV</p>
+            </section>
+            <section class="chronicle-leaf chronicle-plate chronicle-project-plate">
+              <div class="chronicle-character-pair">
+                <figure><img src="./assets/characters/professor-paws.webp" alt="Professor Paws, Grandmaster and historian"/><figcaption><b>Professor Paws</b><span>Grandmaster · Examiner · Historian</span></figcaption></figure>
+                <figure><img src="./assets/characters/rookie.webp" alt="Pawcadet, a young orange tabby apprentice"/><figcaption><b>Pawcadet</b><span>Apprentice · Border-born · Unaffiliated</span></figcaption></figure>
+              </div>
+              <div class="chronicle-sealed-memo">
+                <p>CIRCLE OF NINE LIVES · INTERNAL ROUTING</p>
+                <h3>PROJECT: <span>PROWL</span></h3>
+                <div aria-label="Redacted text"><i></i><i></i><i></i></div>
+                <small>PUBLIC COPY ENDS HERE</small>
+              </div>
+              <p class="chronicle-figure-caption"><b>Final plate.</b> Two names recur in correspondence removed from the public archive.</p>
+              <p class="chronicle-page-folio">XVI</p>
+            </section>
+          </article>
+        </div>
+      </div>
+
+      <nav class="chronicle-navigation" aria-label="Chronicle page navigation">
+        <button class="chronicle-page-button" id="chroniclePreviousButton" type="button" aria-label="Previous entry">‹ <span>Previous</span></button>
+        <div class="chronicle-progress" aria-live="polite">
+          <span id="chronicleProgressLabel">Frontispiece</span>
+          <small id="chronicleProgressCount">Entry 1 of 9</small>
+        </div>
+        <button class="chronicle-page-button" id="chronicleNextButton" type="button" aria-label="Next entry"><span>Next</span> ›</button>
+      </nav>
     </section>
 
     <div class="game-menu-overlay" id="gameMenuOverlay" hidden>
@@ -1035,6 +1492,7 @@
     <script defer src="./src/viewport.js"></script>
     <script defer src="./src/rules.js"></script>
     <script defer src="./src/audio.js"></script>
+    <script defer src="./src/chronicle.js"></script>
     <script defer src="./src/game.js"></script>
   </body>
 </html>
