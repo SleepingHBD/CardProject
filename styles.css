@@ -10850,6 +10850,111 @@ body.chronicle-active {
   line-height: 1.4;
 }
 
+.chronicle-spread-war-detail .chronicle-leaf {
+  align-content: start;
+}
+
+.chronicle-war-detail-leaf h2 {
+  margin-bottom: clamp(10px, 1.8dvh, 18px);
+  font-size: clamp(22px, 2.7vw, 39px);
+}
+
+.chronicle-war-detail-leaf .chronicle-lede {
+  max-width: 58ch;
+  margin-bottom: clamp(12px, 2dvh, 20px) !important;
+  font-size: clamp(14px, 1.2vw, 18px) !important;
+  line-height: 1.42 !important;
+}
+
+.chronicle-war-phase {
+  --war-phase-accent: #81513b;
+  position: relative;
+  margin: 0 0 clamp(10px, 1.6dvh, 16px);
+  padding: clamp(10px, 1.25vw, 15px) clamp(12px, 1.4vw, 18px);
+  background: rgba(255, 248, 220, .28);
+  border: 1px solid rgba(91, 58, 34, .25);
+  border-left: 5px solid var(--war-phase-accent);
+  box-shadow: inset 0 1px rgba(255, 252, 232, .46);
+}
+
+.chronicle-war-phase-ashen { --war-phase-accent: #8b6b3a; }
+.chronicle-war-phase-bannerless { --war-phase-accent: #536b4e; }
+.chronicle-war-phase-accord { --war-phase-accent: #496a7d; }
+
+.chronicle-war-phase header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.chronicle-war-phase header span {
+  flex: 0 0 auto;
+  color: var(--war-phase-accent);
+  font-family: "Cinzel", serif;
+  font-size: clamp(8px, .68vw, 10px);
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.chronicle-war-phase h3 {
+  margin: 0;
+  color: #493024;
+  font-family: "Cinzel", serif;
+  font-size: clamp(13px, 1.15vw, 17px);
+  line-height: 1.15;
+}
+
+.chronicle-war-phase .chronicle-war-phase-purpose {
+  margin: -1px 0 7px;
+  color: var(--war-phase-accent);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: clamp(9px, .75vw, 11px);
+  font-weight: 800;
+  letter-spacing: .045em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.chronicle-war-phase p {
+  margin: 0;
+  color: #5f4634;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(11px, .92vw, 14px);
+  line-height: 1.42;
+}
+
+.chronicle-war-phase p + p {
+  margin-top: .58em;
+}
+
+.chronicle-war-source-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-top: 2px;
+  padding: 9px 12px;
+  color: #674b35;
+  background: rgba(92, 68, 44, .09);
+  border-top: 1px solid rgba(92, 58, 32, .28);
+  border-bottom: 1px solid rgba(92, 58, 32, .28);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(10px, .82vw, 12px);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.chronicle-war-source-note b {
+  color: #5b3925;
+  font-family: "Cinzel", serif;
+  font-size: .78em;
+  font-style: normal;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
 .chronicle-seal-plate {
   place-items: center;
   text-align: center;
@@ -11537,6 +11642,58 @@ body.chronicle-active {
 
   .chronicle-redaction {
     padding: 7px 9px;
+  }
+
+  .chronicle-war-detail-leaf h2 {
+    margin-bottom: 6px;
+    font-size: clamp(18px, 3vw, 25px);
+  }
+
+  .chronicle-war-detail-leaf .chronicle-lede {
+    margin-bottom: 7px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  .chronicle-war-phase {
+    margin-bottom: 5px;
+    padding: 5px 7px;
+    border-left-width: 3px;
+  }
+
+  .chronicle-war-phase header {
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  .chronicle-war-phase header span {
+    font-size: 6px;
+  }
+
+  .chronicle-war-phase h3 {
+    font-size: 9px;
+  }
+
+  .chronicle-war-phase .chronicle-war-phase-purpose {
+    margin: 0 0 2px;
+    font-size: 6px;
+    line-height: 1.1;
+  }
+
+  .chronicle-war-phase p {
+    font-size: 8px;
+    line-height: 1.27;
+  }
+
+  .chronicle-war-phase p + p {
+    margin-top: .36em;
+  }
+
+  .chronicle-war-source-note {
+    gap: 5px;
+    padding: 4px 6px;
+    font-size: 7px;
+    line-height: 1.2;
   }
 
   .chronicle-timeline-plate .chronicle-redaction {
