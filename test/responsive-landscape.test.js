@@ -62,7 +62,7 @@ test("landscape tablets preserve the roomy board and coarse-pointer controls", (
   assert.match(styleSource, /-webkit-user-drag: none;/);
 });
 
-test("short landscape menus keep music credits out of the action column", () => {
+test("short landscape menus anchor music credits to the bottom-left", () => {
   const landscapeRules = styleSource.match(
     /\/\* -+\n   Landscape play surfaces[\s\S]*$/,
   )?.[0];
@@ -70,5 +70,8 @@ test("short landscape menus keep music credits out of the action column", () => 
   assert.ok(landscapeRules, "landscape play-surface rules should exist");
   assert.match(landscapeRules, /\.main-menu-screen \{[\s\S]*?grid-template-rows: auto auto auto auto;/);
   assert.match(landscapeRules, /\.main-menu-actions \{[\s\S]*?grid-column: 2;[\s\S]*?grid-row: 1 \/ span 4;/);
-  assert.match(landscapeRules, /\.main-menu-music-credit \{[\s\S]*?position: relative;[\s\S]*?grid-column: 1;[\s\S]*?grid-row: 4;/);
+  assert.match(
+    landscapeRules,
+    /\.main-menu-music-credit \{[\s\S]*?position: absolute;[\s\S]*?bottom: max\(8px, env\(safe-area-inset-bottom\)\);[\s\S]*?left: max\(10px, env\(safe-area-inset-left\)\);/,
+  );
 });

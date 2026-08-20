@@ -7115,16 +7115,17 @@ input {
 .main-menu-music-credit {
   position: absolute;
   z-index: 1;
-  left: 50%;
-  bottom: clamp(18px, 3vh, 30px);
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(clamp(14px, 2.5vh, 24px), env(safe-area-inset-bottom));
   width: min(620px, calc(100% - 48px));
   margin: 0;
-  transform: translateX(-50%);
+  transform: none;
   color: rgba(235, 216, 169, .72);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .04em;
   line-height: 1.35;
+  text-align: left;
 }
 
 .main-menu-music-credit a {
@@ -9053,18 +9054,15 @@ input {
   }
 
   .main-menu-music-credit {
-    position: relative;
+    position: absolute;
     right: auto;
-    bottom: auto;
-    left: auto;
-    grid-column: 1;
-    grid-row: 4;
-    align-self: start;
-    justify-self: center;
-    width: min(520px, 100%);
-    margin: clamp(4px, 1.2dvh, 8px) auto 0;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    width: min(520px, calc(100% - 20px));
+    margin: 0;
     transform: none;
     font-size: 7px;
+    text-align: left;
   }
 
   .gallery-dialog,
