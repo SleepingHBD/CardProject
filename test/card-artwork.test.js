@@ -29,3 +29,14 @@ test("Teapot Tabby uses Bell's photograph with illustrated fallback support", ()
   assert.match(styleSource, /\.art-teapot-tabby\.uses-photographic-art \.card-art img/);
   assert.match(styleSource, /transform: translateX\(15%\)/);
 });
+
+test("Bell's photographic card uses its mode-specific character name", () => {
+  assert.match(
+    gameSource,
+    /const PHOTOGRAPHIC_CARD_NAMES = Object\.freeze\(\{[\s\S]*?"teapot-tabby": "Peasant Bell"/,
+  );
+  assert.match(gameSource, /function cardDisplayName\(card\)/);
+  assert.match(gameSource, /PHOTOGRAPHIC_CARD_NAMES\[card\.art\] \|\| card\.name/);
+  assert.match(gameSource, /<strong>\$\{displayName\}<\/strong>/);
+  assert.match(gameSource, /cardDisplayName\(a\)\.localeCompare\(cardDisplayName\(b\)\)/);
+});

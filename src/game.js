@@ -95,6 +95,9 @@ const ARTWORK_STYLE_STORAGE_KEY = "projectProwl.artworkStyle";
 const PHOTOGRAPHIC_CARD_ART = Object.freeze({
   "teapot-tabby": "./assets/cards/photographic/teapot-tabby-bell.jpg",
 });
+const PHOTOGRAPHIC_CARD_NAMES = Object.freeze({
+  "teapot-tabby": "Peasant Bell",
+});
 const AUDIO_VOLUME_STORAGE_KEY = "projectProwl.audioVolumes";
 const DEFAULT_AUDIO_VOLUMES = Object.freeze({
   master: 0.72,
@@ -1238,7 +1241,10 @@ function renderTutorialCoach() {
     } else if (selected.length && !prefixFormation) {
       ui.tutorialCoachTitle.textContent = "Try a different order";
       ui.tutorialCoachText.textContent =
-        `Required order: ${lesson.expected.map((art) => CARD_LIBRARY.find((card) => card.art === art)?.name).join(" → ")}.`;
+        `Required order: ${lesson.expected.map((art) => {
+          const card = CARD_LIBRARY.find((candidate) => candidate.art === art);
+          return card ? cardDisplayName(card) : "Unknown card";
+        }).join(" → ")}.`;
       ui.tutorialObjective.textContent =
         "Click a placed card to return it to your hand, then follow the highlighted card.";
     } else {
@@ -1248,7 +1254,7 @@ function renderTutorialCoach() {
       const nextArt = lesson.expected[selected.length];
       const nextCard = CARD_LIBRARY.find((card) => card.art === nextArt);
       ui.tutorialObjective.textContent = placementGuidance?.objective || (nextCard
-        ? `Place ${nextCard.name} into Lane ${selected.length + 1}.`
+        ? `Place ${cardDisplayName(nextCard)} into Lane ${selected.length + 1}.`
         : lesson.objective);
     }
   } else if (tutorial.phase === "claim") {
@@ -1278,6 +1284,10 @@ function renderTutorialCoach() {
       "In a real duel, collect two Ember, two Gust, and two Tide trophies before Professor Paws.";
     ui.tutorialActionButton.textContent = finalLesson ? "Finish Training" : "Continue";
   }
+
+  [ui.tutorialCoachTitle, ui.tutorialCoachText, ui.tutorialObjective].forEach((copyTarget) => {
+    copyTarget.textContent = artworkAdjustedCopy(copyTarget.textContent);
+  });
 
   window.requestAnimationFrame(() => {
     applyTutorialHighlights();
@@ -1554,7 +1564,7 @@ function completeTutorialTrophyClaim(reward) {
     pending.resolution,
   );
   setMessage(
-    `${reward.card.name} becomes your training trophy!`,
+    `${cardDisplayName(reward.card)} becomes your training trophy!`,
     "A normal duel asks you to collect two trophies from each element.",
   );
   finishTutorialLesson();
@@ -2079,6 +2089,20 @@ function cardUsesPhotographicArtwork(cardArt) {
   return state.artworkStyle === "photographic" && Boolean(PHOTOGRAPHIC_CARD_ART[cardArt]);
 }
 
+function cardDisplayName(card) {
+  return state.artworkStyle === "photographic"
+    ? PHOTOGRAPHIC_CARD_NAMES[card.art] || card.name
+    : card.name;
+}
+
+function artworkAdjustedCopy(copy = "") {
+  if (state.artworkStyle !== "photographic") return copy;
+  return Object.entries(PHOTOGRAPHIC_CARD_NAMES).reduce((adjustedCopy, [cardArt, displayName]) => {
+    const originalName = CARD_LIBRARY.find((card) => card.art === cardArt)?.name;
+    return originalName ? adjustedCopy.replaceAll(originalName, displayName) : adjustedCopy;
+  }, String(copy));
+}
+
 function cardArtworkSource(cardArt) {
   return cardUsesPhotographicArtwork(cardArt)
     ? PHOTOGRAPHIC_CARD_ART[cardArt]
@@ -2089,9 +2113,23 @@ function updateDisplayedCardArtwork() {
   document.documentElement.dataset.cardArtwork = state.artworkStyle;
   document.querySelectorAll(".game-card[data-card-template]").forEach((cardElement) => {
     const cardArt = cardElement.dataset.cardTemplate;
+    const card = CARD_LIBRARY.find((candidate) => candidate.art === cardArt);
     const usesPhotograph = cardUsesPhotographicArtwork(cardArt);
     const image = cardElement.querySelector(".card-art img");
     if (image) image.src = cardArtworkSource(cardArt);
+    if (card) {
+      const displayName = cardDisplayName(card);
+      const name = cardElement.querySelector(".card-info > strong");
+      if (name) name.textContent = displayName;
+      if (cardElement.hasAttribute("aria-label")) {
+        cardElement.setAttribute(
+          "aria-label",
+          [card.name, PHOTOGRAPHIC_CARD_NAMES[cardArt]]
+            .filter(Boolean)
+            .reduce((label, knownName) => label.replaceAll(knownName, displayName), cardElement.getAttribute("aria-label")),
+        );
+      }
+    }
     cardElement.classList.toggle("uses-photographic-art", usesPhotograph);
   });
 }
@@ -2109,9 +2147,10 @@ function cardMarkup(
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
   const isExtraCard = displayMode === "extra-card";
+  const displayName = cardDisplayName(card);
   const interactionLabel = isFormationCard
-    ? `Remove ${card.name} from lane ${selectedIndex + 1}`
-    : `Add ${card.name}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
+    ? `Remove ${displayName} from lane ${selectedIndex + 1}`
+    : `Add ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
       <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
@@ -2144,7 +2183,7 @@ function cardMarkup(
         <span class="card-power"><small>POWER</small><b>${card.power}</b></span>
       </span>
       <span class="card-info">
-        <strong>${card.name}</strong>
+        <strong>${displayName}</strong>
         <small title="${tactic.description}">${element.label} · <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-${tactic.icon}"></use></svg> ${tactic.label}</small>
       </span>
       <span class="card-ability">
@@ -2485,19 +2524,19 @@ function renderGallery() {
     sortedCards.sort((a, b) =>
       RARITY_SORT_ORDER[b.rarity] - RARITY_SORT_ORDER[a.rarity]
       || b.power - a.power
-      || a.name.localeCompare(b.name));
+      || cardDisplayName(a).localeCompare(cardDisplayName(b)));
   } else if (state.archiveSort === "power") {
     sortedCards.sort((a, b) =>
       b.power - a.power
-      || a.name.localeCompare(b.name));
+      || cardDisplayName(a).localeCompare(cardDisplayName(b)));
   } else if (state.archiveSort === "name") {
-    sortedCards.sort((a, b) => a.name.localeCompare(b.name));
+    sortedCards.sort((a, b) => cardDisplayName(a).localeCompare(cardDisplayName(b)));
   } else {
     sortedCards.sort((a, b) =>
       ELEMENT_SORT_ORDER[a.element] - ELEMENT_SORT_ORDER[b.element]
       || RARITY_SORT_ORDER[a.rarity] - RARITY_SORT_ORDER[b.rarity]
       || a.power - b.power
-      || a.name.localeCompare(b.name));
+      || cardDisplayName(a).localeCompare(cardDisplayName(b)));
   }
 
   ui.galleryIntro.textContent = sortedCards.length === CARD_LIBRARY.length
@@ -2602,6 +2641,7 @@ function snapshotHistoryCard(card) {
   if (!card) return null;
   return {
     name: card.name,
+    art: card.art,
     element: card.element,
     power: card.power,
     tactic: card.tactic,
@@ -2675,7 +2715,7 @@ function historyLaneCellMarkup(entry, side, index) {
   return `
     <article
       class="history-lane-cell history-cell-${outcome.toLowerCase()} history-element-${card.element}"
-      title="${card.name}"
+      title="${cardDisplayName(card)}"
       aria-label="Lane ${index + 1}, ${outcome}, ${element.label}, power ${card.power}, ${tactic.label}. ${scoreLabel}."
     >
       <em>${outcome}</em>
@@ -2779,7 +2819,7 @@ function renderPreviousRoundsHistory() {
               ? `<strong>${trophyOwner}</strong>
                 <span
                   class="history-trophy-summary history-element-${entry.trophy.card.element}"
-                  title="${entry.trophy.card.name}: ${trophyLabel}"
+                  title="${cardDisplayName(entry.trophy.card)}: ${trophyLabel}"
                   aria-label="${trophyLabel}"
                 >
                   <b>${trophyElement.icon}</b>
@@ -2834,10 +2874,10 @@ function showTrophyClaim(options, playerCards, aiCards, resolution) {
         class="trophy-claim-option element-${card.element}"
         data-trophy-card="${card.instanceId}"
         type="button"
-        aria-label="Claim ${card.name} from Lane ${option.lane + 1} as your trophy${needed ? "; this element is still needed" : "; this element is already complete"}"
+        aria-label="Claim ${cardDisplayName(card)} from Lane ${option.lane + 1} as your trophy${needed ? "; this element is still needed" : "; this element is already complete"}"
       >
         <i aria-hidden="true">${element.icon}</i>
-        <span><b>${card.name}</b><small>Lane ${option.lane + 1} · ${needed ? "NEEDED" : "EXTRA"}</small></span>
+        <span><b>${cardDisplayName(card)}</b><small>Lane ${option.lane + 1} · ${needed ? "NEEDED" : "EXTRA"}</small></span>
       </button>
     `;
   }).join("");
@@ -2849,7 +2889,7 @@ function showTrophyClaim(options, playerCards, aiCards, resolution) {
 }
 
 function setMessage(title, detail) {
-  ui.turnMessage.innerHTML = `<strong>${title}</strong><span>${detail}</span>`;
+  ui.turnMessage.innerHTML = `<strong>${artworkAdjustedCopy(title)}</strong><span>${artworkAdjustedCopy(detail)}</span>`;
 }
 
 function removeCard(hand, instanceId) {
@@ -3077,7 +3117,7 @@ async function animateClashes(playerCards, aiCards) {
 
       setMessage(
         `Clash ${index + 1} of ${resolution.results.length}!`,
-        `${playerCards[index].name} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
+        `${cardDisplayName(playerCards[index])} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
       );
 
       playerLane.classList.add("clashing");
@@ -3144,7 +3184,7 @@ async function animateClashes(playerCards, aiCards) {
         }[winningCard.element];
         setMessage(
           `${element.label} claims Lane ${index + 1}!`,
-          `${winningCard.name} ${defeatCopy}`,
+          `${cardDisplayName(winningCard)} ${defeatCopy}`,
         );
         createDefeatEffect(losingLane, winningCard.element);
         const losingLaneRect = losingLane.getBoundingClientRect();
@@ -3287,7 +3327,7 @@ function completeRoundReward(
 
   if (claimMessage && reward?.card) {
     setMessage(
-      `${reward.card.name} becomes your trophy!`,
+      `${cardDisplayName(reward.card)} becomes your trophy!`,
       claimMessage,
     );
   }
@@ -3319,7 +3359,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
       reward = rewardOptions[0] || null;
       setMessage(
         `Your extra cards win the round, ${score.player}–${score.ai} Round Points!`,
-        `${reward.card.name}, your first extra card, becomes the round trophy.`,
+        `${cardDisplayName(reward.card)}, your first extra card, becomes the round trophy.`,
       );
     } else if (rewardOptions.length > 1) {
       awaitsPlayerClaim = true;
@@ -3331,7 +3371,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
       reward = rewardOptions[0] || null;
       setMessage(
         `You win with ${score.player}–${score.ai} Round Points!`,
-        `Lane ${reward.lane + 1}'s ${reward.card.name} becomes your round trophy.`,
+        `Lane ${reward.lane + 1}'s ${cardDisplayName(reward.card)} becomes your round trophy.`,
       );
     }
     ui.versusBadge.classList.add("win");
@@ -3344,12 +3384,12 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
     if (decidedBy === "extra-cards") {
       setMessage(
         `Professor Paws' extra cards win ${score.ai}–${score.player}.`,
-        `${reward.card.name}, the first extra card, becomes the professor's trophy.`,
+        `${cardDisplayName(reward.card)}, the first extra card, becomes the professor's trophy.`,
       );
     } else {
       setMessage(
         `Professor Paws wins with ${score.ai}–${score.player} Round Points.`,
-        `The professor claims ${reward.card.name} from lane ${reward.lane + 1}.`,
+        `The professor claims ${cardDisplayName(reward.card)} from lane ${reward.lane + 1}.`,
       );
     }
     ui.versusBadge.classList.add("lose");
@@ -3622,6 +3662,9 @@ function renderArtworkSettings(saved = true) {
       : "Illustrated card artwork is selected for this session. Browser storage is unavailable.";
   }
   updateDisplayedCardArtwork();
+  renderGallery();
+  renderPreviousRoundsHistory();
+  if (tutorial.active) renderTutorialCoach();
 }
 
 function renderSettings(clashSaved = true, audioSaved = true, artworkSaved = true) {
