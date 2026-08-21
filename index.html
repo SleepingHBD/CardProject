@@ -415,7 +415,7 @@
       <p class="eyebrow">DUEL SETTINGS</p>
       <h2 id="settingsTitle">Settings</h2>
       <p class="settings-intro" id="settingsIntro">
-        Adjust the duel’s presentation and audio. These choices are saved for this browser.
+        Adjust the duel’s artwork, presentation, and audio. These choices are saved for this browser.
       </p>
       <div class="settings-tabs" role="tablist" aria-label="Settings sections">
         <button
@@ -431,6 +431,17 @@
         </button>
         <button
           class="settings-tab"
+          id="artworkSettingsTab"
+          data-settings-panel="artwork"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="artworkSettingsPanel"
+        >
+          Card Artwork
+        </button>
+        <button
+          class="settings-tab"
           id="clashSettingsTab"
           data-settings-panel="clash"
           type="button"
@@ -441,6 +452,38 @@
           Clash Presentation
         </button>
       </div>
+      <section
+        class="settings-panel"
+        id="artworkSettingsPanel"
+        role="tabpanel"
+        aria-labelledby="artworkSettingsTab"
+        hidden
+      >
+        <fieldset class="clash-style-options artwork-style-options">
+          <legend>Card artwork</legend>
+          <label class="clash-style-option artwork-style-option">
+            <input type="radio" name="artworkStyle" value="illustrated" />
+            <span class="clash-style-seal illustrated-art-seal" aria-hidden="true">I</span>
+            <span>
+              <strong>Illustrated</strong>
+              <small>Uses Project: Prowl’s original cartoon artwork throughout the complete card collection.</small>
+              <em>Original collection · Complete</em>
+            </span>
+          </label>
+          <label class="clash-style-option artwork-style-option">
+            <input type="radio" name="artworkStyle" value="photographic" />
+            <span class="clash-style-seal photographic-art-seal" aria-hidden="true">P</span>
+            <span>
+              <strong>Photographic</strong>
+              <small>Uses real medieval pet portraits where available. Cards awaiting a photograph keep their illustration.</small>
+              <em>Growing collection · Illustrated fallback</em>
+            </span>
+          </label>
+        </fieldset>
+        <p class="settings-status" id="artworkSettingsStatus" aria-live="polite">
+          Illustrated card artwork is currently selected.
+        </p>
+      </section>
       <section
         class="settings-panel"
         id="clashSettingsPanel"

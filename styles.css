@@ -1805,6 +1805,16 @@ h1 {
   object-position: center 35%;
 }
 
+.art-teapot-tabby.uses-photographic-art .card-art img {
+  object-position: center 12%;
+  transform: translateX(15%);
+  filter: saturate(.92) contrast(1.04) brightness(1.02);
+}
+
+.art-teapot-tabby.uses-photographic-art .card-art {
+  background: #050505;
+}
+
 .art-vignette {
   position: absolute;
   inset: 0;
@@ -7164,7 +7174,7 @@ input {
   margin: 0 auto 17px;
   padding: 4px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   background: rgba(83, 53, 35, .14);
   border: 1px solid #987244;
@@ -7296,6 +7306,18 @@ input {
   background:
     radial-gradient(circle, rgba(236,187,92,.25), transparent 55%),
     linear-gradient(#673841, #39202d);
+}
+
+.illustrated-art-seal {
+  background:
+    radial-gradient(circle, rgba(235, 198, 119, .2), transparent 58%),
+    linear-gradient(#5d4934, #35271f);
+}
+
+.photographic-art-seal {
+  background:
+    radial-gradient(circle, rgba(213, 180, 118, .22), transparent 58%),
+    linear-gradient(#53605a, #2d3935);
 }
 
 .clash-style-option strong,

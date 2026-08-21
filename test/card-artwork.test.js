@@ -1,0 +1,31 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, statSync } from "node:fs";
+
+const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
+const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+const teapotPhoto = new URL(
+  "../assets/cards/photographic/teapot-tabby-bell.jpg",
+  import.meta.url,
+);
+
+test("settings offer persistent illustrated and photographic card artwork", () => {
+  assert.match(pageSource, /id="artworkSettingsTab"[\s\S]*?Card Artwork/);
+  assert.match(pageSource, /name="artworkStyle" value="illustrated"/);
+  assert.match(pageSource, /name="artworkStyle" value="photographic"/);
+  assert.match(gameSource, /projectProwl\.artworkStyle/);
+  assert.match(gameSource, /saveArtworkStyle\(state\.artworkStyle\)/);
+});
+
+test("Teapot Tabby uses Bell's photograph with illustrated fallback support", () => {
+  assert.ok(statSync(teapotPhoto).size > 100_000);
+  assert.match(
+    gameSource,
+    /"teapot-tabby": "\.\/assets\/cards\/photographic\/teapot-tabby-bell\.jpg"/,
+  );
+  assert.match(gameSource, /PHOTOGRAPHIC_CARD_ART\[cardArt\]/);
+  assert.match(gameSource, /`\.\/assets\/cards\/\$\{cardArt\}\.webp`/);
+  assert.match(styleSource, /\.art-teapot-tabby\.uses-photographic-art \.card-art img/);
+  assert.match(styleSource, /transform: translateX\(15%\)/);
+});

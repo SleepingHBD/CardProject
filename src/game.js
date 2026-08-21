@@ -90,6 +90,11 @@ const ARCHIVE_SORT_SUMMARIES = {
 };
 const CLASH_STYLES = Object.freeze(["cinematic", "classic"]);
 const CLASH_STYLE_STORAGE_KEY = "projectProwl.clashStyle";
+const ARTWORK_STYLES = Object.freeze(["illustrated", "photographic"]);
+const ARTWORK_STYLE_STORAGE_KEY = "projectProwl.artworkStyle";
+const PHOTOGRAPHIC_CARD_ART = Object.freeze({
+  "teapot-tabby": "./assets/cards/photographic/teapot-tabby-bell.jpg",
+});
 const AUDIO_VOLUME_STORAGE_KEY = "projectProwl.audioVolumes";
 const DEFAULT_AUDIO_VOLUMES = Object.freeze({
   master: 0.72,
@@ -499,6 +504,15 @@ function readSavedClashStyle() {
   }
 }
 
+function readSavedArtworkStyle() {
+  try {
+    const savedStyle = window.localStorage.getItem(ARTWORK_STYLE_STORAGE_KEY);
+    return ARTWORK_STYLES.includes(savedStyle) ? savedStyle : "illustrated";
+  } catch {
+    return "illustrated";
+  }
+}
+
 function normalizedAudioVolumes(volumes = {}) {
   return Object.fromEntries(
     Object.entries(DEFAULT_AUDIO_VOLUMES).map(([key, fallback]) => {
@@ -546,6 +560,7 @@ const state = {
   dealing: false,
   soundOn: true,
   clashStyle: readSavedClashStyle(),
+  artworkStyle: readSavedArtworkStyle(),
   audioVolumes: readSavedAudioVolumes(),
 };
 const tutorial = {
@@ -617,6 +632,7 @@ const ui = {
   gameMenuNote: document.querySelector("#gameMenuNote"),
   settingsDialog: document.querySelector("#settingsDialog"),
   settingsStatus: document.querySelector("#settingsStatus"),
+  artworkSettingsStatus: document.querySelector("#artworkSettingsStatus"),
   audioSettingsStatus: document.querySelector("#audioSettingsStatus"),
   settingsTabs: document.querySelectorAll("[data-settings-panel]"),
   settingsPanels: document.querySelectorAll(".settings-panel"),
@@ -2059,6 +2075,27 @@ function renderAftermathBreakdown(playerCards, resolution) {
   ui.matchupForecast.innerHTML = summary + laneBreakdown;
 }
 
+function cardUsesPhotographicArtwork(cardArt) {
+  return state.artworkStyle === "photographic" && Boolean(PHOTOGRAPHIC_CARD_ART[cardArt]);
+}
+
+function cardArtworkSource(cardArt) {
+  return cardUsesPhotographicArtwork(cardArt)
+    ? PHOTOGRAPHIC_CARD_ART[cardArt]
+    : `./assets/cards/${cardArt}.webp`;
+}
+
+function updateDisplayedCardArtwork() {
+  document.documentElement.dataset.cardArtwork = state.artworkStyle;
+  document.querySelectorAll(".game-card[data-card-template]").forEach((cardElement) => {
+    const cardArt = cardElement.dataset.cardTemplate;
+    const usesPhotograph = cardUsesPhotographicArtwork(cardArt);
+    const image = cardElement.querySelector(".card-art img");
+    if (image) image.src = cardArtworkSource(cardArt);
+    cardElement.classList.toggle("uses-photographic-art", usesPhotograph);
+  });
+}
+
 function cardMarkup(
   card,
   interactive = false,
@@ -2093,7 +2130,7 @@ function cardMarkup(
     : "";
   return `
     <button
-      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${isFormationCard ? " selected formation-card" : ""}"
+      class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${cardUsesPhotographicArtwork(card.art) ? " uses-photographic-art" : ""}${isFormationCard ? " selected formation-card" : ""}"
       data-card-template="${card.art}"
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       type="button"
@@ -2101,7 +2138,7 @@ function cardMarkup(
       ${formationBonusBadge}
       ${resolvedBonusBadge}
       <span class="card-art">
-        <img src="./assets/cards/${card.art}.webp" alt="" draggable="false" />
+        <img src="${cardArtworkSource(card.art)}" alt="" draggable="false" />
         <span class="art-vignette" aria-hidden="true"></span>
         <span class="card-element" aria-hidden="true">${element.icon}</span>
         <span class="card-power"><small>POWER</small><b>${card.power}</b></span>
@@ -3536,6 +3573,15 @@ function saveClashStyle(clashStyle) {
   }
 }
 
+function saveArtworkStyle(artworkStyle) {
+  try {
+    window.localStorage.setItem(ARTWORK_STYLE_STORAGE_KEY, artworkStyle);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function saveAudioVolumes(audioVolumes) {
   try {
     window.localStorage.setItem(
@@ -3561,7 +3607,24 @@ function renderAudioSettings(saved = true) {
     : "Audio levels are set for this session. Browser storage is unavailable.";
 }
 
-function renderSettings(clashSaved = true, audioSaved = true) {
+function renderArtworkSettings(saved = true) {
+  document.querySelectorAll('input[name="artworkStyle"]').forEach((option) => {
+    option.checked = option.value === state.artworkStyle;
+  });
+  const photographicCount = Object.keys(PHOTOGRAPHIC_CARD_ART).length;
+  if (state.artworkStyle === "photographic") {
+    ui.artworkSettingsStatus.textContent = saved
+      ? `Photographic artwork is saved. ${photographicCount} of ${CARD_LIBRARY.length} cards currently has a real pet portrait; the remaining cards use illustrated artwork.`
+      : `Photographic artwork is active for this session. ${photographicCount} of ${CARD_LIBRARY.length} cards currently has a real pet portrait; browser storage is unavailable.`;
+  } else {
+    ui.artworkSettingsStatus.textContent = saved
+      ? "Illustrated card artwork is selected and saved for this browser."
+      : "Illustrated card artwork is selected for this session. Browser storage is unavailable.";
+  }
+  updateDisplayedCardArtwork();
+}
+
+function renderSettings(clashSaved = true, audioSaved = true, artworkSaved = true) {
   document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
     option.checked = option.value === state.clashStyle;
   });
@@ -3569,6 +3632,7 @@ function renderSettings(clashSaved = true, audioSaved = true) {
   ui.settingsStatus.textContent = clashSaved
     ? `${styleLabel} clashes are selected and saved for this browser.`
     : `${styleLabel} clashes are selected for this session. Browser storage is unavailable.`;
+  renderArtworkSettings(artworkSaved);
   renderAudioSettings(audioSaved);
 }
 
@@ -3934,6 +3998,13 @@ document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
     renderSettings(saveClashStyle(state.clashStyle));
   });
 });
+document.querySelectorAll('input[name="artworkStyle"]').forEach((option) => {
+  option.addEventListener("change", () => {
+    if (!option.checked || !ARTWORK_STYLES.includes(option.value)) return;
+    state.artworkStyle = option.value;
+    renderArtworkSettings(saveArtworkStyle(state.artworkStyle));
+  });
+});
 ui.audioVolumeInputs.forEach((input) => {
   input.addEventListener("input", () => {
     const volumeKey = input.dataset.audioVolume;
@@ -3999,6 +4070,7 @@ audio.setVolumes(state.audioVolumes);
 renderSettings(
   saveClashStyle(state.clashStyle),
   saveAudioVolumes(state.audioVolumes),
+  saveArtworkStyle(state.artworkStyle),
 );
 renderFullscreenControls();
 showMainMenu();
