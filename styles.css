@@ -1815,6 +1815,15 @@ h1 {
   background: #050505;
 }
 
+.art-cinder-kit.uses-photographic-art .card-art img {
+  object-position: center 22%;
+  filter: saturate(.94) contrast(1.04) brightness(1.02);
+}
+
+.art-cinder-kit.uses-photographic-art .card-art {
+  background: #100a08;
+}
+
 .art-vignette {
   position: absolute;
   inset: 0;

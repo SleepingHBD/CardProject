@@ -94,9 +94,11 @@ const ARTWORK_STYLES = Object.freeze(["illustrated", "photographic"]);
 const ARTWORK_STYLE_STORAGE_KEY = "projectProwl.artworkStyle";
 const PHOTOGRAPHIC_CARD_ART = Object.freeze({
   "teapot-tabby": "./assets/cards/photographic/teapot-tabby-bell.jpg",
+  "cinder-kit": "./assets/cards/photographic/cinder-shiopan.png",
 });
 const PHOTOGRAPHIC_CARD_NAMES = Object.freeze({
   "teapot-tabby": "Peasant Bell",
+  "cinder-kit": "Cinder Shiopan",
 });
 const AUDIO_VOLUME_STORAGE_KEY = "projectProwl.audioVolumes";
 const DEFAULT_AUDIO_VOLUMES = Object.freeze({
@@ -3652,10 +3654,11 @@ function renderArtworkSettings(saved = true) {
     option.checked = option.value === state.artworkStyle;
   });
   const photographicCount = Object.keys(PHOTOGRAPHIC_CARD_ART).length;
+  const portraitVerb = photographicCount === 1 ? "has" : "have";
   if (state.artworkStyle === "photographic") {
     ui.artworkSettingsStatus.textContent = saved
-      ? `Photographic artwork is saved. ${photographicCount} of ${CARD_LIBRARY.length} cards currently has a real pet portrait; the remaining cards use illustrated artwork.`
-      : `Photographic artwork is active for this session. ${photographicCount} of ${CARD_LIBRARY.length} cards currently has a real pet portrait; browser storage is unavailable.`;
+      ? `Photographic artwork is saved. ${photographicCount} of ${CARD_LIBRARY.length} cards currently ${portraitVerb} a real pet portrait; the remaining cards use illustrated artwork.`
+      : `Photographic artwork is active for this session. ${photographicCount} of ${CARD_LIBRARY.length} cards currently ${portraitVerb} a real pet portrait; browser storage is unavailable.`;
   } else {
     ui.artworkSettingsStatus.textContent = saved
       ? "Illustrated card artwork is selected and saved for this browser."

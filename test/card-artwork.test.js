@@ -9,6 +9,10 @@ const teapotPhoto = new URL(
   "../assets/cards/photographic/teapot-tabby-bell.jpg",
   import.meta.url,
 );
+const cinderPhoto = new URL(
+  "../assets/cards/photographic/cinder-shiopan.png",
+  import.meta.url,
+);
 
 test("settings offer persistent illustrated and photographic card artwork", () => {
   assert.match(pageSource, /id="artworkSettingsTab"[\s\S]*?Card Artwork/);
@@ -39,4 +43,15 @@ test("Bell's photographic card uses its mode-specific character name", () => {
   assert.match(gameSource, /PHOTOGRAPHIC_CARD_NAMES\[card\.art\] \|\| card\.name/);
   assert.match(gameSource, /<strong>\$\{displayName\}<\/strong>/);
   assert.match(gameSource, /cardDisplayName\(a\)\.localeCompare\(cardDisplayName\(b\)\)/);
+});
+
+test("Cinder Kit uses Shiopan's photographic portrait and name", () => {
+  assert.ok(statSync(cinderPhoto).size > 1_000_000);
+  assert.match(
+    gameSource,
+    /"cinder-kit": "\.\/assets\/cards\/photographic\/cinder-shiopan\.png"/,
+  );
+  assert.match(gameSource, /"cinder-kit": "Cinder Shiopan"/);
+  assert.match(styleSource, /\.art-cinder-kit\.uses-photographic-art \.card-art img/);
+  assert.match(styleSource, /object-position: center 22%/);
 });
