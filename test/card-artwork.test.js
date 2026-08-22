@@ -59,6 +59,6 @@ test("Cinder Kit uses Shiopan's photographic portrait and name", () => {
 test("Peasant Bell keeps a complete foreground frame around its shifted portrait", () => {
   assert.match(
     styleSource,
-    /\.art-teapot-tabby\.uses-photographic-art \.card-art::after[\s\S]*?box-shadow: inset 0 0 0 1px #d0aa59/,
+    /\.art-teapot-tabby\.uses-photographic-art \.card-art::after[\s\S]*?inset: 1px;[\s\S]*?border: 1px solid #d0aa59/,
   );
 });
