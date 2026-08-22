@@ -1816,7 +1816,7 @@ h1 {
 }
 
 .art-cinder-kit.uses-photographic-art .card-art img {
-  object-position: center 22%;
+  object-position: center 10%;
   filter: saturate(.94) contrast(1.04) brightness(1.02);
 }
 

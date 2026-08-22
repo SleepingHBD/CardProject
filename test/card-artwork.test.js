@@ -53,5 +53,5 @@ test("Cinder Kit uses Shiopan's photographic portrait and name", () => {
   );
   assert.match(gameSource, /"cinder-kit": "Cinder Shiopan"/);
   assert.match(styleSource, /\.art-cinder-kit\.uses-photographic-art \.card-art img/);
-  assert.match(styleSource, /object-position: center 22%/);
+  assert.match(styleSource, /object-position: center 10%/);
 });
