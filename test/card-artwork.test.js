@@ -53,5 +53,12 @@ test("Cinder Kit uses Shiopan's photographic portrait and name", () => {
   );
   assert.match(gameSource, /"cinder-kit": "Cinder Shiopan"/);
   assert.match(styleSource, /\.art-cinder-kit\.uses-photographic-art \.card-art img/);
-  assert.match(styleSource, /object-position: center 10%/);
+  assert.match(styleSource, /object-position: center top/);
+});
+
+test("Peasant Bell keeps a complete foreground frame around its shifted portrait", () => {
+  assert.match(
+    styleSource,
+    /\.art-teapot-tabby\.uses-photographic-art \.card-art::after[\s\S]*?box-shadow: inset 0 0 0 1px #d0aa59/,
+  );
 });
