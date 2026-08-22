@@ -56,9 +56,18 @@ test("Cinder Kit uses Shiopan's photographic portrait and name", () => {
   assert.match(styleSource, /object-position: center top/);
 });
 
-test("Peasant Bell keeps a complete foreground frame around its shifted portrait", () => {
+test("all photographic cards use one complete foreground frame", () => {
   assert.match(
     styleSource,
-    /\.art-teapot-tabby\.uses-photographic-art \.card-art::after[\s\S]*?inset: 1px;[\s\S]*?border: 1px solid #d0aa59/,
+    /\.game-card\.uses-photographic-art \.card-art \{[\s\S]*?box-shadow: none/,
   );
+  assert.match(
+    styleSource,
+    /\.game-card\.uses-photographic-art \.card-art::after[\s\S]*?inset: 0;[\s\S]*?border: 1px solid #d0aa59/,
+  );
+  assert.match(
+    styleSource,
+    /\.game-card\.uses-photographic-art \.art-vignette \{[\s\S]*?box-shadow: none/,
+  );
+  assert.doesNotMatch(styleSource, /\.art-teapot-tabby\.uses-photographic-art \.card-art::after/);
 });

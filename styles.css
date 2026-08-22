@@ -1805,6 +1805,24 @@ h1 {
   object-position: center 35%;
 }
 
+.game-card.uses-photographic-art .card-art {
+  box-shadow: none;
+}
+
+.game-card.uses-photographic-art .card-art::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  border: 1px solid #d0aa59;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.game-card.uses-photographic-art .art-vignette {
+  box-shadow: none;
+}
+
 .art-teapot-tabby.uses-photographic-art .card-art img {
   object-position: center 12%;
   transform: translateX(15%);
@@ -1813,16 +1831,6 @@ h1 {
 
 .art-teapot-tabby.uses-photographic-art .card-art {
   background: #050505;
-}
-
-.art-teapot-tabby.uses-photographic-art .card-art::after {
-  content: "";
-  position: absolute;
-  z-index: 4;
-  inset: 1px;
-  border: 1px solid #d0aa59;
-  border-radius: 1px;
-  pointer-events: none;
 }
 
 .art-cinder-kit.uses-photographic-art .card-art img {
