@@ -248,66 +248,57 @@ input[type="range"] { accent-color: var(--gold); }
   height: 100%;
   display: block;
   overflow: visible;
-  filter: drop-shadow(0 2px 0 rgba(28, 13, 13, .68));
+  --crest-deep: color-mix(in srgb, var(--crest-color), #160d10 34%);
+  filter: drop-shadow(0 2px 1px rgba(18, 8, 10, .78));
 }
 
 .class-crest-svg[data-element="ember"] { --crest-color: var(--ember); }
 .class-crest-svg[data-element="gust"] { --crest-color: var(--gust); }
 .class-crest-svg[data-element="tide"] { --crest-color: var(--tide); }
 
+.crest-shadow {
+  fill: #1a0e10;
+  opacity: .8;
+}
+
 .crest-field {
-  fill: color-mix(in srgb, var(--crest-color), #2d1718 13%);
+  fill: var(--crest-deep);
   stroke: #f1cf78;
-  stroke-width: 2.5;
+  stroke-width: 18;
 }
 
-.crest-emblem {
+.crest-inner-ring {
   fill: none;
-  stroke: #fff1c7;
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke: rgba(255, 240, 189, .42);
+  stroke-width: 7;
 }
 
-.crest-detail {
+.crest-source {
+  fill: #fff0c5;
+  stroke: #7a4c22;
+  stroke-width: 6;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+.crest-element-mark {
+  fill: #f2c55f;
+  stroke: #fff0ad;
+  stroke-width: 7;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+.crest-waterline {
   fill: none;
-  stroke: #fff1c7;
-  stroke-width: 2.6;
+  stroke: var(--crest-deep);
+  stroke-width: 13;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.crest-solid {
-  fill: #fff1c7;
-  stroke: #fff8df;
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-
-.crest-cutout {
-  fill: none;
-  stroke: color-mix(in srgb, var(--crest-color), #1e1113 28%);
-  stroke-width: 3.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.crest-accent {
-  fill: #f3c95e;
-  stroke: #ffe9a5;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.crest-accent-line {
-  fill: none;
-  stroke: #fff1c7;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
-
-.crest-wave { stroke-width: 2.4; }
+.crest-bow { stroke-width: 8; }
+.crest-shield { stroke-width: 10; }
 .class-choice strong { font-family: "Cinzel", serif; }
 .class-choice small { color: #c5b58f; line-height: 1.35; }
 
@@ -531,6 +522,8 @@ input[type="range"] { accent-color: var(--gold); }
 .help-dialog ol { padding-left: 1.25rem; line-height: 1.5; }
 .help-dialog li + li { margin-top: 8px; }
 .privacy-note { padding: 11px; border: 1px solid #9e7d46; background: rgba(255,248,211,.55); }
+.icon-credit { margin: 13px 0 18px; color: #684934; font-size: .76rem; line-height: 1.45; }
+.icon-credit a { color: #74411f; font-weight: 700; text-underline-offset: 2px; }
 
 @keyframes routePulse {
   0%, 100% { box-shadow: 0 6px 0 #2a1715, 0 0 0 4px rgba(210,168,83,.15); }

@@ -79,5 +79,9 @@ test("the expedition page exposes the complete vertical slice and local-only por
   assert.match(expeditionScript, /canvas\.toBlob/);
   assert.match(expeditionScript, /localStorage\.setItem\(RUN_KEY/);
   assert.match(expeditionScript, /classCrestMarkup/);
+  assert.match(expeditionScript, /viewBox="0 0 512 512"/);
+  assert.match(expeditionScript, /crest-source/);
   assert.doesNotMatch(expeditionScript, /crest-badge/);
+  assert.match(expeditionPage, /Game-Icons\.net/);
+  assert.match(expeditionPage, /creativecommons\.org\/licenses\/by\/3\.0/);
 });
