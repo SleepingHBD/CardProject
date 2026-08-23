@@ -627,6 +627,7 @@ const ui = {
   tutorialMenuOptions: document.querySelector("#tutorialMenuOptions"),
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
+  mainMenuExpeditionButton: document.querySelector("#mainMenuExpeditionButton"),
   mainMenuTutorialButton: document.querySelector("#mainMenuTutorialButton"),
   mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
@@ -3965,6 +3966,9 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
   showDifficultyChooser("main");
 });
 ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("main"));
+ui.mainMenuExpeditionButton.addEventListener("click", () => {
+  window.location.href = "./expedition.html";
+});
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));

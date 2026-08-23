@@ -6685,6 +6685,24 @@ input {
   outline-offset: 3px;
 }
 
+.main-menu-expedition-button {
+  position: relative;
+  display: grid;
+  gap: 1px;
+  color: #fff0bc;
+  background:
+    linear-gradient(100deg, rgba(116, 50, 38, .48), rgba(48, 77, 57, .35)),
+    rgba(43, 25, 25, .86);
+  border-color: #d1a755;
+}
+
+.main-menu-expedition-button small {
+  color: #d6bd7f;
+  font-family: "Marcellus", serif;
+  font-size: 8px;
+  letter-spacing: .16em;
+}
+
 .main-menu-tutorial-button {
   color: #f5dfa3;
   background:

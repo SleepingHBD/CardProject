@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#211515" />
+    <meta
+      name="description"
+      content="Create a champion from your own pet and lead them through a replayable Project: Prowl expedition."
+    />
+    <title>Prowlbound Expedition | Project: Prowl</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&amp;family=IM+Fell+English:ital@0;1&amp;family=Marcellus&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./expedition.css" />
+  </head>
+  <body>
+    <header class="expedition-topbar">
+      <a class="expedition-brand" href="./index.html" aria-label="Return to Project: Prowl">
+        <img src="./assets/brand/project-prowl-logo.png" alt="Project: Prowl" />
+      </a>
+      <div class="mode-title">
+        <span>New prototype mode</span>
+        <strong>Prowlbound Expedition</strong>
+      </div>
+      <div class="topbar-actions">
+        <span class="save-indicator" id="saveIndicator" aria-live="polite">Saved locally</span>
+        <button class="quiet-button" id="expeditionHelpButton" type="button">How it works</button>
+        <a class="quiet-button" href="./index.html">Main menu</a>
+      </div>
+    </header>
+
+    <main class="expedition-app" id="expeditionApp">
+      <section class="app-screen creator-screen" id="creatorScreen" aria-labelledby="creatorTitle">
+        <div class="screen-heading">
+          <p class="eyebrow">Champion workshop</p>
+          <h1 id="creatorTitle">Make your pet the hero</h1>
+          <p>
+            Add a photo, choose a battle form, and begin a short roguelite expedition. Your photo and progress stay
+            in this browser and are never uploaded to a server.
+          </p>
+        </div>
+
+        <div class="creator-layout">
+          <section class="portrait-workshop panel" aria-labelledby="portraitWorkshopTitle">
+            <div class="panel-heading">
+              <p class="step-number">Step 1</p>
+              <h2 id="portraitWorkshopTitle">Choose a portrait</h2>
+            </div>
+            <div class="photo-stage" id="photoStage">
+              <div class="photo-placeholder" id="photoPlaceholder">
+                <span aria-hidden="true">♙</span>
+                <strong>Your champion awaits</strong>
+                <small>PNG, JPG or WebP · up to 12 MB</small>
+              </div>
+              <img id="petPhotoPreview" alt="Your pet portrait preview" hidden />
+            </div>
+            <label class="file-button" for="petPhotoInput">
+              <span id="photoButtonLabel">Choose pet photo</span>
+              <input id="petPhotoInput" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <div class="crop-controls" id="cropControls" hidden>
+              <label>
+                <span>Move left / right</span>
+                <input id="cropX" type="range" min="0" max="100" value="50" />
+              </label>
+              <label>
+                <span>Move up / down</span>
+                <input id="cropY" type="range" min="0" max="100" value="50" />
+              </label>
+              <label>
+                <span>Zoom</span>
+                <input id="cropZoom" type="range" min="100" max="220" value="100" />
+              </label>
+            </div>
+          </section>
+
+          <section class="identity-workshop panel" aria-labelledby="identityWorkshopTitle">
+            <div class="panel-heading">
+              <p class="step-number">Step 2</p>
+              <h2 id="identityWorkshopTitle">Name your champion</h2>
+            </div>
+            <label class="text-field">
+              <span>Champion name</span>
+              <input id="petNameInput" type="text" maxlength="24" placeholder="e.g. Sir Biscuit" autocomplete="off" />
+            </label>
+
+            <div class="panel-heading form-heading">
+              <p class="step-number">Step 3</p>
+              <h2>Choose a battle form</h2>
+            </div>
+            <div class="class-choices" id="classChoices" role="radiogroup" aria-label="Choose a battle form"></div>
+          </section>
+
+          <aside class="champion-preview-wrap" aria-label="Champion preview">
+            <article class="champion-card" id="creatorChampionCard" data-element="ember">
+              <div class="champion-card-crown"><span id="creatorClassIcon">⚔</span></div>
+              <div class="champion-portrait">
+                <img id="creatorCardPhoto" alt="" hidden />
+                <span class="champion-silhouette" id="creatorCardPlaceholder" aria-hidden="true">♞</span>
+              </div>
+              <div class="champion-nameplate">
+                <strong id="creatorCardName">Your Pet</strong>
+                <span id="creatorCardClass">Ember Knight</span>
+              </div>
+              <div class="champion-card-stats">
+                <span><b id="creatorCardHealth">48</b> health</span>
+                <span id="creatorCardElement">🔥 Ember</span>
+              </div>
+            </article>
+            <p class="creator-status" id="creatorStatus" aria-live="polite"></p>
+            <button class="primary-button" id="saveChampionButton" type="button">Create champion</button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="app-screen hub-screen" id="hubScreen" aria-labelledby="hubTitle" hidden>
+        <div class="hub-backdrop" aria-hidden="true"></div>
+        <div class="hub-copy">
+          <p class="eyebrow">The road rearranges with every attempt</p>
+          <h1 id="hubTitle"><span id="hubPetName">Your champion</span> is ready</h1>
+          <p>
+            Choose a path through five encounters and defeat the Warden of the Broken Cycle. Health carries between
+            battles; cards, talents and relics last for one run.
+          </p>
+          <div class="hub-stats" id="hubStats"></div>
+          <div class="hub-actions">
+            <button class="primary-button" id="startRunButton" type="button">Begin expedition</button>
+            <button class="secondary-button" id="editChampionButton" type="button">Edit champion</button>
+          </div>
+        </div>
+        <div id="hubChampionMount" class="hub-champion-mount"></div>
+      </section>
+
+      <section class="app-screen map-screen" id="mapScreen" aria-labelledby="mapTitle" hidden>
+        <header class="run-banner">
+          <div>
+            <p class="eyebrow">The Shifting Road</p>
+            <h1 id="mapTitle">Choose the next encounter</h1>
+          </div>
+          <div class="run-vitals" id="mapRunVitals"></div>
+        </header>
+        <div class="map-layout">
+          <aside class="run-sidebar panel">
+            <div id="mapChampionMount"></div>
+            <h2>Run satchel</h2>
+            <div class="satchel-list" id="satchelList"></div>
+            <button class="secondary-button" id="abandonRunButton" type="button">Abandon run</button>
+          </aside>
+          <section class="route-panel panel" aria-label="Expedition route">
+            <div class="route-map" id="routeMap"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="app-screen combat-screen" id="combatScreen" aria-labelledby="combatTitle" hidden>
+        <header class="combat-banner">
+          <div>
+            <p class="eyebrow" id="combatNodeLabel">Encounter</p>
+            <h1 id="combatTitle">Battle</h1>
+          </div>
+          <div class="turn-seal" id="turnSeal">Turn 1</div>
+        </header>
+        <div class="battlefield">
+          <section class="combatant enemy-combatant" aria-label="Enemy">
+            <div class="combatant-heading">
+              <div>
+                <span class="element-medallion" id="enemyElementIcon"></span>
+                <h2 id="enemyName"></h2>
+              </div>
+              <span class="status-chip" id="enemyStatus"></span>
+            </div>
+            <div class="enemy-portrait" id="enemyPortrait" aria-hidden="true"></div>
+            <div class="health-meter">
+              <div class="health-meter-fill" id="enemyHealthFill"></div>
+              <strong id="enemyHealthText"></strong>
+            </div>
+            <div class="intent-panel">
+              <span>Next intention</span>
+              <strong id="enemyIntent"></strong>
+            </div>
+          </section>
+
+          <section class="combat-center" aria-label="Battle controls">
+            <div class="combat-log" id="combatLog" aria-live="polite"></div>
+            <div class="ultimate-panel">
+              <div class="prowl-gauge"><i id="prowlGaugeFill"></i></div>
+              <button class="ultimate-button" id="ultimateButton" type="button">
+                <span id="ultimateName">Ultimate</span>
+                <small id="ultimateCharge">0 / 10 Prowl</small>
+              </button>
+            </div>
+          </section>
+
+          <section class="combatant player-combatant" aria-label="Your champion">
+            <div class="combatant-heading">
+              <div>
+                <span class="element-medallion" id="playerElementIcon"></span>
+                <h2 id="combatPetName"></h2>
+              </div>
+              <span class="status-chip" id="playerStatus"></span>
+            </div>
+            <div class="combat-pet-portrait"><img id="combatPetPhoto" alt="" /></div>
+            <div class="health-meter">
+              <div class="health-meter-fill" id="playerHealthFill"></div>
+              <strong id="playerHealthText"></strong>
+            </div>
+            <p class="passive-reminder" id="passiveReminder"></p>
+          </section>
+        </div>
+
+        <section class="hand-tray" aria-label="Your hand">
+          <div class="hand-toolbar">
+            <div class="energy-orb"><b id="energyCount">3</b><span>Energy</span></div>
+            <div class="pile-counts">
+              <span>Draw <b id="drawCount">0</b></span>
+              <span>Discard <b id="discardCount">0</b></span>
+            </div>
+            <button class="primary-button end-turn-button" id="endTurnButton" type="button">End turn</button>
+          </div>
+          <div class="combat-hand" id="combatHand"></div>
+        </section>
+      </section>
+
+      <section class="app-screen decision-screen" id="decisionScreen" aria-labelledby="decisionTitle" hidden>
+        <div class="decision-card panel">
+          <p class="eyebrow" id="decisionEyebrow">A choice on the road</p>
+          <h1 id="decisionTitle">Choose</h1>
+          <p class="decision-copy" id="decisionCopy"></p>
+          <div class="decision-options" id="decisionOptions"></div>
+        </div>
+      </section>
+
+      <section class="app-screen ending-screen" id="endingScreen" aria-labelledby="endingTitle" hidden>
+        <div class="ending-card panel">
+          <p class="eyebrow" id="endingEyebrow">The expedition ends</p>
+          <h1 id="endingTitle">The road remembers</h1>
+          <p id="endingCopy"></p>
+          <div class="ending-tally" id="endingTally"></div>
+          <button class="primary-button" id="returnHubButton" type="button">Return to camp</button>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="help-dialog" id="expeditionHelpDialog">
+      <div class="dialog-heading">
+        <p class="eyebrow">First-draft rules</p>
+        <h2>How Prowlbound works</h2>
+      </div>
+      <ol>
+        <li>Your uploaded pet is the champion card and stays with you throughout the expedition.</li>
+        <li>In battle, draw five techniques and spend three Energy each turn. The enemy always shows its next move.</li>
+        <li>Elemental Edge adds +2 damage: Ember beats Gust, Gust beats Tide, and Tide beats Ember.</li>
+        <li>Health carries between encounters. Add cards, gain talents, find relics and choose safer or riskier paths.</li>
+        <li>Defeat the final boss to finish a run. Win or lose, your pet earns permanent Bond XP.</li>
+      </ol>
+      <p class="privacy-note"><strong>Privacy:</strong> your pet image is stored only in this browser's local storage.</p>
+      <button class="primary-button" id="closeExpeditionHelp" type="button">Understood</button>
+    </dialog>
+
+    <script type="module" src="./src/expedition.js"></script>
+  </body>
+</html>
