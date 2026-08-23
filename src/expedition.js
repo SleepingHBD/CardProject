@@ -45,6 +45,38 @@ const NODE_DETAILS = {
   shop: { icon: "¤", label: "Travelling shop" },
 };
 
+const CLASS_CREST_PATHS = Object.freeze({
+  "knight-helm": `
+    <path class="crest-emblem" d="M12 39V25c0-10 6.7-17 16-17s16 7 16 17v14l-7 8H19l-7-8Z"/>
+    <path class="crest-emblem crest-detail" d="M12 27h32M28 9v34M18 35h7m7 0h7M22 8c1-4 4-6 8-6 5 0 8 3 9 8"/>`,
+  "recurve-bow": `
+    <path class="crest-emblem" d="M15 6c4 5 3 10-1 15-5 6-5 12 0 18 4 5 5 10 1 15M15 6v48"/>
+    <path class="crest-emblem crest-detail" d="M8 30h34m-8-6 8 6-8 6"/>`,
+  "shell-shield": `
+    <path class="crest-emblem" d="M28 7c7 0 12 4 16 10l-2 19c-1 8-7 15-14 20-7-5-13-12-14-20l-2-19c4-6 9-10 16-10Z"/>
+    <path class="crest-emblem crest-detail" d="m17 20 11 29 11-29M22 13l6 36 6-36M15 29c8-5 18-5 26 0"/>`,
+});
+
+const ELEMENT_CREST_PATHS = Object.freeze({
+  ember: `
+    <path class="crest-element" d="M50 38c0 5-7 8-7 14a7 7 0 0 0 14 0c0-5-3-8-6-13 0 4-2 7-4 9 1-4 1-7 3-10Z"/>
+    <path class="crest-element-detail" d="M50 48c-2 2-3 4-3 6a3 3 0 0 0 6 0c0-2-1-4-3-6Z"/>`,
+  gust: `
+    <path class="crest-element" d="M42 54c1-9 7-15 16-14-1 9-6 15-15 15Z"/>
+    <path class="crest-element-detail" d="m44 53 11-10"/>`,
+  tide: `<path class="crest-element" d="M50 38c-5 7-8 11-8 15a8 8 0 0 0 16 0c0-4-3-8-8-15Z"/>`,
+});
+
+function classCrestMarkup(form, extraClass = "") {
+  return `
+    <svg class="class-crest-svg ${extraClass}" data-element="${form.element}" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <circle class="crest-field" cx="28" cy="30" r="25"/>
+      ${CLASS_CREST_PATHS[form.crest]}
+      <circle class="crest-badge" cx="50" cy="49" r="12"/>
+      ${ELEMENT_CREST_PATHS[form.element]}
+    </svg>`;
+}
+
 function readJson(key) {
   try {
     return JSON.parse(localStorage.getItem(key) || "null");
@@ -140,7 +172,7 @@ function createChampionCard({ compact = false } = {}) {
   card.className = `champion-card${compact ? " compact" : ""}`;
   card.dataset.element = form.element;
   card.innerHTML = `
-    <div class="champion-card-crown"><span>${form.icon}</span></div>
+    <div class="champion-card-crown">${classCrestMarkup(form)}</div>
     <div class="champion-portrait">
       ${portraitUrl ? `<img src="${portraitUrl}" alt="${escapeHtml(profile.name)}">` : '<span class="champion-silhouette" aria-hidden="true">♞</span>'}
     </div>
@@ -172,7 +204,7 @@ function renderClassChoices() {
     button.setAttribute("aria-checked", String(form.id === selectedClassId));
     button.style.setProperty("--class-color", `var(--${form.element})`);
     button.innerHTML = `
-      <span class="class-choice-icon" aria-hidden="true">${form.icon}</span>
+      <span class="class-choice-crest">${classCrestMarkup(form)}</span>
       <strong>${form.name}</strong>
       <small>${form.summary}</small>
       <small><b>${form.passiveName}:</b> ${form.passive}</small>`;
@@ -184,7 +216,7 @@ function updateCreatorPreview() {
   const form = CLASS_FORMS[selectedClassId];
   const name = ui.petNameInput.value.trim() || "Your Pet";
   ui.creatorChampionCard.dataset.element = form.element;
-  ui.creatorClassIcon.textContent = form.icon;
+  ui.creatorClassIcon.innerHTML = classCrestMarkup(form);
   ui.creatorCardName.textContent = name;
   ui.creatorCardClass.textContent = form.name;
   ui.creatorCardHealth.textContent = form.maxHealth;

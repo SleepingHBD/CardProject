@@ -232,18 +232,68 @@ input[type="range"] { accent-color: var(--gold); }
 }
 .class-choice:hover { border-color: #bd944b; }
 .class-choice[aria-checked="true"] { border-color: var(--gold-bright); background: rgba(85,51,37,.82); box-shadow: inset 0 0 18px rgba(235,192,96,.1); }
-.class-choice-icon {
+.class-choice-crest {
   position: absolute;
-  left: 13px;
+  left: 8px;
   top: 50%;
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--class-color, var(--ember));
-  border: 2px solid var(--gold-bright);
+  width: 46px;
+  height: 46px;
+  display: block;
+  --crest-color: var(--class-color, var(--ember));
   transform: translateY(-50%);
+}
+
+.class-crest-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 2px 0 rgba(28, 13, 13, .68));
+}
+
+.class-crest-svg[data-element="ember"] { --crest-color: var(--ember); }
+.class-crest-svg[data-element="gust"] { --crest-color: var(--gust); }
+.class-crest-svg[data-element="tide"] { --crest-color: var(--tide); }
+
+.crest-field {
+  fill: color-mix(in srgb, var(--crest-color), #2d1718 13%);
+  stroke: #f1cf78;
+  stroke-width: 2.5;
+}
+
+.crest-emblem {
+  fill: none;
+  stroke: #fff1c7;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.crest-detail { stroke-width: 2.1; }
+
+.crest-badge {
+  fill: #2d1a1c;
+  stroke: #f1cf78;
+  stroke-width: 2.5;
+}
+
+.crest-element {
+  stroke: #ffe9a5;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.class-crest-svg[data-element="ember"] .crest-element { fill: #e95c36; }
+.class-crest-svg[data-element="gust"] .crest-element { fill: #69a967; }
+.class-crest-svg[data-element="tide"] .crest-element { fill: #55a8d0; }
+
+.crest-element-detail {
+  fill: #ffe08a;
+  stroke: #ffe9a5;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .class-choice strong { font-family: "Cinzel", serif; }
 .class-choice small { color: #c5b58f; line-height: 1.35; }
@@ -276,18 +326,17 @@ input[type="range"] { accent-color: var(--gold); }
 .champion-card-crown {
   position: absolute;
   z-index: 3;
-  top: 15px;
-  left: 15px;
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  color: white;
-  border: 3px solid #f2d678;
-  border-radius: 50%;
-  background: var(--element);
-  box-shadow: 0 3px 0 rgba(39,20,17,.75);
-  font-size: 1.35rem;
+  top: 10px;
+  left: 10px;
+  width: 62px;
+  height: 62px;
+  display: block;
+}
+
+.champion-card-crown > span {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .champion-portrait {
   position: relative;

@@ -19,6 +19,7 @@ const expeditionScript = readFileSync(new URL("../src/expedition.js", import.met
 test("the expedition offers three distinct elemental champion forms", () => {
   assert.equal(Object.keys(CLASS_FORMS).length, 3);
   assert.deepEqual(new Set(Object.values(CLASS_FORMS).map((form) => form.element)), new Set(["ember", "gust", "tide"]));
+  assert.equal(new Set(Object.values(CLASS_FORMS).map((form) => form.crest)).size, 3);
 });
 
 test("each champion begins with a ten-card deck containing its two class techniques", () => {
@@ -77,4 +78,5 @@ test("the expedition page exposes the complete vertical slice and local-only por
   assert.match(expeditionScript, /indexedDB\.open\(DB_NAME/);
   assert.match(expeditionScript, /canvas\.toBlob/);
   assert.match(expeditionScript, /localStorage\.setItem\(RUN_KEY/);
+  assert.match(expeditionScript, /classCrestMarkup/);
 });
