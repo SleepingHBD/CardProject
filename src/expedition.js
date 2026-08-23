@@ -1,16 +1,22 @@
 import {
   CARD_LIBRARY,
   CLASS_FORMS,
+  DEFAULT_PERSONALITY_ID,
   ELEMENTS,
   ENEMIES,
+  PET_PERSONALITIES,
   RELICS,
   TALENTS,
   bondRank,
   bondReward,
   cardDefinition,
   createRun,
+  commandBonuses,
+  effectiveCommandCost,
   elementEdge,
+  evaluateCommandPlan,
   intentLabel,
+  personalityDefinition,
   randomItem,
   shuffle,
   uniqueRewardChoices,
@@ -33,8 +39,10 @@ let run = readJson(RUN_KEY);
 let portraitUrl = "";
 let sourceImage = null;
 let selectedClassId = profile?.classId || "ember-knight";
+let selectedPersonalityId = profile?.personalityId || DEFAULT_PERSONALITY_ID;
 let activeDecisionActions = new Map();
 let saveTimer = null;
+let resolvingCommands = false;
 
 const NODE_DETAILS = {
   battle: { icon: "⚔", label: "Battle" },
@@ -141,6 +149,10 @@ function classForm() {
   return CLASS_FORMS[profile?.classId || selectedClassId] || CLASS_FORMS["ember-knight"];
 }
 
+function petPersonality() {
+  return personalityDefinition(profile?.personalityId || selectedPersonalityId);
+}
+
 function talentValue(key) {
   return (run?.talents || []).reduce((total, talentId) => {
     const talent = (TALENTS[run.classId] || []).find((item) => item.id === talentId);
@@ -166,10 +178,11 @@ function createChampionCard({ compact = false } = {}) {
     <div class="champion-card-crown">${classCrestMarkup(form)}</div>
     <div class="champion-portrait">
       ${portraitUrl ? `<img src="${portraitUrl}" alt="${escapeHtml(profile.name)}">` : '<span class="champion-silhouette" aria-hidden="true">♞</span>'}
+      <span class="champion-personality-ribbon">${petPersonality().icon} ${petPersonality().name}</span>
     </div>
     <div class="champion-nameplate">
       <strong>${escapeHtml(profile.name)}</strong>
-      <span>${form.name}</span>
+      <span>${form.name} · ${petPersonality().name}</span>
     </div>
     <div class="champion-card-stats">
       <span><b>${run?.maxHealth || form.maxHealth}</b> health</span>
@@ -203,17 +216,38 @@ function renderClassChoices() {
   });
 }
 
+function renderPersonalityChoices() {
+  ui.personalityChoices.replaceChildren();
+  Object.values(PET_PERSONALITIES).forEach((personality) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "personality-choice";
+    button.dataset.personalityId = personality.id;
+    button.setAttribute("role", "radio");
+    button.setAttribute("aria-checked", String(personality.id === selectedPersonalityId));
+    button.innerHTML = `
+      <span class="personality-icon" aria-hidden="true">${personality.icon}</span>
+      <span><strong>${personality.name}</strong><small>${personality.title}</small></span>
+      <p>${personality.description}</p>`;
+    ui.personalityChoices.append(button);
+  });
+}
+
 function updateCreatorPreview() {
   const form = CLASS_FORMS[selectedClassId];
   const name = ui.petNameInput.value.trim() || "Your Pet";
   ui.creatorChampionCard.dataset.element = form.element;
   ui.creatorClassIcon.innerHTML = classCrestMarkup(form);
   ui.creatorCardName.textContent = name;
-  ui.creatorCardClass.textContent = form.name;
+  ui.creatorCardClass.textContent = `${form.name} · ${personalityDefinition(selectedPersonalityId).name}`;
+  ui.creatorPersonalityRibbon.textContent = `${personalityDefinition(selectedPersonalityId).icon} ${personalityDefinition(selectedPersonalityId).name}`;
   ui.creatorCardHealth.textContent = form.maxHealth;
   ui.creatorCardElement.textContent = elementMarkup(form.element);
   document.querySelectorAll(".class-choice").forEach((button) => {
     button.setAttribute("aria-checked", String(button.dataset.classId === selectedClassId));
+  });
+  document.querySelectorAll(".personality-choice").forEach((button) => {
+    button.setAttribute("aria-checked", String(button.dataset.personalityId === selectedPersonalityId));
   });
 }
 
@@ -307,16 +341,18 @@ async function saveChampion() {
       await loadPortrait();
     }
     const existing = profile || {};
-    const classChanged = existing.classId && existing.classId !== selectedClassId;
+    const identityChanged = (existing.classId && existing.classId !== selectedClassId)
+      || (existing.personalityId && existing.personalityId !== selectedPersonalityId);
     profile = {
-      version: 1,
+      version: 2,
       name,
       classId: selectedClassId,
+      personalityId: selectedPersonalityId,
       bondXp: existing.bondXp || 0,
       runs: existing.runs || 0,
       wins: existing.wins || 0,
     };
-    if (classChanged && run) {
+    if (identityChanged && run) {
       run = null;
       saveRun();
     }
@@ -332,9 +368,11 @@ async function saveChampion() {
 
 function renderCreator() {
   selectedClassId = profile?.classId || selectedClassId;
+  selectedPersonalityId = profile?.personalityId || selectedPersonalityId || DEFAULT_PERSONALITY_ID;
   ui.petNameInput.value = profile?.name || "";
   ui.saveChampionButton.textContent = profile ? "Save champion" : "Create champion";
   renderClassChoices();
+  renderPersonalityChoices();
   updateCreatorPreview();
   if (portraitUrl) {
     [ui.petPhotoPreview, ui.creatorCardPhoto].forEach((image) => {
@@ -356,6 +394,7 @@ function renderHub() {
   ui.hubChampionMount.replaceChildren(createChampionCard());
   const rank = bondRank(profile.bondXp);
   ui.hubStats.innerHTML = `
+    <div class="hub-stat"><b>${petPersonality().icon} ${petPersonality().name}</b><span>Personality</span></div>
     <div class="hub-stat"><b>${rank}</b><span>Bond rank</span></div>
     <div class="hub-stat"><b>${profile.bondXp}</b><span>Bond XP</span></div>
     <div class="hub-stat"><b>${profile.runs}</b><span>Runs begun</span></div>
@@ -467,6 +506,7 @@ function beginCombat(node) {
     discardPile: [],
     exhaustPile: [],
     hand: [],
+    commandQueue: [],
     log: [`${enemy.name} blocks the road.`],
   };
   drawCards(5 + firstDrawBonus);
@@ -511,15 +551,64 @@ function dealDamageToPlayer(amount) {
   return { damage, absorbed };
 }
 
-function playCard(index) {
+function currentPlan() {
+  run.combat.commandQueue ||= [];
+  return run.combat.commandQueue;
+}
+
+function evaluateCurrentPlan(entries = currentPlan()) {
+  const combat = run.combat;
+  const enemy = ENEMIES[combat.enemyId];
+  return evaluateCommandPlan(entries, {
+    classId: classForm().id,
+    personalityId: petPersonality().id,
+    baseEnergy: combat.energy,
+    enemyElement: enemy.element,
+    attackBonus: talentValue("attackBonus"),
+    firstAttackBonus: hasRelic("smouldering-collar") && !combat.firstAttackBattle ? 2 : 0,
+    guardBonus: talentValue("guardBonus"),
+    healBonus: talentValue("healBonus"),
+    burnBonus: talentValue("burnBonus"),
+  });
+}
+
+function queueCard(index) {
+  if (resolvingCommands || currentPlan().length >= 3) return;
   const combat = run.combat;
   const entry = combat.hand[index];
+  if (!entry) return;
+  const proposedPlan = [...currentPlan(), entry];
+  if (!evaluateCurrentPlan(proposedPlan).valid) return;
+  currentPlan().push(combat.hand.splice(index, 1)[0]);
+  saveRun();
+  renderCombat();
+}
+
+function removeQueuedCommand(index) {
+  if (resolvingCommands) return;
+  const returnedEntries = currentPlan().splice(index);
+  run.combat.hand.push(...returnedEntries);
+  saveRun();
+  renderCombat();
+}
+
+function clearCommandPlan() {
+  if (resolvingCommands || !currentPlan().length) return;
+  run.combat.hand.push(...currentPlan());
+  run.combat.commandQueue = [];
+  saveRun();
+  renderCombat();
+}
+
+function resolveCommand(entry, index, plannedEntries) {
+  const combat = run.combat;
   const card = cardDefinition(entry);
-  if (!card || card.cost > combat.energy) return;
-  combat.energy -= card.cost;
-  combat.hand.splice(index, 1);
+  const bonus = commandBonuses(plannedEntries, index, {
+    classId: classForm().id,
+    personalityId: petPersonality().id,
+  });
   combat.cardsPlayed += 1;
-  combat.prowl = Math.min(PROWL_MAX, combat.prowl + 1 + (card.prowl || 0));
+  combat.prowl = Math.min(PROWL_MAX, combat.prowl + 1 + (card.prowl || 0) + bonus.prowl);
 
   const enemy = ENEMIES[combat.enemyId];
   const form = classForm();
@@ -530,61 +619,96 @@ function playCard(index) {
     damagePerHit += talentValue("attackBonus");
     if (hasRelic("smouldering-collar") && !combat.firstAttackBattle) damagePerHit += 2;
     const hits = card.hits || 1;
-    let totalDamage = 0;
-    for (let hit = 0; hit < hits; hit += 1) totalDamage += dealDamageToEnemy(damagePerHit).damage;
-    addCombatLog(`${card.name} deals ${totalDamage} damage${hits > 1 ? ` across ${hits} hits` : ""}.`);
+    const totalDamage = dealDamageToEnemy(damagePerHit * hits + bonus.damage).damage;
+    addCombatLog(`${profile.name} uses ${card.name} for ${totalDamage} damage${hits > 1 ? ` across ${hits} hits` : ""}.`);
     if (form.id === "ember-knight" && !combat.firstAttackTurn) combat.enemyBurn += 1 + talentValue("burnBonus");
     combat.firstAttackTurn = true;
     combat.firstAttackBattle = true;
   }
   if (card.block) {
-    const block = card.block + (card.type === "Guard" ? talentValue("guardBonus") : 0);
+    const block = card.block + (card.type === "Guard" ? talentValue("guardBonus") : 0) + bonus.block;
     combat.playerGuard += block;
-    addCombatLog(`${card.name} grants ${block} Guard.`);
+    addCombatLog(`${profile.name}'s ${card.name} grants ${block} Guard.`);
+  } else if (bonus.block) {
+    combat.playerGuard += bonus.block;
+    addCombatLog(`${profile.name}'s plan grants ${bonus.block} Guard.`);
   }
-  if (card.burn) {
-    const burn = card.burn + talentValue("burnBonus");
+  if (card.burn || bonus.burn) {
+    const burn = (card.burn || 0) + bonus.burn + talentValue("burnBonus");
     combat.enemyBurn += burn;
-    addCombatLog(`${card.name} applies ${burn} Burn.`);
+    addCombatLog(`${profile.name} applies ${burn} Burn.`);
   }
-  if (card.heal) {
-    const healing = card.heal + talentValue("healBonus");
+  if (card.heal || bonus.heal) {
+    const healing = (card.heal || 0) + bonus.heal + (card.heal ? talentValue("healBonus") : 0);
     run.hp = Math.min(run.maxHealth, run.hp + healing);
-    addCombatLog(`${card.name} restores ${healing} Health.`);
+    addCombatLog(`${profile.name} restores ${healing} Health.`);
   }
-  if (card.energy) combat.energy += card.energy;
-  if (card.draw) drawCards(card.draw);
+  if (card.draw || bonus.draw) drawCards((card.draw || 0) + bonus.draw);
+  if (bonus.labels.length) addCombatLog(`${profile.name}'s chain: ${bonus.labels.join(" · ")}.`);
   if (form.id === "gust-ranger" && combat.cardsPlayed % 3 === 0) {
     drawCards(1);
-    addCombatLog("Three-Step Flow draws a card.");
+    addCombatLog(`${profile.name}'s Three-Step Flow draws a card.`);
   }
   (card.exhaust ? combat.exhaustPile : combat.discardPile).push(entry);
-  if (combat.enemyHealth <= 0) {
-    finishCombat(true);
-    return;
+  return { card, damaged: isAttack, guarded: Boolean(card.block || bonus.block) };
+}
+
+function commandAnimation(result) {
+  ui.playerCombatant.dataset.action = result.damaged ? "attack" : result.guarded ? "guard" : "technique";
+  if (result.damaged) ui.enemyCombatant.dataset.reaction = "hit";
+  return new Promise((resolve) => setTimeout(() => {
+    delete ui.playerCombatant.dataset.action;
+    delete ui.enemyCombatant.dataset.reaction;
+    resolve();
+  }, 340));
+}
+
+async function resolveCommandPlan() {
+  if (resolvingCommands) return;
+  const combat = run.combat;
+  const plannedEntries = [...currentPlan()];
+  resolvingCommands = true;
+  combat.commandQueue = [];
+  if (!plannedEntries.length) addCombatLog(`${profile.name} waits and watches.`);
+
+  for (let index = 0; index < plannedEntries.length; index += 1) {
+    const entry = plannedEntries[index];
+    const card = cardDefinition(entry);
+    combat.energy = Math.max(0, combat.energy - effectiveCommandCost(card, index, petPersonality().id)) + (card.energy || 0);
+    const result = resolveCommand(entry, index, plannedEntries);
+    renderCombat();
+    await commandAnimation(result);
+    if (combat.enemyHealth <= 0) {
+      resolvingCommands = false;
+      finishCombat(true);
+      return;
+    }
   }
-  saveRun();
-  renderCombat();
+
+  combat.discardPile.push(...combat.hand);
+  combat.hand = [];
+  resolvingCommands = false;
+  enemyTurn();
 }
 
 function useUltimate() {
   const combat = run.combat;
-  if (combat.prowl < PROWL_MAX) return;
+  if (combat.prowl < PROWL_MAX || resolvingCommands) return;
   const form = classForm();
   combat.prowl = 0;
   if (form.id === "ember-knight") {
     const damage = dealDamageToEnemy(12 + elementEdge("ember", ENEMIES[combat.enemyId].element)).damage;
     combat.enemyBurn += 3 + talentValue("burnBonus");
-    addCombatLog(`Furnace Pounce deals ${damage} damage and engulfs the enemy in Burn.`);
+    addCombatLog(`${profile.name}'s Furnace Pounce deals ${damage} damage and engulfs the enemy in Burn.`);
   } else if (form.id === "gust-ranger") {
     combat.energy += 2;
     combat.playerGuard += 6;
     drawCards(3);
-    addCombatLog("Skybreak Sprint grants 2 Energy, 6 Guard and 3 cards.");
+    addCombatLog(`${profile.name}'s Skybreak Sprint grants 2 Energy, 6 Guard and 3 cards.`);
   } else {
     combat.playerGuard += 12 + talentValue("guardBonus");
     run.hp = Math.min(run.maxHealth, run.hp + 4 + talentValue("healBonus"));
-    addCombatLog("Moonwell Aegis grants 12 Guard and restores Health.");
+    addCombatLog(`${profile.name}'s Moonwell Aegis grants 12 Guard and restores Health.`);
   }
   if (combat.enemyHealth <= 0) finishCombat(true);
   else {
@@ -628,17 +752,11 @@ function enemyTurn() {
   beginPlayerTurn();
 }
 
-function endPlayerTurn() {
-  const combat = run.combat;
-  combat.discardPile.push(...combat.hand);
-  combat.hand = [];
-  enemyTurn();
-}
-
 function beginPlayerTurn() {
   const combat = run.combat;
   combat.turn += 1;
   combat.energy = 3;
+  combat.commandQueue = [];
   combat.cardsPlayed = 0;
   combat.firstAttackTurn = false;
   if (classForm().id === "tide-warden") {
@@ -690,8 +808,10 @@ function renderCombat() {
     renderMap();
     return;
   }
+  combat.commandQueue ||= [];
   const enemy = ENEMIES[combat.enemyId];
   const form = classForm();
+  const personality = petPersonality();
   const intent = enemy.intents[combat.intentIndex % enemy.intents.length];
   ui.combatNodeLabel.textContent = enemy.boss ? "Final guardian" : enemy.elite ? "Elite encounter" : "Road encounter";
   ui.combatTitle.textContent = enemy.name;
@@ -702,30 +822,82 @@ function renderCombat() {
   ui.enemyPortrait.textContent = enemy.icon;
   ui.enemyHealthFill.style.width = `${Math.max(0, combat.enemyHealth / enemy.maxHealth) * 100}%`;
   ui.enemyHealthText.textContent = `${combat.enemyHealth} / ${enemy.maxHealth} Health`;
+  ui.enemyPattern.textContent = `Pattern ${combat.intentIndex % enemy.intents.length + 1} of ${enemy.intents.length}`;
   ui.enemyIntent.textContent = intentLabel(intent, combat.enemyStrength, enemy.element, form.element);
   ui.playerElementIcon.textContent = ELEMENTS[form.element].icon;
   ui.combatPetName.textContent = profile.name;
+  ui.combatPersonality.textContent = `${personality.icon} ${personality.title}`;
   ui.playerStatus.textContent = `Guard ${combat.playerGuard} · Burn ${combat.playerBurn}`;
   ui.combatPetPhoto.src = portraitUrl;
   ui.combatPetPhoto.alt = `${profile.name}, your champion`;
   ui.playerHealthFill.style.width = `${Math.max(0, run.hp / run.maxHealth) * 100}%`;
   ui.playerHealthText.textContent = `${run.hp} / ${run.maxHealth} Health`;
-  ui.passiveReminder.innerHTML = `<strong>${form.passiveName}:</strong> ${form.passive}`;
+  ui.passiveReminder.innerHTML = `
+    <strong>${personality.icon} ${personality.name}:</strong> ${personality.description}<br>
+    <strong>${form.passiveName}:</strong> ${form.passive}`;
   ui.combatLog.innerHTML = combat.log.map((line) => `<p>${escapeHtml(line)}</p>`).join("");
   ui.combatLog.scrollTop = ui.combatLog.scrollHeight;
   ui.prowlGaugeFill.style.width = `${combat.prowl / PROWL_MAX * 100}%`;
-  ui.ultimateName.textContent = form.ultimateName;
+  ui.ultimateName.textContent = `${profile.name}'s ${form.ultimateName}`;
   ui.ultimateCharge.textContent = combat.prowl >= PROWL_MAX ? "Ready" : `${combat.prowl} / ${PROWL_MAX} Prowl`;
-  ui.ultimateButton.disabled = combat.prowl < PROWL_MAX;
-  ui.energyCount.textContent = combat.energy;
+  ui.ultimateButton.disabled = combat.prowl < PROWL_MAX || resolvingCommands;
+  ui.energyCount.textContent = evaluateCurrentPlan().remainingEnergy;
   ui.drawCount.textContent = combat.drawPile.length;
   ui.discardCount.textContent = combat.discardPile.length;
+  renderCommandPlan();
   renderHand();
   showScreen(ui.combatScreen);
 }
 
+function renderCommandPlan() {
+  const plan = currentPlan();
+  const evaluation = evaluateCurrentPlan();
+  ui.commandQueue.replaceChildren();
+  for (let index = 0; index < 3; index += 1) {
+    const entry = plan[index];
+    if (!entry) {
+      const slot = document.createElement("div");
+      slot.className = "command-slot empty";
+      slot.innerHTML = `<b>${index + 1}</b><span>${index === 0 ? "Opener" : index === 1 ? "Follow-up" : "Finish"}</span>`;
+      ui.commandQueue.append(slot);
+      continue;
+    }
+    const step = evaluation.steps[index];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "command-slot filled";
+    button.dataset.queueIndex = index;
+    button.dataset.element = step.card.element || "neutral";
+    button.disabled = resolvingCommands;
+    const bonusText = step.bonus.labels.length ? step.bonus.labels.join(" · ") : "No chain bonus yet";
+    button.innerHTML = `
+      <b>${index + 1}</b>
+      <span><strong>${escapeHtml(step.card.name)}</strong><small>${escapeHtml(bonusText)}</small></span>
+      <i>${step.cost}⚡</i>`;
+    button.setAttribute("aria-label", `Remove ${step.card.name} from position ${index + 1}`);
+    ui.commandQueue.append(button);
+  }
+
+  if (!plan.length) {
+    ui.planForecast.textContent = `${profile.name} is waiting for a plan. Passing will discard the hand.`;
+  } else {
+    const parts = [];
+    if (evaluation.totals.damage) parts.push(`${evaluation.totals.damage} damage`);
+    if (evaluation.totals.block) parts.push(`${evaluation.totals.block} Guard`);
+    if (evaluation.totals.burn) parts.push(`${evaluation.totals.burn} Burn`);
+    if (evaluation.totals.heal) parts.push(`${evaluation.totals.heal} healing`);
+    if (evaluation.totals.draw) parts.push(`draw ${evaluation.totals.draw}`);
+    parts.push(`${evaluation.totals.prowl} Prowl`);
+    ui.planForecast.textContent = `Forecast before enemy Guard: ${parts.join(" · ")}.`;
+  }
+  ui.clearPlanButton.disabled = !plan.length || resolvingCommands;
+  ui.endTurnButton.disabled = resolvingCommands || !evaluation.valid;
+  ui.endTurnButton.textContent = plan.length ? `Unleash ${plan.length}-command plan` : "Pass turn";
+}
+
 function renderHand() {
   const combat = run.combat;
+  const planIndex = currentPlan().length;
   ui.combatHand.replaceChildren();
   combat.hand.forEach((entry, index) => {
     const card = cardDefinition(entry);
@@ -734,12 +906,14 @@ function renderHand() {
     button.className = "technique-card";
     button.dataset.cardIndex = index;
     button.dataset.element = card.element || "neutral";
-    button.disabled = card.cost > combat.energy;
+    const proposedPlan = [...currentPlan(), entry];
+    button.disabled = resolvingCommands || planIndex >= 3 || !evaluateCurrentPlan(proposedPlan).valid;
     const symbol = card.type === "Attack" ? "⚔" : card.type === "Guard" ? "⬟" : "✦";
+    const plannedCost = effectiveCommandCost(card, planIndex, petPersonality().id);
     button.innerHTML = `
-      <span class="technique-card-heading"><b>${escapeHtml(card.name)}</b><i class="energy-cost">${card.cost}</i></span>
+      <span class="technique-card-heading"><b>${escapeHtml(card.name)}</b><i class="energy-cost">${plannedCost}</i></span>
       <span class="technique-art" aria-hidden="true">${symbol}</span>
-      <span><p>${escapeHtml(card.description)}</p><small>${elementMarkup(card.element)} · ${card.type}</small></span>`;
+      <span><p>${escapeHtml(card.description)}</p><small>${elementMarkup(card.element)} · ${card.type} · Position ${Math.min(3, planIndex + 1)}</small></span>`;
     ui.combatHand.append(button);
   });
   if (!combat.hand.length) ui.combatHand.innerHTML = "<p>Your hand is empty. End the turn to draw again.</p>";
@@ -1003,6 +1177,12 @@ function bindEvents() {
     selectedClassId = choice.dataset.classId;
     updateCreatorPreview();
   });
+  ui.personalityChoices.addEventListener("click", (event) => {
+    const choice = event.target.closest("[data-personality-id]");
+    if (!choice) return;
+    selectedPersonalityId = choice.dataset.personalityId;
+    updateCreatorPreview();
+  });
   ui.saveChampionButton.addEventListener("click", saveChampion);
   ui.startRunButton.addEventListener("click", startOrResumeRun);
   ui.editChampionButton.addEventListener("click", renderCreator);
@@ -1012,9 +1192,14 @@ function bindEvents() {
   });
   ui.combatHand.addEventListener("click", (event) => {
     const card = event.target.closest("[data-card-index]");
-    if (card && !card.disabled) playCard(Number(card.dataset.cardIndex));
+    if (card && !card.disabled) queueCard(Number(card.dataset.cardIndex));
   });
-  ui.endTurnButton.addEventListener("click", endPlayerTurn);
+  ui.commandQueue.addEventListener("click", (event) => {
+    const command = event.target.closest("[data-queue-index]");
+    if (command && !command.disabled) removeQueuedCommand(Number(command.dataset.queueIndex));
+  });
+  ui.clearPlanButton.addEventListener("click", clearCommandPlan);
+  ui.endTurnButton.addEventListener("click", resolveCommandPlan);
   ui.ultimateButton.addEventListener("click", useUltimate);
   ui.decisionOptions.addEventListener("click", (event) => {
     const option = event.target.closest("[data-decision-key]");
@@ -1039,7 +1224,16 @@ async function initialise() {
     renderCreator();
     return;
   }
-  if (run?.classId !== profile.classId) {
+  if (!profile.personalityId) {
+    profile.personalityId = DEFAULT_PERSONALITY_ID;
+    profile.version = 2;
+    saveProfile();
+  }
+  if (run && !run.personalityId) {
+    run.personalityId = profile.personalityId;
+    saveRun();
+  }
+  if (run?.classId !== profile.classId || (run && run.personalityId !== profile.personalityId)) {
     run = null;
     saveRun();
   }

@@ -4,6 +4,27 @@ export const ELEMENTS = Object.freeze({
   tide: Object.freeze({ id: "tide", label: "Tide", icon: "💧", beats: "ember" }),
 });
 
+export const PET_PERSONALITIES = Object.freeze({
+  bold: Object.freeze({
+    id: "bold", icon: "✹", name: "Bold", title: "The fearless one",
+    description: "The first Attack in every plan deals +2 damage.",
+  }),
+  cunning: Object.freeze({
+    id: "cunning", icon: "◇", name: "Cunning", title: "The clever one",
+    description: "A Technique committed first costs 1 less Energy.",
+  }),
+  loyal: Object.freeze({
+    id: "loyal", icon: "♥", name: "Loyal", title: "The steadfast one",
+    description: "The first Guard command in every plan grants +3 Guard.",
+  }),
+  playful: Object.freeze({
+    id: "playful", icon: "✦", name: "Playful", title: "The unpredictable one",
+    description: "A three-command plan using Attack, Guard and Technique gains 2 extra Prowl and draws 1 card.",
+  }),
+});
+
+export const DEFAULT_PERSONALITY_ID = "bold";
+
 export const CLASS_FORMS = Object.freeze({
   "ember-knight": Object.freeze({
     id: "ember-knight",
@@ -197,59 +218,59 @@ export const ENEMIES = Object.freeze({
   "moss-rat": Object.freeze({
     id: "moss-rat", name: "Moss Rat Marauder", icon: "🐀", element: "gust", maxHealth: 24, coins: 14,
     intents: Object.freeze([
-      Object.freeze({ type: "attack", value: 6 }),
-      Object.freeze({ type: "guard", value: 5 }),
-      Object.freeze({ type: "attack", value: 8 }),
+      Object.freeze({ name: "Mossy Jab", type: "attack", value: 6 }),
+      Object.freeze({ name: "Bramble Brace", type: "guard", value: 5 }),
+      Object.freeze({ name: "Burrow Rush", type: "attack", value: 8 }),
     ]),
   }),
   "cinder-crow": Object.freeze({
     id: "cinder-crow", name: "Cinder Crow", icon: "🐦", element: "ember", maxHealth: 26, coins: 15,
     intents: Object.freeze([
-      Object.freeze({ type: "attack", value: 5 }),
-      Object.freeze({ type: "attack-burn", value: 4, burn: 2 }),
-      Object.freeze({ type: "guard", value: 6 }),
+      Object.freeze({ name: "Cinder Peck", type: "attack", value: 5 }),
+      Object.freeze({ name: "Ashen Brand", type: "attack-burn", value: 4, burn: 2 }),
+      Object.freeze({ name: "Wingguard", type: "guard", value: 6 }),
     ]),
   }),
   "brook-boar": Object.freeze({
     id: "brook-boar", name: "Brook Boar", icon: "🐗", element: "tide", maxHealth: 31, coins: 17,
     intents: Object.freeze([
-      Object.freeze({ type: "guard", value: 6 }),
-      Object.freeze({ type: "attack", value: 8 }),
-      Object.freeze({ type: "attack", value: 10 }),
+      Object.freeze({ name: "Riverhide", type: "guard", value: 6 }),
+      Object.freeze({ name: "Tusk Surge", type: "attack", value: 8 }),
+      Object.freeze({ name: "Flood Charge", type: "attack", value: 10 }),
     ]),
   }),
   "lantern-lynx": Object.freeze({
     id: "lantern-lynx", name: "Lantern Lynx", icon: "🐈", element: "ember", maxHealth: 33, coins: 18,
     intents: Object.freeze([
-      Object.freeze({ type: "attack", value: 7 }),
-      Object.freeze({ type: "strength", value: 2 }),
-      Object.freeze({ type: "attack", value: 6 }),
+      Object.freeze({ name: "Lantern Swipe", type: "attack", value: 7 }),
+      Object.freeze({ name: "Kindle Fury", type: "strength", value: 2 }),
+      Object.freeze({ name: "Blazing Pounce", type: "attack", value: 6 }),
     ]),
   }),
   "iron-mastiff": Object.freeze({
     id: "iron-mastiff", name: "Iron Mastiff", icon: "🐕", element: "ember", maxHealth: 45, coins: 28, elite: true,
     intents: Object.freeze([
-      Object.freeze({ type: "guard", value: 8 }),
-      Object.freeze({ type: "attack", value: 10 }),
-      Object.freeze({ type: "strength", value: 2 }),
-      Object.freeze({ type: "attack", value: 12 }),
+      Object.freeze({ name: "Iron Stance", type: "guard", value: 8 }),
+      Object.freeze({ name: "Chainbite", type: "attack", value: 10 }),
+      Object.freeze({ name: "Temper", type: "strength", value: 2 }),
+      Object.freeze({ name: "Crusher Charge", type: "attack", value: 12 }),
     ]),
   }),
   "tempest-stag": Object.freeze({
     id: "tempest-stag", name: "Tempest Stag", icon: "🦌", element: "gust", maxHealth: 46, coins: 29, elite: true,
     intents: Object.freeze([
-      Object.freeze({ type: "attack", value: 8 }),
-      Object.freeze({ type: "guard", value: 9 }),
-      Object.freeze({ type: "attack", value: 13 }),
+      Object.freeze({ name: "Gale Antlers", type: "attack", value: 8 }),
+      Object.freeze({ name: "Stormhide", type: "guard", value: 9 }),
+      Object.freeze({ name: "Tempest Rush", type: "attack", value: 13 }),
     ]),
   }),
   "cycle-lion": Object.freeze({
     id: "cycle-lion", name: "Lion of the Severed Cycle", icon: "🦁", element: "tide", maxHealth: 72, coins: 60, boss: true,
     intents: Object.freeze([
-      Object.freeze({ type: "attack", value: 8, element: "tide" }),
-      Object.freeze({ type: "guard", value: 10, element: "gust" }),
-      Object.freeze({ type: "attack-burn", value: 7, burn: 2, element: "ember" }),
-      Object.freeze({ type: "attack", value: 13, element: "tide" }),
+      Object.freeze({ name: "Tidal Claw", type: "attack", value: 8, element: "tide" }),
+      Object.freeze({ name: "Cycle's Shelter", type: "guard", value: 10, element: "gust" }),
+      Object.freeze({ name: "Severed Flame", type: "attack-burn", value: 7, burn: 2, element: "ember" }),
+      Object.freeze({ name: "Moonfall Roar", type: "attack", value: 13, element: "tide" }),
     ]),
   }),
 });
@@ -295,6 +316,111 @@ export function cardDefinition(entry) {
   return upgraded;
 }
 
+export function personalityDefinition(personalityId) {
+  return PET_PERSONALITIES[personalityId] || PET_PERSONALITIES[DEFAULT_PERSONALITY_ID];
+}
+
+export function effectiveCommandCost(card, index, personalityId = DEFAULT_PERSONALITY_ID) {
+  if (!card) return Infinity;
+  const cunningOpening = personalityId === "cunning" && index === 0 && card.type === "Technique";
+  return Math.max(0, card.cost - (cunningOpening ? 1 : 0));
+}
+
+export function commandBonuses(entries, index, {
+  classId = "ember-knight",
+  personalityId = DEFAULT_PERSONALITY_ID,
+} = {}) {
+  const cards = entries.map(cardDefinition);
+  const card = cards[index];
+  const previous = cards[index - 1];
+  const bonus = { damage: 0, block: 0, burn: 0, heal: 0, draw: 0, prowl: 0, labels: [] };
+  if (!card) return bonus;
+
+  if (personalityId === "bold" && card.damage && !cards.slice(0, index).some((item) => item?.damage)) {
+    bonus.damage += 2;
+    bonus.labels.push("Bold strike +2");
+  }
+  if (personalityId === "loyal" && card.block && !cards.slice(0, index).some((item) => item?.block)) {
+    bonus.block += 3;
+    bonus.labels.push("Loyal guard +3");
+  }
+  if (previous?.type === "Technique" && card.damage) {
+    bonus.damage += 3;
+    bonus.labels.push("Exploit +3");
+  } else if (previous?.type === "Guard" && card.damage) {
+    bonus.damage += 2;
+    bonus.labels.push("Counter +2");
+  } else if (previous?.type === "Attack" && card.block) {
+    bonus.block += 3;
+    bonus.labels.push("Cover +3");
+  }
+
+  if (index === 2) {
+    if (classId === "ember-knight" && card.damage) {
+      bonus.damage += 2;
+      bonus.burn += 1;
+      bonus.labels.push("Ember finish +2 · Burn +1");
+    } else if (classId === "gust-ranger") {
+      bonus.draw += 1;
+      bonus.prowl += 1;
+      bonus.labels.push("Gust finish · Draw +1 · Prowl +1");
+    } else if (classId === "tide-warden") {
+      bonus.block += 3;
+      bonus.heal += 1;
+      bonus.labels.push("Tide finish · Guard +3 · Heal +1");
+    }
+  }
+
+  const variedPlan = entries.length === 3 && new Set(cards.map((item) => item?.type)).size === 3;
+  if (personalityId === "playful" && index === 2 && variedPlan) {
+    bonus.prowl += 2;
+    bonus.draw += 1;
+    bonus.labels.push("Playful trio · Prowl +2 · Draw +1");
+  }
+  return bonus;
+}
+
+export function evaluateCommandPlan(entries, {
+  classId = "ember-knight",
+  personalityId = DEFAULT_PERSONALITY_ID,
+  baseEnergy = 3,
+  enemyElement = null,
+  attackBonus = 0,
+  firstAttackBonus = 0,
+  guardBonus = 0,
+  healBonus = 0,
+  burnBonus = 0,
+} = {}) {
+  let remainingEnergy = baseEnergy;
+  let valid = entries.length <= 3;
+  const totals = { damage: 0, block: 0, burn: 0, heal: 0, draw: 0, prowl: 0 };
+  let firstAttack = true;
+  const steps = entries.map((entry, index) => {
+    const card = cardDefinition(entry);
+    if (!card) {
+      valid = false;
+      return { card: null, cost: Infinity, bonus: commandBonuses(entries, index, { classId, personalityId }) };
+    }
+    const cost = effectiveCommandCost(card, index, personalityId);
+    if (cost > remainingEnergy) valid = false;
+    remainingEnergy = Math.max(0, remainingEnergy - cost) + (card.energy || 0);
+    const bonus = commandBonuses(entries, index, { classId, personalityId });
+    const hits = card.hits || 1;
+    const openingAttackBonus = card.damage && firstAttack ? firstAttackBonus : 0;
+    totals.damage += ((card.damage || 0) + (card.damage ? elementEdge(card.element, enemyElement) + attackBonus + openingAttackBonus : 0)) * hits + bonus.damage;
+    totals.block += (card.block || 0) + (card.type === "Guard" ? guardBonus : 0) + bonus.block;
+    if (card.burn || bonus.burn) totals.burn += (card.burn || 0) + bonus.burn + burnBonus;
+    totals.heal += (card.heal || 0) + (card.heal ? healBonus : 0) + bonus.heal;
+    totals.draw += (card.draw || 0) + bonus.draw;
+    totals.prowl += 1 + (card.prowl || 0) + bonus.prowl;
+    if (classId === "ember-knight" && card.damage && firstAttack) totals.burn += 1 + burnBonus;
+    if (card.damage) firstAttack = false;
+    if (classId === "gust-ranger" && index === 2) totals.draw += 1;
+    return { card, cost, bonus };
+  });
+  return { valid, remainingEnergy, totals, steps };
+}
+
 export function createExpeditionMap(random = Math.random) {
   const opening = shuffle(NORMAL_ENEMIES, random).slice(0, 2);
   const middleEnemy = randomItem(NORMAL_ENEMIES, random);
@@ -325,8 +451,9 @@ export function createExpeditionMap(random = Math.random) {
 export function createRun(profile, random = Math.random) {
   const form = CLASS_FORMS[profile.classId] || CLASS_FORMS["ember-knight"];
   return {
-    version: 1,
+    version: 2,
     classId: form.id,
+    personalityId: personalityDefinition(profile.personalityId).id,
     stage: 0,
     depth: 0,
     hp: form.maxHealth,
@@ -356,10 +483,11 @@ export function intentLabel(intent, enemyStrength = 0, enemyElement = null, play
   if (!intent) return "Watching carefully";
   const intentElement = intent.element || enemyElement;
   const edge = intent.type.startsWith("attack") ? elementEdge(intentElement, playerElement) : 0;
-  if (intent.type === "attack") return `Attack for ${intent.value + enemyStrength + edge}${edge ? " · Edge +2" : ""}`;
-  if (intent.type === "attack-burn") return `Attack for ${intent.value + enemyStrength + edge} and apply ${intent.burn} Burn${edge ? " · Edge +2" : ""}`;
-  if (intent.type === "guard") return `Gain ${intent.value} Guard`;
-  if (intent.type === "strength") return `Gain ${intent.value} Strength`;
+  const name = intent.name ? `${intent.name} · ` : "";
+  if (intent.type === "attack") return `${name}Attack for ${intent.value + enemyStrength + edge}${edge ? " · Edge +2" : ""}`;
+  if (intent.type === "attack-burn") return `${name}Attack for ${intent.value + enemyStrength + edge} and apply ${intent.burn} Burn${edge ? " · Edge +2" : ""}`;
+  if (intent.type === "guard") return `${name}Gain ${intent.value} Guard`;
+  if (intent.type === "strength") return `${name}Gain ${intent.value} Strength`;
   return "Unknown intention";
 }
 

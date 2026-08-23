@@ -93,6 +93,13 @@
               <h2>Choose a battle form</h2>
             </div>
             <div class="class-choices" id="classChoices" role="radiogroup" aria-label="Choose a battle form"></div>
+
+            <div class="panel-heading personality-heading">
+              <p class="step-number">Step 4</p>
+              <h2>How does your pet face trouble?</h2>
+            </div>
+            <p class="personality-intro">Choose the instinct that feels most like your pet. It stays with them across expeditions and changes how their plans work.</p>
+            <div class="personality-choices" id="personalityChoices" role="radiogroup" aria-label="Choose your pet's personality"></div>
           </section>
 
           <aside class="champion-preview-wrap" aria-label="Champion preview">
@@ -101,6 +108,7 @@
               <div class="champion-portrait">
                 <img id="creatorCardPhoto" alt="" hidden />
                 <span class="champion-silhouette" id="creatorCardPlaceholder" aria-hidden="true">♞</span>
+                <span class="champion-personality-ribbon" id="creatorPersonalityRibbon">✹ Bold</span>
               </div>
               <div class="champion-nameplate">
                 <strong id="creatorCardName">Your Pet</strong>
@@ -165,7 +173,7 @@
           <div class="turn-seal" id="turnSeal">Turn 1</div>
         </header>
         <div class="battlefield">
-          <section class="combatant enemy-combatant" aria-label="Enemy">
+          <section class="combatant enemy-combatant" id="enemyCombatant" aria-label="Enemy">
             <div class="combatant-heading">
               <div>
                 <span class="element-medallion" id="enemyElementIcon"></span>
@@ -179,8 +187,9 @@
               <strong id="enemyHealthText"></strong>
             </div>
             <div class="intent-panel">
-              <span>Next intention</span>
+              <span id="enemyPattern">Pattern step</span>
               <strong id="enemyIntent"></strong>
+              <small>The pattern repeats after its final step.</small>
             </div>
           </section>
 
@@ -195,11 +204,11 @@
             </div>
           </section>
 
-          <section class="combatant player-combatant" aria-label="Your champion">
+          <section class="combatant player-combatant" id="playerCombatant" aria-label="Your champion">
             <div class="combatant-heading">
               <div>
                 <span class="element-medallion" id="playerElementIcon"></span>
-                <h2 id="combatPetName"></h2>
+                <span class="combatant-nameplate"><h2 id="combatPetName"></h2><small id="combatPersonality"></small></span>
               </div>
               <span class="status-chip" id="playerStatus"></span>
             </div>
@@ -212,14 +221,27 @@
           </section>
         </div>
 
-        <section class="hand-tray" aria-label="Your hand">
+        <section class="hand-tray" aria-label="Plan your commands">
+          <section class="command-planner" aria-labelledby="commandPlannerTitle">
+            <div class="command-planner-heading">
+              <div>
+                <strong id="commandPlannerTitle">Plan your pet's moves</strong>
+                <small>Choose up to three cards in the order they should happen.</small>
+              </div>
+              <button class="quiet-button clear-plan-button" id="clearPlanButton" type="button">Clear plan</button>
+            </div>
+            <div class="command-queue" id="commandQueue" aria-live="polite"></div>
+            <div class="plan-resolution">
+              <p id="planForecast">Choose a card to begin the plan.</p>
+              <button class="primary-button end-turn-button" id="endTurnButton" type="button">Pass turn</button>
+            </div>
+          </section>
           <div class="hand-toolbar">
-            <div class="energy-orb"><b id="energyCount">3</b><span>Energy</span></div>
+            <div class="energy-orb"><b id="energyCount">3</b><span>Energy available</span></div>
             <div class="pile-counts">
               <span>Draw <b id="drawCount">0</b></span>
               <span>Discard <b id="discardCount">0</b></span>
             </div>
-            <button class="primary-button end-turn-button" id="endTurnButton" type="button">End turn</button>
           </div>
           <div class="combat-hand" id="combatHand"></div>
         </section>
@@ -251,11 +273,12 @@
         <h2>How Prowlbound works</h2>
       </div>
       <ol>
-        <li>Your uploaded pet is the champion card and stays with you throughout the expedition.</li>
-        <li>In battle, draw five techniques and spend three Energy each turn. The enemy always shows its next move.</li>
+        <li>Your uploaded pet is the champion. Their chosen personality stays with them across expeditions and changes how their plans work.</li>
+        <li>Choose up to three cards in order, then unleash the complete plan. The order creates bonuses such as Exploit, Counter and Cover.</li>
+        <li>Enemies follow named, repeating patterns. Read the next step before deciding whether your pet should attack, prepare or defend.</li>
         <li>Elemental Edge adds +2 damage: Ember beats Gust, Gust beats Tide, and Tide beats Ember.</li>
-        <li>Health carries between encounters. Add cards, gain talents, find relics and choose safer or riskier paths.</li>
-        <li>Defeat the final boss to finish a run. Win or lose, your pet earns permanent Bond XP.</li>
+        <li>Fill Prowl to use a signature move bearing your pet's name. Health carries between encounters.</li>
+        <li>Add commands, gain talents, find relics and defeat the final boss. Win or lose, your pet earns permanent Bond XP.</li>
       </ol>
       <p class="privacy-note"><strong>Privacy:</strong> your pet image is stored only in this browser's local storage.</p>
       <p class="icon-credit">
