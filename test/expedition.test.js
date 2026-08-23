@@ -79,4 +79,5 @@ test("the expedition page exposes the complete vertical slice and local-only por
   assert.match(expeditionScript, /canvas\.toBlob/);
   assert.match(expeditionScript, /localStorage\.setItem\(RUN_KEY/);
   assert.match(expeditionScript, /classCrestMarkup/);
+  assert.doesNotMatch(expeditionScript, /crest-badge/);
 });

@@ -264,37 +264,50 @@ input[type="range"] { accent-color: var(--gold); }
 .crest-emblem {
   fill: none;
   stroke: #fff1c7;
-  stroke-width: 3;
+  stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.crest-detail { stroke-width: 2.1; }
-
-.crest-badge {
-  fill: #2d1a1c;
-  stroke: #f1cf78;
-  stroke-width: 2.5;
-}
-
-.crest-element {
-  stroke: #ffe9a5;
-  stroke-width: 1.4;
+.crest-detail {
+  fill: none;
+  stroke: #fff1c7;
+  stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.class-crest-svg[data-element="ember"] .crest-element { fill: #e95c36; }
-.class-crest-svg[data-element="gust"] .crest-element { fill: #69a967; }
-.class-crest-svg[data-element="tide"] .crest-element { fill: #55a8d0; }
-
-.crest-element-detail {
-  fill: #ffe08a;
-  stroke: #ffe9a5;
+.crest-solid {
+  fill: #fff1c7;
+  stroke: #fff8df;
   stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.crest-cutout {
+  fill: none;
+  stroke: color-mix(in srgb, var(--crest-color), #1e1113 28%);
+  stroke-width: 3.2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+.crest-accent {
+  fill: #f3c95e;
+  stroke: #ffe9a5;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.crest-accent-line {
+  fill: none;
+  stroke: #fff1c7;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.crest-wave { stroke-width: 2.4; }
 .class-choice strong { font-family: "Cinzel", serif; }
 .class-choice small { color: #c5b58f; line-height: 1.35; }
 
