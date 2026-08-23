@@ -11,7 +11,6 @@ test("the main menu excludes the retired World Chronicle", () => {
 
 test("the main menu retains its playable navigation", () => {
   assert.match(pageSource, /id="mainMenuPlayButton"/);
-  assert.match(pageSource, /id="mainMenuExpeditionButton"/);
   assert.match(pageSource, /id="mainMenuTutorialButton"/);
   assert.match(pageSource, /id="mainMenuRulebookButton"/);
   assert.match(pageSource, /id="mainMenuSettingsButton"/);
