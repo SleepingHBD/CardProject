@@ -42,7 +42,7 @@ const CARD_LIBRARY = [
   ["gust", 3, "Dandelion Dash", "Seed Stampede", "All speed. Some direction.", "common", "finisher", "dandelion-dash"],
   ["gust", 4, "Windlass Whiskers", "Pulley Puff", "If it has a rope, he can move it.", "common", "link", "windlass-whiskers"],
   ["gust", 5, "Belfry Bobtail", "Last Toll", "The final bell is always the loudest.", "uncommon", "finisher", "belfry-bobtail"],
-  ["tide", 8, "Puddle Pouncer", "Splash Ambush", "Dry socks are overrated.", "epic", "vanguard", "puddle-pouncer"],
+  ["tide", 8, "Riptide Rook", "Anchorbreaker", "Small paws. Heavy anchor.", "epic", "vanguard", "riptide-rook"],
   ["tide", 6, "Bubble Bengal", "Pearl Pop", "Elegance with every ripple.", "rare", "link", "bubble-bengal"],
   ["tide", 5, "Moonpool Mouser", "Lunar Ripple", "The moon whispers. She listens.", "uncommon", "link", "moonpool-mouser"],
   ["tide", 9, "Empress Ebb", "Leviathan's Decree", "Even the moon waits for her command.", "legendary", "finisher", "empress-ebb"],

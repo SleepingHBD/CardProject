@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
@@ -13,6 +14,34 @@ const cinderPhoto = new URL(
   "../assets/cards/photographic/cinder-shiopan.png",
   import.meta.url,
 );
+
+test("Riptide Rook replaces the Tide Epic Vanguard without changing its library slot", () => {
+  const libraryDeclaration = gameSource.match(
+    /const CARD_LIBRARY = \[[\s\S]*?\}\)\);/,
+  )?.[0];
+  assert.ok(libraryDeclaration, "the mapped card library should be declared");
+  const cards = JSON.parse(runInNewContext(
+    `${libraryDeclaration}\nJSON.stringify(CARD_LIBRARY)`,
+  ));
+
+  assert.equal(cards.length, 24);
+  assert.deepEqual(cards[16], {
+    id: "card-16",
+    element: "tide",
+    power: 8,
+    name: "Riptide Rook",
+    move: "Anchorbreaker",
+    lore: "Small paws. Heavy anchor.",
+    rarity: "epic",
+    tactic: "vanguard",
+    art: "riptide-rook",
+  });
+  assert.equal(cards.filter((card) => card.art === "riptide-rook").length, 1);
+  assert.doesNotMatch(
+    `${pageSource}\n${gameSource}\n${styleSource}`,
+    /Puddle Pouncer|puddle-pouncer|Splash Ambush|Dry socks are overrated\./i,
+  );
+});
 
 test("settings offer persistent illustrated and photographic card artwork", () => {
   assert.match(pageSource, /id="artworkSettingsTab"[\s\S]*?Card Artwork/);
