@@ -8323,7 +8323,7 @@ input {
     margin: 0;
     display: grid;
     grid-template-columns: minmax(330px, 1.18fr) minmax(220px, .82fr);
-    grid-template-rows: 30px minmax(0, 1fr) clamp(104px, 29dvh, 116px);
+    grid-template-rows: 30px minmax(0, 1fr) clamp(116px, 30dvh, 156px);
     overflow: hidden;
     border-width: 3px;
     border-radius: 7px;
@@ -8830,6 +8830,7 @@ input {
     min-width: 0;
     min-height: 36px;
     margin: 0;
+    flex-wrap: nowrap;
     gap: 4px;
   }
 
@@ -8925,10 +8926,10 @@ input {
     width: var(--landscape-hand-card-width);
     min-width: 0;
     max-width: var(--landscape-hand-card-width);
-    height: min(100%, 110px);
+    height: min(100%, 150px);
     padding: 2px;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 24px 27px;
+    grid-template-rows: minmax(0, 1fr) 26px;
     border-width: 2px;
     border-radius: 4px;
     box-shadow:
@@ -8960,9 +8961,15 @@ input {
   .hand .card-info small {
     margin-top: 0;
     font-size: clamp(5px, .82vw, 7px);
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .hand .card-ability {
+    /* The name strip already shows element and role. On this compact shelf,
+       reserve the decorative move/flavor row for the full archive card so
+       portrait windows do not collapse into face-cropping strips. */
+    display: none;
     width: 100%;
     height: auto;
     min-width: 0;
@@ -9170,7 +9177,7 @@ input {
   }
 
   .game-shell {
-    grid-template-rows: 27px minmax(0, 1fr) 96px;
+    grid-template-rows: 27px minmax(0, 1fr) clamp(104px, 30dvh, 124px);
   }
 
   .round-bar {
@@ -9200,8 +9207,7 @@ input {
   }
 
   .hand .game-card {
-    height: min(100%, 91px);
-    grid-template-rows: minmax(0, 1fr) 21px 23px;
+    height: 100%;
   }
 
   .hand .card-info strong {

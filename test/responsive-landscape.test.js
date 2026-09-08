@@ -30,7 +30,20 @@ test("short landscape screens use a height-led gameplay grid", () => {
   assert.match(landscapeRules, /\.arena \{[\s\S]*?grid-column: 1;[\s\S]*?grid-row: 2;/);
   assert.match(landscapeRules, /\.control-panel \{[\s\S]*?grid-column: 2;[\s\S]*?grid-row: 2;/);
   assert.match(landscapeRules, /\.hand \{[\s\S]*?grid-column: 1 \/ -1;[\s\S]*?grid-row: 3;/);
-  assert.match(landscapeRules, /grid-template-rows: 27px minmax\(0, 1fr\) 96px;/);
+  assert.match(landscapeRules, /\.control-panel \.selection-bar \{[^}]*flex-wrap: nowrap;/);
+  assert.match(landscapeRules, /grid-template-rows: 27px minmax\(0, 1fr\) clamp\(104px, 30dvh, 124px\);/);
+});
+
+test("compact hand cards prioritize portraits without hiding gameplay information", () => {
+  const compactHandRules = styleSource.slice(styleSource.indexOf("   Landscape play surfaces"));
+  assert.match(compactHandRules, /\.hand \.game-card \{[^}]*grid-template-rows: minmax\(0, 1fr\) 26px;/);
+  assert.match(compactHandRules, /\.hand \.card-ability \{[^}]*display: none;/);
+  assert.match(compactHandRules, /\.hand \.card-info small \{[^}]*letter-spacing: 0;[^}]*text-transform: none;/);
+  for (const className of ["card-art", "card-info", "card-element", "card-power"]) {
+    const blocks = [...compactHandRules.matchAll(new RegExp(`\\.hand \\.${className} \\{([^}]*)\\}`, "g"))];
+    assert.ok(blocks.length, `${className} should retain its compact sizing`);
+    assert.ok(blocks.every(([, declarations]) => !/display:\s*none/.test(declarations)), `${className} must remain visible`);
+  }
 });
 
 test("the duel follows the live iOS viewport instead of leaving unused space", () => {

@@ -56,6 +56,15 @@ test("Cinder Kit uses Shiopan's photographic portrait and name", () => {
   assert.match(styleSource, /object-position: center top/);
 });
 
+test("Shiopan's cleaned cutout retains its original dimensions and alpha channel", () => {
+  const png = readFileSync(cinderPhoto);
+  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  assert.equal(png.toString("ascii", 12, 16), "IHDR");
+  assert.equal(png.readUInt32BE(16), 1086);
+  assert.equal(png.readUInt32BE(20), 1448);
+  assert.equal(png[25], 6, "the portrait must remain an RGBA PNG, not an opaque background");
+});
+
 test("all photographic cards use one complete foreground frame", () => {
   assert.match(
     styleSource,
