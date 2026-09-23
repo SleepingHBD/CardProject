@@ -9332,3 +9332,280 @@ input {
     min-height: 40px;
   }
 }
+
+/* A full-bleed illustrated route map keeps the cards at the centre of play. */
+.arena.duel-table {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: clamp(6px, .7vw, 10px);
+  background:
+    linear-gradient(rgba(244, 219, 169, .05), rgba(87, 56, 28, .08)),
+    url("assets/backgrounds/duel-map-v1.webp") center / cover no-repeat,
+    #d5ad74;
+  border-bottom-color: #654326;
+  box-shadow: inset 0 0 0 2px #684525, inset 0 0 22px rgba(88, 52, 20, .26);
+  isolation: isolate;
+}
+
+.arena.duel-table::before {
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  background: none;
+  border: 1px solid rgba(81, 51, 26, .65);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px rgba(244, 217, 154, .5);
+  clip-path: none;
+  pointer-events: none;
+}
+
+.arena.duel-table::after {
+  display: none;
+}
+
+.duel-table .duelist-rail {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  width: clamp(68px, calc(50% - 228px), 126px);
+  min-width: 0;
+  max-width: 126px;
+  margin: 0;
+  padding: 6px 5px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 4px;
+  background: rgba(53, 35, 25, .91);
+  border: 1px solid #a67c42;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgba(243, 204, 125, .15), 0 2px 3px rgba(48, 28, 14, .36);
+}
+
+.duel-table .opponent-panel {
+  left: 12px;
+}
+
+.duel-table .you-panel {
+  right: 12px;
+}
+
+.duel-table .duelist-nameplate {
+  width: 100%;
+  padding-bottom: 5px;
+  color: #f4deb0;
+  border-bottom: 1px solid rgba(226, 181, 94, .48);
+  font-family: "Cinzel", serif;
+  font-size: clamp(9px, .85vw, 12px);
+  font-weight: 900;
+  letter-spacing: .12em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.duel-table .duelist-rail .collection {
+  width: min(126px, 100%);
+  min-height: 0;
+  margin: 0;
+  grid-column: 1;
+}
+
+.duel-table .collection::before {
+  color: #d7ba81;
+  font-size: clamp(6px, .58vw, 8px);
+}
+
+.duel-table .battlefield {
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.duel-table .play-zone {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.duel-table .card-placeholder {
+  margin-inline: auto;
+}
+
+.duel-table .played-cards,
+.duel-table .formation-builder,
+.duel-table .formation-slot {
+  min-height: 0;
+}
+
+.duel-table .card-placeholder,
+.duel-table .formation-slot.empty-slot {
+  color: #5b3e27;
+  background:
+    linear-gradient(135deg, rgba(255, 245, 205, .42), transparent 45%),
+    rgba(245, 224, 177, .8);
+  border-color: rgba(111, 70, 38, .6);
+  box-shadow: inset 0 0 0 3px rgba(116, 76, 39, .11);
+}
+
+.duel-table .formation-slot.next-slot {
+  color: #43311f;
+  background: linear-gradient(145deg, #f2dfaa, #d1ac66);
+  border-color: #f8de9f;
+  box-shadow: inset 0 0 0 3px rgba(110, 69, 30, .22), 0 0 0 2px rgba(226, 185, 91, .28);
+}
+
+.duel-table .formation-slot.waiting-slot {
+  opacity: .68;
+}
+
+.duel-table .formation-slot.drag-over {
+  color: #352617;
+  background: #f2d887;
+  border-color: #fff0b7;
+  box-shadow: inset 0 0 0 3px rgba(110, 69, 30, .2), 0 0 18px #e8c260;
+}
+
+.duel-table .versus-badge {
+  left: max(24px, 6%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #33271f;
+  border: 2px solid #d2ab63;
+  box-shadow: inset 0 0 0 2px #241c18, 0 3px 0 #1a1511;
+  font-size: 12px;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .arena.duel-table {
+    gap: 9px;
+    padding: 10px 8px;
+  }
+
+  .duel-table .duelist-rail {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: none;
+    min-height: 42px;
+    padding: 4px 8px;
+    grid-template-columns: 90px minmax(0, 1fr);
+    gap: 8px;
+    text-align: left;
+  }
+
+  .duel-table .opponent-panel,
+  .duel-table .you-panel {
+    right: auto;
+    left: auto;
+  }
+
+  .duel-table .duelist-nameplate {
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .duel-table .duelist-rail .collection {
+    width: min(165px, 100%);
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .duel-table .collection::before {
+    display: none;
+  }
+
+  .duel-table .battlefield {
+    height: 348px;
+    margin: 0;
+  }
+
+  .duel-table .versus-badge {
+    left: 50%;
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 600px) {
+  .arena.duel-table {
+    padding: 4px;
+  }
+
+  .duel-table .duelist-rail {
+    top: 4px;
+    width: clamp(48px, 10vw, 72px);
+    padding: 5px 2px;
+    gap: 4px;
+    border-width: 1px;
+  }
+
+  .duel-table .opponent-panel {
+    left: 4px;
+  }
+
+  .duel-table .you-panel {
+    right: 4px;
+  }
+
+  .duel-table .duelist-nameplate {
+    padding-bottom: 3px;
+    font-size: 7px;
+    letter-spacing: .04em;
+  }
+
+  .duel-table .duelist-rail .collection {
+    width: min(65px, 100%);
+  }
+
+  .duel-table .collection::before {
+    display: none;
+  }
+
+  .duel-table .battlefield {
+    height: 100%;
+    gap: 4px;
+  }
+
+  .duel-table .play-zone {
+    height: auto;
+    min-height: 0;
+    flex: 1 1 0;
+  }
+
+  /* The sealed opponent needs less height; reserve the space for your cards. */
+  .duel-table .battlefield:has(.opponent-zone .card-placeholder) {
+    gap: 10px;
+  }
+
+  .duel-table .battlefield:has(.opponent-zone .card-placeholder) .opponent-zone {
+    flex: 0 0 50px;
+  }
+
+  .duel-table .battlefield:has(.opponent-zone .card-placeholder) .versus-badge {
+    top: 57px;
+  }
+
+  .duel-table .versus-badge {
+    left: max(15px, 5%);
+    width: 22px;
+    height: 22px;
+    font-size: 8px;
+  }
+}
