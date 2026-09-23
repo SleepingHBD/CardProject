@@ -92,6 +92,9 @@ const CLASH_STYLES = Object.freeze(["cinematic", "classic"]);
 const CLASH_STYLE_STORAGE_KEY = "projectProwl.clashStyle";
 const ARTWORK_STYLES = Object.freeze(["illustrated", "photographic"]);
 const ARTWORK_STYLE_STORAGE_KEY = "projectProwl.artworkStyle";
+const BOARD_THEMES = Object.freeze(["map", "tabletop"]);
+// The previous key auto-saved Map for everyone, so start a fresh preference with Tabletop as default.
+const BOARD_THEME_STORAGE_KEY = "projectProwl.boardThemeV2";
 const PHOTOGRAPHIC_CARD_ART = Object.freeze({
   "teapot-tabby": "./assets/cards/photographic/teapot-tabby-bell.jpg",
   "cinder-kit": "./assets/cards/photographic/cinder-shiopan.png",
@@ -518,6 +521,15 @@ function readSavedArtworkStyle() {
   }
 }
 
+function readSavedBoardTheme() {
+  try {
+    const savedTheme = window.localStorage.getItem(BOARD_THEME_STORAGE_KEY);
+    return BOARD_THEMES.includes(savedTheme) ? savedTheme : "tabletop";
+  } catch {
+    return "tabletop";
+  }
+}
+
 function normalizedAudioVolumes(volumes = {}) {
   return Object.fromEntries(
     Object.entries(DEFAULT_AUDIO_VOLUMES).map(([key, fallback]) => {
@@ -566,6 +578,7 @@ const state = {
   soundOn: true,
   clashStyle: readSavedClashStyle(),
   artworkStyle: readSavedArtworkStyle(),
+  boardTheme: readSavedBoardTheme(),
   audioVolumes: readSavedAudioVolumes(),
 };
 const tutorial = {
@@ -638,6 +651,7 @@ const ui = {
   settingsDialog: document.querySelector("#settingsDialog"),
   settingsStatus: document.querySelector("#settingsStatus"),
   artworkSettingsStatus: document.querySelector("#artworkSettingsStatus"),
+  boardSettingsStatus: document.querySelector("#boardSettingsStatus"),
   audioSettingsStatus: document.querySelector("#audioSettingsStatus"),
   settingsTabs: document.querySelectorAll("[data-settings-panel]"),
   settingsPanels: document.querySelectorAll(".settings-panel"),
@@ -1576,7 +1590,7 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
   const lesson = currentTutorialLesson();
   const { score, winner, decidedBy, extraCardPoints } = resolution;
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
-  ui.versusBadge.className = "versus-badge";
+  ui.versusBadge.className = "versus-badge has-score";
 
   if (winner === "player") {
     state.playerRoundWins += 1;
@@ -3351,7 +3365,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   );
   let reward = null;
   let awaitsPlayerClaim = false;
-  ui.versusBadge.className = "versus-badge";
+  ui.versusBadge.className = "versus-badge has-score";
 
   ui.versusBadge.textContent = `${score.player}–${score.ai}`;
 
@@ -3624,6 +3638,15 @@ function saveArtworkStyle(artworkStyle) {
   }
 }
 
+function saveBoardTheme(boardTheme) {
+  try {
+    window.localStorage.setItem(BOARD_THEME_STORAGE_KEY, boardTheme);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function saveAudioVolumes(audioVolumes) {
   try {
     window.localStorage.setItem(
@@ -3670,7 +3693,18 @@ function renderArtworkSettings(saved = true) {
   if (tutorial.active) renderTutorialCoach();
 }
 
-function renderSettings(clashSaved = true, audioSaved = true, artworkSaved = true) {
+function renderBoardSettings(saved = true) {
+  document.documentElement.dataset.boardTheme = state.boardTheme;
+  document.querySelectorAll('input[name="boardTheme"]').forEach((option) => {
+    option.checked = option.value === state.boardTheme;
+  });
+  const themeLabel = state.boardTheme === "tabletop" ? "Tabletop" : "Map";
+  ui.boardSettingsStatus.textContent = saved
+    ? `${themeLabel} is selected and saved for this browser.`
+    : `${themeLabel} is selected for this session. Browser storage is unavailable.`;
+}
+
+function renderSettings(clashSaved = true, audioSaved = true, artworkSaved = true, boardSaved = true) {
   document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
     option.checked = option.value === state.clashStyle;
   });
@@ -3679,6 +3713,7 @@ function renderSettings(clashSaved = true, audioSaved = true, artworkSaved = tru
     ? `${styleLabel} clashes are selected and saved for this browser.`
     : `${styleLabel} clashes are selected for this session. Browser storage is unavailable.`;
   renderArtworkSettings(artworkSaved);
+  renderBoardSettings(boardSaved);
   renderAudioSettings(audioSaved);
 }
 
@@ -4051,6 +4086,13 @@ document.querySelectorAll('input[name="artworkStyle"]').forEach((option) => {
     renderArtworkSettings(saveArtworkStyle(state.artworkStyle));
   });
 });
+document.querySelectorAll('input[name="boardTheme"]').forEach((option) => {
+  option.addEventListener("change", () => {
+    if (!option.checked || !BOARD_THEMES.includes(option.value)) return;
+    state.boardTheme = option.value;
+    renderBoardSettings(saveBoardTheme(state.boardTheme));
+  });
+});
 ui.audioVolumeInputs.forEach((input) => {
   input.addEventListener("input", () => {
     const volumeKey = input.dataset.audioVolume;
@@ -4117,6 +4159,7 @@ renderSettings(
   saveClashStyle(state.clashStyle),
   saveAudioVolumes(state.audioVolumes),
   saveArtworkStyle(state.artworkStyle),
+  saveBoardTheme(state.boardTheme),
 );
 renderFullscreenControls();
 showMainMenu();

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-board-theme="tabletop">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -389,7 +389,7 @@
       <p class="eyebrow">DUEL SETTINGS</p>
       <h2 id="settingsTitle">Settings</h2>
       <p class="settings-intro" id="settingsIntro">
-        Adjust the duel’s artwork, presentation, and audio. These choices are saved for this browser.
+        Adjust the duel’s board, artwork, presentation, and audio. These choices are saved for this browser.
       </p>
       <div class="settings-tabs" role="tablist" aria-label="Settings sections">
         <button
@@ -416,6 +416,17 @@
         </button>
         <button
           class="settings-tab"
+          id="boardSettingsTab"
+          data-settings-panel="board"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="boardSettingsPanel"
+        >
+          Board
+        </button>
+        <button
+          class="settings-tab"
           id="clashSettingsTab"
           data-settings-panel="clash"
           type="button"
@@ -426,6 +437,38 @@
           Clash Presentation
         </button>
       </div>
+      <section
+        class="settings-panel"
+        id="boardSettingsPanel"
+        role="tabpanel"
+        aria-labelledby="boardSettingsTab"
+        hidden
+      >
+        <fieldset class="clash-style-options board-theme-options">
+          <legend>Board style</legend>
+          <label class="clash-style-option board-theme-option">
+            <input type="radio" name="boardTheme" value="map" />
+            <span class="clash-style-seal" aria-hidden="true">M</span>
+            <span>
+              <strong>Map</strong>
+              <small>Play on the original illustrated map of Whiskerkeep.</small>
+              <em>Classic board</em>
+            </span>
+          </label>
+          <label class="clash-style-option board-theme-option">
+            <input type="radio" name="boardTheme" value="tabletop" checked />
+            <span class="clash-style-seal" aria-hidden="true">T</span>
+            <span>
+              <strong>Tabletop</strong>
+              <small>Play across a cloth-topped wooden table with a subtle divide between sides.</small>
+              <em>Default board</em>
+            </span>
+          </label>
+        </fieldset>
+        <p class="settings-status" id="boardSettingsStatus" aria-live="polite">
+          Tabletop is currently selected.
+        </p>
+      </section>
       <section
         class="settings-panel"
         id="artworkSettingsPanel"

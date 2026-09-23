@@ -7197,11 +7197,11 @@ input {
 }
 
 .settings-tabs {
-  width: min(480px, 100%);
+  width: min(570px, 100%);
   margin: 0 auto 17px;
   padding: 4px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   background: rgba(83, 53, 35, .14);
   border: 1px solid #987244;
@@ -7210,7 +7210,7 @@ input {
 }
 
 .settings-tab {
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 12px;
   color: #5b402e;
   background: transparent;
@@ -7220,6 +7220,7 @@ input {
   font-size: 11px;
   font-weight: 900;
   letter-spacing: .05em;
+  line-height: 1.15;
   cursor: pointer;
 }
 
@@ -7239,6 +7240,12 @@ input {
   background: linear-gradient(#65404c, #432a35);
   border-color: #2e1c25;
   box-shadow: inset 0 0 0 1px rgba(223, 183, 108, .42);
+}
+
+@media (max-width: 480px) {
+  .settings-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .settings-panel[hidden] {
@@ -9607,5 +9614,68 @@ input {
     width: 22px;
     height: 22px;
     font-size: 8px;
+  }
+}
+
+/* The alternate board uses the same card zones and controls as the map. */
+[data-board-theme="tabletop"] .arena.duel-table {
+  background: url("assets/backgrounds/whiskerkeep-table-v1.webp") center / cover no-repeat, #29302b;
+  border-bottom-color: #271c17;
+  box-shadow: inset 0 0 0 2px #2b201a, inset 0 0 20px rgba(12, 10, 8, .32);
+}
+
+[data-board-theme="tabletop"] .arena.duel-table::before {
+  border-color: rgba(188, 148, 83, .46);
+  box-shadow: inset 0 0 0 1px rgba(20, 16, 12, .64);
+}
+
+/* Hide the idle VS seal on the tabletop, but retain its round-point result. */
+[data-board-theme="tabletop"] .duel-table .versus-badge:not(.has-score) {
+  display: none;
+}
+
+/* A quiet brass hairline divides the two play areas without adding lane boxes. */
+[data-board-theme="tabletop"] .duel-table .battlefield::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: 16px;
+  left: 16px;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(177, 132, 70, .54) 10%,
+    rgba(207, 166, 100, .74) 50%,
+    rgba(177, 132, 70, .54) 90%,
+    transparent);
+  border-top: 1px solid rgba(17, 20, 17, .76);
+  box-shadow: 0 1px 0 rgba(20, 22, 18, .66);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.board-theme-option .clash-style-seal {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  color: transparent;
+  border-color: #493324;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 2px #c8a36e, 0 1px 2px rgba(42, 25, 16, .25);
+  font-size: 0;
+}
+
+.board-theme-option:has(input[value="map"]) .clash-style-seal {
+  background: url("assets/backgrounds/duel-map-v1.webp") center / cover no-repeat;
+}
+
+.board-theme-option:has(input[value="tabletop"]) .clash-style-seal {
+  background: url("assets/backgrounds/whiskerkeep-table-v1.webp") center / cover no-repeat;
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 600px) {
+  [data-board-theme="tabletop"] .duel-table .battlefield:has(.opponent-zone .card-placeholder)::before {
+    top: 57px;
   }
 }
