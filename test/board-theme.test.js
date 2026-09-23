@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
@@ -109,4 +109,19 @@ test("Tabletop hides the idle VS seal while keeping the round score", () => {
   assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.duel-table \.versus-badge:not\(\.has-score\) \{\s*display: none;/);
   assert.match(sourceFunction("resolveRound"), /ui\.versusBadge\.className = "versus-badge has-score";/);
   assert.match(sourceFunction("resolveTutorialRound"), /ui\.versusBadge\.className = "versus-badge has-score";/);
+});
+
+test("Tabletop uses the complete illustrated frame and keeps empty slots legible", () => {
+  assert.ok(existsSync(new URL("../assets/backgrounds/whiskerkeep-table-v2.webp", import.meta.url)));
+  assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table::before \{[^}]*border-image: url\("assets\/backgrounds\/whiskerkeep-table-v2\.webp"\) 60 60 80 60 fill \/ 1 \/ 0 stretch;/);
+  assert.doesNotMatch(stylesSource, /whiskerkeep-table-v1\.webp/);
+  assert.doesNotMatch(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table \{[^}]*background: url\("assets\/backgrounds\/whiskerkeep-table-v2\.webp"\) center \/ cover/);
+  assert.match(stylesSource, /\.formation-slot\.empty-slot:not\(\.next-slot\):not\(\.drag-over\)/);
+  assert.match(pageSource, /illustrated painted board/);
+});
+
+test("Tabletop scales the frame, not the card zones", () => {
+  assert.doesNotMatch(stylesSource, /\[data-board-theme="tabletop"\] \.duel-table \.battlefield \{\s*padding/);
+  assert.match(stylesSource, /border-width: var\(--table-frame-top\) var\(--table-frame-side\);/);
+  assert.match(stylesSource, /@media \(orientation: landscape\) and \(max-width: 1024px\) and \(max-height: 600px\) \{\s*\[data-board-theme="tabletop"\] \.arena\.duel-table \{\s*--table-frame-top: 4px;\s*--table-frame-side: clamp\(12px, 3\.5dvh, 20px\);/);
 });
