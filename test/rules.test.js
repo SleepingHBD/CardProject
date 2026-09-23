@@ -323,7 +323,7 @@ test("Trophy Denier favors counters to elements the player nearly completes", ()
   );
 });
 
-test("Momentum Rider favors the element of the professor's latest trophy", () => {
+test("Momentum Rider favors the element of the opponent's latest trophy", () => {
   const ember = card("ember", 5);
   const gust = card("gust", 5);
   const traits = [{ id: "momentum-rider", category: "motive" }];
@@ -499,7 +499,7 @@ test("a normal formation win offers every lane-winning card as a trophy", () => 
   );
 });
 
-test("Professor Paws chooses a needed trophy element over raw power", () => {
+test("The opponent chooses a needed trophy element over raw power", () => {
   const emberReward = {
     winner: "ai",
     card: card("ember", 9, "finisher"),

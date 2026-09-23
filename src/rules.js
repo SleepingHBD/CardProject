@@ -32,7 +32,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "trophy-hunter",
     category: "motive",
     label: "Trophy Hunter",
-    description: "Favors elements he still needs as trophies.",
+    description: "Favors elements the opponent still needs as trophies.",
   }),
   Object.freeze({
     id: "counter-scholar",
@@ -44,7 +44,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "power-seeker",
     category: "motive",
     label: "Power Seeker",
-    description: "Favors the highest-Power cards in his hand.",
+    description: "Favors the highest-Power cards in the opponent's hand.",
   }),
   Object.freeze({
     id: "element-loyalist",
@@ -62,7 +62,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "momentum-rider",
     category: "motive",
     label: "Momentum Rider",
-    description: "Favors his latest trophy's element.",
+    description: "Favors the element of the opponent's latest trophy.",
   }),
 ]);
 const AI_FORMATION_TRAITS = Object.freeze([
@@ -70,19 +70,19 @@ const AI_FORMATION_TRAITS = Object.freeze([
     id: "tactic-planner",
     category: "formation",
     label: "Role Planner",
-    description: "Usually orders his cards to activate as many Formation Roles as possible.",
+    description: "Usually orders cards to activate as many Formation Roles as possible.",
   }),
   Object.freeze({
     id: "strong-opener",
     category: "formation",
     label: "Strong Opener",
-    description: "Places his highest-Power card in Lane 1.",
+    description: "Places the highest-Power card in Lane 1.",
   }),
   Object.freeze({
     id: "late-striker",
     category: "formation",
     label: "Late Striker",
-    description: "Highest-Power card goes in his last played lane.",
+    description: "The highest-Power card goes in the last played lane.",
   }),
 ]);
 const AI_COMMITMENT_TRAITS = Object.freeze([
@@ -90,7 +90,7 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "solo-gambler",
     category: "commitment",
     label: "Solo Gambler",
-    description: "Often commits 1 card to conserve his hand, accepting a less reliable formation.",
+    description: "Often commits 1 card to conserve cards, accepting a less reliable formation.",
   }),
   Object.freeze({
     id: "measured-planner",
@@ -120,7 +120,7 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "restless-dealer",
     category: "commitment",
     label: "Restless Dealer",
-    description: "Usually changes his last round's card count.",
+    description: "Usually commits a different number of cards than in the previous round.",
   }),
 ]);
 
@@ -161,7 +161,7 @@ function createAiTraits(random = Math.random) {
       ...motive,
       element,
       label: `${ELEMENTS[element].label} Loyalist`,
-      description: `Favors ${ELEMENTS[element].label} cards whenever he has them.`,
+      description: `Favors ${ELEMENTS[element].label} cards whenever available.`,
     };
   }
 

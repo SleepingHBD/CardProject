@@ -124,7 +124,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "The elemental crests at the edges of the board track the trophies collected from winning rounds.",
     objective:
-      "Win the match by collecting two Ember, two Gust, and two Tide trophies before Professor Paws.",
+      "Win the match by collecting two Ember, two Gust, and two Tide trophies before the opponent.",
     targets: Object.freeze(["#playerCollection", "#aiCollection"]),
     anchor: "#playerCollection",
     preferredSide: "left",
@@ -134,7 +134,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     concept: "Training Grounds Tour",
     title: "Track round wins",
     text:
-      "This display records how many rounds you and Professor Paws have won during the current duel.",
+      "This display records how many rounds you and the opponent have won during the current duel.",
     objective:
       "Rounds Won shows duel performance, but it does not complete the match. Only the six required trophies do.",
     targets: Object.freeze(["#roundScore"]),
@@ -144,11 +144,11 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
   Object.freeze({
     id: "plan",
     concept: "Training Grounds Tour",
-    title: "Read Professor Paws",
+    title: "Read the opponent",
     text:
-      "This panel gives you the rival information allowed by your difficulty. Guided shows live plan clues, Instinct shows his habits, and Blind conceals both.",
+      "This panel gives you the opponent information allowed by your difficulty. Guided shows live plan clues, Instinct shows the opponent's habits, and Blind conceals both.",
     objective:
-      "Use Guided's current clues, Instinct's visible habits, or Blind's Previous Rounds History while his current plan remains hidden.",
+      "Use Guided's current clues, Instinct's visible habits, or Blind's Previous Rounds History while the opponent's current plan remains hidden.",
     targets: Object.freeze([".tactics-board"]),
     anchor: ".tactics-board",
     preferredSide: "left",
@@ -160,7 +160,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "Cards do not combine into one 3v3 total. Lane 1 only clashes with Lane 1, Lane 2 with Lane 2, and Lane 3 with Lane 3.",
     objective:
-      "When your card faces one of Professor Paws’ cards in the same lane, compare their Clash Totals. Winning that lane earns 2 Round Points. A card with no opposing card earns 1 Round Point instead.",
+      "When your card faces one of the opponent's cards in the same lane, compare their Clash Totals. Winning that lane earns 2 Round Points. A card with no opposing card earns 1 Round Point instead.",
     targets: Object.freeze(["#aiPlayZone", "#playerPlayZone"]),
     anchor: "#playerPlayZone",
     preferredSide: "right",
@@ -208,7 +208,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "Previous Rounds History records both revealed formations, every lane result, Round Points, trophy progress, and the claimed trophy after each round.",
     objective:
-      "It is available in every difficulty. In Blind, compare several completed rounds to identify Professor Paws' hidden habits yourself.",
+      "It is available in every difficulty. In Blind, compare several completed rounds to identify the opponent's hidden habits yourself.",
     targets: Object.freeze(["#previousRoundsHistoryButton"]),
     anchor: "#previousRoundsHistoryButton",
     preferredSide: "top",
@@ -232,7 +232,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Elements",
     title: "Use Element Edge",
     intro:
-      "Professor Paws committed Gust. Teapot Tabby’s Ember element beats it and earns Element Edge +2.",
+      "The opponent committed Gust. Teapot Tabby’s Ember element beats it and earns Element Edge +2.",
     objective:
       "Commit Teapot Tabby. Ember beats Gust, so the card earns Element Edge +2.",
     introPages: Object.freeze([
@@ -249,7 +249,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Find the +2 in the preview",
         text:
-          "Professor Paws committed Gust. After you place the Ember card Teapot Tabby, its bonus badge and forecast will include Element Edge +2.",
+          "The opponent committed Gust. After you place the Ember card Teapot Tabby, its bonus badge and forecast will include Element Edge +2.",
         objective:
           "Start the scenario, place Teapot Tabby in Lane 1, and review its complete total before committing.",
         targets: Object.freeze(["#matchupForecast"]),
@@ -272,14 +272,14 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Round Points · Scenario 1 of 3",
     title: "One card against two",
     intro:
-      "When your card faces one of Professor Paws’ cards in the same lane, winning that lane earns 2 Round Points. Any card with no opponent in its lane earns 1 Round Point. In this scenario, your one card faces the first of the professor’s two cards.",
+      "When your card faces one of the opponent's cards in the same lane, winning that lane earns 2 Round Points. Any card with no opposing card in its lane earns 1 Round Point. In this scenario, your one card faces the first of the opponent's two cards.",
     objective:
-      "Play Sir Squall. His lane victory will earn 2 Round Points against the professor's 1 Round Point from his extra card.",
+      "Play Sir Squall. Winning his lane will earn 2 Round Points against the opponent's 1 Round Point from an extra card.",
     playerCards: Object.freeze(["sir-squall", "moonpool-mouser", "comet-claw"]),
     aiCards: Object.freeze(["empress-ebb", "bubble-bengal"]),
     expected: Object.freeze(["sir-squall"]),
     aftermath:
-      "Sir Squall won Lane 1 for 2 Round Points. Professor Paws' extra card added 1 Round Point, so your one-card formation won the round 2–1.",
+      "Sir Squall won Lane 1 for 2 Round Points. The opponent's extra card added 1 Round Point, so your one-card formation won the round 2–1.",
   }),
   Object.freeze({
     id: "commitment-one-vs-three",
@@ -293,7 +293,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     aiCards: Object.freeze(["empress-ebb", "bubble-bengal", "moonpool-mouser"]),
     expected: Object.freeze(["sir-squall"]),
     aftermath:
-      "Sir Squall still won Lane 1 for 2 Round Points, but Professor Paws' two extra cards supplied 2 Round Points. Round Points were tied 2–2, producing a draw and no trophy.",
+      "Sir Squall still won Lane 1 for 2 Round Points, but the opponent's two extra cards supplied 2 Round Points. Round Points were tied 2–2, producing a draw and no trophy.",
   }),
   Object.freeze({
     id: "tactics",
@@ -327,7 +327,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Finisher: commit it last",
         text:
-          "To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. Professor Paws does not need to commit a card to that lane for the Role to activate.",
+          "To gain Finisher +1, commit the Finisher as the final card in a two- or three-card formation. The opponent does not need to commit a card to that lane for the Role to activate.",
         objective:
           "With two cards, commit the Finisher second in Lane 2. With three cards, commit it third in Lane 3. A lone Finisher earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
@@ -438,16 +438,16 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Instinct Practice",
     title: "Read habits without seeing the plan",
     intro:
-      "Instinct hides Professor Paws’ cards and formation size. His three known habits are useful clues, but they describe tendencies rather than promises.",
+      "Instinct hides the opponent's cards and formation size. The three known habits are useful clues, but they describe tendencies rather than promises.",
     objective:
-      "Use the three visible habits to build any two- or three-card formation you believe can handle his likely plan.",
+      "Use the three visible habits to build any two- or three-card formation you believe can handle the opponent's likely plan.",
     introPages: Object.freeze([
       Object.freeze({
         title: "Habits replace exact tells",
         text:
-          "In Instinct, Professor Paws’ card details and commitment count stay sealed. You always see one motive habit, one formation habit, and one commitment habit.",
+          "In Instinct, the opponent's card details and commitment count stay sealed. You always see one motive habit, one formation habit, and one commitment habit.",
         objective:
-          "Read all three together. Each habit answers a different question: what he favors, how he orders it, and how many cards he tends to commit.",
+          "Read all three together. Each habit answers a different question: what the opponent favors, how they order cards, and how many cards they tend to commit.",
         targets: Object.freeze(["#opponentHabits"]),
         anchor: "#opponentHabits",
         preferredSide: "left",
@@ -455,7 +455,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Turn clues into a prediction",
         text:
-          "Power Seeker favors high-Power cards. Strong Opener places his highest-Power card in Lane 1. Full Formation usually commits three cards.",
+          "Power Seeker favors high-Power cards. Strong Opener places the opponent's highest-Power card in Lane 1. Full Formation usually commits three cards.",
         objective:
           "Expect a strong three-card formation with its biggest threat first—but remember that habits never reveal the elements.",
         targets: Object.freeze(["#opponentHabits", "#playerHand"]),
@@ -1283,7 +1283,7 @@ function renderTutorialCoach() {
     ui.tutorialCoachText.textContent =
       "You toured the interface, practised Element Edge and Roles, scored different formation sizes, claimed trophies, followed card flow, and made an independent Instinct read.";
     ui.tutorialObjective.textContent =
-      "In a real duel, collect two Ember, two Gust, and two Tide trophies before Professor Paws.";
+      "In a real duel, collect two Ember, two Gust, and two Tide trophies before the opponent.";
     ui.tutorialActionButton.textContent = finalLesson ? "Finish Training" : "Continue";
   }
 
@@ -1449,7 +1449,7 @@ function beginTutorialLesson() {
   setMessage(
     lesson.title,
     lesson.freeChoice
-      ? `Build any ${lesson.minCards || 1}- or ${lesson.maxCards || MAX_PLAY_SIZE}-card formation using Professor Paws’ habits as clues.`
+      ? `Build any ${lesson.minCards || 1}- or ${lesson.maxCards || MAX_PLAY_SIZE}-card formation using the opponent's habits as clues.`
       : `Build the scripted ${lesson.expected.length}-card formation shown by your coach.`,
   );
   renderTutorialCoach();
@@ -1596,8 +1596,8 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
       : `You win with ${score.player}–${score.ai} Round Points!`
     : winner === "ai"
       ? decidedBy === "extra-cards"
-        ? `Professor Paws' ${extraCardPoints.ai === 1 ? "extra card wins" : "extra cards win"} ${score.ai}–${score.player}.`
-        : `Professor Paws wins with ${score.ai}–${score.player} Round Points.`
+        ? `The opponent's ${extraCardPoints.ai === 1 ? "extra card wins" : "extra cards win"} ${score.ai}–${score.player}.`
+        : `The opponent wins with ${score.ai}–${score.player} Round Points.`
       : `Round Points are tied ${score.player}–${score.ai}.`;
   setMessage(resultLabel, lesson.aftermath);
   renderAftermathBreakdown(playerCards, resolution);
@@ -1821,8 +1821,8 @@ function renderOpponentTells() {
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Guided";
   const concealsCommitment = concealsOpponentFormation();
   ui.tacticsTitle.textContent = state.difficulty === "instinct"
-    ? "Professor's Habits"
-    : "Professor's Plan";
+    ? "Opponent's Habits"
+    : "Opponent's Plan";
   renderOpponentHabits();
 
   if (concealsCommitment) {
@@ -1915,8 +1915,8 @@ function beginFormationBuilding() {
         : "Study the plan. Build your formation.",
     hidesFormation
       ? state.difficulty === "blind"
-        ? "Place one to three cards. His current formation and hidden habits are revealed only through completed rounds."
-        : "Place one to three cards. Professor Paws' formation stays hidden until the clash."
+        ? "Place one to three cards. The opponent's current formation and hidden habits are revealed only through completed rounds."
+        : "Place one to three cards. The opponent's formation stays hidden until the clash."
       : "Place one to three cards in order, review the forecast, then commit when ready.",
   );
 }
@@ -2062,7 +2062,7 @@ function renderAftermathBreakdown(playerCards, resolution) {
         <span>+</span>
         <strong>${resolution.extraCardPoints.player} FROM EXTRA ${resolution.extraCardPoints.player === 1 ? "CARD" : "CARDS"}</strong>
       </span>
-      <small>Professor: ${resolution.laneWins.ai} won ${resolution.laneWins.ai === 1 ? "lane" : "lanes"} × ${LANE_WIN_POINTS} + ${resolution.extraCardPoints.ai} from extra ${resolution.extraCardPoints.ai === 1 ? "card" : "cards"}</small>
+      <small>Opponent: ${resolution.laneWins.ai} won ${resolution.laneWins.ai === 1 ? "lane" : "lanes"} × ${LANE_WIN_POINTS} + ${resolution.extraCardPoints.ai} from extra ${resolution.extraCardPoints.ai === 1 ? "card" : "cards"}</small>
     </span>
   `;
   const laneBreakdown = resolution.lanes.map((lane, index) => {
@@ -2203,13 +2203,13 @@ function placeholder(label) {
 
 function tutorialOpponentLaneGuideMarkup(commitmentCount = MAX_PLAY_SIZE) {
   return `
-    <div class="formation-builder tutorial-lane-guide" aria-label="Professor Paws’ formation lanes">
+    <div class="formation-builder tutorial-lane-guide" aria-label="Opponent's formation lanes">
       ${Array.from({ length: MAX_PLAY_SIZE }, (_, index) => {
         const isCommitted = index < commitmentCount;
         return `
           <div
             class="formation-slot empty-slot${isCommitted ? "" : " waiting-slot"}"
-            aria-label="Professor Paws lane ${index + 1}, ${isCommitted ? "committed card sealed" : "no card committed"}"
+            aria-label="Opponent lane ${index + 1}, ${isCommitted ? "committed card sealed" : "no card committed"}"
           >
             <span>LANE ${index + 1}</span>
             <b>${isCommitted ? "SEALED" : "EMPTY"}</b>
@@ -2428,24 +2428,24 @@ function updateFormationMessage() {
   const detail = concealsOpponentFormation()
     ? count === 0
       ? state.difficulty === "instinct" && tutorial.active && currentTutorialLesson()?.freeChoice
-        ? `Choose ${currentTutorialLesson().minCards || 1}–${currentTutorialLesson().maxCards || MAX_PLAY_SIZE} cards. His commitment habit is your only clue to his hidden formation size.`
+        ? `Choose ${currentTutorialLesson().minCards || 1}–${currentTutorialLesson().maxCards || MAX_PLAY_SIZE} cards. The opponent's commitment habit is your only clue to their hidden formation size.`
         : state.difficulty === "instinct"
-          ? "Choose one to three cards. His commitment habit is your clue to his hidden formation size."
-          : "Choose one to three cards. Use Previous Rounds History to infer his hidden formation habits."
+          ? "Choose one to three cards. The opponent's commitment habit is your clue to their hidden formation size."
+          : "Choose one to three cards. Use Previous Rounds History to infer the opponent's hidden formation habits."
       : tutorial.active
         && currentTutorialLesson()?.freeChoice
         && count < (currentTutorialLesson().minCards || 1)
         ? `Place at least ${currentTutorialLesson().minCards || 1} cards for this practice formation.`
       : state.difficulty === "blind"
-        ? "Your formation is ready. Professor Paws' current cards, formation size, and habits remain concealed."
-        : "Your current formation is ready to commit. Professor Paws' cards and formation size remain concealed."
+        ? "Your formation is ready. The opponent's current cards, formation size, and habits remain concealed."
+        : "Your current formation is ready to commit. The opponent's cards and formation size remain concealed."
     : count === 0
-      ? "Choose one to three cards using Professor Paws' visible plan."
+      ? "Choose one to three cards using the opponent's visible plan."
       : playerExtraCards
         ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraCards} Round ${playerExtraCards === 1 ? "Point" : "Points"}.`
         : aiExtraCards
-          ? `Professor Paws has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}.`
-          : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of Professor Paws’ cards.";
+          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}.`
+          : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of the opponent's cards.";
   setMessage(title, detail);
   renderOpponentTells();
 }
@@ -2635,7 +2635,7 @@ function renderRoundScore() {
   ui.aiRoundScore.textContent = state.aiRoundWins;
   ui.roundScore.setAttribute(
     "aria-label",
-    `${tutorial.active ? "Training rounds won" : "Rounds won"}: You ${state.playerRoundWins}, Professor Paws ${state.aiRoundWins}`,
+    `${tutorial.active ? "Training rounds won" : "Rounds won"}: You ${state.playerRoundWins}, Opponent ${state.aiRoundWins}`,
   );
 }
 
@@ -2751,7 +2751,7 @@ function historyFormationGridMarkup(entry) {
     <div class="history-lane-grid">
       <div class="history-grid-corner">FORMATION</div>
       ${laneHeaders}
-      ${rowMarkup("ai", "PAWS")}
+      ${rowMarkup("ai", "OPPONENT")}
       ${rowMarkup("player", "YOU")}
     </div>
   `;
@@ -2780,13 +2780,13 @@ function renderPreviousRoundsHistory() {
       const winnerLabel = entry.winner === "player"
         ? "You won"
         : entry.winner === "ai"
-          ? "Professor Paws won"
+          ? "Opponent won"
           : "Draw";
       const trophyElement = entry.trophy ? ELEMENTS[entry.trophy.card.element] : null;
       const trophyTactic = entry.trophy
         ? TACTICS[entry.trophy.card.tactic] || TACTICS.link
         : null;
-      const trophyOwner = entry.trophy?.winner === "player" ? "You claimed" : "Professor Paws claimed";
+      const trophyOwner = entry.trophy?.winner === "player" ? "You claimed" : "Opponent claimed";
       const trophyLabel = entry.trophy
         ? `${trophyOwner} ${trophyElement.label}, power ${entry.trophy.card.power}, ${trophyTactic.label}`
         : "No trophy was claimed";
@@ -2803,7 +2803,7 @@ function renderPreviousRoundsHistory() {
                 <b>${entry.score.player}</b>
                 <i aria-hidden="true">–</i>
                 <b>${entry.score.ai}</b>
-                <span>PAWS</span>
+                <span>OPPONENT</span>
                 <small>ROUND POINTS</small>
               </h3>
             </div>
@@ -2812,7 +2812,7 @@ function renderPreviousRoundsHistory() {
           <div class="history-progress-before">
             <span class="history-progress-label">TROPHIES BEFORE</span>
             ${historyProgressMarkup(entry.trophyProgressBefore.player, "You")}
-            ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Professor")}
+            ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Opponent")}
           </div>
           ${historyFormationGridMarkup(entry)}
           <footer class="history-trophy">
@@ -3258,8 +3258,8 @@ function playRound() {
     "player",
     clashCount,
   );
-  ui.aiPlayZone.innerHTML = placeholder(`Revealing Professor Paws' ${state.aiPlan.length}-card plan...`);
-  setMessage("The sealed formation opens...", "Professor Paws committed this plan before your choice.");
+  ui.aiPlayZone.innerHTML = placeholder(`Revealing the opponent's ${state.aiPlan.length}-card plan...`);
+  setMessage("The sealed formation opens...", "The opponent committed this plan before your choice.");
   audio.commit(playerCards.length);
   if (tutorial.active) {
     tutorial.phase = "clashing";
@@ -3385,13 +3385,13 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
       : chooseTrophyReward(rewardOptions, state.aiWins);
     if (decidedBy === "extra-cards") {
       setMessage(
-        `Professor Paws' extra cards win ${score.ai}–${score.player}.`,
-        `${cardDisplayName(reward.card)}, the first extra card, becomes the professor's trophy.`,
+        `The opponent's extra cards win ${score.ai}–${score.player}.`,
+        `${cardDisplayName(reward.card)}, the first extra card, becomes the opponent's trophy.`,
       );
     } else {
       setMessage(
-        `Professor Paws wins with ${score.ai}–${score.player} Round Points.`,
-        `The professor claims ${cardDisplayName(reward.card)} from lane ${reward.lane + 1}.`,
+        `The opponent wins with ${score.ai}–${score.player} Round Points.`,
+        `The opponent claims ${cardDisplayName(reward.card)} from lane ${reward.lane + 1}.`,
       );
     }
     ui.versusBadge.classList.add("lose");
@@ -3471,10 +3471,10 @@ async function endGame(winner) {
   document.querySelector("#resultEyebrow").textContent = won ? "MATCH COMPLETE" : "A NOBLE DUEL";
   document.querySelector("#resultTitle").textContent = won
     ? "A purr-fect victory!"
-    : "Professor Paws prevails!";
+    : "The opponent prevails!";
   const resultSummary = won
     ? "You claimed two trophies from every element."
-    : "Professor Paws completed all six elemental trophy slots first.";
+    : "The opponent completed all six elemental trophy slots first.";
   document.querySelector("#resultText").textContent =
     `${resultSummary} Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
@@ -3781,7 +3781,7 @@ async function startGame() {
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
   ui.versusBadge.textContent = "VS";
   ui.versusBadge.className = "versus-badge";
-  setMessage("The deck is shuffling...", "Professor Paws is preparing the opening deal.");
+  setMessage("The deck is shuffling...", "The opponent is preparing the opening deal.");
   renderCollection(ui.playerCollection, []);
   renderCollection(ui.aiCollection, []);
   renderHand();

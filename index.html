@@ -9,7 +9,7 @@
     />
     <meta name="theme-color" content="#4a2870" />
     <meta property="og:title" content="Project: Prowl — Elemental Cat Duels" />
-    <meta property="og:description" content="Outwit Professor Paws in a richly illustrated elemental card duel." />
+    <meta property="og:description" content="Outwit your opponent in a richly illustrated elemental card duel." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://sleepinghbd.github.io/CardProject/" />
     <meta property="og:image" content="https://sleepinghbd.github.io/CardProject/assets/social/project-prowl-preview.png" />
@@ -18,7 +18,7 @@
     <meta property="og:image:alt" content="Project: Prowl in antique gold medieval lettering on a dark burgundy background." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Project: Prowl — Elemental Cat Duels" />
-    <meta name="twitter:description" content="Outwit Professor Paws in a richly illustrated elemental card duel." />
+    <meta name="twitter:description" content="Outwit your opponent in a richly illustrated elemental card duel." />
     <meta name="twitter:image" content="https://sleepinghbd.github.io/CardProject/assets/social/project-prowl-preview.png" />
     <meta name="twitter:image:alt" content="Project: Prowl in antique gold medieval lettering on a dark burgundy background." />
     <title>Project: Prowl</title>
@@ -128,10 +128,10 @@
           </div>
           <div class="tutorial-coach-copy" aria-live="polite">
             <p class="tutorial-concept" id="tutorialConcept">The elemental cycle</p>
-            <h2 id="tutorialCoachTitle" tabindex="-1">Read the professor’s plan</h2>
+            <h2 id="tutorialCoachTitle" tabindex="-1">Read the opponent’s plan</h2>
             <div class="tutorial-visual" id="tutorialVisual" hidden></div>
             <p id="tutorialCoachText">
-              Professor Paws reveals enough information for you to plan a response.
+              Your opponent reveals enough information for you to plan a response.
             </p>
             <div class="tutorial-objective" id="tutorialObjective">
               Follow the highlighted instruction to continue.
@@ -158,11 +158,11 @@
             <h1 id="gameTitle">Trial of the Elements</h1>
           </div>
           <div class="round-status">
-            <div class="round-score" id="roundScore" aria-live="polite" aria-label="Rounds won: You 0, Professor Paws 0">
+            <div class="round-score" id="roundScore" aria-live="polite" aria-label="Rounds won: You 0, Opponent 0">
               <small>ROUNDS WON</small>
               <span>YOU <b id="playerRoundScore">0</b></span>
               <i aria-hidden="true">–</i>
-              <span><b id="aiRoundScore">0</b> PAWS</span>
+              <span><b id="aiRoundScore">0</b> OPPONENT</span>
             </div>
             <span id="roundLabel">ROUND 1</span>
           </div>
@@ -171,7 +171,7 @@
         <section class="arena duel-table" aria-label="Three-lane dueling table">
           <div class="player-panel opponent-panel duelist-rail">
             <div class="duelist-nameplate">Opponent</div>
-            <div class="collection" id="aiCollection" aria-label="Professor Paws' elemental trophy progress"></div>
+            <div class="collection" id="aiCollection" aria-label="Opponent's elemental trophy progress"></div>
           </div>
 
           <div class="battlefield">
@@ -209,12 +209,12 @@
               <div class="tactics-heading">
                 <span class="scout-seal" aria-hidden="true">&#10022;</span>
                 <div>
-                  <p id="tacticsTitle">Professor's Plan</p>
-                  <small id="commitmentHint">Professor's formation is ready.</small>
-                  <div class="opponent-habits" id="opponentHabits" aria-label="Professor Paws' known habits" aria-live="polite" hidden></div>
+                  <p id="tacticsTitle">Opponent's Plan</p>
+                  <small id="commitmentHint">Opponent's formation is ready.</small>
+                  <div class="opponent-habits" id="opponentHabits" aria-label="Opponent's known habits" aria-live="polite" hidden></div>
                 </div>
               </div>
-              <div class="opponent-tells" id="opponentTells" aria-label="Professor Paws' planned lanes"></div>
+              <div class="opponent-tells" id="opponentTells" aria-label="Opponent's planned lanes"></div>
               <div class="matchup-forecast" id="matchupForecast" aria-live="polite">
                 Place a card to preview its bonuses and total.
               </div>
@@ -617,7 +617,7 @@
           <span>
             <strong>Instinct</strong>
             <small>Hides every card and the formation size—but reveals <b>three persistent habits</b>.</small>
-            <em>Build one to three cards directly and read his behavior.</em>
+            <em>Build one to three cards directly and read the opponent's behavior.</em>
           </span>
         </button>
         <button class="difficulty-option blind-option" data-difficulty="blind" type="button">
@@ -632,7 +632,7 @@
           </span>
           <span>
             <strong>Blind</strong>
-            <small>Hides every current card, formation size, and habit. Identify his patterns through <b>Previous Rounds History</b>.</small>
+            <small>Hides every current card, formation size, and habit. Identify the opponent's patterns through <b>Previous Rounds History</b>.</small>
             <em>The hardest trial: deduction without live clues.</em>
           </span>
         </button>
@@ -754,7 +754,7 @@
       <p class="codex-intro">Use this for reminders during play. Open the Rulebook for complete explanations and examples.</p>
       <section class="codex-goal" aria-label="Match objective">
         <b>Win the match</b>
-        <span>Collect 2 Ember + 2 Gust + 2 Tide trophies before Professor Paws.</span>
+        <span>Collect 2 Ember + 2 Gust + 2 Tide trophies before your opponent.</span>
       </section>
       <div class="codex-grid">
         <section class="codex-card">
@@ -829,7 +829,7 @@
           <span aria-hidden="true">🏆</span>
           <div>
             <h3 id="victoryAtGlance">Victory at a glance</h3>
-            <p>Collect <b>two Ember</b>, <b>two Gust</b>, and <b>two Tide</b> trophies before Professor Paws.</p>
+            <p>Collect <b>two Ember</b>, <b>two Gust</b>, and <b>two Tide</b> trophies before your opponent.</p>
           </div>
         </div>
         <div class="rulebook-trophy-track" aria-label="Required trophies: two Ember, two Gust, and two Tide">
@@ -847,7 +847,7 @@
           <span class="rulebook-number" aria-hidden="true">1</span>
           <h3 id="rulebookSetup">Objective and match structure</h3>
           <ul>
-            <li>A match is a series of rounds against Professor Paws.</li>
+            <li>A match is a series of rounds against your opponent.</li>
             <li>Winning a round awards exactly one trophy. A drawn round awards none.</li>
             <li>Win the match by collecting two Ember, two Gust, and two Tide trophies.</li>
             <li>The Rounds Won score is a match record only. It is not a separate win condition.</li>
@@ -860,8 +860,8 @@
           <p>The shared draw pile contains 39 cards: two copies of every Common and Uncommon card, and one copy of every Rare, Epic, and Legendary card. Both duelists draw up to six cards.</p>
           <dl class="rulebook-definitions">
             <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
-            <div><dt>Instinct</dt><dd>Hides his current cards and formation size, but reveals one motive, one formation habit, and one commitment habit that persist for the match.</dd></div>
-            <div><dt>Blind</dt><dd>Hides his current cards, formation size, and habits. Infer his persistent habits from Previous Rounds History.</dd></div>
+            <div><dt>Instinct</dt><dd>Hides the opponent's current cards and formation size, but reveals one motive, one formation habit, and one commitment habit that persist for the match.</dd></div>
+            <div><dt>Blind</dt><dd>Hides the opponent's current cards, formation size, and habits. Infer their persistent habits from Previous Rounds History.</dd></div>
           </dl>
           <p>Every difficulty includes Previous Rounds History, which records both revealed formations, lane results, Round Points, trophy context, and the claimed trophy after a round is complete. Habits are tendencies, not guarantees. Difficulty changes available information, never the scoring rules or card strength.</p>
         </section>
@@ -1016,7 +1016,7 @@
           <div class="rulebook-win-grid">
             <p><b>Required collection</b><span>2 Ember + 2 Gust + 2 Tide trophies.</span></p>
             <p><b>Extra trophies</b><span>A third trophy of one element is allowed, but it cannot replace a missing element.</span></p>
-            <p><b>Professor Paws</b><span>He wins under exactly the same trophy condition.</span></p>
+            <p><b>Opponent</b><span>They win under exactly the same trophy condition.</span></p>
             <p><b>Rounds Won</b><span>This display tracks round results only and never replaces the trophy goal.</span></p>
           </div>
         </section>
