@@ -111,17 +111,31 @@ test("Tabletop hides the idle VS seal while keeping the round score", () => {
   assert.match(sourceFunction("resolveTutorialRound"), /ui\.versusBadge\.className = "versus-badge has-score";/);
 });
 
-test("Tabletop uses the complete illustrated frame and keeps empty slots legible", () => {
+test("Tabletop keeps the painted surface inside a consistent wood-and-gold frame", () => {
   assert.ok(existsSync(new URL("../assets/backgrounds/whiskerkeep-table-v2.webp", import.meta.url)));
-  assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table::before \{[^}]*border-image: url\("assets\/backgrounds\/whiskerkeep-table-v2\.webp"\) 60 60 80 60 fill \/ 1 \/ 0 stretch;/);
+  assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table \{[^}]*background: url\("assets\/backgrounds\/whiskerkeep-table-v2\.webp"\) center \/ 125% 125% no-repeat/);
+  assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table::before \{[^}]*display: block;[^}]*border: var\(--table-frame-width\) solid #5b3824;[^}]*box-shadow: inset 0 0 0 1px #d6a460/);
+  assert.doesNotMatch(stylesSource, /border-image: url\("assets\/backgrounds\/whiskerkeep-table-v2\.webp"\)/);
   assert.doesNotMatch(stylesSource, /whiskerkeep-table-v1\.webp/);
-  assert.doesNotMatch(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table \{[^}]*background: url\("assets\/backgrounds\/whiskerkeep-table-v2\.webp"\) center \/ cover/);
+  assert.match(stylesSource, /\.board-theme-option:has\(input\[value="tabletop"\]\) \.clash-style-seal \{[^}]*border: 3px solid #5b3824/);
   assert.match(stylesSource, /\.formation-slot\.empty-slot:not\(\.next-slot\):not\(\.drag-over\)/);
   assert.match(pageSource, /illustrated painted board/);
 });
 
 test("Tabletop scales the frame, not the card zones", () => {
   assert.doesNotMatch(stylesSource, /\[data-board-theme="tabletop"\] \.duel-table \.battlefield \{\s*padding/);
-  assert.match(stylesSource, /border-width: var\(--table-frame-top\) var\(--table-frame-side\);/);
-  assert.match(stylesSource, /@media \(orientation: landscape\) and \(max-width: 1024px\) and \(max-height: 600px\) \{\s*\[data-board-theme="tabletop"\] \.arena\.duel-table \{\s*--table-frame-top: 4px;\s*--table-frame-side: clamp\(12px, 3\.5dvh, 20px\);/);
+  assert.match(stylesSource, /--table-frame-width: clamp\(3px, \.55vw, 7px\);/);
+  assert.match(stylesSource, /@media \(orientation: landscape\) and \(max-width: 1024px\) and \(max-height: 600px\) \{\s*\[data-board-theme="tabletop"\] \.arena\.duel-table \{\s*--table-frame-width: 3px;/);
+});
+
+test("Tabletop separates the two play areas with an inlaid hairline", () => {
+  assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.duel-table \.battlefield::before \{[^}]*height: 1px;[^}]*border: 0;[^}]*box-shadow: none;/);
+  assert.match(stylesSource, /\.duel-table \.battlefield:has\(\.opponent-zone \.card-placeholder\)::before \{\s*top: 57px;/);
+});
+
+test("Tabletop tints only the structural board-control divider", () => {
+  assert.match(stylesSource, /\.hand \{[^}]*border-top: 2px solid #b17b3c;/);
+  assert.match(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table \{[^}]*border-right-color: #b17b3c;/);
+  assert.doesNotMatch(stylesSource, /\[data-board-theme="tabletop"\] \.arena\.duel-table::before \{\s*border-right-color:/);
+  assert.doesNotMatch(stylesSource, /--table-outer-right: 4px;/);
 });
