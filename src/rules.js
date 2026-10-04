@@ -1,8 +1,8 @@
 (function exposeClawRules(global) {
 const ELEMENTS = {
-  ember: { icon: "🔥", beats: "gust", label: "Ember" },
+  ember: { icon: "🔥", beats: "gust", label: "Fire" },
   gust: { icon: "🍃", beats: "tide", label: "Gust" },
-  tide: { icon: "💧", beats: "ember", label: "Tide" },
+  tide: { icon: "💧", beats: "ember", label: "Water" },
 };
 
 const ELEMENT_EDGE_BONUS = 2;

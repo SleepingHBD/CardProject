@@ -15,7 +15,7 @@ const cinderPhoto = new URL(
   import.meta.url,
 );
 
-test("Riptide Rook replaces the Tide Epic Vanguard without changing its library slot", () => {
+test("Riptide Rook replaces the Water Epic Vanguard without changing its library slot", () => {
   const libraryDeclaration = gameSource.match(
     /const CARD_LIBRARY = \[[\s\S]*?\}\)\);/,
   )?.[0];

@@ -11,11 +11,11 @@ npm run dev
 
 ## Rules
 
-- Ember beats Gust.
-- Gust beats Tide.
-- Tide beats Ember.
+- Fire beats Gust.
+- Gust beats Water.
+- Water beats Fire.
 - Matching elements compare power.
-- Win by collecting two Ember trophies, two Gust trophies, and two Tide trophies.
+- Win by collecting two Fire trophies, two Gust trophies, and two Water trophies.
 - Non-trophy cards enter the discard pile and reshuffle into the draw pile when needed.
 
 ## Deploy to GitHub Pages

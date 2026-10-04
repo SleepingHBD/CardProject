@@ -83,7 +83,7 @@ const usesPersistentAiHabits = (difficulty = state.difficulty) =>
 const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
 const RARITY_SORT_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 const ARCHIVE_SORT_SUMMARIES = {
-  element: "Ember, Gust, then Tide; Common through Legendary within each element.",
+  element: "Fire, Gust, then Water; Common through Legendary within each element.",
   rarity: "Legendary cards first, then Epic, Rare, Uncommon, and Common.",
   power: "Highest base power first.",
   name: "Alphabetical from A to Z.",
@@ -127,7 +127,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "The elemental crests at the edges of the board track the trophies collected from winning rounds.",
     objective:
-      "Win the match by collecting two Ember, two Gust, and two Tide trophies before the opponent.",
+      "Win the match by collecting two Fire, two Gust, and two Water trophies before the opponent.",
     targets: Object.freeze(["#playerCollection", "#aiCollection"]),
     anchor: "#playerCollection",
     preferredSide: "left",
@@ -235,14 +235,14 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     concept: "Elements",
     title: "Use Element Edge",
     intro:
-      "The opponent committed Gust. Teapot Tabby’s Ember element beats it and earns Element Edge +2.",
+      "The opponent committed Gust. Teapot Tabby’s Fire element beats it and earns Element Edge +2.",
     objective:
-      "Commit Teapot Tabby. Ember beats Gust, so the card earns Element Edge +2.",
+      "Commit Teapot Tabby. Fire beats Gust, so the card earns Element Edge +2.",
     introPages: Object.freeze([
       Object.freeze({
         title: "Element Edge follows the cycle",
         text:
-          "Ember beats Gust, Gust beats Tide, and Tide beats Ember. A card that beats the opposing element earns Element Edge +2 when it faces a card in the same lane.",
+          "Fire beats Gust, Gust beats Water, and Water beats Fire. A card that beats the opposing element earns Element Edge +2 when it faces a card in the same lane.",
         objective:
           "Element Edge strengthens the card’s total, but it does not guarantee victory. Printed Power and every other active bonus still matter.",
         visual: "element-cycle",
@@ -252,7 +252,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Find the +2 in the preview",
         text:
-          "The opponent committed Gust. After you place the Ember card Teapot Tabby, its bonus badge and forecast will include Element Edge +2.",
+          "The opponent committed Gust. After you place the Fire card Teapot Tabby, its bonus badge and forecast will include Element Edge +2.",
         objective:
           "Start the scenario, place Teapot Tabby in Lane 1, and review its complete total before committing.",
         targets: Object.freeze(["#matchupForecast"]),
@@ -268,7 +268,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     aiCards: Object.freeze(["dandelion-dash"]),
     expected: Object.freeze(["teapot-tabby"]),
     aftermath:
-      "Teapot Tabby’s Power 3 gained Element Edge +2 for a Clash Total of 5. No Role bonus was involved. Winning that lane supplied the round’s 2 Round Points and an Ember trophy.",
+      "Teapot Tabby’s Power 3 gained Element Edge +2 for a Clash Total of 5. No Role bonus was involved. Winning that lane supplied the round’s 2 Round Points and a Fire trophy.",
   }),
   Object.freeze({
     id: "commitment-one-vs-two",
@@ -322,7 +322,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
         text:
           "A Link card can earn Link +1 in Lane 2 or Lane 3. It gains +1 only when the card committed directly before the Link has a different element from the Link card itself.",
         objective:
-          "For example, a Tide Link committed after an Ember card earns +1; a Tide Link committed after another Tide card earns no bonus.",
+          "For example, a Water Link committed after a Fire card earns +1; a Water Link committed after another Water card earns no bonus.",
         targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
         anchor: "#playerPlayZone",
         preferredSide: "right",
@@ -358,9 +358,9 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Connect with Link",
         text:
-          "Bubble Bengal is a Tide Link. Candle Pounce was committed directly before her. The card before the Link is Ember, which differs from Bubble Bengal’s Tide element, so Link +1 will activate.",
+          "Bubble Bengal is a Water Link. Candle Pounce was committed directly before her. The card before the Link is Fire, which differs from Bubble Bengal’s Water element, so Link +1 will activate.",
         objective:
-          "Place Bubble Bengal in Lane 2. Because the card directly before the Link has a different element from her Tide element, she receives Link +1.",
+          "Place Bubble Bengal in Lane 2. Because the card directly before the Link has a different element from her Water element, she receives Link +1.",
       }),
       Object.freeze({
         title: "Close with Finisher",
@@ -378,7 +378,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     aiCards: Object.freeze(["teapot-tabby", "moonpool-mouser", "wellwater-wisp"]),
     expected: Object.freeze(["candle-pounce", "bubble-bengal", "dandelion-dash"]),
     aftermath:
-      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Tide element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation. Changing their order could disable these bonuses.",
+      "Candle Pounce gained Vanguard +1 for being in Lane 1. Bubble Bengal gained Link +1 because the card before the Link had a different element from her Water element. Dandelion Dash gained Finisher +1 because he was last in a three-card formation. Changing their order could disable these bonuses.",
     trophyChoice: true,
   }),
   Object.freeze({
@@ -1108,7 +1108,7 @@ function renderTutorialVisual(type = null) {
     <div
       class="element-edge-cycle"
       role="img"
-      aria-label="Element Edge cycle: Ember beats Gust, Gust beats Tide, and Tide beats Ember. A card whose element beats its opponent adds Element Edge plus two to that card's Clash Total."
+      aria-label="Element Edge cycle: Fire beats Gust, Gust beats Water, and Water beats Fire. A card whose element beats its opponent adds Element Edge plus two to that card's Clash Total."
     >
       <svg class="element-cycle-arrows" viewBox="0 0 320 190" aria-hidden="true">
         <defs>
@@ -1125,15 +1125,15 @@ function renderTutorialVisual(type = null) {
       <span class="element-cycle-beats beats-tide-ember" aria-hidden="true">BEATS</span>
       <div class="element-cycle-node cycle-ember">
         <i aria-hidden="true">${ELEMENTS.ember.icon}</i>
-        <b>EMBER</b>
+        <b>${ELEMENTS.ember.label.toUpperCase()}</b>
       </div>
       <div class="element-cycle-node cycle-gust">
         <i aria-hidden="true">${ELEMENTS.gust.icon}</i>
-        <b>GUST</b>
+        <b>${ELEMENTS.gust.label.toUpperCase()}</b>
       </div>
       <div class="element-cycle-node cycle-tide">
         <i aria-hidden="true">${ELEMENTS.tide.icon}</i>
-        <b>TIDE</b>
+        <b>${ELEMENTS.tide.label.toUpperCase()}</b>
       </div>
       <div class="element-cycle-edge" aria-hidden="true">
         <b>+${ELEMENT_EDGE_BONUS}</b>
@@ -1297,7 +1297,7 @@ function renderTutorialCoach() {
     ui.tutorialCoachText.textContent =
       "You toured the interface, practised Element Edge and Roles, scored different formation sizes, claimed trophies, followed card flow, and made an independent Instinct read.";
     ui.tutorialObjective.textContent =
-      "In a real duel, collect two Ember, two Gust, and two Tide trophies before the opponent.";
+      "In a real duel, collect two Fire, two Gust, and two Water trophies before the opponent.";
     ui.tutorialActionButton.textContent = finalLesson ? "Finish Training" : "Continue";
   }
 
@@ -2588,7 +2588,7 @@ function renderCollection(target, cards) {
   const progress = getTrophyProgress(cards);
   target.setAttribute(
     "aria-label",
-    `${progress} of 6 trophy slots filled. Ember ${Math.min(counts.ember, TROPHIES_PER_ELEMENT)} of 2, Gust ${Math.min(counts.gust, TROPHIES_PER_ELEMENT)} of 2, Tide ${Math.min(counts.tide, TROPHIES_PER_ELEMENT)} of 2.`,
+    `${progress} of 6 trophy slots filled. Fire ${Math.min(counts.ember, TROPHIES_PER_ELEMENT)} of 2, Gust ${Math.min(counts.gust, TROPHIES_PER_ELEMENT)} of 2, Water ${Math.min(counts.tide, TROPHIES_PER_ELEMENT)} of 2.`,
   );
   target.innerHTML = Object.entries(ELEMENTS).map(([elementKey, element]) => {
     const filledCount = Math.min(counts[elementKey], TROPHIES_PER_ELEMENT);
@@ -2695,7 +2695,7 @@ function recordCompletedRound(reward, playerCards, aiCards, resolution) {
 
 function historyProgressMarkup(counts, label) {
   return `
-    <span class="history-progress" aria-label="${label}: Ember ${counts.ember}, Gust ${counts.gust}, Tide ${counts.tide}">
+    <span class="history-progress" aria-label="${label}: Fire ${counts.ember}, Gust ${counts.gust}, Water ${counts.tide}">
       <b>${label}</b>
       ${Object.entries(ELEMENTS).map(([key, element]) =>
         `<i class="element-${key}">${element.icon} ${counts[key]}</i>`).join("")}
