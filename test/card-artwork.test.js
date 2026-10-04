@@ -43,15 +43,109 @@ test("Riptide Rook replaces the Water Epic Vanguard without changing its library
   );
 });
 
-test("settings offer persistent illustrated and photographic card artwork", () => {
-  assert.match(pageSource, /id="artworkSettingsTab"[\s\S]*?Card Artwork/);
+test("photographic artwork settings are temporarily hidden, not deleted", () => {
+  assert.match(gameSource, /const PHOTOGRAPHIC_ARTWORK_ENABLED = false;/);
+  assert.match(pageSource, /id="artworkSettingsTab"\s+hidden/);
   assert.match(pageSource, /name="artworkStyle" value="illustrated"/);
   assert.match(pageSource, /name="artworkStyle" value="photographic"/);
   assert.match(gameSource, /projectProwl\.artworkStyle/);
   assert.match(gameSource, /saveArtworkStyle\(state\.artworkStyle\)/);
+  assert.match(styleSource, /\.settings-tab\[hidden\],[\s\S]*?display: none/);
+  assert.match(styleSource, /repeat\(auto-fit, minmax\(120px, 1fr\)\)/);
+  assert.doesNotMatch(pageSource, /Adjust the duel’s board, artwork/);
 });
 
-test("Teapot Tabby uses Bell's photograph with illustrated fallback support", () => {
+function artworkFixture(savedStyle, enabled = false, storageBlocked = false) {
+  const storage = new Map([["projectProwl.artworkStyle", savedStyle]]);
+  const context = {
+    PHOTOGRAPHIC_ARTWORK_ENABLED: enabled,
+    state: { artworkStyle: savedStyle },
+    CARD_LIBRARY: [
+      { art: "teapot-tabby", name: "Teapot Tabby" },
+      { art: "cinder-kit", name: "Cinder Kit" },
+    ],
+    window: {
+      localStorage: {
+        getItem(key) {
+          if (storageBlocked) throw new Error("Storage is unavailable");
+          return storage.get(key) ?? null;
+        },
+        setItem(key, value) {
+          if (storageBlocked) throw new Error("Storage is unavailable");
+          storage.set(key, value);
+        },
+      },
+    },
+  };
+  const declarations = ["ARTWORK_STYLES", "ARTWORK_STYLE_STORAGE_KEY", "PHOTOGRAPHIC_CARD_ART", "PHOTOGRAPHIC_CARD_NAMES"]
+    .map((name) => gameSource.match(new RegExp(`const ${name} = [\\s\\S]*?;`))?.[0]);
+  const functions = ["readSavedArtworkStyle", "saveArtworkStyle", "cardUsesPhotographicArtwork", "cardDisplayName", "artworkAdjustedCopy", "cardArtworkSource", "renderArtworkSettings", "showSettingsPanel"]
+    .map((name) => gameSource.match(new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`))?.[0]);
+  assert.ok([...declarations, ...functions].every(Boolean));
+  runInNewContext([...declarations, ...functions].join("\n"), context);
+  return { context, storage };
+}
+
+test("fresh and returning photographic preferences resolve and save as illustrated", () => {
+  for (const savedStyle of [null, "illustrated", "photographic", "unknown"]) {
+    const { context, storage } = artworkFixture(savedStyle);
+    assert.equal(context.readSavedArtworkStyle(), "illustrated");
+    assert.equal(context.saveArtworkStyle(savedStyle), true);
+    assert.equal(storage.get("projectProwl.artworkStyle"), "illustrated");
+  }
+  const blocked = artworkFixture("photographic", false, true).context;
+  assert.equal(blocked.readSavedArtworkStyle(), "illustrated");
+  assert.equal(blocked.saveArtworkStyle("illustrated"), false);
+  const future = artworkFixture("photographic", true).context;
+  assert.equal(future.readSavedArtworkStyle(), "photographic", "the preserved mode can be re-enabled later");
+});
+
+test("disabled photographic mode cannot replace artwork, names, or tutorial copy", () => {
+  const { context } = artworkFixture("photographic");
+  for (const card of context.CARD_LIBRARY) {
+    assert.equal(context.cardUsesPhotographicArtwork(card.art), false);
+    assert.equal(context.cardDisplayName(card), card.name);
+    assert.equal(context.cardArtworkSource(card.art), `./assets/cards/${card.art}.webp`);
+  }
+  assert.equal(context.artworkAdjustedCopy("Commit Teapot Tabby, then Cinder Kit."), "Commit Teapot Tabby, then Cinder Kit.");
+});
+
+test("rendering settings normalizes stale state and disables the hidden artwork controls", () => {
+  const { context } = artworkFixture("photographic");
+  const options = ["illustrated", "photographic"].map((value) => ({ value }));
+  context.ui = { artworkSettingsTab: {}, artworkSettingsStatus: {} };
+  context.document = { querySelectorAll: () => options };
+  context.updateDisplayedCardArtwork = () => {};
+  context.renderGallery = () => {};
+  context.renderPreviousRoundsHistory = () => {};
+  context.tutorial = { active: false };
+  context.renderArtworkSettings();
+  assert.equal(context.state.artworkStyle, "illustrated");
+  assert.equal(context.ui.artworkSettingsTab.hidden, true);
+  assert.ok(options.every((option) => option.disabled));
+  assert.equal(options[0].checked, true);
+  assert.equal(options[1].checked, false);
+});
+
+test("hidden artwork panel cannot displace the available audio, board, or clash panels", () => {
+  const { context } = artworkFixture("illustrated");
+  const panels = ["audio", "artwork", "board", "clash"];
+  context.ui = {
+    settingsTabs: panels.map((name) => ({
+      dataset: { settingsPanel: name }, hidden: name === "artwork",
+      classList: { toggle() {} }, setAttribute() {},
+    })),
+    settingsPanels: panels.map((name) => ({ id: `${name}SettingsPanel` })),
+  };
+  for (const requested of ["artwork", "missing", "audio", "board", "clash"]) {
+    context.showSettingsPanel(requested);
+    const active = context.ui.settingsPanels.filter((panel) => !panel.hidden);
+    assert.equal(active.length, 1);
+    assert.equal(active[0].id, `${["artwork", "missing"].includes(requested) ? "audio" : requested}SettingsPanel`);
+  }
+});
+
+test("Teapot Tabby's preserved photograph retains illustrated fallback support", () => {
   assert.ok(statSync(teapotPhoto).size > 100_000);
   assert.match(
     gameSource,

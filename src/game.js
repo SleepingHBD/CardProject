@@ -90,7 +90,11 @@ const ARCHIVE_SORT_SUMMARIES = {
 };
 const CLASH_STYLES = Object.freeze(["cinematic", "classic"]);
 const CLASH_STYLE_STORAGE_KEY = "projectProwl.clashStyle";
-const ARTWORK_STYLES = Object.freeze(["illustrated", "photographic"]);
+// Keep the photographic collection available for later, but do not expose it yet.
+const PHOTOGRAPHIC_ARTWORK_ENABLED = false;
+const ARTWORK_STYLES = Object.freeze(
+  PHOTOGRAPHIC_ARTWORK_ENABLED ? ["illustrated", "photographic"] : ["illustrated"],
+);
 const ARTWORK_STYLE_STORAGE_KEY = "projectProwl.artworkStyle";
 const BOARD_THEMES = Object.freeze(["map", "tabletop"]);
 // The previous key auto-saved Map for everyone, so start a fresh preference with Tabletop as default.
@@ -650,6 +654,7 @@ const ui = {
   gameMenuNote: document.querySelector("#gameMenuNote"),
   settingsDialog: document.querySelector("#settingsDialog"),
   settingsStatus: document.querySelector("#settingsStatus"),
+  artworkSettingsTab: document.querySelector("#artworkSettingsTab"),
   artworkSettingsStatus: document.querySelector("#artworkSettingsStatus"),
   boardSettingsStatus: document.querySelector("#boardSettingsStatus"),
   audioSettingsStatus: document.querySelector("#audioSettingsStatus"),
@@ -2102,17 +2107,19 @@ function renderAftermathBreakdown(playerCards, resolution) {
 }
 
 function cardUsesPhotographicArtwork(cardArt) {
-  return state.artworkStyle === "photographic" && Boolean(PHOTOGRAPHIC_CARD_ART[cardArt]);
+  return PHOTOGRAPHIC_ARTWORK_ENABLED
+    && state.artworkStyle === "photographic"
+    && Boolean(PHOTOGRAPHIC_CARD_ART[cardArt]);
 }
 
 function cardDisplayName(card) {
-  return state.artworkStyle === "photographic"
+  return PHOTOGRAPHIC_ARTWORK_ENABLED && state.artworkStyle === "photographic"
     ? PHOTOGRAPHIC_CARD_NAMES[card.art] || card.name
     : card.name;
 }
 
 function artworkAdjustedCopy(copy = "") {
-  if (state.artworkStyle !== "photographic") return copy;
+  if (!PHOTOGRAPHIC_ARTWORK_ENABLED || state.artworkStyle !== "photographic") return copy;
   return Object.entries(PHOTOGRAPHIC_CARD_NAMES).reduce((adjustedCopy, [cardArt, displayName]) => {
     const originalName = CARD_LIBRARY.find((card) => card.art === cardArt)?.name;
     return originalName ? adjustedCopy.replaceAll(originalName, displayName) : adjustedCopy;
@@ -3926,7 +3933,8 @@ function saveClashStyle(clashStyle) {
 
 function saveArtworkStyle(artworkStyle) {
   try {
-    window.localStorage.setItem(ARTWORK_STYLE_STORAGE_KEY, artworkStyle);
+    const enabledStyle = ARTWORK_STYLES.includes(artworkStyle) ? artworkStyle : "illustrated";
+    window.localStorage.setItem(ARTWORK_STYLE_STORAGE_KEY, enabledStyle);
     return true;
   } catch {
     return false;
@@ -3968,8 +3976,11 @@ function renderAudioSettings(saved = true) {
 }
 
 function renderArtworkSettings(saved = true) {
+  if (!ARTWORK_STYLES.includes(state.artworkStyle)) state.artworkStyle = "illustrated";
+  ui.artworkSettingsTab.hidden = !PHOTOGRAPHIC_ARTWORK_ENABLED;
   document.querySelectorAll('input[name="artworkStyle"]').forEach((option) => {
     option.checked = option.value === state.artworkStyle;
+    option.disabled = !PHOTOGRAPHIC_ARTWORK_ENABLED;
   });
   const photographicCount = Object.keys(PHOTOGRAPHIC_CARD_ART).length;
   const portraitVerb = photographicCount === 1 ? "has" : "have";
@@ -4013,6 +4024,10 @@ function renderSettings(clashSaved = true, audioSaved = true, artworkSaved = tru
 }
 
 function showSettingsPanel(panelName) {
+  const available = [...ui.settingsTabs].some((tab) => (
+    tab.dataset.settingsPanel === panelName && !tab.hidden
+  ));
+  if (!available) panelName = "audio";
   ui.settingsTabs.forEach((tab) => {
     const selected = tab.dataset.settingsPanel === panelName;
     tab.classList.toggle("is-active", selected);
@@ -4376,7 +4391,7 @@ document.querySelectorAll('input[name="clashStyle"]').forEach((option) => {
 });
 document.querySelectorAll('input[name="artworkStyle"]').forEach((option) => {
   option.addEventListener("change", () => {
-    if (!option.checked || !ARTWORK_STYLES.includes(option.value)) return;
+    if (option.disabled || !option.checked || !ARTWORK_STYLES.includes(option.value)) return;
     state.artworkStyle = option.value;
     renderArtworkSettings(saveArtworkStyle(state.artworkStyle));
   });
