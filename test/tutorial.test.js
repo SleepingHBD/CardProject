@@ -88,7 +88,9 @@ test("Previous Rounds History uses an aligned tactical lane table instead of ful
   assert.match(historyMarkupSource, /history-cell-element/);
   assert.match(historyMarkupSource, /history-cell-power/);
   assert.match(historyMarkupSource, /history-cell-role/);
-  assert.match(historyMarkupSource, /history-cell-math/);
+  assert.match(historyMarkupSource, /history-cell-stats/);
+  assert.match(historyMarkupSource, /history-cell-outcome/);
+  assert.doesNotMatch(historyMarkupSource, /history-cell-math/);
   assert.doesNotMatch(historyMarkupSource, /cardMarkup\(card\)/);
 });
 

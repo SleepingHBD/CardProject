@@ -2723,33 +2723,32 @@ function historyLaneCellMarkup(entry, side, index) {
   const element = ELEMENTS[card.element];
   const tactic = TACTICS[card.tactic] || TACTICS.link;
   const outcome = isExtra
-    ? "EXTRA"
-    : lane?.winner === "draw"
-      ? "DRAW"
-      : lane?.winner === side
-        ? "WIN"
-        : "LOSS";
-  const finalTotal = side === "player" ? lane?.playerTotal : lane?.aiTotal;
-  const bonus = isExtra ? 0 : Math.max(0, (finalTotal || card.power) - card.power);
-  const scoreLabel = isExtra
-    ? "Unopposed card, plus 1 Round Point"
-    : `Power ${card.power}, bonus plus ${bonus}, clash total ${finalTotal}`;
+    ? "Extra +1 Round Point"
+    : side === "player"
+      ? lane?.winner === "draw" ? "Draw" : lane?.winner === "player" ? "Win" : "Loss"
+      : "";
+  const outcomeClass = isExtra ? "extra" : outcome.toLowerCase();
+  const outcomeLabel = outcome ? ` ${outcome}.` : "";
+  const finalTotal = (side === "player" ? lane?.playerTotal : lane?.aiTotal) ?? card.power;
+  const bonus = isExtra ? 0 : Math.max(0, finalTotal - card.power);
+  const powerLabel = bonus > 0
+    ? `Base Power ${card.power}, bonus ${bonus}, clash total ${finalTotal}`
+    : `Base Power ${card.power}`;
 
   return `
     <article
-      class="history-lane-cell history-cell-${outcome.toLowerCase()} history-element-${card.element}"
+      class="history-lane-cell${outcomeClass ? ` history-cell-${outcomeClass}` : ""} history-element-${card.element}"
       title="${cardDisplayName(card)}"
-      aria-label="Lane ${index + 1}, ${outcome}, ${element.label}, power ${card.power}, ${tactic.label}. ${scoreLabel}."
+      aria-label="Lane ${index + 1}, ${element.label}, ${powerLabel}, ${tactic.label}.${outcomeLabel}"
     >
-      <em>${outcome}</em>
-      <span class="history-cell-element" title="${element.label}" aria-label="${element.label}">${element.icon}</span>
-      <strong class="history-cell-power" title="Power ${card.power}" aria-label="Power ${card.power}">${card.power}</strong>
-      <span class="history-cell-role" title="${tactic.label}: ${tactic.description}" aria-label="${tactic.label}">
-        <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-${tactic.icon}"></use></svg>
-      </span>
-      <span class="history-cell-math">
-        ${isExtra ? `<b>+1 RP</b>` : `<small>+${bonus}</small><i aria-hidden="true">→</i><b>${finalTotal}</b>`}
-      </span>
+      <div class="history-cell-stats">
+        <span class="history-cell-element" title="${element.label}" aria-label="${element.label}">${element.icon}</span>
+        <strong class="history-cell-power" title="${powerLabel}" aria-label="${powerLabel}">${card.power}${bonus > 0 ? ` <small class="history-cell-bonus">+${bonus}</small>` : ""}</strong>
+        <span class="history-cell-role" title="${tactic.label}: ${tactic.description}" aria-label="${tactic.label}">
+          <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-${tactic.icon}"></use></svg>
+        </span>
+      </div>
+      ${outcome ? `<span class="history-cell-outcome">${outcome}</span>` : ""}
     </article>
   `;
 }
@@ -2759,22 +2758,63 @@ function historyFormationGridMarkup(entry) {
     .map((index) => `<div class="history-grid-lane">LANE ${index + 1}</div>`)
     .join("");
   const rowMarkup = (side, label) => {
-    const cards = side === "player" ? entry.playerCards : entry.aiCards;
     return `
       <div class="history-grid-side">
         <strong>${label}</strong>
-        <small>${cards.length} ${cards.length === 1 ? "CARD" : "CARDS"}</small>
       </div>
       ${[0, 1, 2].map((index) => historyLaneCellMarkup(entry, side, index)).join("")}
     `;
   };
   return `
     <div class="history-lane-grid">
-      <div class="history-grid-corner">FORMATION</div>
+      <div class="history-grid-corner" aria-hidden="true"></div>
       ${laneHeaders}
       ${rowMarkup("ai", "OPPONENT")}
       ${rowMarkup("player", "YOU")}
     </div>
+  `;
+}
+
+function historyLaneCalculationMarkup(entry, side, index) {
+  const cards = side === "player" ? entry.playerCards : entry.aiCards;
+  const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
+  const card = cards[index];
+  if (!card) return `<span aria-label="No card">—</span>`;
+  if (!opposingCards[index]) return "Extra card: <b>+1 Round Point</b>";
+  const lane = entry.laneResults[index];
+  const total = side === "player" ? lane.playerTotal : lane.aiTotal;
+  const bonus = total - card.power;
+  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>`;
+}
+
+function historyRoundDetailsMarkup(entry) {
+  const lanes = Array.from({ length: Math.max(entry.playerCards.length, entry.aiCards.length) }, (_, index) => index);
+  const trophyCard = entry.trophy?.card;
+  const trophyTactic = trophyCard ? TACTICS[trophyCard.tactic] || TACTICS.link : null;
+  return `
+    <details class="history-details">
+      <summary>Details</summary>
+      <div class="history-details-content">
+        <p class="history-detail-context">${DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
+        <div class="history-progress-before">
+          <span class="history-progress-label">Trophies before this round</span>
+          ${historyProgressMarkup(entry.trophyProgressBefore.player, "You")}
+          ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Opponent")}
+        </div>
+        <table class="history-calculation-table">
+          <caption>Lane calculations</caption>
+          <thead><tr><th scope="col">Lane</th><th scope="col">You</th><th scope="col">Opponent</th></tr></thead>
+          <tbody>${lanes.map((index) => `
+            <tr>
+              <th scope="row">${index + 1}</th>
+              <td>${historyLaneCalculationMarkup(entry, "player", index)}</td>
+              <td>${historyLaneCalculationMarkup(entry, "ai", index)}</td>
+            </tr>
+          `).join("")}</tbody>
+        </table>
+        ${trophyCard ? `<p class="history-detail-trophy">Claimed card: <b>${cardDisplayName(trophyCard)}</b> · Lane ${entry.trophy.lane + 1} · Power ${trophyCard.power} · ${trophyTactic.label}</p>` : ""}
+      </div>
+    </details>
   `;
 }
 
@@ -2801,56 +2841,31 @@ function renderPreviousRoundsHistory() {
       const winnerLabel = entry.winner === "player"
         ? "You won"
         : entry.winner === "ai"
-          ? "Opponent won"
+          ? "You lost"
           : "Draw";
       const trophyElement = entry.trophy ? ELEMENTS[entry.trophy.card.element] : null;
-      const trophyTactic = entry.trophy
-        ? TACTICS[entry.trophy.card.tactic] || TACTICS.link
-        : null;
       const trophyOwner = entry.trophy?.winner === "player" ? "You claimed" : "Opponent claimed";
-      const trophyLabel = entry.trophy
-        ? `${trophyOwner} ${trophyElement.label}, power ${entry.trophy.card.power}, ${trophyTactic.label}`
-        : "No trophy was claimed";
       return `
         <article class="previous-round-entry">
           <header>
-            <div>
-              <div class="history-entry-labels">
-                <span class="history-round-number">ROUND <strong>${entry.round}</strong></span>
-                <span class="history-mode">${DIFFICULTIES[entry.difficulty]?.label || "Training"}</span>
-              </div>
-              <h3 class="history-scoreline">
-                <span>YOU</span>
-                <b>${entry.score.player}</b>
-                <i aria-hidden="true">–</i>
-                <b>${entry.score.ai}</b>
-                <span>OPPONENT</span>
-                <small>ROUND POINTS</small>
-              </h3>
-            </div>
-            <b class="history-round-result history-round-result-${entry.winner}">${winnerLabel}</b>
+            <h3 class="history-entry-heading">
+              <span class="history-round-number">ROUND <strong>${entry.round}</strong></span>
+              <span class="history-round-result history-round-result-${entry.winner}">${winnerLabel}</span>
+            </h3>
+            <span class="history-scoreline" aria-label="Round Points: You ${entry.score.player}, Opponent ${entry.score.ai}">
+              <b>${entry.score.player}</b>
+              <i aria-hidden="true">–</i>
+              <b>${entry.score.ai}</b>
+              <small>Round Points</small>
+            </span>
           </header>
-          <div class="history-progress-before">
-            <span class="history-progress-label">TROPHIES BEFORE</span>
-            ${historyProgressMarkup(entry.trophyProgressBefore.player, "You")}
-            ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Opponent")}
-          </div>
           ${historyFormationGridMarkup(entry)}
           <footer class="history-trophy">
-            <span aria-hidden="true">◆</span>
             ${entry.trophy
-              ? `<strong>${trophyOwner}</strong>
-                <span
-                  class="history-trophy-summary history-element-${entry.trophy.card.element}"
-                  title="${cardDisplayName(entry.trophy.card)}: ${trophyLabel}"
-                  aria-label="${trophyLabel}"
-                >
-                  <b>${trophyElement.icon}</b>
-                  <b>${entry.trophy.card.power}</b>
-                  <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-${trophyTactic.icon}"></use></svg>
-                </span>`
-              : `<strong>${trophyLabel}</strong>`}
+              ? `<span>${trophyOwner}</span><strong class="history-trophy-element"><span aria-hidden="true">${trophyElement.icon}</span> ${trophyElement.label}</strong>`
+              : `<span>No trophy claimed</span>`}
           </footer>
+          ${historyRoundDetailsMarkup(entry)}
         </article>
       `;
     })
@@ -4153,6 +4168,7 @@ ui.previousRoundsHistoryButton.addEventListener("click", () => {
   renderPreviousRoundsHistory();
   if (!ui.previousRoundsHistoryDialog.open) {
     ui.previousRoundsHistoryDialog.showModal();
+    ui.previousRoundsHistoryList.scrollTop = 0;
   }
 });
 document.querySelectorAll("[data-close-previous-rounds-history]").forEach((button) => {
