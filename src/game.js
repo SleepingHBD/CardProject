@@ -3005,43 +3005,214 @@ function createCinematicCardCopy(card, className) {
   return copy;
 }
 
+// These six adjoining regions start as one card and buckle into a damp pile.
+// Percentage geometry keeps the same silhouette at every board/card size.
+const WATER_PAPER_FOLDS = Object.freeze([
+  { clip: "polygon(0 0,54% 0,44% 27%,0 37%)", x: "-5%", y: "12%", angle: "-13deg", crease: "128deg", depth: ".29" },
+  { clip: "polygon(54% 0,100% 0,100% 36%,70% 42%,44% 27%)", x: "4%", y: "15%", angle: "16deg", crease: "38deg", depth: ".26" },
+  { clip: "polygon(0 37%,44% 27%,51% 61%,19% 68%,0 61%)", x: "-2%", y: "9%", angle: "9deg", crease: "155deg", depth: ".25" },
+  { clip: "polygon(44% 27%,70% 42%,100% 36%,100% 71%,74% 77%,51% 61%)", x: "3%", y: "11%", angle: "-11deg", crease: "65deg", depth: ".31" },
+  { clip: "polygon(0 61%,19% 68%,51% 61%,44% 100%,0 100%)", x: "-4%", y: "10%", angle: "-8deg", crease: "115deg", depth: ".28" },
+  { clip: "polygon(51% 61%,74% 77%,100% 71%,100% 100%,44% 100%)", x: "2%", y: "8%", angle: "12deg", crease: "28deg", depth: ".24" },
+]);
+
+function createWaterDefeatEffect(card, { aftermath = false } = {}) {
+  const effect = document.createElement("span");
+  effect.className = `defeat-effect defeat-tide${aftermath ? " aftermath-remains" : ""}`;
+  effect.setAttribute("aria-hidden", "true");
+
+  const puddle = document.createElement("span");
+  puddle.className = "water-puddle";
+  puddle.innerHTML = `<svg viewBox="0 0 200 70" aria-hidden="true" focusable="false">
+    <path fill="#285766" opacity=".32" d="M12 36C1 24 32 17 49 19C67 5 93 9 111 14C137 8 154 18 170 22C191 20 202 36 184 44C192 56 160 60 144 55C120 66 103 58 87 59C55 63 41 54 28 53C5 55 1 42 12 36Z"/>
+    <path fill="#5aa5b8" opacity=".62" d="M17 32C25 22 47 27 61 19C80 10 98 19 115 20C137 14 153 28 170 28C191 29 184 40 172 44C148 55 134 47 119 52C91 56 77 48 58 51C33 50 8 42 17 32Z"/>
+    <path fill="none" stroke="#c4e5df" stroke-width="2" stroke-linecap="round" opacity=".7" d="M29 33Q42 28 58 31M134 41Q153 45 169 37M68 48Q81 52 94 49"/>
+  </svg>`;
+  effect.append(puddle);
+
+  const pulp = document.createElement("span");
+  pulp.className = "water-pulp-body";
+  pulp.innerHTML = `<svg viewBox="0 0 160 80" aria-hidden="true" focusable="false">
+    <path fill="#78877d" stroke="#3c5758" stroke-width="2" stroke-linejoin="round" d="M9 29L31 13L63 20L86 8L111 21L147 26L151 50L128 67L96 62L73 72L44 62L16 66L6 49Z"/>
+    <path fill="#a6afa0" d="M9 29L31 13L63 20L48 40L18 46ZM86 8L111 21L94 40L64 20ZM94 40L147 26L128 48L116 65Z"/>
+    <path fill="#405c5e" fill-opacity=".65" d="M18 46L48 40L73 72L44 62L16 66ZM64 20L94 40L74 53L48 40ZM128 48L151 50L128 67L116 65Z"/>
+    <path fill="none" stroke="#c2c7b5" stroke-opacity=".65" stroke-width="1.5" d="M31 15L48 40L18 46M86 10L94 40L128 48M48 40L74 53L96 62"/>
+  </svg>`;
+  effect.append(pulp);
+
+  if (!aftermath) {
+    const soakingCard = createCinematicCardCopy(card, "water-soaking-card");
+    effect.append(soakingCard);
+  }
+
+  WATER_PAPER_FOLDS.forEach((fold, index) => {
+    const paper = createCinematicCardCopy(card, "water-paper-fold");
+    paper.style.setProperty("--fold-clip", fold.clip);
+    paper.style.setProperty("--fold-x", fold.x);
+    paper.style.setProperty("--fold-y", fold.y);
+    paper.style.setProperty("--fold-angle", fold.angle);
+    paper.style.setProperty("--crease-angle", fold.crease);
+    paper.style.setProperty("--fold-depth", fold.depth);
+    paper.style.setProperty("--fold-layer", index + 3);
+    effect.append(paper);
+  });
+
+  // After a board rerender, keep only settled paper and water, never replay a splash.
+  if (aftermath) return effect;
+
+  const surge = document.createElement("span");
+  surge.className = "water-surge";
+  surge.innerHTML = `<svg viewBox="0 0 200 240" aria-hidden="true" focusable="false">
+    <path class="water-wave-body" fill="#3a94ad" fill-opacity=".73" stroke="#286377" stroke-width="2" stroke-linejoin="round" d="M7 164C18 145 17 121 29 106C44 87 58 79 49 60C42 48 32 53 32 61C13 35 40 17 68 29C87 37 95 59 93 83C111 63 104 41 124 45C139 47 145 71 141 93C159 81 163 64 172 70C187 82 178 106 188 128L191 178C183 202 165 212 131 215C80 221 30 205 7 185Z"/>
+    <path fill="#79c8d0" fill-opacity=".8" d="M14 166C24 133 34 129 51 108C73 82 74 49 53 39C72 40 90 59 80 89C74 112 65 129 54 145C85 129 92 114 107 94C107 119 95 147 76 159C109 158 134 140 154 117C150 148 138 169 111 182C67 193 31 182 14 166Z"/>
+    <path class="water-foam" fill="#e0eee2" d="M32 61C25 46 38 33 51 35C70 35 82 52 78 69C74 60 70 53 61 52C56 51 52 55 52 61C48 51 40 51 37 60L32 65ZM95 80C104 66 107 50 117 48C128 47 135 56 136 67C130 63 127 61 124 65C119 61 114 66 112 74L101 88ZM146 91C159 78 163 68 171 74C178 78 179 87 176 98C170 87 168 88 164 94C160 90 156 97 151 102Z"/>
+    <path class="water-flow-lines" fill="none" stroke="#d3eee6" stroke-width="3.5" stroke-linecap="round" d="M28 147C37 126 55 117 66 92M82 161C101 151 118 134 128 112M132 180Q155 162 169 138"/>
+    <path fill="none" stroke="#e5f3e9" stroke-width="3" stroke-linecap="round" d="M21 179Q34 186 47 184M59 191Q73 196 88 191M114 202Q133 203 150 195"/>
+  </svg>`;
+  effect.append(surge);
+
+  const droplets = document.createElement("span");
+  droplets.className = "water-droplets";
+  for (let index = 0; index < 12; index += 1) {
+    const droplet = document.createElement("i");
+    const direction = index % 2 === 0 ? -1 : 1;
+    droplet.style.setProperty("--drop-x", `${direction * (18 + (index % 4) * 8)}cqw`);
+    droplet.style.setProperty("--drop-rise", `${-22 - (index % 3) * 9}cqh`);
+    droplet.style.setProperty("--drop-fall", `${20 + (index % 4) * 7}cqh`);
+    droplet.style.setProperty("--drop-delay", `${110 + index * 13}ms`);
+    droplet.style.setProperty("--drop-size", `${3 + index % 3}%`);
+    droplet.style.left = `${33 + (index % 6) * 6}%`;
+    droplets.append(droplet);
+  }
+  effect.append(droplets);
+  return effect;
+}
+
+const FIRE_CHAR_FRAGMENTS = Object.freeze([
+  { clip: "polygon(12% 43%,34% 46%,43% 63%,27% 77%,10% 68%,18% 57%)", x: "-8%", y: "24%", angle: "-19deg" },
+  { clip: "polygon(57% 49%,77% 41%,89% 59%,79% 74%,59% 68%,65% 59%)", x: "7%", y: "23%", angle: "17deg" },
+  { clip: "polygon(36% 65%,49% 60%,65% 71%,58% 85%,38% 80%,43% 73%)", x: "0%", y: "13%", angle: "-7deg" },
+]);
+
+function createFireDefeatEffect(card, { aftermath = false } = {}) {
+  const effect = document.createElement("span");
+  effect.className = `defeat-effect defeat-ember${aftermath ? " aftermath-remains" : ""}`;
+  effect.setAttribute("aria-hidden", "true");
+
+  const ashes = document.createElement("span");
+  ashes.className = "fire-ash-bed";
+  ashes.innerHTML = `<svg viewBox="0 0 200 70" aria-hidden="true" focusable="false">
+    <path fill="#3b302a" opacity=".2" d="M17 39Q40 25 71 30Q97 19 135 28Q171 24 188 42Q165 56 128 51Q82 60 52 49Q23 53 17 39Z"/>
+    <g fill="#302824" stroke="#51423a" stroke-width="1" stroke-linejoin="round">
+      <path d="M27 33L42 27L49 37L38 46L23 42Z"/><path d="M64 36L80 30L92 39L81 48L61 44Z"/>
+      <path d="M116 29L133 23L148 36L137 46L119 43Z"/><path d="M154 40L165 34L177 40L170 49L157 48Z"/>
+      <path d="M48 50L55 46L65 52L57 57Z"/><path d="M100 49L108 44L117 51L110 58Z"/>
+    </g>
+    <g fill="#84756a"><path d="M15 44L21 41L24 46Z"/><path d="M78 55L84 52L88 56Z"/><path d="M146 54L152 50L158 55Z"/><path d="M181 36L186 34L190 38Z"/></g>
+  </svg>`;
+  effect.append(ashes);
+
+  FIRE_CHAR_FRAGMENTS.forEach((fragment, index) => {
+    const paper = createCinematicCardCopy(card, "fire-char-fragment");
+    paper.style.setProperty("--char-clip", fragment.clip);
+    paper.style.setProperty("--char-x", fragment.x);
+    paper.style.setProperty("--char-y", fragment.y);
+    paper.style.setProperty("--char-angle", fragment.angle);
+    paper.style.setProperty("--char-layer", index + 3);
+    effect.append(paper);
+  });
+  if (aftermath) return effect;
+
+  // The darker copy is burned slightly later, exposing a narrow charred edge.
+  effect.append(
+    createCinematicCardCopy(card, "fire-paper-char"),
+    createCinematicCardCopy(card, "fire-paper-face"),
+  );
+
+  const front = document.createElement("span");
+  front.className = "fire-burn-front";
+  const flamePositions = [5, 17, 29, 44, 58, 76, 93];
+  const flameWidths = [12, 9, 16, 12, 15, 14, 10];
+  const flameHeights = [65, 43, 87, 56, 74, 94, 51];
+  for (let index = 0; index < 7; index += 1) {
+    const flame = document.createElement("span");
+    flame.className = "fire-tongue";
+    flame.style.left = `${flamePositions[index]}%`;
+    flame.style.width = `${flameWidths[index]}%`;
+    flame.style.height = `${flameHeights[index]}%`;
+    flame.style.bottom = `${index % 3 * 4}%`;
+    flame.style.setProperty("--flame-sway", `${index % 2 === 0 ? -6 : 7}deg`);
+    flame.style.setProperty("--flame-cycle", `${210 + index * 17}ms`);
+    flame.innerHTML = `<svg viewBox="0 0 60 100" aria-hidden="true" focusable="false">
+      <path fill="#b94321" d="M13 98C-2 78 7 60 19 49C29 39 31 20 26 2C47 20 45 37 40 49C48 43 51 34 51 26C62 45 53 61 49 70C64 80 53 99 40 100Z"/>
+      <path fill="#ef842a" d="M18 97C5 82 13 65 24 56C33 47 36 34 34 22C47 42 33 55 35 67C42 60 45 52 45 45C54 66 44 73 49 85C49 96 34 102 18 97Z"/>
+      <path fill="#ffd279" d="M24 96C17 88 19 78 28 69C33 64 34 57 34 51C43 66 32 71 34 81C39 79 40 75 41 72C46 87 38 98 24 96Z"/>
+      <path fill="#fff0b2" d="M28 98C23 92 28 84 32 80C32 88 38 89 36 94L33 99Z"/>
+    </svg>`;
+    front.append(flame);
+  }
+  effect.append(front);
+
+  const smoke = document.createElement("span");
+  smoke.className = "fire-smoke";
+  for (let index = 0; index < 3; index += 1) {
+    const wisp = document.createElement("i");
+    wisp.style.left = `${18 + index * 25}%`;
+    wisp.style.setProperty("--smoke-drift", `${index % 2 === 0 ? -9 : 12}cqw`);
+    wisp.style.setProperty("--smoke-delay", `${index * 95}ms`);
+    smoke.append(wisp);
+  }
+  effect.append(smoke);
+
+  const debris = document.createElement("span");
+  debris.className = "fire-debris";
+  for (let index = 0; index < 16; index += 1) {
+    const fleck = document.createElement("i");
+    fleck.className = index < 7 ? "fire-spark" : "fire-ash";
+    fleck.style.left = `${12 + index % 7 * 12}%`;
+    fleck.style.top = `${60 - index % 4 * 12}%`;
+    fleck.style.setProperty("--fleck-x", `${(index % 2 === 0 ? -1 : 1) * (8 + index % 4 * 5)}cqw`);
+    fleck.style.setProperty("--fleck-rise", `${-17 - index % 3 * 8}cqh`);
+    fleck.style.setProperty("--fleck-delay", `${130 + index * 25}ms`);
+    debris.append(fleck);
+  }
+  effect.append(debris);
+  return effect;
+}
+
 function createDefeatEffect(lane, winningElement, { aftermath = false } = {}) {
   const card = lane.querySelector(".game-card");
   if (!card) return null;
+
+  if (winningElement === "tide") {
+    const waterEffect = createWaterDefeatEffect(card, { aftermath });
+    lane.classList.add("cinematic-defeat", "defeated-by-tide");
+    lane.append(waterEffect);
+    return waterEffect;
+  }
+
+  if (winningElement === "ember") {
+    const fireEffect = createFireDefeatEffect(card, { aftermath });
+    lane.classList.add("cinematic-defeat", "defeated-by-ember");
+    lane.append(fireEffect);
+    return fireEffect;
+  }
 
   const effect = document.createElement("span");
   effect.className = `defeat-effect defeat-${winningElement}`;
   if (aftermath) effect.classList.add("aftermath-remains");
   effect.setAttribute("aria-hidden", "true");
 
-  if (winningElement === "ember") {
-    effect.append(
-      createCinematicCardCopy(card, "ember-burning-card"),
-      createCinematicCardCopy(card, "ember-charred-remains"),
-    );
-    const heatWave = document.createElement("span");
-    heatWave.className = "ember-heat-wave";
-    effect.append(heatWave);
-  } else if (winningElement === "gust") {
+  if (winningElement === "gust") {
     const vortex = document.createElement("span");
     vortex.className = "tornado-vortex";
     effect.append(vortex);
     for (let index = 1; index <= 6; index += 1) {
       effect.append(createCinematicCardCopy(card, `tornado-fragment fragment-${index}`));
     }
-  } else {
-    effect.append(
-      createCinematicCardCopy(card, "tide-soaking-card"),
-      createCinematicCardCopy(card, "tide-pulp-remains"),
-    );
-    const waterSheet = document.createElement("span");
-    waterSheet.className = "tide-water-sheet";
-    const inkBleed = document.createElement("span");
-    inkBleed.className = "tide-ink-bleed";
-    effect.append(waterSheet, inkBleed);
   }
 
-  const particleCount = winningElement === "tide" ? 12 : winningElement === "gust" ? 14 : 16;
+  const particleCount = winningElement === "gust" ? 14 : 16;
   const particles = document.createElement("span");
   particles.className = "defeat-particles";
   for (let index = 0; index < particleCount; index += 1) {
