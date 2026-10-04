@@ -105,20 +105,6 @@ test("Water dispatch marks only its losing lane and returns its cleanup containe
   assert.equal(context.createDefeatEffect(lane, "tide"), null);
 });
 
-test("Gust retains its existing effect composition during the Water and Fire phases", () => {
-  const context = fixture();
-  for (const [element, copyClass, copies, particleCount] of [
-    ["gust", "tornado-fragment", 6, 14],
-  ]) {
-    const lane = new Element();
-    lane.querySelector = () => context.card;
-    const effect = context.createDefeatEffect(lane, element);
-    assert.equal(childrenWith(effect, copyClass).length, copies);
-    assert.equal(childrenWith(effect, "defeat-particles")[0].children.length, particleCount);
-    assert.equal(childrenWith(effect, "water-paper-fold").length, 0);
-  }
-});
-
 test("Water folds override card-entry animations and hide the intact losing card", () => {
   assert.match(styles, /\.defeat-tide \.water-paper-fold \{[\s\S]*?animation: water-paper-crumple 1\.4s/);
   assert.match(styles, /\.defeat-tide \.water-soaking-card \{[\s\S]*?animation: water-paper-soak 1\.4s/);

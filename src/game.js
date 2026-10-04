@@ -3129,37 +3129,56 @@ function createFireDefeatEffect(card, { aftermath = false } = {}) {
     createCinematicCardCopy(card, "fire-paper-face"),
   );
 
-  const front = document.createElement("span");
-  front.className = "fire-burn-front";
-  const flamePositions = [5, 17, 29, 44, 58, 76, 93];
-  const flameWidths = [12, 9, 16, 12, 15, 14, 10];
-  const flameHeights = [65, 43, 87, 56, 74, 94, 51];
-  for (let index = 0; index < 7; index += 1) {
-    const flame = document.createElement("span");
-    flame.className = "fire-tongue";
-    flame.style.left = `${flamePositions[index]}%`;
-    flame.style.width = `${flameWidths[index]}%`;
-    flame.style.height = `${flameHeights[index]}%`;
-    flame.style.bottom = `${index % 3 * 4}%`;
-    flame.style.setProperty("--flame-sway", `${index % 2 === 0 ? -6 : 7}deg`);
-    flame.style.setProperty("--flame-cycle", `${210 + index * 17}ms`);
-    flame.innerHTML = `<svg viewBox="0 0 60 100" aria-hidden="true" focusable="false">
-      <path fill="#b94321" d="M13 98C-2 78 7 60 19 49C29 39 31 20 26 2C47 20 45 37 40 49C48 43 51 34 51 26C62 45 53 61 49 70C64 80 53 99 40 100Z"/>
-      <path fill="#ef842a" d="M18 97C5 82 13 65 24 56C33 47 36 34 34 22C47 42 33 55 35 67C42 60 45 52 45 45C54 66 44 73 49 85C49 96 34 102 18 97Z"/>
-      <path fill="#ffd279" d="M24 96C17 88 19 78 28 69C33 64 34 57 34 51C43 66 32 71 34 81C39 79 40 75 41 72C46 87 38 98 24 96Z"/>
-      <path fill="#fff0b2" d="M28 98C23 92 28 84 32 80C32 88 38 89 36 94L33 99Z"/>
-    </svg>`;
-    front.append(flame);
-  }
-  effect.append(front);
+  const heat = document.createElement("span");
+  heat.className = "fire-contact-heat";
+  effect.append(heat);
+
+  // Broad flames behind the paper become visible through its burn holes;
+  // foreground curls share their base so this reads as one engulfing fire.
+  const flameShapes = [
+    ["M13 98C-2 78 7 60 19 49C29 39 31 20 26 2C47 20 45 37 40 49C48 43 51 34 51 26C62 45 53 61 49 70C64 80 53 99 40 100Z", "M18 97C5 82 13 65 24 56C33 47 36 34 34 22C47 42 33 55 35 67C42 60 45 52 45 45C54 66 44 73 49 85C49 96 34 102 18 97Z", "M24 96C17 88 19 78 28 69C33 64 34 57 34 51C43 66 32 71 34 81C39 79 40 75 41 72C46 87 38 98 24 96Z"],
+    ["M10 99C-4 78 12 65 12 48C12 34 3 23 6 9C14 28 31 30 29 50C41 40 48 22 42 0C63 24 54 42 46 57C39 71 60 77 52 93C46 105 23 101 10 99Z", "M16 99C4 80 24 72 20 56C30 66 38 49 41 32C49 51 32 65 35 77C42 72 46 65 45 59C59 77 48 97 37 100Z", "M23 99C16 91 25 79 29 71C38 83 33 88 40 85C44 98 32 103 23 99Z"],
+    ["M8 96C-3 74 15 65 24 55C35 43 19 30 26 18C38 39 48 30 43 4C65 24 50 44 42 56C53 59 49 72 53 79C64 103 31 107 8 96Z", "M15 96C9 79 30 68 34 60C39 50 31 42 33 37C47 48 36 64 39 72C46 68 45 62 46 60C60 78 48 101 33 101Z", "M24 97C18 85 34 82 32 71C45 81 39 87 42 92C41 102 30 101 24 97Z"],
+  ];
+  const flameBanks = [
+    { className: "fire-flame-envelope", positions: [5, 26, 48, 73, 94], widths: [32, 38, 35, 42, 30], heights: [80, 96, 87, 99, 74] },
+    { className: "fire-burn-front", positions: [5, 34, 65, 94], widths: [35, 48, 46, 34], heights: [85, 68, 96, 76] },
+  ];
+  flameBanks.forEach((bank, bankIndex) => {
+    const flames = document.createElement("span");
+    flames.className = bank.className;
+    bank.positions.forEach((position, index) => {
+      const flame = document.createElement("span");
+      flame.className = "fire-tongue";
+      flame.style.left = `${position}%`;
+      flame.style.width = `${bank.widths[index]}%`;
+      flame.style.height = `${bank.heights[index]}%`;
+      flame.style.bottom = `${index % 3 * 3}%`;
+      flame.style.setProperty("--flame-sway", `${index % 2 === 0 ? -9 : 11}deg`);
+      flame.style.setProperty("--flame-cycle", `${160 + (index + bankIndex) % 4 * 19}ms`);
+      const [outer, body, core] = flameShapes[(index + bankIndex) % flameShapes.length];
+      flame.innerHTML = `<svg viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path fill="#a73119" stroke="#87321d" stroke-width=".7" stroke-linejoin="round" d="${outer}"/>
+        <path fill="#f26c20" d="${body}"/>
+        <path fill="#ffd479" d="${core}"/>
+        <path fill="#fff0b2" d="M28 98C23 92 28 84 32 80C32 88 38 89 36 94L33 99Z"/>
+      </svg>`;
+      flames.append(flame);
+    });
+    effect.append(flames);
+  });
 
   const smoke = document.createElement("span");
   smoke.className = "fire-smoke";
   for (let index = 0; index < 3; index += 1) {
     const wisp = document.createElement("i");
-    wisp.style.left = `${18 + index * 25}%`;
+    wisp.style.left = `${5 + index * 27}%`;
     wisp.style.setProperty("--smoke-drift", `${index % 2 === 0 ? -9 : 12}cqw`);
-    wisp.style.setProperty("--smoke-delay", `${index * 95}ms`);
+    wisp.style.setProperty("--smoke-delay", `${200 + index * 70}ms`);
+    wisp.innerHTML = `<svg viewBox="0 0 90 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path fill="#51493f" fill-opacity=".65" d="M22 118C5 100 8 82 29 74C52 65 61 54 50 43C40 35 23 40 21 29C17 17 35 10 54 12C37 15 31 24 41 29C62 34 77 48 64 66C54 79 33 79 31 94C29 104 41 111 43 120Z"/>
+      <path fill="#897d68" fill-opacity=".42" d="M30 116C16 103 21 88 40 81C61 73 73 59 67 46C82 64 63 82 47 88C31 95 31 103 41 115ZM42 31C28 27 27 21 39 17C31 26 53 27 55 37Z"/>
+    </svg>`;
     smoke.append(wisp);
   }
   effect.append(smoke);
@@ -3171,12 +3190,95 @@ function createFireDefeatEffect(card, { aftermath = false } = {}) {
     fleck.className = index < 7 ? "fire-spark" : "fire-ash";
     fleck.style.left = `${12 + index % 7 * 12}%`;
     fleck.style.top = `${60 - index % 4 * 12}%`;
-    fleck.style.setProperty("--fleck-x", `${(index % 2 === 0 ? -1 : 1) * (8 + index % 4 * 5)}cqw`);
-    fleck.style.setProperty("--fleck-rise", `${-17 - index % 3 * 8}cqh`);
-    fleck.style.setProperty("--fleck-delay", `${130 + index * 25}ms`);
+    fleck.style.setProperty("--fleck-x", `${(index % 2 === 0 ? -1 : 1) * (14 + index % 4 * 8)}cqw`);
+    fleck.style.setProperty("--fleck-rise", `${-24 - index % 3 * 10}cqh`);
+    fleck.style.setProperty("--fleck-delay", `${index < 7 ? 120 + index * 9 : 370 + (index - 7) * 22}ms`);
     debris.append(fleck);
   }
   effect.append(debris);
+  return effect;
+}
+
+// Shared jagged edges partition the whole card exactly once. Unlike overlapping
+// cutouts, these shreds can pull apart without duplicating the character/artwork.
+const GUST_PAPER_SHREDS = Object.freeze([
+  { clip: "polygon(0 0,46% 0,41% 9%,50% 17%,48% 26%,41% 30%,29% 22%,15% 28%,0 24%)", tearX: "-9%", tearY: "-5%", orbitX: "18%", orbitY: "-12%", spin: "65deg", x: "-22%", y: "45%", angle: "-27deg" },
+  { clip: "polygon(46% 0,100% 0,100% 23%,88% 29%,75% 24%,62% 32%,48% 26%,50% 17%,41% 9%)", tearX: "8%", tearY: "-7%", orbitX: "26%", orbitY: "18%", spin: "125deg", x: "23%", y: "42%", angle: "24deg" },
+  { clip: "polygon(0 24%,15% 28%,29% 22%,41% 30%,48% 26%,43% 38%,53% 45%,53% 55%,44% 51%,29% 57%,13% 47%,0 52%)", tearX: "-14%", tearY: "1%", orbitX: "-28%", orbitY: "-8%", spin: "-58deg", x: "-14%", y: "36%", angle: "17deg" },
+  { clip: "polygon(48% 26%,62% 32%,75% 24%,88% 29%,100% 23%,100% 50%,80% 57%,66% 48%,53% 55%,53% 45%,43% 38%)", tearX: "13%", tearY: "-1%", orbitX: "10%", orbitY: "-12%", spin: "92deg", x: "16%", y: "34%", angle: "-19deg" },
+  { clip: "polygon(0 52%,13% 47%,29% 57%,44% 51%,53% 55%,45% 63%,51% 68%,47% 75%,42% 80%,29% 74%,12% 81%,0 75%)", tearX: "-12%", tearY: "4%", orbitX: "-18%", orbitY: "-40%", spin: "-78deg", x: "-24%", y: "28%", angle: "-12deg" },
+  { clip: "polygon(53% 55%,66% 48%,80% 57%,100% 50%,100% 73%,91% 78%,78% 72%,64% 79%,47% 75%,51% 68%,45% 63%)", tearX: "15%", tearY: "3%", orbitX: "-32%", orbitY: "-14%", spin: "-138deg", x: "26%", y: "29%", angle: "31deg" },
+  { clip: "polygon(0 75%,12% 81%,29% 74%,42% 80%,47% 75%,43% 85%,54% 91%,49% 100%,0 100%)", tearX: "-7%", tearY: "7%", orbitX: "12%", orbitY: "-48%", spin: "118deg", x: "-6%", y: "23%", angle: "-22deg" },
+  { clip: "polygon(47% 75%,64% 79%,78% 72%,91% 78%,100% 73%,100% 100%,49% 100%,54% 91%,43% 85%)", tearX: "9%", tearY: "8%", orbitX: "-12%", orbitY: "-42%", spin: "-112deg", x: "8%", y: "24%", angle: "15deg" },
+]);
+
+function createGustDefeatEffect(card, { aftermath = false } = {}) {
+  const effect = document.createElement("span");
+  effect.className = `defeat-effect defeat-gust${aftermath ? " aftermath-remains" : ""}`;
+  effect.setAttribute("aria-hidden", "true");
+
+  const bed = document.createElement("span");
+  bed.className = "gust-paper-bed";
+  bed.innerHTML = `<svg viewBox="0 0 200 50" aria-hidden="true" focusable="false">
+    <path fill="#4b402e" opacity=".16" d="M13 30Q54 20 99 24Q151 19 188 31Q151 43 101 38Q49 44 13 30Z"/>
+    <g fill="#dbcfab" stroke="#968765" stroke-width=".8" stroke-linejoin="round">
+      <path d="M28 29L40 26L48 30L37 34L23 32Z"/><path d="M67 37L76 31L83 34L78 40Z"/>
+      <path d="M134 29L144 24L151 28L146 34Z"/><path d="M161 36L170 32L178 36L167 39Z"/>
+    </g>
+  </svg>`;
+  effect.append(bed);
+
+  GUST_PAPER_SHREDS.forEach((shred, index) => {
+    const paper = document.createElement("span");
+    paper.className = "gust-paper-shred";
+    paper.style.setProperty("--shred-clip", shred.clip);
+    paper.style.setProperty("--tear-x", shred.tearX);
+    paper.style.setProperty("--tear-y", shred.tearY);
+    paper.style.setProperty("--orbit-x", shred.orbitX);
+    paper.style.setProperty("--orbit-y", shred.orbitY);
+    paper.style.setProperty("--shred-spin", shred.spin);
+    paper.style.setProperty("--shred-x", shred.x);
+    paper.style.setProperty("--shred-y", shred.y);
+    paper.style.setProperty("--shred-angle", shred.angle);
+    paper.style.setProperty("--shred-layer", index + 3);
+    const fibre = document.createElement("span");
+    fibre.className = "gust-paper-fibre";
+    paper.append(fibre, createCinematicCardCopy(card, "gust-paper-face"));
+    effect.append(paper);
+  });
+  // A rerender restores settled scraps only; it must never restart the wind.
+  if (aftermath) return effect;
+
+  const wind = document.createElement("span");
+  wind.className = "gust-windfield";
+  wind.innerHTML = `<svg viewBox="0 0 200 260" aria-hidden="true" focusable="false">
+    <g fill="#a7b7a0" fill-opacity=".48" stroke="#627b5e" stroke-opacity=".65" stroke-width="1" stroke-linejoin="round">
+      <path class="gust-wind-band" d="M15 70C45 26 145 14 181 48C208 78 129 94 64 83C128 91 187 66 175 50C148 22 51 38 15 70Z"/>
+      <path class="gust-wind-band" d="M12 140C42 94 163 75 188 108C211 135 154 157 58 146C128 150 188 121 175 112C149 87 54 111 12 140Z"/>
+      <path class="gust-wind-band" d="M32 198C53 164 140 141 166 161C192 180 134 211 80 206C122 206 164 180 151 169C132 155 66 179 32 198Z"/>
+      <path class="gust-wind-band" d="M69 219C90 194 127 189 144 201C160 215 117 242 97 246C119 228 133 211 124 207C113 202 89 211 69 219Z"/>
+    </g>
+    <g class="gust-flow-lines" fill="none" stroke="#eee9d2" stroke-opacity=".85" stroke-width="2.5" stroke-linecap="round">
+      <path d="M34 54C80 24 167 27 178 53C186 70 134 84 95 83"/>
+      <path d="M31 125C82 90 171 93 182 115C190 130 139 149 91 147"/>
+      <path d="M51 188C91 159 148 154 162 172C172 185 132 205 103 206"/>
+      <path d="M83 219Q115 198 134 209Q139 219 111 236"/>
+    </g>
+  </svg>`;
+  effect.append(wind);
+
+  const dust = document.createElement("span");
+  dust.className = "gust-paper-dust";
+  for (let index = 0; index < 12; index += 1) {
+    const fleck = document.createElement("i");
+    fleck.style.left = `${31 + index % 5 * 9}%`;
+    fleck.style.top = `${35 + index % 4 * 11}%`;
+    fleck.style.setProperty("--dust-x", `${(index % 2 === 0 ? -1 : 1) * (16 + index % 4 * 6)}cqw`);
+    fleck.style.setProperty("--dust-y", `${-18 - index % 3 * 12}cqh`);
+    fleck.style.setProperty("--dust-delay", `${160 + index * 17}ms`);
+    dust.append(fleck);
+  }
+  effect.append(dust);
   return effect;
 }
 
@@ -3198,36 +3300,13 @@ function createDefeatEffect(lane, winningElement, { aftermath = false } = {}) {
     return fireEffect;
   }
 
-  const effect = document.createElement("span");
-  effect.className = `defeat-effect defeat-${winningElement}`;
-  if (aftermath) effect.classList.add("aftermath-remains");
-  effect.setAttribute("aria-hidden", "true");
-
   if (winningElement === "gust") {
-    const vortex = document.createElement("span");
-    vortex.className = "tornado-vortex";
-    effect.append(vortex);
-    for (let index = 1; index <= 6; index += 1) {
-      effect.append(createCinematicCardCopy(card, `tornado-fragment fragment-${index}`));
-    }
+    const gustEffect = createGustDefeatEffect(card, { aftermath });
+    lane.classList.add("cinematic-defeat", "defeated-by-gust");
+    lane.append(gustEffect);
+    return gustEffect;
   }
-
-  const particleCount = winningElement === "gust" ? 14 : 16;
-  const particles = document.createElement("span");
-  particles.className = "defeat-particles";
-  for (let index = 0; index < particleCount; index += 1) {
-    const particle = document.createElement("i");
-    particle.style.setProperty("--particle-index", index);
-    particle.style.setProperty(
-      "--particle-left",
-      `${8 + index * (84 / Math.max(1, particleCount - 1))}%`,
-    );
-    particles.append(particle);
-  }
-  effect.append(particles);
-  lane.classList.add("cinematic-defeat", `defeated-by-${winningElement}`);
-  lane.append(effect);
-  return effect;
+  return null;
 }
 
 function restoreCinematicAftermathRemains(playerCards, aiCards, resolution) {
