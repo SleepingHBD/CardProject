@@ -61,7 +61,11 @@ test("Water buckles six card regions and uses a bounded twelve-droplet splash", 
   assert.equal(effect.attributes["aria-hidden"], "true");
   assert.equal(childrenWith(effect, "water-paper-fold").length, 6);
   assert.equal(childrenWith(effect, "water-soaking-card").length, 1);
+  assert.equal(childrenWith(effect, "water-running-ink").length, 1);
   assert.equal(childrenWith(effect, "water-surge").length, 1);
+  assert.match(childrenWith(effect, "water-surge")[0].innerHTML, /class="water-breaking-crest"/);
+  assert.equal(childrenWith(effect, "water-drench-sheet").length, 1);
+  assert.equal(childrenWith(effect, "water-impact-splash").length, 1);
   assert.equal(childrenWith(effect, "water-pulp-body").length, 1);
   assert.equal(childrenWith(effect, "water-puddle").length, 1);
   assert.equal(childrenWith(effect, "water-droplets")[0].children.length, 12);
@@ -84,7 +88,7 @@ test("Water aftermath contains settled paper without recreating transient splash
   const effect = context.createWaterDefeatEffect(context.card, { aftermath: true });
   assert.match(effect.className, /aftermath-remains/);
   assert.equal(effect.children.length, 8);
-  for (const name of ["water-soaking-card", "water-surge", "water-droplets"]) {
+  for (const name of ["water-soaking-card", "water-running-ink", "water-surge", "water-drench-sheet", "water-impact-splash", "water-droplets"]) {
     assert.equal(childrenWith(effect, name).length, 0);
   }
   assert.equal(childrenWith(effect, "water-paper-fold").length, 6);
@@ -118,7 +122,39 @@ test("Water finishes within the unchanged lane timing; Classic and reduced motio
   assert.match(animate, /const pauseDuration = reducedMotion \? 30 : cinematic \? 1450 : 180;/);
   assert.match(animate, /if \(cinematic && winner !== "draw"\)/);
   assert.match(animate, /audio\.cardDestruction\(winningCard\.element, destructionPan\);/);
-  assert.match(styles, /@keyframes water-paper-crumple[\s\S]*?88%, 100%/);
+  assert.match(styles, /@keyframes water-paper-crumple[\s\S]*?76%, 100%/);
+  const { card, createWaterDefeatEffect } = fixture();
+  for (const droplet of childrenWith(createWaterDefeatEffect(card), "water-droplets")[0].children) {
+    assert.ok(parseFloat(droplet.properties["--drop-delay"]) + 700 <= 1400);
+  }
+});
+
+test("Water has a forceful crest/splash, early card buckling, and an ink-bleed layer", () => {
+  assert.match(styles, /@keyframes water-surge-break[\s\S]*?17% \{ opacity: 1;/);
+  assert.match(styles, /@keyframes water-impact-fan[\s\S]*?27% \{ opacity: 1;/);
+  assert.match(styles, /@keyframes water-crest-overturn[\s\S]*?30%[\s\S]*?rotate\(20deg\)[\s\S]*?44%[\s\S]*?rotate\(35deg\)/);
+  assert.match(styles, /@keyframes water-sheet-pour[\s\S]*?19% \{ opacity: \.88;/);
+  assert.match(styles, /@keyframes water-paper-soak[\s\S]*?14%[\s\S]*?rotateY\(24deg\)/);
+  assert.match(styles, /@keyframes water-paper-crumple[\s\S]*?42%[\s\S]*?rotateX\(28deg\)[\s\S]*?58%[\s\S]*?rotateX\(55deg\)/);
+  assert.match(styles, /\.clash-card \.defeat-tide \.water-running-ink \{[\s\S]*?blur\(\.9cqw\)[\s\S]*?animation: water-ink-run 1\.4s/);
+  assert.match(styles, /\.defeat-tide \.card-bonus-badge \{ visibility: hidden; animation: none; \}/);
+  assert.match(styles, /\.water-running-ink \{[\s\S]*?background: transparent;\s*border-color: transparent;/);
+  assert.match(styles, /\.water-running-ink::before,[\s\S]*?content: none;/);
+  assert.match(styles, /\.water-running-ink \.card-art > :not\(img\) \{\s*visibility: hidden;/);
+});
+
+test("Water ink copies retain the card's artwork but cannot be played or focused", () => {
+  const { card, createWaterDefeatEffect } = fixture();
+  card.className += " uses-photographic-art";
+  const copies = createWaterDefeatEffect(card).children.filter(child => child.tagName === "button");
+  assert.equal(copies.length, 8);
+  for (const copy of copies) {
+    assert.match(copy.className, /uses-photographic-art/);
+    assert.equal(copy.disabled, true);
+    assert.equal(copy.attributes["aria-hidden"], "true");
+    assert.equal(copy.attributes.tabindex, "-1");
+    assert.equal(copy.attributes["data-card-id"], undefined);
+  }
 });
 
 test("production packaging copies every deferred game script, including viewport sizing", () => {

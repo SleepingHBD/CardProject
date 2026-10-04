@@ -3033,16 +3033,18 @@ function createWaterDefeatEffect(card, { aftermath = false } = {}) {
   const pulp = document.createElement("span");
   pulp.className = "water-pulp-body";
   pulp.innerHTML = `<svg viewBox="0 0 160 80" aria-hidden="true" focusable="false">
-    <path fill="#78877d" stroke="#3c5758" stroke-width="2" stroke-linejoin="round" d="M9 29L31 13L63 20L86 8L111 21L147 26L151 50L128 67L96 62L73 72L44 62L16 66L6 49Z"/>
-    <path fill="#a6afa0" d="M9 29L31 13L63 20L48 40L18 46ZM86 8L111 21L94 40L64 20ZM94 40L147 26L128 48L116 65Z"/>
-    <path fill="#405c5e" fill-opacity=".65" d="M18 46L48 40L73 72L44 62L16 66ZM64 20L94 40L74 53L48 40ZM128 48L151 50L128 67L116 65Z"/>
-    <path fill="none" stroke="#c2c7b5" stroke-opacity=".65" stroke-width="1.5" d="M31 15L48 40L18 46M86 10L94 40L128 48M48 40L74 53L96 62"/>
+    <path fill="#818c7e" stroke="#3e5958" stroke-width="1.8" stroke-linejoin="round" d="M9 34C15 22 28 15 41 19L53 14C64 12 75 19 85 14C96 7 110 19 117 21C138 17 144 32 150 37L147 52C138 61 126 63 114 61C96 67 78 63 64 66L48 61C33 63 22 54 14 56L7 45Z"/>
+    <path fill="#b0b7a1" d="M13 33Q30 13 48 25Q53 36 42 39L20 44ZM65 24Q85 10 100 22Q111 35 99 41L85 32ZM115 28Q137 22 145 39L120 44L106 37Z"/>
+    <path fill="#4c6764" d="M20 44Q41 39 52 45L66 65L47 59Q32 63 20 50ZM51 27Q66 23 71 37L88 49L75 57L58 39ZM99 41Q112 35 123 46L136 54L114 60L100 52Z"/>
+    <path fill="none" stroke="#d0d2b7" stroke-opacity=".75" stroke-width="1.4" stroke-linecap="round" d="M28 24Q45 21 43 33L28 42M72 25Q85 21 87 32L99 42M120 31Q136 29 137 40M60 46L76 57L88 51"/>
+    <path fill="none" stroke="#31585b" stroke-opacity=".55" stroke-width="2" stroke-linecap="round" d="M15 51Q24 48 34 53M94 60L106 57M130 47L140 50"/>
   </svg>`;
   effect.append(pulp);
 
   if (!aftermath) {
     const soakingCard = createCinematicCardCopy(card, "water-soaking-card");
-    effect.append(soakingCard);
+    const runningInk = createCinematicCardCopy(card, "water-running-ink");
+    effect.append(soakingCard, runningInk);
   }
 
   WATER_PAPER_FOLDS.forEach((fold, index) => {
@@ -3062,25 +3064,49 @@ function createWaterDefeatEffect(card, { aftermath = false } = {}) {
 
   const surge = document.createElement("span");
   surge.className = "water-surge";
-  surge.innerHTML = `<svg viewBox="0 0 200 240" aria-hidden="true" focusable="false">
-    <path class="water-wave-body" fill="#3a94ad" fill-opacity=".73" stroke="#286377" stroke-width="2" stroke-linejoin="round" d="M7 164C18 145 17 121 29 106C44 87 58 79 49 60C42 48 32 53 32 61C13 35 40 17 68 29C87 37 95 59 93 83C111 63 104 41 124 45C139 47 145 71 141 93C159 81 163 64 172 70C187 82 178 106 188 128L191 178C183 202 165 212 131 215C80 221 30 205 7 185Z"/>
-    <path fill="#79c8d0" fill-opacity=".8" d="M14 166C24 133 34 129 51 108C73 82 74 49 53 39C72 40 90 59 80 89C74 112 65 129 54 145C85 129 92 114 107 94C107 119 95 147 76 159C109 158 134 140 154 117C150 148 138 169 111 182C67 193 31 182 14 166Z"/>
-    <path class="water-foam" fill="#e0eee2" d="M32 61C25 46 38 33 51 35C70 35 82 52 78 69C74 60 70 53 61 52C56 51 52 55 52 61C48 51 40 51 37 60L32 65ZM95 80C104 66 107 50 117 48C128 47 135 56 136 67C130 63 127 61 124 65C119 61 114 66 112 74L101 88ZM146 91C159 78 163 68 171 74C178 78 179 87 176 98C170 87 168 88 164 94C160 90 156 97 151 102Z"/>
-    <path class="water-flow-lines" fill="none" stroke="#d3eee6" stroke-width="3.5" stroke-linecap="round" d="M28 147C37 126 55 117 66 92M82 161C101 151 118 134 128 112M132 180Q155 162 169 138"/>
-    <path fill="none" stroke="#e5f3e9" stroke-width="3" stroke-linecap="round" d="M21 179Q34 186 47 184M59 191Q73 196 88 191M114 202Q133 203 150 195"/>
+  surge.innerHTML = `<svg viewBox="0 0 220 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <g class="water-breaking-crest">
+    <path class="water-wave-body" fill="#28799b" stroke="#244f67" stroke-width="2" stroke-linejoin="round" d="M8 220C25 205 33 183 31 158C25 118 32 80 57 58C83 34 119 31 147 47C173 63 180 92 167 114C160 127 148 133 134 131C151 121 154 109 149 99C142 85 122 83 111 96C97 114 104 133 122 151C151 181 174 198 210 197L218 229C184 246 140 244 107 245C58 251 25 244 8 236Z"/>
+    <path fill="#56b7cc" d="M19 221C39 184 27 131 47 94C65 62 105 46 138 59C160 68 169 85 163 100C157 86 138 75 123 80C101 85 91 101 91 119C94 152 138 181 164 193C113 186 86 167 72 143C81 177 99 204 135 220C76 236 42 231 19 221Z"/>
+    <path fill="#1e5579" d="M35 160C42 194 62 214 94 227C134 241 181 236 209 225L212 232Q159 253 104 243Q57 248 21 232ZM104 122C108 145 134 160 150 173C143 151 160 154 167 143C147 151 121 143 104 122Z"/>
+    <path class="water-foam" fill="#e0f0e6" d="M50 72C60 46 99 31 127 40C150 45 169 62 173 81C177 102 163 124 147 127C151 119 156 114 155 107C151 111 148 106 149 99C143 101 142 93 137 90C131 95 128 88 123 89C117 98 112 92 108 102C103 102 101 109 99 114C96 95 103 81 119 77C133 72 148 77 157 86C155 66 133 51 111 51C87 49 67 60 50 72Z"/>
+    <path class="water-flow-lines" fill="none" stroke="#b6e5e3" stroke-width="3" stroke-linecap="round" d="M44 165C39 117 59 83 87 72M56 181C57 149 62 122 77 101M119 185Q148 209 183 213"/>
+    </g>
+    <path fill="none" stroke="#eff5e5" stroke-width="3" stroke-linecap="round" d="M27 228Q48 235 63 230M83 237Q98 242 114 236M165 230L177 229M190 221L199 218"/>
   </svg>`;
   effect.append(surge);
+
+  // The crest rolls over into a separate falling sheet, rather than shrinking
+  // a rigid wave icon. Irregular tongues sweep down the actual card surface.
+  const sheet = document.createElement("span");
+  sheet.className = "water-drench-sheet";
+  sheet.innerHTML = `<svg viewBox="0 0 200 170" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path fill="#62baca" stroke="#326f85" stroke-width="1.4" stroke-linejoin="round" d="M12 12Q33 2 53 13Q78 24 99 10Q130 1 149 16Q169 25 188 13C180 46 190 61 181 89C176 107 187 117 174 135C164 151 167 162 159 164C148 158 160 135 149 115C139 101 145 81 135 70C124 84 140 117 128 139C120 155 113 164 106 159C102 139 114 124 103 104C96 83 97 58 85 60C74 79 93 104 84 128C76 143 81 166 69 168C54 158 63 132 53 118C42 99 51 80 40 70C30 93 36 110 27 116C15 106 25 80 16 64C8 43 15 29 12 12Z"/>
+    <path fill="#d8eee4" d="M16 15Q41 9 57 22Q80 34 101 20Q126 8 148 25Q167 35 183 21L181 35Q161 46 147 36Q125 21 105 33Q84 45 57 33Q35 21 16 28Z"/>
+    <path fill="none" stroke="#c6e9e3" stroke-width="4" stroke-linecap="round" d="M35 35Q24 56 31 74M64 43Q69 60 66 84Q63 104 71 120M116 43Q109 63 118 84M163 48Q173 77 165 94Q158 110 167 121"/>
+    <path fill="none" stroke="#2d88a1" stroke-width="3" stroke-linecap="round" d="M50 41Q43 59 52 72M94 41Q87 66 99 84M142 41Q131 57 141 80"/>
+  </svg>`;
+  effect.append(sheet);
+
+  const splash = document.createElement("span");
+  splash.className = "water-impact-splash";
+  splash.innerHTML = `<svg viewBox="0 0 220 110" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path fill="#6cbdcd" stroke="#347c96" stroke-width="1.2" stroke-linejoin="round" d="M13 76C38 73 42 48 27 35C54 39 52 65 69 74C75 60 59 30 51 17C78 28 85 57 96 72C110 59 111 23 126 8C127 40 119 59 126 72C143 61 158 36 175 35C161 52 150 67 154 77C178 77 186 56 207 53C192 72 184 83 212 88C179 110 48 113 9 90Z"/>
+    <path fill="#e4f0e5" d="M15 84Q51 78 41 51Q59 68 71 82L82 80Q79 58 68 44Q87 53 97 82L109 82Q121 65 123 40Q132 66 127 82L140 85Q154 65 166 57Q158 80 160 87Q184 86 191 73Q188 88 202 91Q163 103 116 98Q64 105 15 92Z"/>
+    <path fill="none" stroke="#f4f5de" stroke-width="2" stroke-linecap="round" d="M41 91L61 94M80 93L94 91M141 94L158 96M174 91L184 89"/>
+  </svg>`;
+  effect.append(splash);
 
   const droplets = document.createElement("span");
   droplets.className = "water-droplets";
   for (let index = 0; index < 12; index += 1) {
     const droplet = document.createElement("i");
     const direction = index % 2 === 0 ? -1 : 1;
-    droplet.style.setProperty("--drop-x", `${direction * (18 + (index % 4) * 8)}cqw`);
-    droplet.style.setProperty("--drop-rise", `${-22 - (index % 3) * 9}cqh`);
-    droplet.style.setProperty("--drop-fall", `${20 + (index % 4) * 7}cqh`);
-    droplet.style.setProperty("--drop-delay", `${110 + index * 13}ms`);
-    droplet.style.setProperty("--drop-size", `${3 + index % 3}%`);
+    droplet.style.setProperty("--drop-x", `${direction * (22 + (index % 4) * 7)}cqw`);
+    droplet.style.setProperty("--drop-rise", `${-20 - (index % 3) * 6}cqh`);
+    droplet.style.setProperty("--drop-fall", `${24 + (index % 4) * 6}cqh`);
+    droplet.style.setProperty("--drop-delay", `${165 + index * 9}ms`);
+    droplet.style.setProperty("--drop-size", `${4 + index % 3}%`);
     droplet.style.left = `${33 + (index % 6) * 6}%`;
     droplets.append(droplet);
   }

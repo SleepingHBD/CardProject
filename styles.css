@@ -7870,11 +7870,44 @@ input {
   transform-origin: 50% 78%;
 }
 
-.defeat-tide .card-bonus-badge { visibility: hidden; }
+.defeat-tide .card-bonus-badge { visibility: hidden; animation: none; }
 
 .defeat-tide .water-soaking-card {
   z-index: 2;
-  animation: water-paper-soak 1.4s ease-out both;
+  animation: water-paper-soak 1.4s linear both;
+}
+
+.clash-card .defeat-tide .water-running-ink {
+  z-index: 3;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  clip-path: inset(0 0 29%);
+  mask-image:
+    radial-gradient(ellipse at 30% 35%, #000 15%, transparent 60%),
+    radial-gradient(ellipse at 70% 55%, #000 10%, transparent 60%);
+  mix-blend-mode: multiply;
+  filter: saturate(.25) brightness(.55) contrast(.7) blur(.9cqw);
+  transform-origin: 50% 78%;
+  animation: water-ink-run 1.4s linear both;
+}
+
+/* Only pigment bleeds: do not leave a second intact frame behind the folds. */
+.clash-card .defeat-tide .water-running-ink::before,
+.clash-card .defeat-tide .water-running-ink::after,
+.clash-card .defeat-tide .water-running-ink .card-art::after {
+  content: none;
+}
+
+.clash-card .defeat-tide .water-running-ink > :not(.card-art),
+.clash-card .defeat-tide .water-running-ink .card-art > :not(img) {
+  visibility: hidden;
+}
+
+.clash-card .defeat-tide .water-running-ink .card-art {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .defeat-tide .water-soaking-card::after {
@@ -7888,14 +7921,14 @@ input {
     radial-gradient(ellipse at 68% 65%, rgba(26,64,77,.56), transparent 68%);
   mix-blend-mode: multiply;
   transform-origin: 35% 25%;
-  animation: water-stain-spread 1.4s ease-out both;
+  animation: water-stain-spread 1.4s linear both;
 }
 
 .defeat-tide .water-paper-fold {
   z-index: var(--fold-layer);
   opacity: 0;
   clip-path: var(--fold-clip);
-  animation: water-paper-crumple 1.4s cubic-bezier(.25,.62,.34,1) both;
+  animation: water-paper-crumple 1.4s linear both;
 }
 
 .defeat-tide .water-paper-fold::after {
@@ -7912,16 +7945,18 @@ input {
   position: absolute;
   z-index: 1;
   top: 77%;
-  left: 9%;
-  width: 82%;
-  height: 26%;
+  left: 0;
+  width: 100%;
+  height: 29%;
   transform-origin: center;
   animation: water-puddle-settle 1.4s ease-out both;
 }
 
 .water-puddle svg,
 .water-pulp-body svg,
-.water-surge svg {
+.water-surge svg,
+.water-drench-sheet svg,
+.water-impact-splash svg {
   display: block;
   width: 100%;
   height: 100%;
@@ -7930,11 +7965,11 @@ input {
 
 .water-pulp-body {
   position: absolute;
-  z-index: 2;
-  top: 64%;
+  z-index: 10;
+  top: 68%;
   left: 15%;
   width: 70%;
-  height: 29%;
+  height: 25%;
   filter: drop-shadow(0 3px 2px rgba(29,48,45,.22));
   animation: water-pulp-form 1.4s ease-out both;
 }
@@ -7942,12 +7977,40 @@ input {
 .water-surge {
   position: absolute;
   z-index: 12;
-  top: 0;
-  left: -16%;
-  width: 132%;
-  height: 87%;
-  transform-origin: 35% 78%;
-  animation: water-surge-break 1.4s cubic-bezier(.2,.64,.3,1) both;
+  top: -4%;
+  left: -13%;
+  width: 126%;
+  height: 100%;
+  transform-origin: 15% 80%;
+  animation: water-surge-break 1.4s linear both;
+}
+
+.water-impact-splash {
+  position: absolute;
+  z-index: 13;
+  top: 50%;
+  left: -14%;
+  width: 128%;
+  height: 47%;
+  transform-origin: 50% 95%;
+  animation: water-impact-fan 1.4s linear both;
+}
+
+.water-drench-sheet {
+  position: absolute;
+  z-index: 11;
+  top: 24%;
+  left: -6%;
+  width: 112%;
+  height: 72%;
+  transform-origin: 50% 0;
+  animation: water-sheet-pour 1.4s linear both;
+}
+
+.water-breaking-crest {
+  transform-box: fill-box;
+  transform-origin: 35% 95%;
+  animation: water-crest-overturn 1.4s linear both;
 }
 
 .water-droplets {
@@ -7963,13 +8026,13 @@ input {
 }
 
 .water-flow-lines {
-  stroke-dasharray: 30 12;
-  animation: water-flow-travel 1.05s linear both;
+  stroke-dasharray: 48 19;
+  animation: water-flow-travel .55s linear 2 both;
 }
 
 .water-droplets i {
   position: absolute;
-  top: 37%;
+  top: 61%;
   width: var(--drop-size);
   height: calc(var(--drop-size) * 1.1);
   border: 1px solid rgba(44,108,126,.6);
@@ -7977,14 +8040,14 @@ input {
   background: #91cfd6;
   box-shadow: inset 1px 1px 0 #d9eee5;
   opacity: 0;
-  animation: water-droplet-arc .84s ease-out var(--drop-delay) both;
+  animation: water-droplet-arc .7s cubic-bezier(.15,.65,.35,1) var(--drop-delay) both;
 }
 
 .defeat-tide.aftermath-remains .water-paper-fold {
   animation: none;
-  opacity: .88;
-  filter: saturate(.3) brightness(.63) contrast(.84) blur(.2px);
-  transform: translate(var(--fold-x), var(--fold-y)) rotate(var(--fold-angle)) scale(.64, var(--fold-depth));
+  opacity: .65;
+  filter: saturate(.15) brightness(.56) contrast(.78) blur(.45cqw);
+  transform: translate(var(--fold-x), var(--fold-y)) rotate(var(--fold-angle)) rotateX(12deg) rotateY(8deg) scale(.64, var(--fold-depth));
 }
 
 .defeat-tide.aftermath-remains .water-paper-fold::after {
@@ -7994,13 +8057,13 @@ input {
 
 .defeat-tide.aftermath-remains .water-puddle {
   animation: none;
-  opacity: .58;
+  opacity: .72;
   transform: scale(1);
 }
 
 .defeat-tide.aftermath-remains .water-pulp-body {
   animation: none;
-  opacity: .88;
+  opacity: .94;
   transform: none;
 }
 
@@ -8177,71 +8240,107 @@ input {
 }
 
 @keyframes water-paper-soak {
-  0%, 7% { opacity: 1; filter: none; transform: none; }
-  24% { opacity: 1; filter: saturate(.7) brightness(.84); transform: rotate(-2deg) skewY(1deg); }
-  33% { opacity: 1; filter: saturate(.52) brightness(.74) contrast(.86); transform: none; }
-  43%, 100% { opacity: 0; filter: saturate(.35) brightness(.64); transform: scale(.96); }
+  0%, 6% { opacity: 1; filter: none; transform: none; }
+  14% { opacity: 1; filter: saturate(.6) brightness(.85); transform: translate(3%, 1%) rotate(-5deg) rotateY(24deg) skewX(-3deg); }
+  21% { opacity: 1; filter: saturate(.35) brightness(.6) contrast(.84) blur(.2cqw); transform: translate(1%, 3%) rotateX(12deg) skewX(-5deg) scale(.94, 1.04); }
+  29% { opacity: 1; filter: saturate(.35) brightness(.6) contrast(.84); transform: translate(1%, 3%) rotate(-1deg) rotateX(14deg) scale(.96, .9); }
+  36%, 100% { opacity: 0; filter: saturate(.2) brightness(.56); transform: translateY(7%) rotateX(32deg) scale(.93, .76); }
+}
+
+@keyframes water-ink-run {
+  0%, 6% { opacity: 0; transform: none; }
+  15% { opacity: .62; transform: translateY(4%) scale(1, 1.03); }
+  27% { opacity: .8; transform: translateY(11%) scale(.96, 1.07); }
+  42%, 100% { opacity: 0; transform: translateY(19%) scale(.72, .36); }
 }
 
 @keyframes water-stain-spread {
-  0%, 6% { opacity: 0; transform: scale(.15); }
-  15% { opacity: .85; transform: scale(.45); }
-  34%, 100% { opacity: 1; transform: scale(1.4); }
+  0%, 5% { opacity: 0; transform: scale(.15); }
+  13% { opacity: .85; transform: scale(.8); }
+  23%, 100% { opacity: 1; transform: scale(1.4); }
 }
 
 @keyframes water-paper-crumple {
-  0%, 27% { opacity: 0; filter: saturate(.55) brightness(.76); transform: none; }
-  33% { opacity: 1; filter: saturate(.52) brightness(.74) contrast(.86); transform: none; }
-  48% { opacity: 1; filter: saturate(.4) brightness(.7) contrast(.86); transform: translate(calc(var(--fold-x) * .6), 3%) rotate(calc(var(--fold-angle) * .55)) scale(.92, .85); }
-  72% { opacity: 1; filter: saturate(.3) brightness(.63) contrast(.84) blur(.2px); transform: translate(var(--fold-x), var(--fold-y)) rotate(var(--fold-angle)) scale(.66, calc(var(--fold-depth) + .04)); }
-  88%, 100% { opacity: .88; filter: saturate(.3) brightness(.63) contrast(.84) blur(.2px); transform: translate(var(--fold-x), var(--fold-y)) rotate(var(--fold-angle)) scale(.64, var(--fold-depth)); }
+  0%, 23% { opacity: 0; filter: saturate(.35) brightness(.6) contrast(.84); transform: none; }
+  29% { opacity: 1; filter: saturate(.35) brightness(.6) contrast(.84); transform: translate(1%, 3%) rotate(-1deg) rotateX(14deg) scale(.96, .9); }
+  42% { opacity: 1; filter: saturate(.25) brightness(.58) contrast(.8); transform: translate(calc(var(--fold-x) * .35), 5%) rotate(calc(var(--fold-angle) * .45)) rotateX(28deg) rotateY(calc(var(--fold-angle) * .8)) scale(.95, .68); }
+  58% { opacity: .85; filter: saturate(.2) brightness(.57) contrast(.78) blur(.3cqw); transform: translate(var(--fold-x), calc(var(--fold-y) * 1.1)) rotate(calc(var(--fold-angle) * 1.4)) rotateX(55deg) rotateY(calc(var(--fold-angle) * -.8)) scale(.75, calc(var(--fold-depth) + .17)); }
+  76%, 100% { opacity: .65; filter: saturate(.15) brightness(.56) contrast(.78) blur(.45cqw); transform: translate(var(--fold-x), var(--fold-y)) rotate(var(--fold-angle)) rotateX(12deg) rotateY(8deg) scale(.64, var(--fold-depth)); }
 }
 
 @keyframes water-crease-deepen {
-  0%, 28% { opacity: 0; }
-  52% { opacity: .5; }
-  78%, 100% { opacity: .82; }
+  0%, 23% { opacity: 0; }
+  42% { opacity: .72; }
+  65%, 100% { opacity: .82; }
 }
 
 @keyframes water-surge-break {
-  0% { opacity: 0; transform: translate(-13%, -9%) rotate(-12deg) scale(.45, .58); }
-  12% { opacity: .92; transform: translate(-4%, -5%) rotate(-5deg) scale(.9, .95); }
-  29% { opacity: .8; transform: translate(3%, 9%) rotate(3deg) scale(1.02, 1); }
-  49% { opacity: .5; transform: translate(2%, 26%) rotate(5deg) scale(.97, .64); }
-  66% { opacity: .15; transform: translate(0, 44%) rotate(0) scale(.86, .26); }
-  76%, 100% { opacity: 0; transform: translate(0, 52%) scale(.8, .1); }
+  0% { opacity: 0; transform: translate(-20%, 5%) rotate(-11deg) scale(.45, .45); }
+  8% { opacity: .98; transform: translate(-13%, -7%) rotate(-8deg) scale(.83, .91); }
+  17% { opacity: 1; transform: translate(0, 1%) rotate(5deg) scale(1.04, 1.03); }
+  30% { opacity: .95; transform: translate(6%, 12%) rotate(8deg) scale(1.06, .96); }
+  44% { opacity: .8; transform: translate(9%, 27%) rotate(8deg) scale(1.14, .68); }
+  58% { opacity: .5; transform: translate(5%, 47%) rotate(2deg) scale(1.05, .32); }
+  72% { opacity: .15; transform: translate(2%, 56%) scale(1.01, .12); }
+  82%, 100% { opacity: 0; transform: translate(0, 60%) scale(.98, .07); }
+}
+
+@keyframes water-impact-fan {
+  0%, 10% { opacity: 0; transform: scale(.35, .08); }
+  19% { opacity: .92; transform: scale(.84, .7); }
+  27% { opacity: 1; transform: scale(1.13, .96); }
+  42% { opacity: .8; transform: translateY(3%) scale(1.05, .65); }
+  58% { opacity: .3; transform: translateY(8%) scale(1, .2); }
+  70%, 100% { opacity: 0; transform: translateY(12%) scale(.9, .08); }
+}
+
+@keyframes water-crest-overturn {
+  0%, 10% { opacity: 1; transform: rotate(-8deg) skewX(-5deg) scale(.93, 1.06); }
+  19% { opacity: 1; transform: rotate(7deg) skewX(4deg) scale(1.03, 1); }
+  30% { opacity: .92; transform: translate(8%, 5%) rotate(20deg) skewX(12deg) scale(1.08, .8); }
+  44% { opacity: .45; transform: translate(18%, 26%) rotate(35deg) skewX(24deg) scale(1.2, .4); }
+  58%, 100% { opacity: 0; transform: translate(28%, 48%) rotate(45deg) scale(1.2, .1); }
+}
+
+@keyframes water-sheet-pour {
+  0%, 10% { opacity: 0; transform: translateY(-16%) scale(.6, .1); }
+  19% { opacity: .88; transform: translateY(-5%) scale(1, .85); }
+  30% { opacity: .86; transform: translateY(9%) scale(1, 1.05); }
+  45% { opacity: .58; transform: translateY(23%) scale(1.13, .6); }
+  60%, 100% { opacity: 0; transform: translateY(38%) scale(1.05, .1); }
 }
 
 @keyframes water-puddle-settle {
-  0%, 22% { opacity: 0; transform: scale(.2, .4); }
-  48% { opacity: .76; transform: scale(.82, .85); }
-  72% { opacity: .7; transform: scale(1.06, 1); }
-  100% { opacity: .58; transform: scale(1); }
+  0%, 12% { opacity: 0; transform: scale(.2, .4); }
+  32% { opacity: .88; transform: scale(.85, .9); }
+  52% { opacity: .82; transform: scale(1.1, 1); }
+  80%, 100% { opacity: .72; transform: scale(1); }
 }
 
 @keyframes water-foam-curl {
-  0% { transform: translate(-3%, 6%) rotate(-6deg) scale(.88); }
-  28% { transform: translate(2%, -2%) rotate(3deg) scale(1.02); }
-  65%, 100% { transform: translate(6%, 9%) rotate(8deg) scale(.85, .8); }
+  0% { transform: translate(-3%, 4%) rotate(-9deg) scale(.88); }
+  17% { transform: translate(1%, -1%) rotate(1deg) scale(1.02); }
+  38% { transform: translate(7%, 9%) rotate(15deg) scale(.96, .86); }
+  64%, 100% { transform: translate(12%, 18%) rotate(22deg) scale(.74, .6); }
 }
 
 @keyframes water-flow-travel {
-  from { stroke-dashoffset: 38; }
-  to { stroke-dashoffset: -46; }
+  from { stroke-dashoffset: 86; }
+  to { stroke-dashoffset: -110; }
 }
 
 @keyframes water-pulp-form {
-  0%, 48% { opacity: 0; transform: translateY(-12%) scale(.88, 1.4); }
-  72% { opacity: .82; transform: scale(1.03, 1.08); }
-  88%, 100% { opacity: .88; transform: none; }
+  0%, 36% { opacity: 0; transform: translateY(-30%) scale(.62, 1.3); }
+  55% { opacity: .9; transform: translateY(-4%) scale(1.05, 1.16); }
+  76%, 100% { opacity: .94; transform: none; }
 }
 
 @keyframes water-droplet-arc {
   0% { opacity: 0; transform: translate(0, 0) scale(.4); }
   12% { opacity: .92; }
-  42% { opacity: .85; transform: translate(calc(var(--drop-x) * .65), var(--drop-rise)) rotate(-22deg) scale(.9, 1.1); }
-  84% { opacity: .6; transform: translate(var(--drop-x), var(--drop-fall)) rotate(18deg) scale(.8, 1.2); }
-  100% { opacity: 0; transform: translate(var(--drop-x), calc(var(--drop-fall) + 5cqh)) scale(1.15, .25); }
+  40% { opacity: .9; transform: translate(calc(var(--drop-x) * .6), var(--drop-rise)) rotate(-22deg) scale(.9, 1.15); }
+  81% { opacity: .7; transform: translate(var(--drop-x), var(--drop-fall)) rotate(18deg) scale(.8, 1.35); }
+  100% { opacity: 0; transform: translate(var(--drop-x), calc(var(--drop-fall) + 5cqh)) scale(1.3, .2); }
 }
 
 @media (max-width: 640px) {
