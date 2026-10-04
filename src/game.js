@@ -3228,14 +3228,14 @@ function createFireDefeatEffect(card, { aftermath = false } = {}) {
 // Shared jagged edges partition the whole card exactly once. Unlike overlapping
 // cutouts, these shreds can pull apart without duplicating the character/artwork.
 const GUST_PAPER_SHREDS = Object.freeze([
-  { clip: "polygon(0 0,46% 0,41% 9%,50% 17%,48% 26%,41% 30%,29% 22%,15% 28%,0 24%)", tearX: "-9%", tearY: "-5%", orbitX: "18%", orbitY: "-12%", spin: "65deg", x: "-22%", y: "45%", angle: "-27deg" },
-  { clip: "polygon(46% 0,100% 0,100% 23%,88% 29%,75% 24%,62% 32%,48% 26%,50% 17%,41% 9%)", tearX: "8%", tearY: "-7%", orbitX: "26%", orbitY: "18%", spin: "125deg", x: "23%", y: "42%", angle: "24deg" },
-  { clip: "polygon(0 24%,15% 28%,29% 22%,41% 30%,48% 26%,43% 38%,53% 45%,53% 55%,44% 51%,29% 57%,13% 47%,0 52%)", tearX: "-14%", tearY: "1%", orbitX: "-28%", orbitY: "-8%", spin: "-58deg", x: "-14%", y: "36%", angle: "17deg" },
-  { clip: "polygon(48% 26%,62% 32%,75% 24%,88% 29%,100% 23%,100% 50%,80% 57%,66% 48%,53% 55%,53% 45%,43% 38%)", tearX: "13%", tearY: "-1%", orbitX: "10%", orbitY: "-12%", spin: "92deg", x: "16%", y: "34%", angle: "-19deg" },
-  { clip: "polygon(0 52%,13% 47%,29% 57%,44% 51%,53% 55%,45% 63%,51% 68%,47% 75%,42% 80%,29% 74%,12% 81%,0 75%)", tearX: "-12%", tearY: "4%", orbitX: "-18%", orbitY: "-40%", spin: "-78deg", x: "-24%", y: "28%", angle: "-12deg" },
-  { clip: "polygon(53% 55%,66% 48%,80% 57%,100% 50%,100% 73%,91% 78%,78% 72%,64% 79%,47% 75%,51% 68%,45% 63%)", tearX: "15%", tearY: "3%", orbitX: "-32%", orbitY: "-14%", spin: "-138deg", x: "26%", y: "29%", angle: "31deg" },
-  { clip: "polygon(0 75%,12% 81%,29% 74%,42% 80%,47% 75%,43% 85%,54% 91%,49% 100%,0 100%)", tearX: "-7%", tearY: "7%", orbitX: "12%", orbitY: "-48%", spin: "118deg", x: "-6%", y: "23%", angle: "-22deg" },
-  { clip: "polygon(47% 75%,64% 79%,78% 72%,91% 78%,100% 73%,100% 100%,49% 100%,54% 91%,43% 85%)", tearX: "9%", tearY: "8%", orbitX: "-12%", orbitY: "-42%", spin: "-112deg", x: "8%", y: "24%", angle: "15deg" },
+  { clip: "polygon(0 0,46% 0,41% 9%,50% 17%,48% 26%,41% 30%,29% 22%,15% 28%,0 24%)", pivot: "25% 14%", tearX: "-9%", tearY: "2%", orbitX: "18%", orbitY: "8%", spin: "65deg", x: "-22%", y: "45%", angle: "-27deg" },
+  { clip: "polygon(46% 0,100% 0,100% 23%,88% 29%,75% 24%,62% 32%,48% 26%,50% 17%,41% 9%)", pivot: "73% 16%", tearX: "8%", tearY: "3%", orbitX: "26%", orbitY: "18%", spin: "125deg", x: "23%", y: "42%", angle: "24deg" },
+  { clip: "polygon(0 24%,15% 28%,29% 22%,41% 30%,48% 26%,43% 38%,53% 45%,53% 55%,44% 51%,29% 57%,13% 47%,0 52%)", pivot: "26% 40%", tearX: "-14%", tearY: "1%", orbitX: "-28%", orbitY: "-8%", spin: "-58deg", x: "-14%", y: "36%", angle: "17deg" },
+  { clip: "polygon(48% 26%,62% 32%,75% 24%,88% 29%,100% 23%,100% 50%,80% 57%,66% 48%,53% 55%,53% 45%,43% 38%)", pivot: "73% 40%", tearX: "13%", tearY: "-1%", orbitX: "10%", orbitY: "-12%", spin: "92deg", x: "16%", y: "34%", angle: "-19deg" },
+  { clip: "polygon(0 52%,13% 47%,29% 57%,44% 51%,53% 55%,45% 63%,51% 68%,47% 75%,42% 80%,29% 74%,12% 81%,0 75%)", pivot: "26% 65%", tearX: "-12%", tearY: "4%", orbitX: "-18%", orbitY: "-40%", spin: "-78deg", x: "-24%", y: "28%", angle: "-12deg" },
+  { clip: "polygon(53% 55%,66% 48%,80% 57%,100% 50%,100% 73%,91% 78%,78% 72%,64% 79%,47% 75%,51% 68%,45% 63%)", pivot: "73% 65%", tearX: "15%", tearY: "3%", orbitX: "-32%", orbitY: "-14%", spin: "-138deg", x: "26%", y: "29%", angle: "31deg" },
+  { clip: "polygon(0 75%,12% 81%,29% 74%,42% 80%,47% 75%,43% 85%,54% 91%,49% 100%,0 100%)", pivot: "25% 88%", tearX: "-7%", tearY: "7%", orbitX: "12%", orbitY: "-48%", spin: "118deg", x: "-6%", y: "23%", angle: "-22deg" },
+  { clip: "polygon(47% 75%,64% 79%,78% 72%,91% 78%,100% 73%,100% 100%,49% 100%,54% 91%,43% 85%)", pivot: "73% 87%", tearX: "9%", tearY: "8%", orbitX: "-12%", orbitY: "-42%", spin: "-112deg", x: "8%", y: "24%", angle: "15deg" },
 ]);
 
 function createGustDefeatEffect(card, { aftermath = false } = {}) {
@@ -3258,6 +3258,7 @@ function createGustDefeatEffect(card, { aftermath = false } = {}) {
     const paper = document.createElement("span");
     paper.className = "gust-paper-shred";
     paper.style.setProperty("--shred-clip", shred.clip);
+    paper.style.setProperty("--shred-pivot", shred.pivot);
     paper.style.setProperty("--tear-x", shred.tearX);
     paper.style.setProperty("--tear-y", shred.tearY);
     paper.style.setProperty("--orbit-x", shred.orbitX);
@@ -3277,31 +3278,49 @@ function createGustDefeatEffect(card, { aftermath = false } = {}) {
 
   const wind = document.createElement("span");
   wind.className = "gust-windfield";
-  wind.innerHTML = `<svg viewBox="0 0 200 260" aria-hidden="true" focusable="false">
-    <g fill="#a7b7a0" fill-opacity=".48" stroke="#627b5e" stroke-opacity=".65" stroke-width="1" stroke-linejoin="round">
-      <path class="gust-wind-band" d="M15 70C45 26 145 14 181 48C208 78 129 94 64 83C128 91 187 66 175 50C148 22 51 38 15 70Z"/>
-      <path class="gust-wind-band" d="M12 140C42 94 163 75 188 108C211 135 154 157 58 146C128 150 188 121 175 112C149 87 54 111 12 140Z"/>
-      <path class="gust-wind-band" d="M32 198C53 164 140 141 166 161C192 180 134 211 80 206C122 206 164 180 151 169C132 155 66 179 32 198Z"/>
-      <path class="gust-wind-band" d="M69 219C90 194 127 189 144 201C160 215 117 242 97 246C119 228 133 211 124 207C113 202 89 211 69 219Z"/>
+  wind.innerHTML = `<svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path class="gust-funnel-body" fill="#649553" fill-opacity=".32" d="M18 51C51 31 149 24 183 43C178 71 143 91 154 122C159 147 131 170 129 190C130 211 104 236 100 250C89 224 71 216 70 192C68 167 44 150 50 122C54 94 27 86 18 51Z"/>
+    <g fill="#83b16b" fill-opacity=".68" stroke="#456f3b" stroke-opacity=".78" stroke-width="1" stroke-linejoin="round">
+      <path class="gust-wind-band" d="M9 68C22 30 127 12 178 34C196 43 197 60 182 68C161 80 104 85 71 81C127 77 180 57 174 48C155 21 59 37 9 68Z"/>
+      <path class="gust-wind-band" d="M18 128C32 91 132 65 169 87C200 109 140 137 67 133C120 129 170 105 160 97C137 79 64 97 18 128Z"/>
+      <path class="gust-wind-band" d="M44 179C60 146 130 126 152 145C174 167 128 190 77 189C119 180 151 158 139 151C121 140 79 158 44 179Z"/>
+      <path class="gust-wind-band" d="M70 222C82 196 115 181 132 193C154 210 113 241 100 251C112 225 134 211 121 206C110 199 89 214 70 222Z"/>
     </g>
-    <g class="gust-flow-lines" fill="none" stroke="#eee9d2" stroke-opacity=".85" stroke-width="2.5" stroke-linecap="round">
-      <path d="M34 54C80 24 167 27 178 53C186 70 134 84 95 83"/>
-      <path d="M31 125C82 90 171 93 182 115C190 130 139 149 91 147"/>
-      <path d="M51 188C91 159 148 154 162 172C172 185 132 205 103 206"/>
-      <path d="M83 219Q115 198 134 209Q139 219 111 236"/>
+    <g class="gust-flow-lines" fill="none" stroke="#d0e8ad" stroke-opacity=".92" stroke-width="3" stroke-linecap="round">
+      <path d="M24 51C65 20 167 22 181 45C194 68 127 81 86 79"/>
+      <path d="M34 113C82 81 161 78 174 100C187 121 137 133 85 134"/>
+      <path d="M59 164C91 142 139 135 149 154C159 170 127 187 91 187"/>
+      <path d="M81 214Q114 190 130 202Q140 216 108 239"/>
     </g>
   </svg>`;
   effect.append(wind);
 
+  // These near-side currents cross in front of the paper; the rear funnel sits
+  // behind it, so the shreds move through the vortex instead of under an icon.
+  const frontWind = document.createElement("span");
+  frontWind.className = "gust-frontwind";
+  frontWind.innerHTML = `<svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <g fill="#91bf72" fill-opacity=".78" stroke="#527d41" stroke-opacity=".68" stroke-width="1" stroke-linejoin="round">
+      <path class="gust-front-band" d="M14 62C38 94 139 109 187 66C179 98 96 126 37 98C17 89 12 73 14 62Z"/>
+      <path class="gust-front-band" d="M33 125C67 151 136 155 165 125C164 151 119 176 70 159C44 151 34 139 33 125Z"/>
+      <path class="gust-front-band" d="M57 180C77 196 119 197 142 178C138 201 106 216 83 204C67 197 59 189 57 180Z"/>
+      <path class="gust-front-band" d="M79 224Q100 239 122 218Q120 241 100 249Q83 242 79 224Z"/>
+    </g>
+    <g class="gust-speed-lines" fill="none" stroke="#e0efc4" stroke-width="3" stroke-linecap="round">
+      <path d="M16 69C52 107 150 108 182 79M38 135C75 166 139 161 160 141M63 188Q104 219 137 187M84 231Q103 249 119 230"/>
+    </g>
+  </svg>`;
+  effect.append(frontWind);
+
   const dust = document.createElement("span");
   dust.className = "gust-paper-dust";
-  for (let index = 0; index < 12; index += 1) {
+  for (let index = 0; index < 18; index += 1) {
     const fleck = document.createElement("i");
     fleck.style.left = `${31 + index % 5 * 9}%`;
     fleck.style.top = `${35 + index % 4 * 11}%`;
-    fleck.style.setProperty("--dust-x", `${(index % 2 === 0 ? -1 : 1) * (16 + index % 4 * 6)}cqw`);
-    fleck.style.setProperty("--dust-y", `${-18 - index % 3 * 12}cqh`);
-    fleck.style.setProperty("--dust-delay", `${160 + index * 17}ms`);
+    fleck.style.setProperty("--dust-x", `${(index % 2 === 0 ? -1 : 1) * (24 + index % 4 * 8)}cqw`);
+    fleck.style.setProperty("--dust-y", `${-20 - index % 3 * 13}cqh`);
+    fleck.style.setProperty("--dust-delay", `${170 + index * 13}ms`);
     dust.append(fleck);
   }
   effect.append(dust);

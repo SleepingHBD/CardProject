@@ -51,7 +51,7 @@ function fixture() {
   return context;
 }
 
-test("Gust tears eight actual card regions with paper edges and twelve bounded dust flecks", () => {
+test("Gust tears eight actual card regions between green currents with eighteen bounded dust flecks", () => {
   const { card, createGustDefeatEffect } = fixture();
   const effect = createGustDefeatEffect(card);
   assert.equal(effect.className, "defeat-effect defeat-gust");
@@ -59,8 +59,10 @@ test("Gust tears eight actual card regions with paper edges and twelve bounded d
   assert.equal(childrenWith(effect, "gust-paper-shred").length, 8);
   assert.equal(childrenWith(effect, "gust-paper-bed").length, 1);
   assert.equal(childrenWith(effect, "gust-windfield").length, 1);
-  assert.equal(childrenWith(effect, "gust-paper-dust")[0].children.length, 12);
+  assert.equal(childrenWith(effect, "gust-frontwind").length, 1);
+  assert.equal(childrenWith(effect, "gust-paper-dust")[0].children.length, 18);
   assert.equal((childrenWith(effect, "gust-windfield")[0].innerHTML.match(/class="gust-wind-band"/g) || []).length, 4);
+  assert.equal((childrenWith(effect, "gust-frontwind")[0].innerHTML.match(/class="gust-front-band"/g) || []).length, 4);
   assert.equal(card.children.length, 0);
   assert.equal(card.attributes["data-card-id"], "original");
 });
@@ -97,6 +99,7 @@ test("Gust copies preserve photographic artwork and are decorative, not playable
     for (const name of ["--tear-x", "--tear-y", "--orbit-x", "--orbit-y", "--shred-x", "--shred-y"]) {
       assert.match(shred.properties[name], /%$/);
     }
+    assert.match(shred.properties["--shred-pivot"], /^\d+% \d+%$/);
   }
 });
 
@@ -106,7 +109,7 @@ test("Gust aftermath restores only small settled scraps, without replaying wind 
   assert.match(effect.className, /aftermath-remains/);
   assert.equal(effect.children.length, 9);
   assert.equal(childrenWith(effect, "gust-paper-shred").length, 8);
-  for (const name of ["gust-windfield", "gust-paper-dust"]) assert.equal(childrenWith(effect, name).length, 0);
+  for (const name of ["gust-windfield", "gust-frontwind", "gust-paper-dust"]) assert.equal(childrenWith(effect, name).length, 0);
   assert.match(styles, /\.defeat-gust\.aftermath-remains \.gust-paper-shred \{\s*animation: none;/);
   assert.match(styles, /\.defeat-gust\.aftermath-remains \.gust-paper-bed \{\s*animation: none;/);
   assert.match(styles, /\.defeat-gust\.aftermath-remains \.gust-paper-face::after \{\s*animation: none;/);
@@ -131,15 +134,42 @@ test("Gust replaces glowing rings/overlapping cutouts and prevents a ghost of th
   assert.match(styles, /\.clash-card\.defeated-by-gust > \.game-card \{\s*animation: none;\s*opacity: 0;/);
   assert.match(styles, /\.clash-card \.defeat-gust \.gust-paper-face \{[\s\S]*?filter: none;\s*animation: none;/);
   assert.match(styles, /\.defeat-gust \.card-bonus-badge \{\s*visibility: hidden;\s*animation: none;/);
-  assert.match(styles, /@keyframes gust-paper-tear[\s\S]*?rotateY\(-14deg\)[\s\S]*?92%, 100%/);
+  assert.match(styles, /@keyframes gust-paper-tear[\s\S]*?rotateY\(-32deg\)[\s\S]*?84%, 100%/);
 });
 
 test("Gust settles within existing clash timing and preserves audio/Classic/reduced-motion behavior", () => {
   assert.match(styles, /animation: gust-paper-tear 1\.4s linear both;/);
-  assert.match(styles, /animation: gust-wind-curl \.55s ease-in-out 2 alternate both;/);
-  assert.match(styles, /animation: gust-dust-orbit \.98s/);
+  assert.match(styles, /animation: gust-wind-curl \.18s linear 6 both;/);
+  assert.match(styles, /animation: gust-dust-orbit \.82s/);
+  const { card, createGustDefeatEffect } = fixture();
+  for (const fleck of childrenWith(createGustDefeatEffect(card), "gust-paper-dust")[0].children) {
+    assert.ok(parseFloat(fleck.properties["--dust-delay"]) + 820 <= 1400);
+  }
   const animate = source.slice(source.indexOf("async function animateClashes("), source.indexOf("\nfunction playRound("));
   assert.match(animate, /const pauseDuration = reducedMotion \? 30 : cinematic \? 1450 : 180;/);
   assert.match(animate, /const cinematic = state\.clashStyle === "cinematic" && !reducedMotion;/);
   assert.match(animate, /audio\.cardDestruction\(winningCard\.element, destructionPan\);/);
+});
+
+test("Gust's primary wind colours are distinctly leaf green, not grey or neon", () => {
+  const { card, createGustDefeatEffect } = fixture();
+  const effect = createGustDefeatEffect(card);
+  for (const [name, colour] of [["gust-windfield", "83b16b"], ["gust-frontwind", "91bf72"]]) {
+    assert.ok(childrenWith(effect, name)[0].innerHTML.includes(`fill="#${colour}"`));
+    const [red, green, blue] = colour.match(/../g).map(value => parseInt(value, 16));
+    assert.ok(green >= red + 30 && green >= blue + 40);
+    assert.ok(green < 210 && red > 100 && blue > 90, "natural leaf colour rather than neon");
+  }
+  assert.doesNotMatch(childrenWith(effect, "gust-windfield")[0].innerHTML, /#a7b7a0|#627b5e|#eee9d2/);
+  assert.match(styles, /\.gust-windfield \{ z-index: 2; \}/);
+  assert.match(styles, /\.gust-frontwind \{ z-index: 12; \}/);
+});
+
+test("Gust sharply rips early, tumbles fragments through the vortex, then settles smaller scraps", () => {
+  assert.match(styles, /@keyframes gust-paper-tear[\s\S]*?14%[\s\S]*?rotateY\(-32deg\)[\s\S]*?21%[\s\S]*?var\(--tear-x\) \* 1\.25/);
+  assert.match(styles, /@keyframes gust-paper-tear[\s\S]*?52%[\s\S]*?var\(--shred-spin\) \* 2\.15[\s\S]*?67%[\s\S]*?var\(--shred-spin\) \* 3/);
+  assert.match(styles, /@keyframes gust-paper-tear[\s\S]*?84%, 100%[\s\S]*?scale\(\.4\)/);
+  assert.match(styles, /\.defeat-gust\.aftermath-remains \.gust-paper-shred \{[\s\S]*?scale\(\.4\)/);
+  assert.match(styles, /@keyframes gust-wind-curl \{\s*0%, 100%/);
+  assert.match(styles, /@keyframes gust-flow-travel[\s\S]*?var\(--gust-flow-step\)/);
 });
