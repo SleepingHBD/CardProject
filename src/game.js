@@ -3281,12 +3281,12 @@ function createGustDefeatEffect(card, { aftermath = false } = {}) {
   wind.innerHTML = `<svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
     <path class="gust-funnel-body" fill="#649553" fill-opacity=".32" d="M18 51C51 31 149 24 183 43C178 71 143 91 154 122C159 147 131 170 129 190C130 211 104 236 100 250C89 224 71 216 70 192C68 167 44 150 50 122C54 94 27 86 18 51Z"/>
     <g fill="#83b16b" fill-opacity=".68" stroke="#456f3b" stroke-opacity=".78" stroke-width="1" stroke-linejoin="round">
-      <path class="gust-wind-band" d="M9 68C22 30 127 12 178 34C196 43 197 60 182 68C161 80 104 85 71 81C127 77 180 57 174 48C155 21 59 37 9 68Z"/>
-      <path class="gust-wind-band" d="M18 128C32 91 132 65 169 87C200 109 140 137 67 133C120 129 170 105 160 97C137 79 64 97 18 128Z"/>
-      <path class="gust-wind-band" d="M44 179C60 146 130 126 152 145C174 167 128 190 77 189C119 180 151 158 139 151C121 140 79 158 44 179Z"/>
-      <path class="gust-wind-band" d="M70 222C82 196 115 181 132 193C154 210 113 241 100 251C112 225 134 211 121 206C110 199 89 214 70 222Z"/>
+      <path class="gust-wind-band" d="M9 68C22 30 127 12 178 34C196 43 197 60 182 68C161 80 104 85 71 81C127 70 180 63 174 54C155 34 59 49 9 68Z"/>
+      <path class="gust-wind-band" d="M18 128C32 91 132 65 169 87C200 109 140 137 67 133C120 120 170 113 160 104C137 90 64 105 18 128Z"/>
+      <path class="gust-wind-band" d="M44 179C60 146 130 126 152 145C174 167 128 190 77 189C119 173 151 165 139 157C121 148 79 166 44 179Z"/>
+      <path class="gust-wind-band" d="M70 222C82 196 115 181 132 193C154 210 113 241 100 251C112 219 134 218 121 212C110 205 89 217 70 222Z"/>
     </g>
-    <g class="gust-flow-lines" fill="none" stroke="#d0e8ad" stroke-opacity=".92" stroke-width="3" stroke-linecap="round">
+    <g class="gust-flow-lines" fill="none" stroke="#d0e8ad" stroke-opacity=".92" stroke-width="3.5" stroke-linecap="round">
       <path d="M24 51C65 20 167 22 181 45C194 68 127 81 86 79"/>
       <path d="M34 113C82 81 161 78 174 100C187 121 137 133 85 134"/>
       <path d="M59 164C91 142 139 135 149 154C159 170 127 187 91 187"/>
@@ -3301,12 +3301,12 @@ function createGustDefeatEffect(card, { aftermath = false } = {}) {
   frontWind.className = "gust-frontwind";
   frontWind.innerHTML = `<svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
     <g fill="#91bf72" fill-opacity=".78" stroke="#527d41" stroke-opacity=".68" stroke-width="1" stroke-linejoin="round">
-      <path class="gust-front-band" d="M14 62C38 94 139 109 187 66C179 98 96 126 37 98C17 89 12 73 14 62Z"/>
-      <path class="gust-front-band" d="M33 125C67 151 136 155 165 125C164 151 119 176 70 159C44 151 34 139 33 125Z"/>
-      <path class="gust-front-band" d="M57 180C77 196 119 197 142 178C138 201 106 216 83 204C67 197 59 189 57 180Z"/>
-      <path class="gust-front-band" d="M79 224Q100 239 122 218Q120 241 100 249Q83 242 79 224Z"/>
+      <path class="gust-front-band" d="M14 62C38 84 139 98 187 66C179 98 96 126 37 98C17 89 12 73 14 62Z"/>
+      <path class="gust-front-band" d="M33 125C67 142 136 145 165 125C164 151 119 176 70 159C44 151 34 139 33 125Z"/>
+      <path class="gust-front-band" d="M57 180C77 190 119 189 142 178C138 201 106 216 83 204C67 197 59 189 57 180Z"/>
+      <path class="gust-front-band" d="M79 224Q100 232 122 218Q120 241 100 249Q83 242 79 224Z"/>
     </g>
-    <g class="gust-speed-lines" fill="none" stroke="#e0efc4" stroke-width="3" stroke-linecap="round">
+    <g class="gust-speed-lines" fill="none" stroke="#e0efc4" stroke-width="3.5" stroke-linecap="round">
       <path d="M16 69C52 107 150 108 182 79M38 135C75 166 139 161 160 141M63 188Q104 219 137 187M84 231Q103 249 119 230"/>
     </g>
   </svg>`;

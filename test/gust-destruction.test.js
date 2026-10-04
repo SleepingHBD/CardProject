@@ -173,3 +173,17 @@ test("Gust sharply rips early, tumbles fragments through the vortex, then settle
   assert.match(styles, /@keyframes gust-wind-curl \{\s*0%, 100%/);
   assert.match(styles, /@keyframes gust-flow-travel[\s\S]*?var\(--gust-flow-step\)/);
 });
+
+test("Gust thickens filled ribbons and highlights without enlarging the vortex containers", () => {
+  const { card, createGustDefeatEffect } = fixture();
+  const effect = createGustDefeatEffect(card);
+  const rear = childrenWith(effect, "gust-windfield")[0].innerHTML;
+  const front = childrenWith(effect, "gust-frontwind")[0].innerHTML;
+  assert.match(rear, /C127 70 180 63 174 54C155 34 59 49/);
+  assert.match(front, /M14 62C38 84 139 98 187 66/);
+  for (const svg of [rear, front]) {
+    assert.match(svg, /viewBox="0 0 200 260"/);
+    assert.match(svg, /stroke-width="3\.5"/);
+  }
+  assert.match(styles, /\.gust-windfield,\s*\.gust-frontwind \{[\s\S]*?left: -21%;\s*top: -12%;\s*width: 142%;\s*height: 120%;\s*animation: gust-wind-gather 1\.4s linear both;/);
+});
