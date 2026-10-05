@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./four-lane-preview.css" />
   </head>
   <body>
     <svg class="tactic-symbol-library" aria-hidden="true">
@@ -44,6 +45,9 @@
       <symbol id="tactic-icon-sword" viewBox="0 0 24 24">
         <path d="m21.5 1.8-6.1 2.8-7.5 7.5 4 4 7.5-7.5 2.1-6.8Z" />
         <path d="m6.6 10.8 6.6 6.6-2 2-1.8-1.8-3.6 3.6-3-3 3.6-3.6-1.8-1.8 2-2Z" />
+      </symbol>
+      <symbol id="tactic-icon-banner" viewBox="0 0 24 24">
+        <path d="M4 2h2v20H4V2Zm4 1h13l-4 4 4 4H8V3Z" />
       </symbol>
     </svg>
     <div class="sky-confetti" aria-hidden="true"></div>
@@ -292,6 +296,15 @@
           Tutorial Mode
         </button>
         <button
+          class="main-menu-option-button main-menu-four-lane-button"
+          id="mainMenuFourLaneButton"
+          type="button"
+          aria-label="Four-Lane Mode — Work in progress"
+          aria-controls="fourLanePreviewScreen"
+        >
+          <span>Four-Lane Mode</span><span class="four-lane-menu-badge" aria-hidden="true">WIP</span>
+        </button>
+        <button
           class="main-menu-option-button"
           id="mainMenuRulebookButton"
           type="button"
@@ -332,6 +345,69 @@
       </p>
     </section>
 
+    <section
+      class="four-lane-preview-screen"
+      id="fourLanePreviewScreen"
+      aria-labelledby="fourLanePreviewTitle"
+      hidden
+    >
+      <div class="four-lane-preview-content">
+        <header class="four-lane-preview-header">
+          <div>
+            <p class="four-lane-preview-eyebrow">Project: Prowl <span>Work in progress</span></p>
+            <h1 id="fourLanePreviewTitle" tabindex="-1">Four-Lane Mode</h1>
+            <p>A separate workbench for the next evolution of our duels.</p>
+          </div>
+          <button class="main-menu-option-button four-lane-return-button" id="fourLaneReturnButton" type="button">
+            Return to Main Menu
+          </button>
+        </header>
+
+        <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
+          <div class="four-lane-card-showcase-heading">
+            <h2 id="fourLaneCardsTitle">Meet the Rally cards</h2>
+            <p>Three new Rare cards · Power 6 · Fire, Gust and Water</p>
+          </div>
+          <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Rare Rally card previews"></div>
+          <p class="four-lane-card-showcase-note">Rally is a new support role for this mode. These cards are previews; their gameplay bonus is not active yet.</p>
+        </section>
+
+        <div class="four-lane-preview-layout">
+          <figure class="four-lane-preview-board" aria-labelledby="fourLaneBoardCaption">
+            <div class="four-lane-preview-side">Opponent</div>
+            <div class="four-lane-preview-row" aria-label="Opponent’s four lanes">
+              <span class="four-lane-preview-slot" aria-label="Opponent Lane 1"><span aria-hidden="true">◆</span></span>
+              <span class="four-lane-preview-slot" aria-label="Opponent Lane 2"><span aria-hidden="true">◆</span></span>
+              <span class="four-lane-preview-slot" aria-label="Opponent Lane 3"><span aria-hidden="true">◆</span></span>
+              <span class="four-lane-preview-slot is-new-lane" aria-label="Opponent Lane 4"><span aria-hidden="true">◆</span></span>
+            </div>
+            <div class="four-lane-preview-lane-labels" aria-hidden="true">
+              <span>Lane 1</span><span>Lane 2</span><span>Lane 3</span><span>Lane 4</span>
+            </div>
+            <div class="four-lane-preview-row" aria-label="Your four lanes">
+              <span class="four-lane-preview-slot" aria-label="Your Lane 1"><span aria-hidden="true">◆</span></span>
+              <span class="four-lane-preview-slot" aria-label="Your Lane 2"><span aria-hidden="true">◆</span></span>
+              <span class="four-lane-preview-slot" aria-label="Your Lane 3"><span aria-hidden="true">◆</span></span>
+              <span class="four-lane-preview-slot is-new-lane" aria-label="Your Lane 4"><span aria-hidden="true">◆</span></span>
+            </div>
+            <div class="four-lane-preview-side">You</div>
+            <figcaption id="fourLaneBoardCaption">Four lanes. One to four committed cards.</figcaption>
+          </figure>
+
+          <aside class="four-lane-preview-roadmap" aria-labelledby="fourLaneRoadmapTitle">
+            <p class="four-lane-preview-eyebrow">The direction</p>
+            <h2 id="fourLaneRoadmapTitle">More room for strategy</h2>
+            <ol>
+              <li><h3>Your own deck</h3><p>Build around the cards, elements and roles that suit your playstyle.</p></li>
+              <li><h3>New combinations</h3><p>Explore a fourth lane and new roles, while keeping one-card plays possible.</p></li>
+              <li><h3>Distinct opponents</h3><p>Face rivals with their own decks and recognisable habits.</p></li>
+            </ol>
+          </aside>
+        </div>
+
+        <p class="four-lane-preview-notice"><strong>Preview only — not playable yet.</strong> This mode will be developed separately. Normal Play still uses the existing three-lane game.</p>
+      </div>
+    </section>
 
     <div class="game-menu-overlay" id="gameMenuOverlay" hidden>
       <section

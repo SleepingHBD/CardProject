@@ -63,6 +63,30 @@ const CARD_LIBRARY = [
 }));
 
 const HAND_SIZE = 6;
+// Reserved for the separate four-lane preview; never included in freshDeck().
+const FOUR_LANE_RALLY_CARDS = Object.freeze([
+  ["ember", "Hareth Hearthbeat", "Kindling Cadence", "A steady beat. A braver formation.", "hareth-hearthbeat"],
+  ["gust", "Megwyn Windwhistle", "Second Wind Serenade", "One melody lifts every paw.", "megwyn-windwhistle"],
+  ["tide", "Deshone Dewguard", "Springwater Resolve", "Keeps weary paws in the fight.", "deshone-dewguard"],
+].map(([element, name, move, lore, art]) => Object.freeze({
+  id: `four-lane-${art}`,
+  element,
+  power: 6,
+  name,
+  move,
+  lore,
+  rarity: "rare",
+  tactic: "rally",
+  art,
+  artworkSource: `./assets/cards/four-lane/${art}.png`,
+})));
+const FOUR_LANE_ROLES = Object.freeze({
+  rally: Object.freeze({
+    icon: "banner",
+    label: "Rally",
+    description: "Rally is a new support role for Four-Lane Mode. Its gameplay bonus is not active in this preview.",
+  }),
+});
 const MAX_PLAY_SIZE = 3;
 const DECK_COPIES_BY_RARITY = Object.freeze({
   common: 2,
@@ -645,6 +669,11 @@ const ui = {
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
   mainMenuTutorialButton: document.querySelector("#mainMenuTutorialButton"),
+  mainMenuFourLaneButton: document.querySelector("#mainMenuFourLaneButton"),
+  fourLanePreviewScreen: document.querySelector("#fourLanePreviewScreen"),
+  fourLanePreviewTitle: document.querySelector("#fourLanePreviewTitle"),
+  fourLaneReturnButton: document.querySelector("#fourLaneReturnButton"),
+  fourLaneCardGallery: document.querySelector("#fourLaneCardGallery"),
   mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
   mainMenuFullscreenButton: document.querySelector("#mainMenuFullscreenButton"),
@@ -691,6 +720,7 @@ const touchFirstInput = window.matchMedia?.("(hover: none) and (pointer: coarse)
 let settingsReturnTarget = "main";
 let difficultyReturnTarget = "main";
 let difficultyPreviousLockedState = true;
+let fourLanePreviewBackground = [];
 let gameMenuPreviousFocus = null;
 const tutorialCoachDrag = {
   pointerId: null,
@@ -2135,6 +2165,7 @@ function cardArtworkSource(cardArt) {
 function updateDisplayedCardArtwork() {
   document.documentElement.dataset.cardArtwork = state.artworkStyle;
   document.querySelectorAll(".game-card[data-card-template]").forEach((cardElement) => {
+    if (cardElement.dataset.cardPreview === "four-lane") return;
     const cardArt = cardElement.dataset.cardTemplate;
     const card = CARD_LIBRARY.find((candidate) => candidate.art === cardArt);
     const usesPhotograph = cardUsesPhotographicArtwork(cardArt);
@@ -2165,7 +2196,8 @@ function cardMarkup(
   formationBonus = null,
 ) {
   const element = ELEMENTS[card.element];
-  const tactic = TACTICS[card.tactic] || TACTICS.link;
+  const isFourLanePreview = displayMode === "four-lane-preview";
+  const tactic = (isFourLanePreview ? FOUR_LANE_ROLES[card.tactic] : TACTICS[card.tactic]) || TACTICS.link;
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
@@ -2194,13 +2226,14 @@ function cardMarkup(
     <button
       class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${cardUsesPhotographicArtwork(card.art) ? " uses-photographic-art" : ""}${isFormationCard ? " selected formation-card" : ""}"
       data-card-template="${card.art}"
+      ${isFourLanePreview ? `data-card-preview="four-lane" aria-label="${displayName}, ${element.label}, Rare, Power ${card.power}, Rally role, preview only"` : ""}
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       type="button"
     >
       ${formationBonusBadge}
       ${resolvedBonusBadge}
       <span class="card-art">
-        <img src="${cardArtworkSource(card.art)}" alt="" draggable="false" />
+        <img src="${card.artworkSource || cardArtworkSource(card.art)}" alt="" draggable="false" ${isFourLanePreview ? 'loading="lazy" decoding="async" width="1254" height="1254"' : ""} />
         <span class="art-vignette" aria-hidden="true"></span>
         <span class="card-element" aria-hidden="true">${element.icon}</span>
         <span class="card-power"><small>POWER</small><b>${card.power}</b></span>
@@ -4062,6 +4095,7 @@ function openSettings(returnTarget) {
 }
 
 function showMainMenu() {
+  hideFourLanePreview();
   state.locked = true;
   stopTutorialMode();
   audio.startMainMenuMusic();
@@ -4073,6 +4107,37 @@ function showMainMenu() {
   setGameMenuVisibility(false);
   ui.mainMenuScreen.hidden = false;
   document.body.classList.add("main-menu-active");
+}
+
+function hideFourLanePreview() {
+  ui.fourLanePreviewScreen.hidden = true;
+  fourLanePreviewBackground.forEach(({ element, inert }) => { element.inert = inert; });
+  fourLanePreviewBackground = [];
+}
+
+function renderFourLaneCards() {
+  ui.fourLaneCardGallery.innerHTML = FOUR_LANE_RALLY_CARDS.map((card) => `
+    <div class="four-lane-card-item" role="listitem">
+      ${cardMarkup(card, false, -1, "four-lane-preview")}
+    </div>
+  `).join("");
+}
+
+function showFourLanePreview() {
+  showMainMenu();
+  ui.mainMenuScreen.hidden = true;
+  fourLanePreviewBackground = [...document.querySelectorAll(".topbar, body > main")]
+    .map((element) => ({ element, inert: element.inert }));
+  fourLanePreviewBackground.forEach(({ element }) => { element.inert = true; });
+  ui.fourLanePreviewScreen.hidden = false;
+  renderFourLaneCards();
+  ui.fourLanePreviewScreen.scrollTop = 0;
+  ui.fourLanePreviewTitle.focus({ preventScroll: true });
+}
+
+function leaveFourLanePreview() {
+  showMainMenu();
+  ui.mainMenuFourLaneButton.focus({ preventScroll: true });
 }
 
 function showTutorialMenu() {
@@ -4327,6 +4392,13 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
 });
 ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("main"));
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
+ui.mainMenuFourLaneButton.addEventListener("click", showFourLanePreview);
+ui.fourLaneReturnButton.addEventListener("click", leaveFourLanePreview);
+ui.fourLanePreviewScreen.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  event.preventDefault();
+  leaveFourLanePreview();
+});
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
 ui.mainMenuFullscreenButton.addEventListener("click", toggleFullscreen);
