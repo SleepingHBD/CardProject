@@ -65,17 +65,20 @@ const CARD_LIBRARY = [
 const HAND_SIZE = 6;
 // Reserved for the separate four-lane preview; never included in freshDeck().
 const FOUR_LANE_RALLY_CARDS = Object.freeze([
-  ["ember", "Hareth Hearthbeat", "Kindling Cadence", "A steady beat. A braver formation.", "hareth-hearthbeat"],
-  ["gust", "Megwyn Windwhistle", "Second Wind Serenade", "One melody lifts every paw.", "megwyn-windwhistle"],
-  ["tide", "Deshone Dewguard", "Springwater Resolve", "Keeps weary paws in the fight.", "deshone-dewguard"],
-].map(([element, name, move, lore, art]) => Object.freeze({
+  ["ember", 6, "Hareth Hearthbeat", "Kindling Cadence", "A steady beat. A braver formation.", "rare", "hareth-hearthbeat"],
+  ["gust", 6, "Megwyn Windwhistle", "Second Wind Serenade", "One melody lifts every paw.", "rare", "megwyn-windwhistle"],
+  ["tide", 6, "Deshone Dewguard", "Springwater Resolve", "Keeps weary paws in the fight.", "rare", "deshone-dewguard"],
+  ["ember", 5, "Charmae Emberhem", "Golden Mend", "Every stitch steadies the banner.", "uncommon", "charmae-emberhem"],
+  ["gust", 5, "Aakith Wayfinder", "Windward Route", "No paw left wandering.", "uncommon", "aakith-wayfinder"],
+  ["tide", 5, "Sajrin Shellwright", "Shellward Shelter", "Built to weather the worst.", "uncommon", "sajrin-shellwright"],
+].map(([element, power, name, move, lore, rarity, art]) => Object.freeze({
   id: `four-lane-${art}`,
   element,
-  power: 6,
+  power,
   name,
   move,
   lore,
-  rarity: "rare",
+  rarity,
   tactic: "rally",
   art,
   artworkSource: `./assets/cards/four-lane/${art}.png`,
@@ -2197,6 +2200,7 @@ function cardMarkup(
 ) {
   const element = ELEMENTS[card.element];
   const isFourLanePreview = displayMode === "four-lane-preview";
+  const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
   const tactic = (isFourLanePreview ? FOUR_LANE_ROLES[card.tactic] : TACTICS[card.tactic]) || TACTICS.link;
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
@@ -2226,7 +2230,7 @@ function cardMarkup(
     <button
       class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${cardUsesPhotographicArtwork(card.art) ? " uses-photographic-art" : ""}${isFormationCard ? " selected formation-card" : ""}"
       data-card-template="${card.art}"
-      ${isFourLanePreview ? `data-card-preview="four-lane" aria-label="${displayName}, ${element.label}, Rare, Power ${card.power}, Rally role, preview only"` : ""}
+      ${isFourLanePreview ? `data-card-preview="four-lane" aria-label="${displayName}, ${element.label}, ${rarityLabel}, Power ${card.power}, Rally role, preview only"` : ""}
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       type="button"
     >

@@ -73,6 +73,8 @@
 
 .four-lane-card-gallery {
   display: grid;
+  max-width: 738px;
+  margin-inline: auto;
   grid-template-columns: repeat(auto-fit, 230px);
   justify-content: center;
   gap: 24px;
