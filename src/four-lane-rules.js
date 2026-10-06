@@ -6,6 +6,8 @@
   const HAND_SIZE = 7;
   const ROUND_DRAW = 2;
   const MAX_EXTRA_CARD_POINTS = 2;
+  // Personality breaks close strategic decisions, not clearly worse outcomes.
+  const HABIT_SCORE_WINDOW = .75;
   const TACTICS = Object.freeze({
     ...normal.TACTICS,
     link: Object.freeze({ ...normal.TACTICS.link,
@@ -115,13 +117,9 @@
 
   function createAiTraits(random = Math.random) {
     const descriptions = {
-      "solo-gambler": "Favors 1-card recovery plays, but commits more when large formations keep beating him.",
+      "solo-gambler": "Favors committing 1 card when his hand needs rebuilding, but can commit more to avoid giving away rounds.",
       "measured-planner": "Favors 2-card formations when they offer a good chance to win.",
       "full-formation": "Favors 4-card pushes, then smaller formations to rebuild the opponent's hand.",
-      "score-reader": "Favors larger commitments when behind in trophies and smaller ones when ahead.",
-      "echo-tactician": "Favors matching your last round's card count, but can adapt to your patterns.",
-      "restless-dealer": "Favors changing how many cards he commits from one round to the next.",
-      "tactic-planner": "Orders cards to activate their roles and use Rally to strengthen the card directly before it.",
     };
     return normal.createAiTraits(random).map(trait => Object.freeze({ ...trait,
       description: descriptions[trait.id] || trait.description,
@@ -132,7 +130,8 @@
     const maximum = Math.min(MAX_COMMITMENT, handLength);
     const has = id => traits.some(trait => trait.id === id);
     let weights = [.15, .25, .4, .2];
-    if (has("solo-gambler")) weights = [.5, .3, .15, .05];
+    if (has("solo-gambler")) weights = handLength < HAND_SIZE
+      ? [.7, .2, .08, .02] : [.15, .4, .35, .1];
     if (has("measured-planner")) weights = [.1, .65, .2, .05];
     if (has("full-formation")) weights = [.04, .1, .16, .7];
     if (has("score-reader")) {
@@ -287,6 +286,16 @@
     return scenarios;
   }
 
+  function selectCloseHabitPlan(plans, bestScore) {
+    let preferred;
+    for (const candidate of plans) {
+      if (candidate.score < bestScore - HABIT_SCORE_WINDOW) continue;
+      if (!preferred || candidate.preference > preferred.preference
+        || (candidate.preference === preferred.preference && candidate.score > preferred.score)) preferred = candidate;
+    }
+    return preferred?.cards;
+  }
+
   function chooseAiFormation(hand, playerWins, aiWins, random = Math.random, traits = [], publicInfo = {}) {
     if (!hand.length) return [];
     const read = readPlayerHistory(publicInfo.history || []);
@@ -298,6 +307,10 @@
     const ownCounts = normal.getElementTrophyCounts(aiWins);
     const playerCounts = normal.getElementTrophyCounts(playerWins);
     const has = id => traits.some(trait => trait.id === id);
+    const seeksPower = has("power-seeker");
+    const plansRoles = has("tactic-planner");
+    const rebuilding = has("solo-gambler") && hand.length < HAND_SIZE;
+    const hasRefinedPreference = seeksPower || plansRoles || rebuilding;
     const loyalElement = traits.find(trait => trait.id === "element-loyalist")?.element;
     const need = counts => Object.keys(ELEMENTS).reduce((sum, element) =>
       sum + Math.max(0, TROPHIES_PER_ELEMENT - counts[element]), 0);
@@ -314,6 +327,7 @@
         - (ELEMENTS[other.element].beats === card.element ? ELEMENT_EDGE_BONUS : 0)));
     });
     let best = [], bestScore = -Infinity;
+    const closePlans = [];
     const indices = [], used = new Set();
     const evaluate = () => {
       const cards = indices.map(index => hand[index]);
@@ -349,16 +363,24 @@
       let motive = 0;
       for (const card of cards) {
         if (has("trophy-hunter") && ownCounts[card.element] < TROPHIES_PER_ELEMENT) motive += .8;
-        if (has("power-seeker")) motive += card.power * .1;
         if (card.element === loyalElement) motive += 1.1;
         if (has("counter-scholar") && ELEMENTS[card.element].beats === playerWins.at(-1)?.element) motive += 1;
         if (has("momentum-rider") && card.element === aiWins.at(-1)?.element) motive += 1;
         if (has("trophy-denier") && playerCounts[ELEMENTS[card.element].beats] === TROPHIES_PER_ELEMENT - 1) motive += 1;
       }
       score += motive / count;
-      if (has("tactic-planner")) score += bonuses.reduce((sum, bonus) => sum + bonus, 0) * .22;
       score += Math.min(.999999, Math.max(0, random())) * .35;
       if (score > bestScore) { best = cards; bestScore = score; }
+      if (hasRefinedPreference) {
+        // Mean Power and bonuses per card avoid rewarding wasteful larger plays.
+        // Rally received is included in role combinations, without changing its rules.
+        const powerPreference = seeksPower
+          ? cards.reduce((sum, card) => sum + card.power - 3, 0) / (6 * count) : 0;
+        const rolePreference = plansRoles
+          ? bonuses.reduce((sum, bonus) => sum + bonus, 0) / (2 * count) : 0;
+        const recoveryPreference = rebuilding ? (MAX_COMMITMENT - count) / (MAX_COMMITMENT - 1) : 0;
+        closePlans.push({ cards, score, preference: powerPreference + rolePreference + recoveryPreference });
+      }
     };
     const visit = () => {
       if (indices.length) evaluate();
@@ -369,6 +391,9 @@
       }
     };
     visit();
+    if (hasRefinedPreference) {
+      return selectCloseHabitPlan(closePlans, bestScore) || best;
+    }
     return best;
   }
 

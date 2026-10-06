@@ -44,7 +44,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "power-seeker",
     category: "motive",
     label: "Power Seeker",
-    description: "Favors the highest-Power cards in the opponent's hand.",
+    description: "Prefers to commit high-Power cards rather than save them.",
   }),
   Object.freeze({
     id: "element-loyalist",
@@ -56,7 +56,7 @@ const AI_MOTIVE_TRAITS = Object.freeze([
     id: "trophy-denier",
     category: "motive",
     label: "Trophy Denier",
-    description: "Counters elements where you have 1/2 trophies.",
+    description: "Favors counters to elements you have 1 trophy in.",
   }),
   Object.freeze({
     id: "momentum-rider",
@@ -70,19 +70,19 @@ const AI_FORMATION_TRAITS = Object.freeze([
     id: "tactic-planner",
     category: "formation",
     label: "Role Planner",
-    description: "Usually orders cards to activate as many Formation Roles as possible.",
+    description: "Favors formations that activate role bonuses.",
   }),
   Object.freeze({
     id: "strong-opener",
     category: "formation",
     label: "Strong Opener",
-    description: "Places the highest-Power card in Lane 1.",
+    description: "Places his highest-Power committed card in Lane 1.",
   }),
   Object.freeze({
     id: "late-striker",
     category: "formation",
     label: "Late Striker",
-    description: "The highest-Power card goes in the last played lane.",
+    description: "Places his highest-Power committed card in his last occupied lane.",
   }),
 ]);
 const AI_COMMITMENT_TRAITS = Object.freeze([
@@ -108,19 +108,19 @@ const AI_COMMITMENT_TRAITS = Object.freeze([
     id: "score-reader",
     category: "commitment",
     label: "Trophy Reader",
-    description: "Commits more cards when behind in trophies; fewer when ahead.",
+    description: "Favors committing more cards when behind in trophies, and fewer when ahead.",
   }),
   Object.freeze({
     id: "echo-tactician",
     category: "commitment",
     label: "Echo Tactician",
-    description: "Often matches your last round's card count.",
+    description: "Favors committing the same number of cards you committed in the previous round.",
   }),
   Object.freeze({
     id: "restless-dealer",
     category: "commitment",
     label: "Restless Dealer",
-    description: "Usually commits a different number of cards than in the previous round.",
+    description: "Favors committing a different number of cards than he committed in the previous round.",
   }),
 ]);
 

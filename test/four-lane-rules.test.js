@@ -256,7 +256,7 @@ test("all role and element arrangements receive only immediate backward Rally su
   assert.equal(checked, 88428);
 });
 
-test("Rally explanations consistently say before, including card tooltips, habits, lobby and rules", () => {
+test("Rally explanations consistently say before, while Role Planner keeps its concise general explanation", () => {
   const description = four.TACTICS.rally.description;
   assert.match(description, /card committed directly before it/);
   assert.match(description, /In Lane 1, Rally gives no bonus/);
@@ -264,7 +264,8 @@ test("Rally explanations consistently say before, including card tooltips, habit
   runInNewContext(gameSource.slice(gameSource.indexOf("const FOUR_LANE_ROLES ="), gameSource.indexOf("const MAX_PLAY_SIZE =")), context);
   assert.equal(runInNewContext("FOUR_LANE_ROLES.rally.description", context), description);
   const planner = four.createAiTraits(() => 0).find(value => value.id === "tactic-planner");
-  assert.match(planner.description, /Rally to strengthen the card directly before it/);
+  assert.equal(planner.description, "Favors formations that activate role bonuses.");
+  assert.doesNotMatch(planner.description, /Rally/i);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(html, /Rally gives \+1 Power to the card committed directly before it/);
   assert.match(html, /Rally in Lane 2 boosts Lane 1/);

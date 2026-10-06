@@ -504,7 +504,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Turn clues into a prediction",
         text:
-          "Power Seeker favors high-Power cards. Strong Opener places the opponent's highest-Power card in Lane 1. Full Formation usually commits three cards.",
+          "Power Seeker favors high-Power cards. Strong Opener places his highest-Power committed card in Lane 1. Full Formation usually commits three cards.",
         objective:
           "Expect a strong three-card formation with its biggest threat first—but remember that habits never reveal the elements.",
         targets: Object.freeze(["#opponentHabits", "#playerHand"]),
