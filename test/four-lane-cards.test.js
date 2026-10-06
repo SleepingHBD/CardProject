@@ -6,7 +6,7 @@ import { runInNewContext } from "node:vm";
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const rulesSource = readFileSync(new URL("../src/rules.js", import.meta.url), "utf8");
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const approvedCards = ["rare-rally-artwork.json", "uncommon-rally-artwork.json"].flatMap(file => (
+const approvedCards = ["rare-rally-artwork.json", "uncommon-rally-artwork.json", "common-rally-artwork.json"].flatMap(file => (
   JSON.parse(readFileSync(new URL(`../assets/cards/four-lane/${file}`, import.meta.url), "utf8")).cards
 ));
 
@@ -38,46 +38,50 @@ function fixture() {
   return context;
 }
 
-test("all six framed Rally cards match their approved artwork manifests", () => {
+test("all nine framed Rally cards match their approved artwork manifests", () => {
   const context = fixture();
   const cards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_RALLY_CARDS)", context));
-  assert.equal(cards.length, 6);
-  assert.equal(new Set(cards.map(card => card.id)).size, 6);
+  assert.equal(cards.length, 9);
+  assert.equal(new Set(cards.map(card => card.id)).size, 9);
   for (const approved of approvedCards) {
     const card = cards.find(card => card.name === approved.name);
     assert.ok(card);
     assert.equal(card.element, approved.element);
     assert.equal(card.move, approved.move);
+    if (approved.lore) assert.equal(card.lore, approved.lore);
     assert.deepEqual({ rarity: card.rarity, role: card.tactic, power: card.power }, approved.intendedStats);
     assert.equal(card.artworkSource, `./assets/cards/four-lane/${approved.asset}`);
     assert.ok(existsSync(new URL(`../${card.artworkSource}`, import.meta.url)));
   }
 });
 
-test("the preview reuses Rare and Uncommon frames with Rally labels, icons and safe non-playable markup", () => {
+test("the preview reuses Rare, Uncommon and Common frames with Rally labels, icons and safe non-playable markup", () => {
   const context = fixture();
   runInNewContext("renderFourLaneCards()", context);
   const markup = context.ui.fourLaneCardGallery.innerHTML;
   assert.equal((markup.match(/class="game-card element-\w+ rarity-rare/g) || []).length, 3);
   assert.equal((markup.match(/class="game-card element-\w+ rarity-uncommon/g) || []).length, 3);
-  assert.equal((markup.match(/data-card-preview="four-lane"/g) || []).length, 6);
+  assert.equal((markup.match(/class="game-card element-\w+ rarity-common/g) || []).length, 3);
+  assert.equal((markup.match(/data-card-preview="four-lane"/g) || []).length, 9);
   assert.equal((markup.match(/<b>6<\/b>/g) || []).length, 3);
   assert.equal((markup.match(/<b>5<\/b>/g) || []).length, 3);
-  assert.equal((markup.match(/href="#tactic-icon-banner"/g) || []).length, 12);
-  assert.equal((markup.match(/\sdisabled/g) || []).length, 6);
+  assert.equal((markup.match(/<b>4<\/b>/g) || []).length, 3);
+  assert.equal((markup.match(/href="#tactic-icon-banner"/g) || []).length, 18);
+  assert.equal((markup.match(/\sdisabled/g) || []).length, 9);
   assert.equal((markup.match(/, Rare, Power 6, Rally role, preview only/g) || []).length, 3);
   assert.equal((markup.match(/, Uncommon, Power 5, Rally role, preview only/g) || []).length, 3);
+  assert.equal((markup.match(/, Common, Power 4, Rally role, preview only/g) || []).length, 3);
   assert.doesNotMatch(markup, /data-card-id|draggable="true"|>Link<|>Vanguard</);
   assert.match(pageSource, /symbol id="tactic-icon-banner"/);
   assert.match(pageSource, /id="fourLaneCardGallery" role="list"/);
   assert.match(pageSource, /their gameplay bonus is not active yet/);
 });
 
-test("each element has one Rare and one Uncommon Rally preview", () => {
+test("each element has one Rare, one Uncommon and one Common Rally preview", () => {
   const cards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_RALLY_CARDS)", fixture()));
   for (const element of ["ember", "gust", "tide"]) {
     assert.deepEqual(cards.filter(card => card.element === element).map(card => [card.rarity, card.power]), [
-      ["rare", 6], ["uncommon", 5],
+      ["rare", 6], ["uncommon", 5], ["common", 4],
     ]);
   }
 });

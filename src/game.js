@@ -71,6 +71,9 @@ const FOUR_LANE_RALLY_CARDS = Object.freeze([
   ["ember", 5, "Charmae Emberhem", "Golden Mend", "Every stitch steadies the banner.", "uncommon", "charmae-emberhem"],
   ["gust", 5, "Aakith Wayfinder", "Windward Route", "No paw left wandering.", "uncommon", "aakith-wayfinder"],
   ["tide", 5, "Sajrin Shellwright", "Shellward Shelter", "Built to weather the worst.", "uncommon", "sajrin-shellwright"],
+  ["ember", 4, "Lucan Crustkeeper", "Warm Welcome", "A warm loaf. A braver paw.", "common", "lucan-crustkeeper"],
+  ["gust", 4, "Jiawen Barleybreeze", "Harvest Breeze", "The wind lends a working paw.", "common", "jiawen-barleybreeze"],
+  ["tide", 4, "Siewen Rainkeeper", "Rainshare", "Every drop is worth sharing.", "common", "siewen-rainkeeper"],
 ].map(([element, power, name, move, lore, rarity, art]) => Object.freeze({
   id: `four-lane-${art}`,
   element,
