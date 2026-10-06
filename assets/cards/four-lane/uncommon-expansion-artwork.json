@@ -1,5 +1,6 @@
 {
   "version": 7,
+  "namingNote": "Current card names use first names only. Historical artwork prompts and revision names retain their original wording as provenance; asset filenames and stats are unchanged.",
   "status": "Framed in the Four-Lane Mode card preview; not registered in the live three-lane game. Four-Lane gameplay is not active yet.",
   "generator": "Built-in ImageGen using the image-generation skill; no CLI/API fallback used.",
   "imageDimensions": {
@@ -18,7 +19,7 @@
   "styleReview": "Uses the existing collection's compact feline proportions, warm-black contours, restrained matte cel shading, elemental palettes and sparse graphic backgrounds. The three designs use different professions, breeds, poses and primary props rather than increasing rendering complexity.",
   "cards": [
     {
-      "name": "Shazmir Ashveil",
+      "name": "Shazmir",
       "basedOn": "Shazmeer",
       "gender": "male",
       "breed": "Lykoi",
@@ -93,7 +94,7 @@
       ]
     },
     {
-      "name": "Hidayn Windbrace",
+      "name": "Hidayn",
       "basedOn": "Hidayat",
       "gender": "male",
       "breed": "Scottish Fold",
@@ -140,7 +141,7 @@
       "redesignPrompt": "Use case: identity-preserve.\nAsset type: square full-bleed character artwork for Project: Prowl's established medieval elemental cat-card collection.\nInput image 1 is the EDIT TARGET and identity anchor: Hidayn Windbrace, currently a crossbow sentry. Images 2–5 are STYLE REFERENCES ONLY: Sizzle Mittens, Whisker Whirl, Moatgate Mau, Charmae Emberhem.\nPrimary request: redesign Hidayn as a medieval GUST GLIDER SOLDIER with a strapped-on wood-and-cloth wing rig. Intentionally change the pose and equipment; preserve his identity, compact feline proportions and collection finish. REMOVE THE CROSSBOW, bolt, bowstring and stone ledge entirely. The glider is his primary prop, no secondary weapon clutter.\nIdentity invariants: SAME male CREAM SCOTTISH FOLD CAT, green eyes, rounded cheeks, short feline muzzle, focused closed-mouth expression, ONE cream tail, TWO SMALL feline ears folded forward close against his crown (not long spaniel ears, horns or upright ears). Same large expressive head, very short neck, short round torso, broad haunches, SHORT cat limbs. Not an adult human, flying squirrel or generic helmeted knight.\nClothing: keep the short MOSS-GREEN quilted jack, ochre trim, one brown leather shoulder guard, simple brown bracers and plain belt. Add a believable brown LEATHER FLIGHT HARNESS over that jack, broad straps around both shoulders and waist visibly connecting to ONE central wooden glider mounting behind the upper back. Soldier/scout gear made of medieval cloth, timber and leather, no modern tactical vest, aircraft equipment, parachute backpack, metal machine or fancy new insignia.\nPose: AIRBORNE in a controlled shallow descending glide, compact torso leaning modestly forward. Head LEVEL and alert, eyes scanning the landing direction in a slight three-quarter turn, BOTH eyes visible. His TWO SHORT FORELEGS emerge from the shoulders through bracers; TWO rounded cream forepaws grip separate positions on ONE horizontal wooden CONTROL BAR at lower chest height. Paw contacts and shoulder connections visible, no human fingers. Bar is below his face and attached by TWO clearly continuous simple supports to the same glider frame, not a floating stick. TWO short HIND LEGS bend from the haunches and tuck beneath the short jacket, with TWO distinct cream hind paws visible and anatomically attached. No long adult human legs, third landing foot, extra arm, dangling detached paw or a foot fused to the tail. Four feline limbs total, ONE tail clearly separate from wing braces.\nGlider equipment: ONE coherent BACK-MOUNTED glider frame with TWO balanced wing panels spread to either side and slightly ABOVE his shoulders. BOTH panels are one device joined at a visible central wooden mounting, structurally continuous to the harness. Each wing has a chunky wooden leading edge and THREE simple wooden ribs supporting taut pale-cream LINEN with broad moss-green sections. Clean triangulated wing shape with a smooth or gently segmented trailing edge, simple few lashings at the central joints. Equipment resembles a small medieval craft powered by gust magic, not biological angel/bat wings. Wings must NOT grow from his ears or forelegs. No feathers, webbing hands, duplicate sets of wings, modern hang-glider tubing, nylon sail, propeller, jetpack, strings floating into nothing, fuselage, wheels or runway.\nGust action: ONE broad GREEN/TEAL wind sweep below and around the wings with at most two leaves, supporting a controlled glide. It never hides the harness junction, hands, feet, eyes or continuous frame. Wings and wood connections must remain graphically readable.\nComposition: square 1254x1254 opaque artwork master. Compact cat LARGE in the foreground, oversized head upper-middle; wing span fitted completely inside the canvas with moderate margins, no giant tiny-pilot landscape composition. Full folded ears, four paws, tail and both wing tips inside canvas. Foreground body partly overlaps the wing root with honest occlusion, both wing halves clearly attached to the same back harness. Both eyes visible clear of upper corner badge zones. Sparse SKY-BLUE field with ONE large warm-CREAM circle, no ground ledge, buildings, distant silhouettes or other animals.\nExact collection finish: SAME ARTIST, bold warm-black exterior contour, thin deliberate interior lines, smooth matte flat colour masses with ONE crisp hard-edged cel shadow per material and tiny flat highlights. Fur in grouped silhouette tufts, not strands. Keep the same detail density as existing cards despite the wing prop. No hatching, grain, soft gradients, glowing rim light, bloom, photorealism, painterly rendering, shiny 3D or technical schematic.\nARTWORK ONLY: no card frame, text, numbers, watermark, signature, logo or extra objects."
     },
     {
-      "name": "Isai Tidebind",
+      "name": "Isai",
       "basedOn": "Isaiah",
       "gender": "male",
       "breed": "Snowshoe",

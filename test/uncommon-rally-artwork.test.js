@@ -8,9 +8,9 @@ const rareManifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", 
 
 test("Uncommon Rally artwork preserves the three approved character identities", () => {
   assert.deepEqual(manifest.cards.map(({ name, gender, breed, element }) => ({ name, gender, breed, element })), [
-    { name: "Charmae Emberhem", gender: "female", breed: "Havana Brown", element: "ember" },
-    { name: "Aakith Wayfinder", gender: "male", breed: "American Curl", element: "gust" },
-    { name: "Sajrin Shellwright", gender: "male", breed: "Turkish Van", element: "tide" },
+    { name: "Charmae", gender: "female", breed: "Havana Brown", element: "ember" },
+    { name: "Aakith", gender: "male", breed: "American Curl", element: "gust" },
+    { name: "Sajrin", gender: "male", breed: "Turkish Van", element: "tide" },
   ]);
   for (const card of manifest.cards) {
     assert.deepEqual(card.intendedStats, { rarity: "uncommon", role: "rally", power: 5 });
@@ -20,7 +20,7 @@ test("Uncommon Rally artwork preserves the three approved character identities",
   assert.equal(manifest.styleReferences.length, 3);
 });
 
-test("Charmae's surname and Aakith's table, map, hind leg and matching tunic revisions are documented", () => {
+test("Charmae's earlier name and Aakith's table, map, hind leg and matching tunic revisions are documented", () => {
   const [charmae, aakith] = manifest.cards;
   assert.equal(charmae.previousName, "Charmae Hearthstitch");
   assert.equal(charmae.asset, "charmae-emberhem.png");

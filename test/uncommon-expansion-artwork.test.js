@@ -10,9 +10,9 @@ const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf
 
 test("the additional Uncommon artwork preserves the approved friends, breeds and role gaps", () => {
   assert.deepEqual(manifest.cards.map(({ name, basedOn, breed, element, intendedStats }) => ({ name, basedOn, breed, element, intendedStats })), [
-    { name: "Shazmir Ashveil", basedOn: "Shazmeer", breed: "Lykoi", element: "ember", intendedStats: { rarity: "uncommon", role: "link", power: 5 } },
-    { name: "Hidayn Windbrace", basedOn: "Hidayat", breed: "Scottish Fold", element: "gust", intendedStats: { rarity: "uncommon", role: "vanguard", power: 5 } },
-    { name: "Isai Tidebind", basedOn: "Isaiah", breed: "Snowshoe", element: "tide", intendedStats: { rarity: "uncommon", role: "finisher", power: 5 } },
+    { name: "Shazmir", basedOn: "Shazmeer", breed: "Lykoi", element: "ember", intendedStats: { rarity: "uncommon", role: "link", power: 5 } },
+    { name: "Hidayn", basedOn: "Hidayat", breed: "Scottish Fold", element: "gust", intendedStats: { rarity: "uncommon", role: "vanguard", power: 5 } },
+    { name: "Isai", basedOn: "Isaiah", breed: "Snowshoe", element: "tide", intendedStats: { rarity: "uncommon", role: "finisher", power: 5 } },
   ]);
   assert.match(manifest.generator, /Built-in ImageGen/);
   assert.equal(manifest.styleReferences.length, 4);
@@ -39,8 +39,8 @@ test("new Uncommon PNG masters match the existing square Rally master dimensions
 
 test("the wave-rider and glider redesigns retain their exact original drafts", () => {
   assert.equal(manifest.version, 7);
-  const hidayn = manifest.cards.find(card => card.name === "Hidayn Windbrace");
-  const isai = manifest.cards.find(card => card.name === "Isai Tidebind");
+  const hidayn = manifest.cards.find(card => card.name === "Hidayn");
+  const isai = manifest.cards.find(card => card.name === "Isai");
   assert.match(hidayn.characterDescription, /glider soldier/);
   assert.match(hidayn.redesignPrompt, /glider soldier/i);
   assert.match(hidayn.latestRevisionPrompt, /wing tips/i);
@@ -63,7 +63,7 @@ test("the wave-rider and glider redesigns retain their exact original drafts", (
 });
 
 test("Shazmir's neutral-grip revision preserves earlier masters and excludes the rejected backhand holds", () => {
-  const shazmir = manifest.cards.find(card => card.name === "Shazmir Ashveil");
+  const shazmir = manifest.cards.find(card => card.name === "Shazmir");
   const preserved = shazmir.revisionHistory.find(revision => revision.type === "original-grip-preserved");
   assert.equal(preserved.asset, "shazmir-ashveil-original-grip.png");
   const backup = readFileSync(new URL(preserved.asset, artworkFolder));
@@ -88,7 +88,7 @@ test("Shazmir's neutral-grip revision preserves earlier masters and excludes the
 });
 
 test("Shazmir's toe-count correction records its focused prompt and preserves the exact neutral-grip master", () => {
-  const shazmir = manifest.cards.find(card => card.name === "Shazmir Ashveil");
+  const shazmir = manifest.cards.find(card => card.name === "Shazmir");
   const previous = shazmir.revisionHistory.find(revision => revision.type === "neutral-grip-preserved-before-toe-count-correction");
   assert.ok(previous);
   assert.equal(previous.asset, "shazmir-ashveil-neutral-grip-before-toe-fix.png");
@@ -111,7 +111,7 @@ test("Shazmir's toe-count correction records its focused prompt and preserves th
 });
 
 test("Isai's right-facing head edit retains the exact previous wave-rider master and head-only edit intent", () => {
-  const isai = manifest.cards.find(card => card.name === "Isai Tidebind");
+  const isai = manifest.cards.find(card => card.name === "Isai");
   const previous = isai.revisionHistory.find(revision => revision.type === "wave-rider-head-left-preserved");
   assert.ok(previous);
   assert.equal(previous.asset, "isai-tidebind-before-head-turn.png");

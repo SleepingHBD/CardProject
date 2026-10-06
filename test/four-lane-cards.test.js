@@ -60,7 +60,7 @@ test("Jyawaye's rename updates display and accessibility text without changing p
   const context = fixture();
   const cards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_RALLY_CARDS)", context));
   const card = cards.find(card => card.id === "four-lane-jiawen-barleybreeze");
-  assert.equal(card.name, "Jyawaye Fieldwhisper");
+  assert.equal(card.name, "Jyawaye");
   assert.equal(card.art, "jiawen-barleybreeze");
   assert.equal(card.artworkSource, "./assets/cards/four-lane/jiawen-barleybreeze.png");
   assert.equal(card.move, "Harvest Breeze");
@@ -68,9 +68,30 @@ test("Jyawaye's rename updates display and accessibility text without changing p
     element: "gust", rarity: "common", role: "rally", power: 4,
   });
   runInNewContext("renderFourLaneCards()", context);
-  assert.match(context.ui.fourLaneCardGallery.innerHTML, /<strong>Jyawaye Fieldwhisper<\/strong>/);
-  assert.match(context.ui.fourLaneCardGallery.innerHTML, /aria-label="Jyawaye Fieldwhisper, Gust, Common, Power 4, Rally role, preview only"/);
+  assert.match(context.ui.fourLaneCardGallery.innerHTML, /<strong>Jyawaye<\/strong>/);
+  assert.match(context.ui.fourLaneCardGallery.innerHTML, /aria-label="Jyawaye, Gust, Common, Power 4, Rally role, preview only"/);
   assert.doesNotMatch(context.ui.fourLaneCardGallery.innerHTML, /Jiawen Barleybreeze/);
+});
+
+test("all twelve new cards use first names in both visible and accessible labels without changing asset identities", () => {
+  const context = fixture();
+  const cards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_CARDS)", context));
+  const expected = [
+    ["Hareth", "hareth-hearthbeat"], ["Megwyn", "megwyn-windwhistle"], ["Deshone", "deshone-dewguard"],
+    ["Charmae", "charmae-emberhem"], ["Aakith", "aakith-wayfinder"], ["Sajrin", "sajrin-shellwright"],
+    ["Lucan", "lucan-cinderclay"], ["Jyawaye", "jiawen-barleybreeze"], ["Siewen", "siewen-rainkeeper"],
+    ["Shazmir", "shazmir-ashveil"], ["Hidayn", "hidayn-windbrace"], ["Isai", "isai-tidebind"],
+  ];
+  assert.deepEqual(cards.map(card => [card.name, card.art]), expected);
+  assert.equal(new Set(cards.map(card => card.name)).size, 12);
+  for (const card of cards) {
+    assert.equal(card.id, `four-lane-${card.art}`);
+    assert.equal(card.artworkSource, `./assets/cards/four-lane/${card.art}.png`);
+    assert.match(card.name, /^[A-Za-z]+$/);
+    const markup = runInNewContext(`cardMarkup(FOUR_LANE_CARDS[${cards.indexOf(card)}], false, -1, "four-lane-preview")`, context);
+    assert.match(markup, new RegExp(`<strong>${card.name}</strong>`));
+    assert.match(markup, new RegExp(`aria-label="${card.name}, `));
+  }
 });
 
 test("the preview reuses rarity frames with correct role labels, icons and safe non-playable markup", () => {

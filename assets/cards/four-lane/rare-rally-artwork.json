@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "namingNote": "Current card names use first names only. Historical artwork prompts and revision names retain their original wording as provenance; asset filenames and stats are unchanged.",
   "status": "Framed card previews in the separate four-lane mode; not added to the live three-lane card pool. Rally gameplay is not active yet.",
   "generator": "Built-in ImageGen; no CLI/API fallback used.",
   "revisionNote": "Original prompts and anatomy corrections are retained as provenance. Where present, latestRevisionPrompt describes the current artwork and overrides the original costume/breed brief.",
@@ -14,7 +15,7 @@
   ],
   "cards": [
     {
-      "name": "Megwyn Windwhistle",
+      "name": "Megwyn",
       "gender": "female",
       "breed": "Devon Rex",
       "element": "gust",
@@ -29,7 +30,7 @@
       "revisionPrompt": "Use case: precise-object-edit. Image 1 is the edit target, Megwyn Windwhistle. Change ONLY the tail to make it appropriate for a short-curly-coated Devon Rex: replace the overly fluffy fox-like plume on the lower-left with a slimmer, gently tapering cream cat tail with a few subtle grouped curl marks. Preserve the existing upward-curled direction and visible continuous attachment at her hip, but remove the large shaggy tufts and excessive volume. This is ONE tail, not a second appendage. Keep the curve clearly separate from her two seated hind legs and both flute-holding forelegs.\nPreserve everything else pixel-faithfully: same cute cream Devon Rex head, very large cat ears, grouped forehead curls, green eyes, expression, feather, sage tunic, forest-green embroidered waistcoat, brown pouch, flute and both grips, two hind paws, stone seat, background circle, wind curls, grass and seeds, square composition and same clean bold-inked flat cel-shaded collection style. Do not change her face, paws, flute, pose, outfit or background. No lettering, card frame or watermark."
     },
     {
-      "name": "Hareth Hearthbeat",
+      "name": "Hareth",
       "gender": "male",
       "breed": "British Shorthair",
       "element": "ember",
@@ -46,7 +47,7 @@
       "revisionPrompt": "Use case: precise-object-edit. Image 1 is the edit target, Hareth Hearthbeat. Make ONE eye-colour correction only: both eyes should have clearly visible amber-gold irises around their dark pupils, matching the warm amber cat eyes of Project: Prowl's Fire cards. Keep the pupils large, keep their existing gaze and white highlights, and preserve the original eye shape, outlines and expression. The amber iris should be a broad simple flat shape, not realistic radial texture.\nPreserve EVERYTHING ELSE: same stocky copper-orange British Shorthair, face, muzzle, brows, grin, head size, four limbs, paws and drumstick grips, cream rolled sleeves, brick-red doublet, leather harness, drum and emblem, tail, brick courtyard, flags, background, framing, exact palette outside the two eye irises and same clean bold-inked flat cel-shaded collection style. No other changes, no lettering, no card frame or watermark."
     },
     {
-      "name": "Deshone Dewguard",
+      "name": "Deshone",
       "gender": "male",
       "breed": "Somali",
       "element": "tide",

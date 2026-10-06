@@ -7,7 +7,7 @@ const manifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", artw
 
 test("the new Rare Rally artwork has the approved names and one character per element", () => {
   assert.deepEqual(manifest.cards.map(card => card.name), [
-    "Megwyn Windwhistle", "Hareth Hearthbeat", "Deshone Dewguard",
+    "Megwyn", "Hareth", "Deshone",
   ]);
   assert.deepEqual(manifest.cards.map(card => card.element).sort(), ["ember", "gust", "tide"]);
   for (const card of manifest.cards) {

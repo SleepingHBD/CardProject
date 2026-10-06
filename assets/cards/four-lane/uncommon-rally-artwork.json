@@ -1,8 +1,9 @@
 {
   "version": 6,
+  "namingNote": "Current card names use first names only. Historical artwork prompts and revision names retain their original wording as provenance; asset filenames and stats are unchanged.",
   "status": "Framed card previews in the separate four-lane mode; not added to the live three-lane card pool. Rally gameplay is not active yet.",
   "generator": "Built-in ImageGen; no CLI/API fallback used.",
-  "revisionNote": "Original concept prompts and style-transfer edits are retained as provenance. Where present, latestRevisionPrompt describes the newest artwork. Charmae's artwork is unchanged; her approved new surname is Emberhem.",
+  "revisionNote": "Original concept prompts and style-transfer edits are retained as provenance. Where present, latestRevisionPrompt describes the newest artwork. Charmae's earlier surnames are historical only; her current name is Charmae.",
   "imageDimensions": {
     "width": 1254,
     "height": 1254
@@ -16,7 +17,7 @@
   ],
   "cards": [
     {
-      "name": "Charmae Emberhem",
+      "name": "Charmae",
       "gender": "female",
       "breed": "Havana Brown",
       "element": "ember",
@@ -34,7 +35,7 @@
       "lore": "Every stitch steadies the banner."
     },
     {
-      "name": "Aakith Wayfinder",
+      "name": "Aakith",
       "gender": "male",
       "breed": "American Curl",
       "element": "gust",
@@ -68,7 +69,7 @@
       "costumeDescription": "Short forest-green hooded tunic with cream lining and trim, including a matching green skirt panel and cream hem visibly ending above each hind leg. The wooden table correctly occludes the tunic."
     },
     {
-      "name": "Sajrin Shellwright",
+      "name": "Sajrin",
       "gender": "male",
       "breed": "Turkish Van",
       "element": "tide",

@@ -65,15 +65,15 @@ const CARD_LIBRARY = [
 const HAND_SIZE = 6;
 // Reserved for the separate four-lane preview; never included in freshDeck().
 const FOUR_LANE_RALLY_CARDS = Object.freeze([
-  ["ember", 6, "Hareth Hearthbeat", "Kindling Cadence", "A steady beat. A braver formation.", "rare", "hareth-hearthbeat"],
-  ["gust", 6, "Megwyn Windwhistle", "Second Wind Serenade", "One melody lifts every paw.", "rare", "megwyn-windwhistle"],
-  ["tide", 6, "Deshone Dewguard", "Springwater Resolve", "Keeps weary paws in the fight.", "rare", "deshone-dewguard"],
-  ["ember", 5, "Charmae Emberhem", "Golden Mend", "Every stitch steadies the banner.", "uncommon", "charmae-emberhem"],
-  ["gust", 5, "Aakith Wayfinder", "Windward Route", "No paw left wandering.", "uncommon", "aakith-wayfinder"],
-  ["tide", 5, "Sajrin Shellwright", "Shellward Shelter", "Built to weather the worst.", "uncommon", "sajrin-shellwright"],
-  ["ember", 4, "Lucan Cinderclay", "Kilnkindle", "Small cups. Warm company.", "common", "lucan-cinderclay"],
-  ["gust", 4, "Jyawaye Fieldwhisper", "Harvest Breeze", "The wind lends a working paw.", "common", "jiawen-barleybreeze"],
-  ["tide", 4, "Siewen Rainkeeper", "Rainshare", "Every drop is worth sharing.", "common", "siewen-rainkeeper"],
+  ["ember", 6, "Hareth", "Kindling Cadence", "A steady beat. A braver formation.", "rare", "hareth-hearthbeat"],
+  ["gust", 6, "Megwyn", "Second Wind Serenade", "One melody lifts every paw.", "rare", "megwyn-windwhistle"],
+  ["tide", 6, "Deshone", "Springwater Resolve", "Keeps weary paws in the fight.", "rare", "deshone-dewguard"],
+  ["ember", 5, "Charmae", "Golden Mend", "Every stitch steadies the banner.", "uncommon", "charmae-emberhem"],
+  ["gust", 5, "Aakith", "Windward Route", "No paw left wandering.", "uncommon", "aakith-wayfinder"],
+  ["tide", 5, "Sajrin", "Shellward Shelter", "Built to weather the worst.", "uncommon", "sajrin-shellwright"],
+  ["ember", 4, "Lucan", "Kilnkindle", "Small cups. Warm company.", "common", "lucan-cinderclay"],
+  ["gust", 4, "Jyawaye", "Harvest Breeze", "The wind lends a working paw.", "common", "jiawen-barleybreeze"],
+  ["tide", 4, "Siewen", "Rainshare", "Every drop is worth sharing.", "common", "siewen-rainkeeper"],
 ].map(([element, power, name, move, lore, rarity, art]) => Object.freeze({
   id: `four-lane-${art}`,
   element,
@@ -87,9 +87,9 @@ const FOUR_LANE_RALLY_CARDS = Object.freeze([
   artworkSource: `./assets/cards/four-lane/${art}.png`,
 })));
 const FOUR_LANE_UNCOMMON_CARDS = Object.freeze([
-  ["ember", 5, "Shazmir Ashveil", "Ashen Flourish", "A little flourish. A lot of fire.", "link", "shazmir-ashveil"],
-  ["gust", 5, "Hidayn Windbrace", "Firstwind Descent", "First to land. Ready to stand.", "vanguard", "hidayn-windbrace"],
-  ["tide", 5, "Isai Tidebind", "Closing Current", "One last wave. No way back.", "finisher", "isai-tidebind"],
+  ["ember", 5, "Shazmir", "Ashen Flourish", "A little flourish. A lot of fire.", "link", "shazmir-ashveil"],
+  ["gust", 5, "Hidayn", "Firstwind Descent", "First to land. Ready to stand.", "vanguard", "hidayn-windbrace"],
+  ["tide", 5, "Isai", "Closing Current", "One last wave. No way back.", "finisher", "isai-tidebind"],
 ].map(([element, power, name, move, lore, tactic, art]) => Object.freeze({
   id: `four-lane-${art}`,
   element,

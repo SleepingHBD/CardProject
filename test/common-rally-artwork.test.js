@@ -8,9 +8,9 @@ const rareManifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", 
 
 test("Common Rally artwork preserves the three approved names, breeds and element assignments", () => {
   assert.deepEqual(manifest.cards.map(({ name, basedOn, gender, breed, element }) => ({ name, basedOn, gender, breed, element })), [
-    { name: "Lucan Cinderclay", basedOn: "Lucas", gender: "male", breed: "Singapura", element: "ember" },
-    { name: "Jyawaye Fieldwhisper", basedOn: "Jia Wei", gender: "male", breed: "Korat", element: "gust" },
-    { name: "Siewen Rainkeeper", basedOn: "Siew Hean", gender: "male", breed: "LaPerm", element: "tide" },
+    { name: "Lucan", basedOn: "Lucas", gender: "male", breed: "Singapura", element: "ember" },
+    { name: "Jyawaye", basedOn: "Jia Wei", gender: "male", breed: "Korat", element: "gust" },
+    { name: "Siewen", basedOn: "Siew Hean", gender: "male", breed: "LaPerm", element: "tide" },
   ]);
   for (const card of manifest.cards) {
     assert.deepEqual(card.intendedStats, { rarity: "common", role: "rally", power: 4 });
