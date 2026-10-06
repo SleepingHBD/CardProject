@@ -32,6 +32,7 @@ function fixture() {
   runInNewContext([
     gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE =")),
     gameSource.slice(gameSource.indexOf("const FOUR_LANE_RALLY_CARDS ="), gameSource.indexOf("const DIFFICULTIES =")),
+    sourceFunction("cardRoleDefinition"),
     sourceFunction("cardMarkup"),
     sourceFunction("renderFourLaneCards"),
     sourceFunction("freshDeck"),
@@ -119,7 +120,7 @@ test("the preview reuses rarity frames with correct role labels, icons and safe 
   assert.doesNotMatch(markup, /data-card-id|draggable="true"/);
   assert.match(pageSource, /symbol id="tactic-icon-banner"/);
   assert.match(pageSource, /id="fourLaneCardGallery" role="list"/);
-  assert.match(pageSource, /their gameplay bonus is not active yet/);
+  assert.match(pageSource, /These cards are now playable in Four-Lane Mode/);
 });
 
 test("all three additional Uncommon frames match the approved final artwork and intended roles", () => {

@@ -356,12 +356,21 @@
           <div>
             <p class="four-lane-preview-eyebrow">Project: Prowl <span>Work in progress</span></p>
             <h1 id="fourLanePreviewTitle" tabindex="-1">Four-Lane Mode</h1>
-            <p>A separate workbench for the next evolution of our duels.</p>
+            <p>A playable prototype with personal decks, Rally and four lanes.</p>
           </div>
           <button class="main-menu-option-button four-lane-return-button" id="fourLaneReturnButton" type="button">
             Return to Main Menu
           </button>
         </header>
+
+        <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
+          <div>
+            <h2 id="fourLaneLaunchTitle">Play the first four-lane duel</h2>
+            <p>Commit 1–4 cards. Start with 7 in hand, then draw up to 3 each round, without exceeding 7.</p>
+            <p>Both players start with one copy of each of the 36 cards, in separate shuffled decks. Deckbuilding and rival progression come later.</p>
+          </div>
+          <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Start Four-Lane Duel</button>
+        </section>
 
         <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
           <div class="four-lane-card-showcase-heading">
@@ -369,7 +378,7 @@
             <p>Nine Rally cards, plus three Uncommon cards: Fire Link, Gust Vanguard and Water Finisher.</p>
           </div>
           <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Four-Lane card previews"></div>
-          <p class="four-lane-card-showcase-note">Rally is a new support role for this mode. These cards are previews; their gameplay bonus is not active yet.</p>
+          <p class="four-lane-card-showcase-note">Rally gives +1 Power to the card committed directly after it. These cards are now playable in Four-Lane Mode.</p>
         </section>
 
         <div class="four-lane-preview-layout">
@@ -405,7 +414,7 @@
           </aside>
         </div>
 
-        <p class="four-lane-preview-notice"><strong>Preview only — not playable yet.</strong> This mode will be developed separately. Normal Play still uses the existing three-lane game.</p>
+        <p class="four-lane-preview-notice"><strong>Playable prototype — balance testing in progress.</strong> Normal Play still uses the existing three-lane game.</p>
       </div>
     </section>
 
@@ -1158,6 +1167,26 @@
       <button class="primary-button rulebook-finish" data-close-rulebook type="button">Return</button>
     </dialog>
 
+    <dialog class="game-dialog four-lane-rules-dialog" id="fourLaneRulesDialog" aria-labelledby="fourLaneRulesTitle">
+      <button class="dialog-close" data-close-four-lane-rules type="button" aria-label="Close Four-Lane rules">×</button>
+      <p class="eyebrow">FOUR-LANE MODE · PROTOTYPE</p>
+      <h2 id="fourLaneRulesTitle">Four-Lane Rules</h2>
+      <div class="four-lane-rules-content">
+        <section><h3>Build a formation</h3><p>Commit 1–4 cards in order. Lane 1 faces Lane 1, Lane 2 faces Lane 2, and so on. Every role can be placed in any lane; placement only affects its bonus.</p></section>
+        <section><h3>Win a lane, then the round</h3><p>Clash Total = printed Power + Element Edge + your card's role bonus + received Rally bonus. The higher total wins the lane; equal totals draw.</p><p>Fire beats Gust, Gust beats Water, and Water beats Fire. The element with the advantage gains +2.</p><p>Each lane win scores 2 Round Points. Each extra card with no opposing card scores 1 Round Point, even if you won no lanes. Drawn lanes score nothing. Higher Round Points wins the round; equal points draw.</p></section>
+        <section><h3>Four formation roles</h3><ul>
+          <li><b>Vanguard:</b> +1 when committed in Lane 1.</li>
+          <li><b>Link:</b> +1 in Lane 2, 3 or 4 when the card directly before it has a different element.</li>
+          <li><b>Finisher:</b> +1 when committed last in a formation of at least two cards.</li>
+          <li><b>Rally:</b> Gives +1 Power to the card committed directly after it—not itself. The receiving card can also earn its own role bonus. A Rally with no following card gives no bonus. Receiving Rally does not increase the bonus passed onwards.</li>
+        </ul></section>
+        <section><h3>Choose a trophy</h3><p>If you win the round and won any lanes, claim one of your lane-winning cards. This still applies when extra-card points helped you win. If you won no lanes, your first unopposed card becomes the trophy. A drawn round awards no trophy.</p><p>The trophy leaves your deck for this duel. Collect 2 Fire, 2 Gust and 2 Water trophies to win the match.</p></section>
+        <section><h3>Manage your own hand</h3><p>Start with 7 cards. Between rounds, draw up to 3 without exceeding 7 cards in hand. Four-card pushes gradually reduce your reserves; smaller formations rebuild them.</p><p>You and your opponent have separate decks and discard piles. All committed cards except the claimed trophy go into their owner's discard pile. Only that owner's empty draw pile can trigger a reshuffle.</p></section>
+        <section><h3>Read your opponent</h3><p>Guided shows the opponent's elements and Power ranges. Instinct conceals their formation but reveals three persistent habits. Blind conceals both formation and habits. Previous Rounds History records all four lanes after a round is complete.</p></section>
+      </div>
+      <button class="primary-button" data-close-four-lane-rules type="button">Return</button>
+    </dialog>
+
     <dialog class="game-dialog result-dialog" id="resultDialog">
       <div class="result-burst" aria-hidden="true">✦</div>
       <p class="eyebrow" id="resultEyebrow">MATCH COMPLETE</p>
@@ -1172,6 +1201,7 @@
 
     <script defer src="./src/viewport.js"></script>
     <script defer src="./src/rules.js"></script>
+    <script defer src="./src/four-lane-rules.js"></script>
     <script defer src="./src/audio.js"></script>
     <script defer src="./src/game.js"></script>
   </body>

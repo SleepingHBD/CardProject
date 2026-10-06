@@ -1,4 +1,4 @@
-/* An isolated landing page: no changes to the live three-lane board. */
+/* Four-Lane lobby and mode-scoped layout; Normal Play keeps its own geometry. */
 .main-menu-four-lane-button {
   display: flex;
   align-items: center;
@@ -303,6 +303,123 @@
 
 .four-lane-preview-notice strong {
   color: #efddb4;
+}
+
+.four-lane-launch {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  border: 1px solid #bd9557;
+  border-radius: 6px;
+  background: #ba8b3c12;
+}
+
+.four-lane-launch h2 {
+  margin: 0 0 8px;
+  font: 800 21px/1.4 "Cinzel", serif;
+  color: #f1d492;
+}
+
+.four-lane-launch p { margin: 6px 0; color: #d4c4a8; font-size: 15px; line-height: 1.5; }
+.four-lane-launch button { flex: 0 0 240px; min-height: 52px; padding: 12px; }
+.four-lane-rules-dialog { width: min(820px, calc(100vw - 24px)); }
+.four-lane-rules-content { display: grid; gap: 16px; margin-bottom: 20px; line-height: 1.6; }
+.four-lane-rules-content h3 { margin: 0 0 6px; font-family: "Cinzel", serif; }
+.four-lane-rules-content p { margin: 6px 0; }
+.four-lane-rules-content ul { padding-left: 22px; }
+.four-lane-rules-content li { margin-bottom: 8px; }
+
+body[data-duel-mode="four-lane"] .duel-table .play-zone {
+  width: min(100%, calc((var(--duel-card-width) * 4) + 24px));
+}
+
+body[data-duel-mode="four-lane"] .duel-table .formation-slot,
+body[data-duel-mode="four-lane"] .duel-table .clash-card {
+  flex: 0 1 var(--duel-card-width);
+  min-width: 0;
+}
+
+/* Reserve space for commit/trophy controls even when four lane results are shown. */
+body[data-duel-mode="four-lane"] .control-panel .tactics-board {
+  min-height: 0;
+  height: auto;
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 900px) {
+  body[data-duel-mode="four-lane"] .control-panel {
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    align-content: stretch;
+  }
+}
+
+body[data-duel-mode="four-lane"] .play-zone .game-card { width: 100%; min-width: 0; }
+body[data-duel-mode="four-lane"] .opponent-tells { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body[data-duel-mode="four-lane"] .art-vignette { pointer-events: none; }
+body[data-duel-mode="four-lane"] .game-card[data-card-template="hareth-hearthbeat"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="megwyn-windwhistle"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="deshone-dewguard"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="charmae-emberhem"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="aakith-wayfinder"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="sajrin-shellwright"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="lucan-cinderclay"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="jiawen-barleybreeze"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="siewen-rainkeeper"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="shazmir-ashveil"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="hidayn-windbrace"] .card-art img,
+body[data-duel-mode="four-lane"] .game-card[data-card-template="isai-tidebind"] .card-art img { object-position: center 25%; }
+
+.history-lane-grid.history-four-lanes { grid-template-columns: 70px repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 700px) {
+  .four-lane-launch { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+  .four-lane-launch button { flex-basis: auto; }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  body[data-duel-mode="four-lane"] .duel-table .play-zone { width: 100%; height: clamp(100px, 36vw, 160px); }
+  body[data-duel-mode="four-lane"] .duel-table .battlefield { height: clamp(252px, 82vw, 348px); }
+  body[data-duel-mode="four-lane"] .duel-table :is(.formation-slot, .clash-card) { height: 100%; flex: 1 1 0; }
+  body[data-duel-mode="four-lane"] .play-zone .game-card { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) 24px 24px; padding: 2px; }
+  body[data-duel-mode="four-lane"] .play-zone .card-art { height: auto; min-height: 0; }
+  body[data-duel-mode="four-lane"] .play-zone .card-info { min-height: 0; padding: 2px; }
+  body[data-duel-mode="four-lane"] .play-zone .card-ability { height: auto; min-height: 0; padding: 2px; }
+  body[data-duel-mode="four-lane"] .play-zone .card-ability small { display: none; }
+  body[data-duel-mode="four-lane"] .play-zone .card-info strong { font-size: 8px; }
+  body[data-duel-mode="four-lane"] .play-zone .card-info small { font-size: 5px; }
+  .history-lane-grid.history-four-lanes { grid-template-columns: 46px repeat(4, minmax(0, 1fr)); gap: 0 2px; }
+  .history-four-lanes .history-cell-stats { gap: 2px; }
+  .history-four-lanes .history-lane-cell { --history-stat-size: clamp(12px, 3.6vw, 20px); }
+  .history-four-lanes .history-cell-power { font-size: 17px; }
+  .history-four-lanes .history-cell-bonus { font-size: 10px; }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 600px) {
+  body[data-duel-mode="four-lane"] .duel-table .play-zone { width: min(100%, calc((var(--landscape-duel-card-width) * 4) + 12px)); height: auto; }
+  body[data-duel-mode="four-lane"] .duel-table :is(.formation-slot, .clash-card) { flex: 0 1 var(--landscape-duel-card-width); height: 100%; }
+  body[data-duel-mode="four-lane"] .matchup-forecast { overflow-y: auto; }
+  body[data-duel-mode="four-lane"] .lane-result {
+    min-width: 0;
+    width: 100%;
+    padding: 2px 1px;
+    border-width: 1px;
+    font-size: 6px;
+    letter-spacing: 0;
+  }
+  body[data-duel-mode="four-lane"] .lane-result small { font-size: 5px; letter-spacing: 0; }
+  .history-lane-grid.history-four-lanes { grid-template-columns: 52px repeat(4, minmax(0, 1fr)); }
+  .history-four-lanes .history-cell-stats { gap: 3px; }
+  .history-four-lanes .history-lane-cell { --history-stat-size: 18px; }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 360px) {
+  body[data-duel-mode="four-lane"] .game-shell {
+    grid-template-rows: 27px minmax(0, 1fr) clamp(90px, 27dvh, 104px);
+  }
 }
 
 @media (max-width: 700px) {

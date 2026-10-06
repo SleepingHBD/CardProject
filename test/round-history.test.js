@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
+import "../src/four-lane-rules.js";
 
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const { ELEMENTS, TACTICS, resolveClashes, getFormationRewardOptions, getElementTrophyCounts } = globalThis.ClawRules;
-const functions = ["snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
+const functions = ["cardRoleDefinition", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
   .map((name) => gameSource.match(new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`))?.[0]);
 assert.ok(functions.every(Boolean), "all history helpers must be loaded from the implementation");
 
@@ -16,6 +17,8 @@ function fixture() {
   const state = { round: 1, difficulty: "blind", previousRoundsHistory: [], playerWins: [], aiWins: [] };
   const context = {
     ELEMENTS, TACTICS, state, getElementTrophyCounts,
+    ClawFourLaneRules: globalThis.ClawFourLaneRules,
+    FOUR_LANE_ROLES: globalThis.ClawFourLaneRules.TACTICS,
     DIFFICULTIES: { blind: { label: "Blind" }, instinct: { label: "Instinct" }, guided: { label: "Guided" } },
     cardDisplayName: (value) => value.name,
     ui: {
@@ -157,4 +160,20 @@ test("history rendering keeps newest rounds first, does not mutate records, and 
 test("history icons have definite dimensions and reopening starts at the newest round", () => {
   assert.match(styleSource, /\.history-cell-role \.tactic-icon \{\s*width: calc\(var\(--history-stat-size\) \* \.82\);\s*height: calc\(var\(--history-stat-size\) \* \.82\);/);
   assert.match(gameSource, /ui\.previousRoundsHistoryDialog\.showModal\(\);\s*ui\.previousRoundsHistoryList\.scrollTop = 0;/);
+});
+
+test("four-lane history retains Lane 4, Rally symbols and received bonuses", () => {
+  const context = fixture();
+  context.state.gameMode = "four-lane";
+  const player = [card("gust", 5), card("tide", 5), card("ember", 4, "rally"), card("gust", 5, "finisher")];
+  const opponent = Array.from({ length: 4 }, () => card("gust", 5, "vanguard"));
+  const resolution = globalThis.ClawFourLaneRules.resolveClashes(player, opponent);
+  const reward = globalThis.ClawFourLaneRules.getFormationRewardOptions(player, opponent, resolution)[0];
+  context.recordCompletedRound(reward, player, opponent, resolution);
+  const markup = context.ui.previousRoundsHistoryList.innerHTML;
+  assert.match(markup, /history-four-lanes/);
+  assert.match(markup, /LANE 4/);
+  assert.match(markup, /#tactic-icon-banner/);
+  assert.match(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 3), /history-cell-bonus">\+2/);
+  assert.equal((markup.match(/class="history-grid-lane"/g) || []).length, 4);
 });
