@@ -27,7 +27,7 @@ test("the in-game menu leaves the top layer before fullscreen changes", () => {
 test("the in-game menu uses a controlled overlay instead of a native modal", () => {
   assert.match(pageSource, /class="game-menu-overlay" id="gameMenuOverlay" hidden/);
   assert.match(pageSource, /id="gameMenuDialog"[\s\S]*?role="dialog"[\s\S]*?aria-modal="true"/);
-  assert.doesNotMatch(pageSource, /<dialog[\s\S]*?id="gameMenuDialog"/);
+  assert.doesNotMatch(pageSource, /<dialog\b[^>]*\bid="gameMenuDialog"/);
   assert.match(gameSource, /function openGameMenu\(\)/);
   assert.match(gameSource, /function closeGameMenu\(\{ restoreFocus = true \} = \{\}\)/);
   assert.match(gameSource, /ui\.gameMenuOverlay\.addEventListener\("keydown", trapGameMenuFocus\)/);

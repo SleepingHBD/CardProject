@@ -746,6 +746,20 @@ let pendingDuelMode = "normal";
 let difficultyPreviousLockedState = true;
 let fourLanePreviewBackground = [];
 let gameMenuPreviousFocus = null;
+const constructedDecks = globalThis.ClawDeckbuilding;
+const fourLaneDeckCatalog = constructedDecks.createCardCatalog([...CARD_LIBRARY, ...FOUR_LANE_CARDS]);
+const fourLaneStarterDecks = constructedDecks.createStarterPresets(fourLaneDeckCatalog);
+let browserDeckStorage;
+try { browserDeckStorage = window.localStorage; } catch { /* Session-only decks remain usable. */ }
+const fourLaneDeckStore = constructedDecks.createDeckStore(fourLaneDeckCatalog, browserDeckStorage);
+let matchFourLaneDeck = fourLaneStarterDecks[0];
+const fourLaneDeckEditor = globalThis.ClawDeckEditor.createController({
+  catalog: fourLaneDeckCatalog, store: fourLaneDeckStore,
+  cardMarkup: card => cardMarkup(card, false, -1, "four-lane-preview"),
+  artworkSource: cardArtworkSource,
+  onOpen() { ui.fourLanePreviewScreen.hidden = true; },
+  onClose() { ui.fourLanePreviewScreen.hidden = false; document.querySelector("#fourLaneDeckEditorButton").focus({ preventScroll: true }); },
+});
 const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
@@ -1874,12 +1888,8 @@ function freshDeck() {
 }
 
 function freshPersonalDeck(side) {
-  const stamp = Date.now();
-  // First playable prototype: one copy of each of the 36 cards per player.
-  // Deck construction and rival-specific lists remain a separate next milestone.
-  return shuffle([...CARD_LIBRARY, ...FOUR_LANE_CARDS].map(card => ({
-    ...card, instanceId: `${side}-${card.id}-${stamp}`,
-  })));
+  const definition = side === "player" ? matchFourLaneDeck : fourLaneStarterDecks[0];
+  return shuffle(constructedDecks.buildDeckInstances(fourLaneDeckCatalog, definition, side));
 }
 
 function drawCard() {
@@ -4260,6 +4270,7 @@ function showMainMenu() {
 }
 
 function hideFourLanePreview() {
+  fourLaneDeckEditor.close(true);
   ui.fourLanePreviewScreen.hidden = true;
   fourLanePreviewBackground.forEach(({ element, inert }) => { element.inert = inert; });
   fourLanePreviewBackground = [];
@@ -4280,6 +4291,7 @@ function showFourLanePreview() {
     .map((element) => ({ element, inert: element.inert }));
   fourLanePreviewBackground.forEach(({ element }) => { element.inert = true; });
   ui.fourLanePreviewScreen.hidden = false;
+  fourLaneDeckEditor.renderLobby();
   renderFourLaneCards();
   ui.fourLanePreviewScreen.scrollTop = 0;
   ui.fourLanePreviewTitle.focus({ preventScroll: true });
@@ -4297,7 +4309,14 @@ function showTutorialMenu() {
 
 function showDifficultyChooser(returnTarget = "main") {
   pendingDuelMode = returnTarget === "four-lane" || (returnTarget === "game" && isFourLaneMode()) ? "four-lane" : "normal";
-  if (returnTarget === "four-lane") hideFourLanePreview();
+  if (returnTarget === "four-lane") {
+    const selected = fourLaneDeckEditor.getSelectedDeck();
+    if (!constructedDecks.validateDeck(fourLaneDeckCatalog, selected).valid) return;
+    // Immutable snapshot: restarting/changing difficulty keeps this match's deck,
+    // even if the saved selection is changed in a later lobby visit.
+    matchFourLaneDeck = Object.freeze({ version: selected.version, name: selected.name, cards: Object.freeze([...selected.cards]) });
+    hideFourLanePreview();
+  }
   document.querySelector("#difficultyIntro").textContent =
     `Build one to ${pendingDuelMode === "four-lane" ? "four" : "three"} cards and review completed rounds in Previous Rounds History. Guided reveals live clues, Instinct reveals habits, and Blind conceals both.`;
   document.querySelector(".instinct-option em").textContent =

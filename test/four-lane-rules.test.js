@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
 import "../src/four-lane-rules.js";
+import "../src/deckbuilding.js";
 
 const normal = globalThis.ClawRules;
 const four = globalThis.ClawFourLaneRules;
@@ -445,20 +446,25 @@ test("four-lane concealment returns four sealed clues and Guided has four positi
   assert.deepEqual(four.buildTellClues(2, "guided"), ["full", "full", "empty", "empty"]);
 });
 
-test("live personal starter decks contain all 36 cards, balanced roles, and owner-specific identities", () => {
-  const context = { shuffle: cards => cards };
-  runInNewContext([
+test("live personal decks use 24 validated cards, allow duplicate templates and keep owner-specific identities", () => {
+  const cardDefinitions = runInNewContext([
     gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE =")),
     gameSource.slice(gameSource.indexOf("const FOUR_LANE_RALLY_CARDS ="), gameSource.indexOf("const DIFFICULTIES =")),
-    sourceFunction("freshPersonalDeck"),
-  ].join("\n"), context);
+    "[...CARD_LIBRARY, ...FOUR_LANE_CARDS]",
+  ].join("\n"));
+  const constructedDecks = globalThis.ClawDeckbuilding;
+  const fourLaneDeckCatalog = constructedDecks.createCardCatalog(cardDefinitions);
+  const fourLaneStarterDecks = constructedDecks.createStarterPresets(fourLaneDeckCatalog);
+  const context = { shuffle: cards => cards, constructedDecks, fourLaneDeckCatalog, fourLaneStarterDecks, matchFourLaneDeck: fourLaneStarterDecks[0] };
+  runInNewContext(sourceFunction("freshPersonalDeck"), context);
   const player = JSON.parse(runInNewContext('JSON.stringify(freshPersonalDeck("player"))', context));
   const opponent = JSON.parse(runInNewContext('JSON.stringify(freshPersonalDeck("opponent"))', context));
-  assert.equal(player.length, 36);
-  assert.equal(new Set(player.map(value => value.art)).size, 36);
+  assert.equal(player.length, 24);
+  assert.equal(new Set(player.map(value => value.instanceId)).size, 24);
+  assert.ok(new Set(player.map(value => value.art)).size < 24);
   for (const element of ["ember", "gust", "tide"]) {
     for (const role of ["vanguard", "link", "finisher", "rally"]) {
-      assert.equal(player.filter(value => value.element === element && value.tactic === role).length, 3);
+      assert.equal(player.filter(value => value.element === element && value.tactic === role).length, 2);
     }
   }
   const ids = new Set(player.map(value => value.instanceId));
