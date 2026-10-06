@@ -789,10 +789,23 @@ function chooseAiCommitment(...args) { return duelRules().chooseAiCommitment(...
 function chooseAiCards(...args) { return duelRules().chooseAiCards(...args); }
 function createAiTraits(...args) { return duelRules().createAiTraits(...args); }
 
+function getExtraCardPoints(cardCount, opposingCount) {
+  return isFourLaneMode() ? duelRules().getExtraCardPoints(cardCount, opposingCount)
+    : Math.max(0, cardCount - opposingCount) * EXTRA_CARD_POINTS;
+}
+
+function getExtraCardLanePoints(index, opposingCount) {
+  return isFourLaneMode() ? duelRules().getExtraCardLanePoints(index, opposingCount)
+    : index >= opposingCount ? EXTRA_CARD_POINTS : 0;
+}
+
 function renderDuelMode() {
   document.body.dataset.duelMode = state.gameMode;
   document.querySelector(".arena").setAttribute("aria-label", `${isFourLaneMode() ? "Four" : "Three"}-lane dueling table`);
   document.querySelector("#gameTitle").textContent = isFourLaneMode() ? "Four-Lane Duel · WIP" : "Trial of the Elements";
+  document.querySelector(".rules-strip .rule-chip.gust").innerHTML = isFourLaneMode()
+    ? "<b>EXTRA</b> Extra cards add 1 Round Point each, up to 2 per side per round"
+    : "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point";
   document.querySelector(".rules-strip .rule-chip.tide").innerHTML = isFourLaneMode()
     ? "<b>TROPHY</b> Claim a lane-winning card; if you won no lanes, claim your first extra card"
     : "<b>TROPHY</b> A round win awards one played card";
@@ -1907,6 +1920,18 @@ function refillHands(openingHand = false) {
 }
 
 function prepareAiPlan() {
+  if (isFourLaneMode()) {
+    state.aiPlan = duelRules().chooseAiFormation(
+      state.aiHand,
+      state.playerWins,
+      state.aiWins,
+      Math.random,
+      state.aiTraits,
+      { history: state.previousRoundsHistory, cardLibrary: [...CARD_LIBRARY, ...FOUR_LANE_CARDS] },
+    );
+    state.aiTellClues = buildTellClues(state.aiPlan.length, state.difficulty);
+    return;
+  }
   const commitment = chooseAiCommitment(
     state.aiHand.length,
     state.playerWins,
@@ -1965,12 +1990,14 @@ function renderOpponentTells() {
   const playerCardCount = state.selectedCardIds.length;
   const aiExtraCards = Math.max(0, state.aiPlan.length - playerCardCount);
   const playerExtraCards = Math.max(0, playerCardCount - state.aiPlan.length);
+  const aiExtraPoints = getExtraCardPoints(state.aiPlan.length, playerCardCount);
+  const playerExtraPoints = getExtraCardPoints(playerCardCount, state.aiPlan.length);
   const formationStatus = playerCardCount === 0
     ? `Build 1–${getMaxPlaySize()} cards`
     : aiExtraCards
-      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}`
+      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${aiExtraPoints} Round ${aiExtraPoints === 1 ? "Point" : "Points"}${aiExtraCards > aiExtraPoints ? " (the 2-point cap)" : ""}`
       : playerExtraCards
-        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraCards} Round ${playerExtraCards === 1 ? "Point" : "Points"}`
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraPoints} Round ${playerExtraPoints === 1 ? "Point" : "Points"}${playerExtraCards > playerExtraPoints ? " (the 2-point cap)" : ""}`
         : "Equal formation size";
   ui.commitmentHint.textContent =
     `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationStatus}`;
@@ -2122,12 +2149,13 @@ function renderMatchupForecast() {
     }
 
     if (!opponentCard) {
+      const points = getExtraCardLanePoints(index, state.aiPlan.length);
       return `
         <span class="forecast-chip forecast-extra-card">
           <i>${index + 1}</i>
-          <b>◆ EXTRA CARD +${EXTRA_CARD_POINTS}</b>
-          <span class="forecast-equation"><strong>+${EXTRA_CARD_POINTS} ROUND POINT</strong></span>
-          <small>No opposing card; adds 1 Round Point instead of clashing</small>
+          <b>◆ EXTRA CARD +${points}</b>
+          <span class="forecast-equation"><strong>+${points} ROUND ${points === 1 ? "POINT" : "POINTS"}</strong></span>
+          <small>${points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
         </span>
       `;
     }
@@ -2277,6 +2305,7 @@ function cardMarkup(
   selectedIndex = -1,
   displayMode = "default",
   formationBonus = null,
+  extraCardPoints = null,
 ) {
   const element = ELEMENTS[card.element];
   const isFourLanePreview = displayMode === "four-lane-preview";
@@ -2286,6 +2315,7 @@ function cardMarkup(
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
   const isExtraCard = displayMode === "extra-card";
+  const extraPoints = isExtraCard ? extraCardPoints ?? EXTRA_CARD_POINTS : 0;
   const displayName = cardDisplayName(card);
   const interactionLabel = isFormationCard
     ? `Remove ${displayName} from lane ${selectedIndex + 1}`
@@ -2293,16 +2323,16 @@ function cardMarkup(
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
       <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
-        <small>${formationBonus.extraCard ? "EXTRA" : "BONUS"}</small>
+        <small>${formationBonus.extraCard ? formationBonus.text === "+0" ? "CAP" : "EXTRA" : "BONUS"}</small>
         <b>${formationBonus.text}</b>
       </span>
     `
     : "";
   const resolvedBonusBadge = isPlayedCard || isExtraCard
     ? `
-      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? `Extra card with no opposing card; adds ${EXTRA_CARD_POINTS} Round Point` : "Bonus not yet resolved"}">
-        <small>${isExtraCard ? "EXTRA" : "BONUS"}</small>
-        <b>${isExtraCard ? `+${EXTRA_CARD_POINTS}` : "+?"}</b>
+      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? extraPoints ? `Extra card with no opposing card; adds ${extraPoints} Round Point` : "Extra card; adds 0 Round Points because the 2-point extra-card cap is reached" : "Bonus not yet resolved"}">
+        <small>${isExtraCard ? extraPoints ? "EXTRA" : "CAP" : "BONUS"}</small>
+        <b>${isExtraCard ? `+${extraPoints}` : "+?"}</b>
       </span>
     `
     : "";
@@ -2439,9 +2469,11 @@ function getFormationBonusPreview(selectedCards, index) {
 
   const opponentCard = state.aiPlan[index];
   if (!opponentCard) {
+    const points = getExtraCardLanePoints(index, state.aiPlan.length);
     return {
-      text: `+${EXTRA_CARD_POINTS}`,
-      label: `Extra card with no opposing card; adds ${EXTRA_CARD_POINTS} Round Point instead of clashing`,
+      text: `+${points}`,
+      label: points ? `Extra card with no opposing card; adds ${points} Round Point instead of clashing`
+        : "Extra card; adds 0 Round Points because the 2-point extra-card cap is reached",
       extraCard: true,
     };
   }
@@ -2565,6 +2597,8 @@ function updateFormationMessage() {
     : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
   const playerExtraCards = Math.max(0, count - state.aiPlan.length);
   const aiExtraCards = Math.max(0, state.aiPlan.length - count);
+  const playerExtraPoints = getExtraCardPoints(count, state.aiPlan.length);
+  const aiExtraPoints = getExtraCardPoints(state.aiPlan.length, count);
   const detail = concealsOpponentFormation()
     ? count === 0
       ? state.difficulty === "instinct" && tutorial.active && currentTutorialLesson()?.freeChoice
@@ -2582,9 +2616,9 @@ function updateFormationMessage() {
     : count === 0
       ? `Choose one to ${isFourLaneMode() ? "four" : "three"} cards using the opponent's visible plan.`
       : playerExtraCards
-        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraCards} Round ${playerExtraCards === 1 ? "Point" : "Points"}.`
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraPoints} Round ${playerExtraPoints === 1 ? "Point" : "Points"}${playerExtraCards > playerExtraPoints ? " (the 2-point cap)" : ""}.`
         : aiExtraCards
-          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraCards} Round ${aiExtraCards === 1 ? "Point" : "Points"}.`
+          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraPoints} Round ${aiExtraPoints === 1 ? "Point" : "Points"}${aiExtraCards > aiExtraPoints ? " (the 2-point cap)" : ""}.`
           : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of the opponent's cards.";
   setMessage(title, detail);
   renderOpponentTells();
@@ -2652,12 +2686,14 @@ function toggleCardSelection(instanceId) {
 function playedCardsMarkup(cards, side, clashCount = cards.length) {
   return `
     <div class="played-cards ${side}-formation">
-      ${cards.map((card, index) => `
+      ${cards.map((card, index) => {
+        const points = getExtraCardLanePoints(index, clashCount);
+        return `
         <div class="clash-card${index >= clashCount ? " result-extra-card" : ""}" data-clash-index="${index}">
-          ${cardMarkup(card, false, index, index >= clashCount ? "extra-card" : "played")}
-          <span class="lane-result">${index >= clashCount ? "EXTRA +1" : ""}</span>
+          ${cardMarkup(card, false, index, index >= clashCount ? "extra-card" : "played", null, points)}
+          <span class="lane-result">${index >= clashCount ? points ? `EXTRA +${points}` : "CAP +0" : ""}</span>
         </div>
-      `).join("")}
+      `; }).join("")}
     </div>
   `;
 }
@@ -2814,6 +2850,7 @@ function recordCompletedRound(reward, playerCards, aiCards, resolution) {
     aiCards: aiCards.map(snapshotHistoryCard),
     winner: resolution.winner,
     score: { ...resolution.score },
+    extraCardPoints: { ...resolution.extraCardPoints },
     laneResults: resolution.lanes.map((lane) => ({
       winner: lane.winner,
       playerTotal: lane.player.total,
@@ -2844,6 +2881,15 @@ function historyProgressMarkup(counts, label) {
   `;
 }
 
+function historyExtraCardLanePoints(entry, side, index) {
+  const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
+  // Store earned points, rather than reinterpreting an old round with today's
+  // rules. Older in-memory entries can recover that number from their score.
+  const laneWins = entry.laneResults.filter(lane => lane.winner === side).length;
+  const points = entry.extraCardPoints?.[side] ?? Math.max(0, entry.score[side] - laneWins * 2);
+  return index >= opposingCards.length && index < opposingCards.length + points ? 1 : 0;
+}
+
 function historyLaneCellMarkup(entry, side, index) {
   const cards = side === "player" ? entry.playerCards : entry.aiCards;
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
@@ -2857,7 +2903,7 @@ function historyLaneCellMarkup(entry, side, index) {
   const element = ELEMENTS[card.element];
   const tactic = cardRoleDefinition(card, entry.mode);
   const outcome = isExtra
-    ? "Extra +1 Round Point"
+    ? historyExtraCardLanePoints(entry, side, index) ? "Extra +1 Round Point" : "Extra +0 · Cap reached"
     : side === "player"
       ? lane?.winner === "draw" ? "Draw" : lane?.winner === "player" ? "Win" : "Loss"
       : "";
@@ -2915,7 +2961,8 @@ function historyLaneCalculationMarkup(entry, side, index) {
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   const card = cards[index];
   if (!card) return `<span aria-label="No card">—</span>`;
-  if (!opposingCards[index]) return "Extra card: <b>+1 Round Point</b>";
+  if (!opposingCards[index]) return historyExtraCardLanePoints(entry, side, index)
+    ? "Extra card: <b>+1 Round Point</b>" : "Extra card: <b>+0 Round Points</b> · 2-point cap reached";
   const lane = entry.laneResults[index];
   const total = side === "player" ? lane.playerTotal : lane.aiTotal;
   const bonus = total - card.power;
@@ -3743,7 +3790,7 @@ function playRound() {
     ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount);
     setMessage(
       `${playerCards.length} cards against ${aiCards.length}!`,
-      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point.`,
+      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point${isFourLaneMode() ? ", up to 2 per side per round" : ""}.`,
     );
     audio.reveal(aiCards.length);
     const resolution = await animateClashes(playerCards, aiCards);

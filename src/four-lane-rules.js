@@ -5,6 +5,7 @@
   const MAX_COMMITMENT = 4;
   const HAND_SIZE = 7;
   const ROUND_DRAW = 2;
+  const MAX_EXTRA_CARD_POINTS = 2;
   const TACTICS = Object.freeze({
     ...normal.TACTICS,
     link: Object.freeze({ ...normal.TACTICS.link,
@@ -39,6 +40,14 @@
     return scoring;
   }
 
+  function getExtraCardPoints(cardCount, opposingCount) {
+    return Math.min(MAX_EXTRA_CARD_POINTS, Math.max(0, cardCount - opposingCount));
+  }
+
+  function getExtraCardLanePoints(index, opposingCount) {
+    return index >= opposingCount && index < opposingCount + MAX_EXTRA_CARD_POINTS ? 1 : 0;
+  }
+
   function resolveClashes(playerCards, aiCards) {
     for (const formation of [playerCards, aiCards]) {
       if (!Array.isArray(formation) || formation.length < 1 || formation.length > MAX_COMMITMENT) {
@@ -59,8 +68,8 @@
     results.forEach(winner => { laneWins[winner]++; });
     const lanePoints = { player: laneWins.player * 2, ai: laneWins.ai * 2 };
     const extraCardPoints = {
-      player: Math.max(0, playerCards.length - aiCards.length),
-      ai: Math.max(0, aiCards.length - playerCards.length),
+      player: getExtraCardPoints(playerCards.length, aiCards.length),
+      ai: getExtraCardPoints(aiCards.length, playerCards.length),
     };
     const score = { player: lanePoints.player + extraCardPoints.player,
       ai: lanePoints.ai + extraCardPoints.ai, draw: laneWins.draw };
@@ -105,22 +114,23 @@
   }
 
   function createAiTraits(random = Math.random) {
+    const descriptions = {
+      "solo-gambler": "Favors 1-card recovery plays, but commits more when large formations keep beating him.",
+      "measured-planner": "Favors 2-card formations when they offer a good chance to win.",
+      "full-formation": "Favors 4-card pushes, then smaller formations to rebuild the opponent's hand.",
+      "score-reader": "Favors larger commitments when behind in trophies and smaller ones when ahead.",
+      "echo-tactician": "Favors matching your last round's card count, but can adapt to your patterns.",
+      "restless-dealer": "Favors changing how many cards he commits from one round to the next.",
+      "tactic-planner": "Orders cards to activate their roles and use Rally to strengthen the next card.",
+    };
     return normal.createAiTraits(random).map(trait => Object.freeze({ ...trait,
-      description: trait.id === "full-formation"
-        ? "Favors 4-card pushes, then smaller formations to rebuild the opponent's hand."
-        : trait.id === "solo-gambler"
-          ? "Often commits 1 card to conserve cards or rebuild the opponent's hand; vulnerable to large formations."
-          : trait.id === "tactic-planner"
-            ? "Orders cards to activate their roles and use Rally to strengthen the next card."
-            : trait.description,
+      description: descriptions[trait.id] || trait.description,
     }));
   }
 
-  function chooseAiCommitment(handLength, playerWins, aiWins, random = Math.random, traits = [], previous = {}) {
+  function getCommitmentWeights(handLength, playerWins, aiWins, traits = [], previous = {}) {
     const maximum = Math.min(MAX_COMMITMENT, handLength);
-    if (maximum <= 1) return maximum;
     const has = id => traits.some(trait => trait.id === id);
-    const roll = Math.min(.999999, Math.max(0, random()));
     let weights = [.15, .25, .4, .2];
     if (has("solo-gambler")) weights = [.5, .3, .15, .05];
     if (has("measured-planner")) weights = [.1, .65, .2, .05];
@@ -143,7 +153,15 @@
       weights[1] *= 2.5;
       weights[3] *= .15;
     }
-    const total = weights.slice(0, maximum).reduce((sum, weight) => sum + weight, 0);
+    return weights.slice(0, maximum);
+  }
+
+  function chooseAiCommitment(handLength, playerWins, aiWins, random = Math.random, traits = [], previous = {}) {
+    const maximum = Math.min(MAX_COMMITMENT, handLength);
+    if (maximum <= 1) return maximum;
+    const weights = getCommitmentWeights(handLength, playerWins, aiWins, traits, previous);
+    const roll = Math.min(.999999, Math.max(0, random()));
+    const total = weights.reduce((sum, weight) => sum + weight, 0);
     let threshold = roll * total;
     for (let index = 0; index < maximum; index++) {
       threshold -= weights[index];
@@ -184,8 +202,179 @@
     return orderAiFormation(chosen, random, traits);
   }
 
+  // These reads are beliefs, not access to the player's live hand or selection.
+  // Completed rounds are the only player formations accepted by the planner.
+  function readPlayerHistory(history = []) {
+    const rounds = [];
+    let estimatedHand = HAND_SIZE;
+    for (const round of history) {
+      const cards = round?.playerCards;
+      if (!Array.isArray(cards) || cards.length < 1 || cards.length > MAX_COMMITMENT
+        || cards.some(card => !ELEMENTS[card?.element] || !Number.isFinite(card.power))) continue;
+      estimatedHand = Math.min(HAND_SIZE, Math.max(0, estimatedHand - cards.length) + ROUND_DRAW);
+      rounds.push(cards.map(card => ({ element: card.element, power: card.power, tactic: card.tactic })));
+    }
+    const counts = rounds.map(cards => cards.length);
+    const weights = [.22, .36, .24, .18];
+    const recent = counts.slice(-12);
+    recent.forEach((count, index) => { weights[count - 1] += .3 + .7 * (index + 1) / recent.length; });
+    // Conditional transitions learn push/recovery patterns without assuming every
+    // one-card play means the next round will also contain one card.
+    for (let depth = 1; depth <= 2; depth++) {
+      if (counts.length <= depth) continue;
+      const tail = counts.slice(-depth);
+      for (let index = Math.max(depth, counts.length - 14); index < counts.length; index++) {
+        if (tail.every((count, offset) => counts[index - depth + offset] === count)) {
+          weights[counts[index] - 1] += depth === 2 ? 3 : 1.2;
+        }
+      }
+    }
+    let repeatedCount = null;
+    // Check longer cycles first: two recovery singles are not evidence that a
+    // known four/single/single cycle has become an endless run of singles.
+    for (let period = 3; period >= 1; period--) {
+      if (counts.length < period * 2) continue;
+      const tail = counts.slice(-period * 2);
+      if (tail.slice(0, period).every((count, index) => count === tail[index + period])) {
+        repeatedCount = tail[0];
+        weights[repeatedCount - 1] += 9;
+        break;
+      }
+    }
+    const maximum = Math.min(MAX_COMMITMENT, estimatedHand);
+    weights.forEach((_, index) => { if (index >= maximum) weights[index] = 0; });
+    const total = weights.reduce((sum, weight) => sum + weight, 0);
+    return { rounds: rounds.slice(-16), estimatedHand, repeatedCount,
+      commitmentProbabilities: weights.map(weight => weight / total) };
+  }
+
+  function buildPlayerScenarios(read, publicCards, random) {
+    const fallback = Object.keys(ELEMENTS).flatMap(element =>
+      [3, 4, 5, 6, 8, 9].map((power, index) => ({ element, power,
+        tactic: ["rally", "link", "vanguard", "finisher"][index % 4] })));
+    const pool = publicCards.length ? publicCards : fallback;
+    const roll = () => Math.min(.999999, Math.max(0, random()));
+    const scenarios = [];
+    for (let count = 1; count <= MAX_COMMITMENT; count++) {
+      const probability = read.commitmentProbabilities[count - 1];
+      if (!probability) continue;
+      const observed = read.rounds.filter(cards => cards.length === count).slice(-5);
+      for (let sample = 0; sample < 6; sample++) {
+        let cards;
+        if (observed.length && sample < 4) {
+          // Recalled cards describe a tendency, never a guaranteed repeat. Power
+          // and elements are varied so one lucky reveal does not become a tell.
+          const reference = observed[Math.floor(roll() * observed.length)];
+          cards = reference.map(card => ({ ...card,
+            power: Math.max(3, Math.min(9, card.power + Math.floor(roll() * 3) - 1)),
+            element: roll() < .2 ? pool[Math.floor(roll() * pool.length)].element : card.element }));
+        } else {
+          const available = [...pool];
+          const sampleHand = [];
+          while (available.length && sampleHand.length < Math.max(count, read.estimatedHand)) {
+            sampleHand.push(available.splice(Math.floor(roll() * available.length), 1)[0]);
+          }
+          sampleHand.sort((a, b) => b.power - a.power);
+          // Include conserved/cheap pushes as well as power-heavy formations.
+          cards = (sample === 5 && count > 2 ? sampleHand.slice(-count) : sampleHand.slice(0, count));
+          cards = orderAiFormation(cards, roll, [{ id: "tactic-planner" }]);
+        }
+        if (cards.length !== count) continue;
+        scenarios.push({ cards, weight: probability / 6,
+          totals: cards.map((card, index) => card.power + getTacticBonus(cards, index) + getRallyBonus(cards, index)) });
+      }
+    }
+    return scenarios;
+  }
+
+  function chooseAiFormation(hand, playerWins, aiWins, random = Math.random, traits = [], publicInfo = {}) {
+    if (!hand.length) return [];
+    const read = readPlayerHistory(publicInfo.history || []);
+    // The library is public card definitions, not a list of live player cards.
+    const scenarios = buildPlayerScenarios(read, publicInfo.cardLibrary || [], random);
+    const previousRound = publicInfo.history?.at(-1);
+    const previous = { player: previousRound?.playerCards?.length, ai: previousRound?.aiCards?.length };
+    const prior = getCommitmentWeights(hand.length, playerWins, aiWins, traits, previous);
+    const ownCounts = normal.getElementTrophyCounts(aiWins);
+    const playerCounts = normal.getElementTrophyCounts(playerWins);
+    const has = id => traits.some(trait => trait.id === id);
+    const loyalElement = traits.find(trait => trait.id === "element-loyalist")?.element;
+    const need = counts => Object.keys(ELEMENTS).reduce((sum, element) =>
+      sum + Math.max(0, TROPHIES_PER_ELEMENT - counts[element]), 0);
+    const rewardValue = (card, counts, remaining) => counts[card.element] >= TROPHIES_PER_ELEMENT
+      ? .1 : 2.5 + counts[card.element] * .7 + (remaining === 1 ? 6 : 0);
+    const ownNeed = need(ownCounts), playerNeed = need(playerCounts);
+    const ownRewards = hand.map(card => rewardValue(card, ownCounts, ownNeed));
+    scenarios.forEach(scenario => {
+      scenario.rewards = scenario.cards.map(card => rewardValue(card, playerCounts, playerNeed));
+      // Cache pair/bonus comparisons: every candidate uses the same public beliefs.
+      scenario.matchups = hand.map(card => scenario.cards.map((other, lane) =>
+        card.power - scenario.totals[lane]
+        + (ELEMENTS[card.element].beats === other.element ? ELEMENT_EDGE_BONUS : 0)
+        - (ELEMENTS[other.element].beats === card.element ? ELEMENT_EDGE_BONUS : 0)));
+    });
+    let best = [], bestScore = -Infinity;
+    const indices = [], used = new Set();
+    const evaluate = () => {
+      const cards = indices.map(index => hand[index]);
+      const count = cards.length;
+      const strongest = Math.max(...cards.map(card => card.power));
+      // Explicit ordering habits are promises. Strategy may change the subset,
+      // but it must not quietly place that subset's strongest card elsewhere.
+      if (has("strong-opener") && cards[0].power !== strongest) return;
+      if (has("late-striker") && cards[count - 1].power !== strongest) return;
+      const bonuses = cards.map((_, lane) => getTacticBonus(cards, lane) + getRallyBonus(cards, lane));
+      let score = 0;
+      for (const scenario of scenarios) {
+        const paired = Math.min(count, scenario.cards.length);
+        let ownPoints = getExtraCardPoints(count, paired), playerPoints = getExtraCardPoints(scenario.cards.length, paired);
+        let ownReward = 0, playerReward = 0;
+        for (let lane = 0; lane < paired; lane++) {
+          const margin = scenario.matchups[indices[lane]][lane] + bonuses[lane];
+          if (margin > 0) { ownPoints += 2; ownReward = Math.max(ownReward, ownRewards[indices[lane]]); }
+          if (margin < 0) { playerPoints += 2; playerReward = Math.max(playerReward, scenario.rewards[lane]); }
+        }
+        // With no lane victory, only the first extra card is trophy-eligible.
+        if (!ownReward && count > paired) ownReward = ownRewards[indices[paired]];
+        if (!playerReward && scenario.cards.length > paired) playerReward = scenario.rewards[paired];
+        score += scenario.weight * (ownPoints > playerPoints ? 4 + ownReward
+          : ownPoints < playerPoints ? -4 - playerReward : -.25);
+      }
+      const nextHand = Math.min(HAND_SIZE, hand.length - count + ROUND_DRAW);
+      // Cards spent now constrain later pushes. Do not burn the whole hand for
+      // a small gain, or waste a premium card on an unopposed extra lane.
+      score -= [0, 3.5, 2.5, 1.4, .65, .2, 0, 0][nextHand] + count * .12;
+      score -= cards.reduce((sum, card) => sum + (card.power - 3) * .1, 0);
+      score += 1.25 * Math.log(prior[count - 1] / Math.max(...prior));
+      let motive = 0;
+      for (const card of cards) {
+        if (has("trophy-hunter") && ownCounts[card.element] < TROPHIES_PER_ELEMENT) motive += .8;
+        if (has("power-seeker")) motive += card.power * .1;
+        if (card.element === loyalElement) motive += 1.1;
+        if (has("counter-scholar") && ELEMENTS[card.element].beats === playerWins.at(-1)?.element) motive += 1;
+        if (has("momentum-rider") && card.element === aiWins.at(-1)?.element) motive += 1;
+        if (has("trophy-denier") && playerCounts[ELEMENTS[card.element].beats] === TROPHIES_PER_ELEMENT - 1) motive += 1;
+      }
+      score += motive / count;
+      if (has("tactic-planner")) score += bonuses.reduce((sum, bonus) => sum + bonus, 0) * .22;
+      score += Math.min(.999999, Math.max(0, random())) * .35;
+      if (score > bestScore) { best = cards; bestScore = score; }
+    };
+    const visit = () => {
+      if (indices.length) evaluate();
+      if (indices.length === Math.min(MAX_COMMITMENT, hand.length)) return;
+      for (let index = 0; index < hand.length; index++) {
+        if (used.has(index)) continue;
+        used.add(index); indices.push(index); visit(); indices.pop(); used.delete(index);
+      }
+    };
+    visit();
+    return best;
+  }
+
   global.ClawFourLaneRules = Object.freeze({ ELEMENTS, ELEMENT_EDGE_BONUS, TROPHIES_PER_ELEMENT,
-    TACTICS, MAX_COMMITMENT, HAND_SIZE, ROUND_DRAW, LANE_WIN_POINTS: 2, EXTRA_CARD_POINTS: 1,
-    getTacticBonus, getRallyBonus, scoreClash, resolveClashes, getFormationRewardOptions,
-    replenishHand, buildTellClues, createAiTraits, chooseAiCommitment, chooseAiCards, orderAiFormation });
+    TACTICS, MAX_COMMITMENT, HAND_SIZE, ROUND_DRAW, MAX_EXTRA_CARD_POINTS, LANE_WIN_POINTS: 2, EXTRA_CARD_POINTS: 1,
+    getTacticBonus, getRallyBonus, getExtraCardPoints, getExtraCardLanePoints, scoreClash, resolveClashes, getFormationRewardOptions,
+    replenishHand, buildTellClues, createAiTraits, chooseAiCommitment, chooseAiCards, orderAiFormation,
+    readPlayerHistory, chooseAiFormation });
 })(globalThis);

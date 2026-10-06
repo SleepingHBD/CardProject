@@ -8,7 +8,7 @@ import "../src/four-lane-rules.js";
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const { ELEMENTS, TACTICS, resolveClashes, getFormationRewardOptions, getElementTrophyCounts } = globalThis.ClawRules;
-const functions = ["cardRoleDefinition", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
+const functions = ["cardRoleDefinition", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
   .map((name) => gameSource.match(new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`))?.[0]);
 assert.ok(functions.every(Boolean), "all history helpers must be loaded from the implementation");
 
@@ -176,4 +176,28 @@ test("four-lane history retains Lane 4, Rally symbols and received bonuses", () 
   assert.match(markup, /#tactic-icon-banner/);
   assert.match(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 3), /history-cell-bonus">\+2/);
   assert.equal((markup.match(/class="history-grid-lane"/g) || []).length, 4);
+});
+
+test("four-lane history records capped points, labels the third extra +0, and gives no trophy after losing the only lane", () => {
+  for (const larger of ["player", "ai"]) {
+    const context = fixture(); context.state.gameMode = "four-lane";
+    const weak = Array.from({ length: 4 }, () => card("gust", 3)), strong = [card("gust", 9)];
+    const player = larger === "player" ? weak : strong, opponent = larger === "player" ? strong : weak;
+    const result = globalThis.ClawFourLaneRules.resolveClashes(player, opponent);
+    assert.equal(result.winner, "draw");
+    context.recordCompletedRound(null, player, opponent, result);
+    const entry = context.state.previousRoundsHistory[0];
+    assert.equal(entry.extraCardPoints[larger], 2);
+    assert.equal(entry.trophy, null);
+    assert.match(context.ui.previousRoundsHistoryList.innerHTML, /No trophy claimed/);
+    assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Extra \+0 · Cap reached/);
+    assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Round Points.*2-point cap reached/);
+    assert.equal((context.historyFormationGridMarkup(entry).match(/>Extra \+1 Round Point</g) || []).length, 2);
+    result.extraCardPoints[larger] = 0;
+    assert.equal(entry.extraCardPoints[larger], 2, "history snapshots, rather than aliases, earned points");
+    delete entry.extraCardPoints;
+    assert.equal(context.historyExtraCardLanePoints(entry, larger, 3), 0, "older entries can recover the cap from their recorded score");
+    entry.score[larger] = 3;
+    assert.equal(context.historyExtraCardLanePoints(entry, larger, 3), 1, "a historical uncapped score is not retroactively rewritten");
+  }
 });

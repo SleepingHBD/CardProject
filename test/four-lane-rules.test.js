@@ -22,13 +22,14 @@ test("four-lane constants and roles are isolated from Normal Play", () => {
   assert.equal(four.ROUND_DRAW, 2);
   assert.equal(four.LANE_WIN_POINTS, 2);
   assert.equal(four.EXTRA_CARD_POINTS, 1);
+  assert.equal(four.MAX_EXTRA_CARD_POINTS, 2);
   assert.equal(normal.MAX_COMMITMENT, 3);
   assert.deepEqual(Object.keys(normal.TACTICS), ["vanguard", "link", "finisher"]);
   assert.equal(normal.getTacticBonus([card("gust", 5, "rally")], 0), 0);
 });
 
 test("one-card victories have the agreed results against one through four cards", () => {
-  for (const [count, winner, points] of [[1, "player", 0], [2, "player", 1], [3, "draw", 2], [4, "ai", 3]]) {
+  for (const [count, winner, points] of [[1, "player", 0], [2, "player", 1], [3, "draw", 2], [4, "draw", 2]]) {
     const result = four.resolveClashes([card("gust", 9)], Array.from({ length: count }, () => card("gust", 3)));
     assert.equal(result.winner, winner);
     assert.equal(result.score.player, 2);
@@ -36,7 +37,119 @@ test("one-card victories have the agreed results against one through four cards"
   }
 });
 
-test("all 228 abstract outcomes use symmetric 2-per-win and unconditional 1-per-extra scoring", () => {
+test("the first two extra cards score, their total is capped, and every other count pairing is unchanged", () => {
+  for (let own = 1; own <= 4; own++) for (let opposing = 1; opposing <= 4; opposing++) {
+    const perLane = Array.from({ length: own }, (_, index) => four.getExtraCardLanePoints(index, opposing));
+    assert.equal(perLane.reduce((sum, points) => sum + points, 0), four.getExtraCardPoints(own, opposing));
+    assert.ok(perLane.every(points => points === 0 || points === 1));
+    if (Math.abs(own - opposing) <= 2) assert.equal(four.getExtraCardPoints(own, opposing), Math.max(0, own - opposing));
+  }
+  assert.deepEqual([0, 1, 2, 3].map(index => four.getExtraCardLanePoints(index, 1)), [0, 1, 1, 0]);
+});
+
+test("four versus one must draw after a lane loss and still wins after a lane win or draw", () => {
+  for (const [power, score, winner, trophyLane] of [[3, 2, "draw", null], [5, 2, "player", 1], [9, 4, "player", 0]]) {
+    const player = [card("gust", power), card("tide", 3), card("ember", 3), card("gust", 3)];
+    const opponent = [card("gust", 5)];
+    const result = four.resolveClashes(player, opponent);
+    assert.equal(result.score.player, score);
+    assert.equal(result.winner, winner);
+    const options = four.getFormationRewardOptions(player, opponent, result);
+    assert.equal(options[0]?.lane ?? null, trophyLane);
+    assert.equal(options.length, trophyLane === null ? 0 : 1);
+    const reverse = four.resolveClashes(opponent, player);
+    assert.equal(reverse.winner, winner === "player" ? "ai" : "draw");
+    assert.equal(reverse.extraCardPoints.ai, 2);
+  }
+});
+
+test("Guided previews, forecasts and formation messages show a zero-point third extra card without leaking sealed plans", () => {
+  const selected = [card("gust", 5, "vanguard", "1"), card("tide", 4, "rally", "2"),
+    card("ember", 4, "rally", "3"), card("gust", 5, "finisher", "4")];
+  const context = {
+    state: { aiPlan: [card()], aiTellClues: ["full"], selectedCardIds: ["1", "2", "3", "4"],
+      playerHand: selected, difficulty: "guided", locked: false },
+    tutorial: { active: false }, ELEMENTS: normal.ELEMENTS, EXTRA_CARD_POINTS: 1, ELEMENT_EDGE_BONUS: 2,
+    isFourLaneMode: () => true, duelRules: () => four, concealsOpponentFormation: () => false,
+    getKnownPlayerTacticBonus: four.getTacticBonus, getTacticBonus: four.getTacticBonus, getRallyBonus: four.getRallyBonus,
+    cardRoleDefinition: value => four.TACTICS[value.tactic], getPowerTier: normal.getPowerTier,
+    scoreClash: four.scoreClash, getBonusBreakdown: () => ({ total: 0, label: "No bonus" }),
+    ui: { matchupForecast: { style: {} } }, renderOpponentTells: () => {},
+  };
+  context.setMessage = (title, detail) => { context.message = { title, detail }; };
+  runInNewContext(["getExtraCardPoints", "getExtraCardLanePoints", "getFormationBonusPreview", "renderMatchupForecast", "updateFormationMessage"]
+    .map(sourceFunction).join("\n"), context);
+  assert.equal(context.getFormationBonusPreview(selected, 1).text, "+1");
+  assert.equal(context.getFormationBonusPreview(selected, 2).text, "+1");
+  assert.equal(context.getFormationBonusPreview(selected, 3).text, "+0");
+  assert.match(context.getFormationBonusPreview(selected, 3).label, /2-point extra-card cap/);
+  context.renderMatchupForecast();
+  assert.equal((context.ui.matchupForecast.innerHTML.match(/EXTRA CARD \+1/g) || []).length, 2);
+  assert.match(context.ui.matchupForecast.innerHTML, /EXTRA CARD \+0/);
+  context.updateFormationMessage();
+  assert.match(context.message.detail, /3 extra cards add 2 Round Points \(the 2-point cap\)/);
+  context.concealsOpponentFormation = () => true;
+  context.renderMatchupForecast();
+  const sealed = context.ui.matchupForecast.innerHTML;
+  const badge = JSON.stringify(context.getFormationBonusPreview(selected, 3));
+  context.state.aiPlan = selected;
+  context.renderMatchupForecast();
+  assert.equal(context.ui.matchupForecast.innerHTML, sealed);
+  assert.equal(JSON.stringify(context.getFormationBonusPreview(selected, 3)), badge);
+});
+
+test("played formations label the third extra card +0 while Normal Play keeps +1 extras", () => {
+  const context = { isFourLaneMode: () => true, duelRules: () => four, EXTRA_CARD_POINTS: 1,
+    cardMarkup: (card, interactive, index, display, bonus, points) => `<b data-points="${points}">${display}</b>` };
+  runInNewContext(["getExtraCardLanePoints", "playedCardsMarkup"].map(sourceFunction).join("\n"), context);
+  const markup = context.playedCardsMarkup([card(), card(), card(), card()], "player", 1);
+  assert.equal((markup.match(/>EXTRA \+1</g) || []).length, 2);
+  assert.match(markup, />CAP \+0</);
+  context.isFourLaneMode = () => false;
+  assert.equal((context.playedCardsMarkup([card(), card(), card()], "player", 1).match(/>EXTRA \+1</g) || []).length, 2);
+});
+
+test("the Guided plan heading uses earned extra points, and sealed headings reveal no cap or count", () => {
+  const context = {
+    state: { difficulty: "guided", aiPlan: [card()], aiTellClues: ["full"], selectedCardIds: ["1", "2", "3", "4"] },
+    DIFFICULTIES: { guided: { label: "Guided" }, instinct: { label: "Instinct" } },
+    ELEMENTS: normal.ELEMENTS, EXTRA_CARD_POINTS: 1, getPowerTier: normal.getPowerTier,
+    isFourLaneMode: () => true, duelRules: () => four, getMaxPlaySize: () => 4,
+    concealsOpponentFormation: () => false, renderOpponentHabits() {},
+    ui: { tacticsTitle: {}, commitmentHint: {}, opponentTells: {} },
+  };
+  runInNewContext(["getExtraCardPoints", "renderOpponentTells"].map(sourceFunction).join("\n"), context);
+  context.renderOpponentTells();
+  assert.match(context.ui.commitmentHint.textContent, /Your 3 extra cards add 2 Round Points \(the 2-point cap\)/);
+  context.state.aiPlan = [card(), card(), card(), card()]; context.state.selectedCardIds = ["1"];
+  context.renderOpponentTells();
+  assert.match(context.ui.commitmentHint.textContent, /3 opposing extra cards add 2 Round Points/);
+  context.state.difficulty = "instinct"; context.concealsOpponentFormation = () => true;
+  context.renderOpponentTells();
+  assert.equal(context.ui.commitmentHint.textContent, "Instinct · Formation size and cards concealed");
+  assert.equal(context.ui.opponentTells.innerHTML, "");
+  context.state.aiPlan = [card()]; context.renderOpponentTells();
+  assert.equal(context.ui.commitmentHint.textContent, "Instinct · Formation size and cards concealed");
+});
+
+test("the rules strip and dedicated Four-Lane rules explain the cap without changing Normal Play copy", () => {
+  const nodes = { ".arena": { setAttribute() {} }, "#gameTitle": {},
+    ".rules-strip .rule-chip.gust": {}, ".rules-strip .rule-chip.tide": {} };
+  const context = { state: { gameMode: "four-lane" }, document: { body: { dataset: {} }, querySelector: selector => nodes[selector] },
+    isFourLaneMode: () => true, renderGallery() {} };
+  runInNewContext(sourceFunction("renderDuelMode"), context);
+  context.renderDuelMode();
+  assert.match(nodes[".rules-strip .rule-chip.gust"].innerHTML, /up to 2 per side per round/);
+  context.isFourLaneMode = () => false; context.renderDuelMode();
+  assert.equal(nodes[".rules-strip .rule-chip.gust"].innerHTML, "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point");
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const fourRules = html.slice(html.indexOf('id="fourLaneRulesDialog"'));
+  assert.match(fourRules, /2 extra-card points per side per round/);
+  assert.match(fourRules, /Only your first two extra cards score; a third adds 0/);
+  assert.match(fourRules, /4 cards against 1 and lose Lane 1.*round draws/);
+});
+
+test("all 228 abstract outcomes use symmetric 2-per-win scoring and a two-point extra-card cap", () => {
   let checked = 0;
   for (let playerCount = 1; playerCount <= 4; playerCount++) {
     for (let opponentCount = 1; opponentCount <= 4; opponentCount++) {
@@ -52,8 +165,8 @@ test("all 228 abstract outcomes use symmetric 2-per-win and unconditional 1-per-
           if (outcome === 2) { opponent[lane].power++; opponentWins++; }
         }
         const resolution = four.resolveClashes(player, opponent);
-        const playerPoints = playerWins * 2 + Math.max(0, playerCount - opponentCount);
-        const opponentPoints = opponentWins * 2 + Math.max(0, opponentCount - playerCount);
+        const playerPoints = playerWins * 2 + Math.min(2, Math.max(0, playerCount - opponentCount));
+        const opponentPoints = opponentWins * 2 + Math.min(2, Math.max(0, opponentCount - playerCount));
         assert.equal(resolution.score.player, playerPoints);
         assert.equal(resolution.score.ai, opponentPoints);
         assert.equal(resolution.winner, playerPoints === opponentPoints ? "draw" : playerPoints > opponentPoints ? "player" : "ai");
@@ -98,7 +211,7 @@ test("Lane 4 supports Link and Finisher, and unopposed bonuses never multiply ex
   const player = [card("gust", 4, "vanguard"), card("tide", 4, "rally"), card("ember", 4, "rally"), card("gust", 5, "link")];
   assert.equal(four.getTacticBonus(player, 3), 1);
   const result = four.resolveClashes(player, [card("gust", 9)]);
-  assert.equal(result.extraCardPoints.player, 3);
+  assert.equal(result.extraCardPoints.player, 2);
   assert.equal(four.getTacticBonus([card(), card("gust", 5, "finisher")], 1), 1);
   assert.equal(four.getTacticBonus([card("gust", 5, "finisher")], 0), 0);
 });
@@ -117,7 +230,7 @@ test("an extra-points victory with a won lane still requires the lane-winning tr
 
 test("a no-lane-win victory claims the first unopposed card, never another extra card", () => {
   const player = [card("gust", 3), card("tide", 4), card("ember", 6), card("gust", 9)];
-  const opponent = [card("gust", 9)];
+  const opponent = [card("gust", 3)];
   const result = four.resolveClashes(player, opponent);
   assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), [
     { winner: "player", card: player[1], lane: 1, fixed: true },
@@ -312,16 +425,16 @@ test("100 seeded complete duels conserve each personal deck and exclude trophies
       return { deck, discard: [], hand: [], trophies: [] };
     });
     const traits = four.createAiTraits(random);
-    const previous = {};
+    const history = [];
     sides.forEach(side => four.replenishHand(side.deck, side.discard, side.hand, four.HAND_SIZE, random));
     let completed = false;
     for (let round = 0; round < 300; round++) {
       const [player, opponent] = sides;
       const playerCount = Math.min(player.hand.length, match % 5 === 4 ? 1 + Math.floor(random() * 4) : 1 + match % 5);
-      const opponentCount = four.chooseAiCommitment(opponent.hand.length, player.trophies, opponent.trophies, random, traits, previous);
       const formations = [
         four.chooseAiCards(player.hand, playerCount, opponent.trophies, player.trophies, random),
-        four.chooseAiCards(opponent.hand, opponentCount, player.trophies, opponent.trophies, random, traits),
+        four.chooseAiFormation(opponent.hand, player.trophies, opponent.trophies, random, traits,
+          { history, cardLibrary: library }),
       ];
       const resolution = four.resolveClashes(...formations);
       const options = four.getFormationRewardOptions(...formations, resolution);
@@ -336,13 +449,12 @@ test("100 seeded complete duels conserve each personal deck and exclude trophies
         assert.equal(new Set(all.map(value => value.instanceId)).size, 36);
         assert.ok(all.every(value => value.instanceId.startsWith(index === 0 ? "player-" : "ai-")));
       });
+      history.push({ playerCards: formations[0], aiCards: formations[1] });
       if (sides.some(side => normal.hasCompletedElementSet(side.trophies))) { completed = true; break; }
       sides.forEach(side => {
         reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, random).reshuffled);
         assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
       });
-      previous.player = playerCount;
-      previous.ai = opponentCount;
     }
     assert.equal(completed, true, `seeded match ${match} should reach the trophy goal`);
   }
