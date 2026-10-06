@@ -358,80 +358,119 @@
           <div>
             <p class="four-lane-preview-eyebrow">Project: Prowl <span>Work in progress</span></p>
             <h1 id="fourLanePreviewTitle" tabindex="-1">Four-Lane Mode</h1>
-            <p>A playable prototype with personal decks, Rally and four lanes.</p>
+            <p>Choose your deck, then find your next rival.</p>
           </div>
           <button class="main-menu-option-button four-lane-return-button" id="fourLaneReturnButton" type="button">
             Return to Main Menu
           </button>
         </header>
 
-        <section class="four-lane-deck-choice" aria-labelledby="fourLaneDeckChoiceTitle">
-          <div>
-            <h2 id="fourLaneDeckChoiceTitle">Your deck</h2>
-            <label for="fourLaneDeckSelect">Choose a starter or saved deck</label>
-            <select id="fourLaneDeckSelect" aria-describedby="fourLaneDeckSummary"></select>
-            <p id="fourLaneDeckSummary"></p>
+        <ol class="four-lane-lobby-steps" aria-label="Duel setup">
+          <li id="fourLaneDeckStep" aria-current="step"><span aria-hidden="true">1</span> Your deck</li>
+          <li id="fourLaneRivalStep"><span aria-hidden="true">2</span> Your rival</li>
+          <li><span aria-hidden="true">3</span> Difficulty</li>
+        </ol>
+
+        <div class="four-lane-lobby-page" id="fourLaneDeckPage">
+          <section class="four-lane-deck-choice" aria-labelledby="fourLaneDeckChoiceTitle">
+            <div class="four-lane-page-heading">
+              <h2 id="fourLaneDeckChoiceTitle" tabindex="-1">Your deck</h2>
+              <p>Pick a ready-to-play starter, or build a deck around your own playstyle.</p>
+            </div>
+            <div class="four-lane-deck-paths">
+              <fieldset class="four-lane-starter-choice">
+                <legend>Choose a starter deck</legend>
+                <p>Four different playstyles. All starters are ready to use and include every element.</p>
+                <div class="four-lane-starter-options" id="fourLaneStarterOptions"></div>
+              </fieldset>
+              <section class="four-lane-custom-choice" aria-labelledby="fourLaneCustomTitle">
+                <p class="four-lane-path-label">Or make it your own</p>
+                <h3 id="fourLaneCustomTitle">Build your own deck</h3>
+                <p>Choose from the full collection. Start with a starter deck, or build from scratch.</p>
+                <button class="main-menu-option-button" id="fourLaneDeckEditorButton" type="button" aria-controls="deckEditorScreen">Build a Deck</button>
+                <div class="four-lane-saved-choice">
+                  <label for="fourLaneDeckSelect">Your saved decks</label>
+                  <select id="fourLaneDeckSelect" aria-describedby="fourLaneSavedHelp"></select>
+                  <p id="fourLaneSavedHelp">Saved decks stay in this browser.</p>
+                </div>
+              </section>
+            </div>
             <p class="deck-storage-notice" id="fourLaneDeckStorageNotice" hidden></p>
-          </div>
-          <button class="main-menu-option-button" id="fourLaneDeckEditorButton" type="button" aria-controls="deckEditorScreen">Build a Deck</button>
-        </section>
+            <div class="four-lane-deck-confirm">
+              <div role="status" aria-live="polite" aria-atomic="true">
+                <span class="four-lane-path-label">Selected deck</span>
+                <h3 id="fourLaneSelectedDeckName"></h3>
+                <p id="fourLaneDeckSummary"></p>
+              </div>
+              <button class="main-menu-option-button" id="fourLaneConfirmDeckButton" type="button" aria-controls="fourLaneRivalPage">Confirm Deck <span aria-hidden="true">→</span></button>
+            </div>
+          </section>
 
-        <fieldset class="four-lane-rival-choice" id="fourLaneRivalChoice" aria-describedby="fourLaneRivalHelp">
-          <legend>Choose your rival</legend>
-          <p id="fourLaneRivalHelp">Each rival has a different deck. Its three habits stay fixed during a duel. Start again from this screen to roll new habits. For Blind, choose Random Rival to keep the matchup a mystery.</p>
-          <div class="four-lane-rival-options" id="fourLaneRivalOptions"></div>
-        </fieldset>
-
-        <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
-          <div>
-            <h2 id="fourLaneLaunchTitle">Ready to duel?</h2>
+          <details class="four-lane-basics">
+            <summary>Four-Lane basics</summary>
             <p>Commit 1–4 cards. Start with 7 in hand, then draw up to 2 between rounds, without exceeding 7.</p>
-            <p>Each lane win earns 2 Round Points. Extra cards earn 1 each, up to 2 extra-card points per side per round.</p>
-            <p>Collect two trophies of each element to win. Choose Guided, Instinct or Blind on the next screen.</p>
-          </div>
-          <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Start Four-Lane Duel</button>
-        </section>
-
-        <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
-          <details class="four-lane-card-disclosure">
-            <summary id="fourLaneCardsTitle">Meet the 12 new cards</summary>
-            <p>Nine Rally cards, plus three Uncommon cards: Fire Link, Gust Vanguard and Water Finisher.</p>
-            <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Four-Lane card previews"></div>
-            <p class="four-lane-card-showcase-note">Rally gives +1 Power to the card committed directly before it. These cards are now playable in Four-Lane Mode.</p>
+            <p>Each lane win earns 2 Round Points. Extra cards earn 1 each, up to 2 extra-card points per side per round. Collect two trophies of each element to win.</p>
+            <div class="four-lane-preview-layout">
+              <figure class="four-lane-preview-board" aria-labelledby="fourLaneBoardCaption">
+                <div class="four-lane-preview-side">Opponent</div>
+                <div class="four-lane-preview-row" aria-label="Opponent’s four lanes">
+                  <span class="four-lane-preview-slot" aria-label="Opponent Lane 1"><span aria-hidden="true">◆</span></span>
+                  <span class="four-lane-preview-slot" aria-label="Opponent Lane 2"><span aria-hidden="true">◆</span></span>
+                  <span class="four-lane-preview-slot" aria-label="Opponent Lane 3"><span aria-hidden="true">◆</span></span>
+                  <span class="four-lane-preview-slot is-new-lane" aria-label="Opponent Lane 4"><span aria-hidden="true">◆</span></span>
+                </div>
+                <div class="four-lane-preview-lane-labels" aria-hidden="true">
+                  <span>Lane 1</span><span>Lane 2</span><span>Lane 3</span><span>Lane 4</span>
+                </div>
+                <div class="four-lane-preview-row" aria-label="Your four lanes">
+                  <span class="four-lane-preview-slot" aria-label="Your Lane 1"><span aria-hidden="true">◆</span></span>
+                  <span class="four-lane-preview-slot" aria-label="Your Lane 2"><span aria-hidden="true">◆</span></span>
+                  <span class="four-lane-preview-slot" aria-label="Your Lane 3"><span aria-hidden="true">◆</span></span>
+                  <span class="four-lane-preview-slot is-new-lane" aria-label="Your Lane 4"><span aria-hidden="true">◆</span></span>
+                </div>
+                <div class="four-lane-preview-side">You</div>
+                <figcaption id="fourLaneBoardCaption">Four lanes. One to four committed cards.</figcaption>
+              </figure>
+              <aside class="four-lane-preview-roadmap" aria-labelledby="fourLaneRoadmapTitle">
+                <h2 id="fourLaneRoadmapTitle">Make the most of your roles</h2>
+                <ol>
+                  <li><h3>Vanguard</h3><p>Gets +1 Power in Lane 1.</p></li>
+                  <li><h3>Link</h3><p>Gets +1 Power when the card committed directly before it has a different element.</p></li>
+                  <li><h3>Finisher</h3><p>Gets +1 Power when committed last in a formation of at least two cards.</p></li>
+                  <li><h3>Rally</h3><p>Gives +1 Power to the card committed directly before it.</p></li>
+                </ol>
+              </aside>
+            </div>
           </details>
-        </section>
+          <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
+            <details class="four-lane-card-disclosure">
+              <summary id="fourLaneCardsTitle">Meet the 12 new cards</summary>
+              <p>Nine Rally cards, plus three Uncommon cards: Fire Link, Gust Vanguard and Water Finisher.</p>
+              <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Four-Lane card previews"></div>
+              <p class="four-lane-card-showcase-note">Rally gives +1 Power to the card committed directly before it. These cards are now playable in Four-Lane Mode.</p>
+            </details>
+          </section>
+        </div>
 
-        <div class="four-lane-preview-layout">
-          <figure class="four-lane-preview-board" aria-labelledby="fourLaneBoardCaption">
-            <div class="four-lane-preview-side">Opponent</div>
-            <div class="four-lane-preview-row" aria-label="Opponent’s four lanes">
-              <span class="four-lane-preview-slot" aria-label="Opponent Lane 1"><span aria-hidden="true">◆</span></span>
-              <span class="four-lane-preview-slot" aria-label="Opponent Lane 2"><span aria-hidden="true">◆</span></span>
-              <span class="four-lane-preview-slot" aria-label="Opponent Lane 3"><span aria-hidden="true">◆</span></span>
-              <span class="four-lane-preview-slot is-new-lane" aria-label="Opponent Lane 4"><span aria-hidden="true">◆</span></span>
-            </div>
-            <div class="four-lane-preview-lane-labels" aria-hidden="true">
-              <span>Lane 1</span><span>Lane 2</span><span>Lane 3</span><span>Lane 4</span>
-            </div>
-            <div class="four-lane-preview-row" aria-label="Your four lanes">
-              <span class="four-lane-preview-slot" aria-label="Your Lane 1"><span aria-hidden="true">◆</span></span>
-              <span class="four-lane-preview-slot" aria-label="Your Lane 2"><span aria-hidden="true">◆</span></span>
-              <span class="four-lane-preview-slot" aria-label="Your Lane 3"><span aria-hidden="true">◆</span></span>
-              <span class="four-lane-preview-slot is-new-lane" aria-label="Your Lane 4"><span aria-hidden="true">◆</span></span>
-            </div>
-            <div class="four-lane-preview-side">You</div>
-            <figcaption id="fourLaneBoardCaption">Four lanes. One to four committed cards.</figcaption>
-          </figure>
-
-          <aside class="four-lane-preview-roadmap" aria-labelledby="fourLaneRoadmapTitle">
-            <p class="four-lane-preview-eyebrow">The direction</p>
-            <h2 id="fourLaneRoadmapTitle">More room for strategy</h2>
-            <ol>
-              <li><h3>Your own deck</h3><p>Build around the cards, elements and roles that suit your playstyle.</p></li>
-              <li><h3>New combinations</h3><p>Explore a fourth lane and new roles, while keeping one-card plays possible.</p></li>
-              <li><h3>Distinct opponents</h3><p>Face rivals with their own decks and recognisable habits.</p></li>
-            </ol>
-          </aside>
+        <div class="four-lane-lobby-page" id="fourLaneRivalPage" hidden>
+          <div class="four-lane-page-heading four-lane-rival-heading">
+            <div><h2 id="fourLaneRivalTitle" tabindex="-1">Choose your rival</h2><p>Your deck is ready. Choose who you want to face.</p></div>
+            <button class="main-menu-option-button" id="fourLaneChangeDeckButton" type="button" aria-controls="fourLaneDeckPage">Back to Your Deck</button>
+          </div>
+          <div class="four-lane-confirmed-deck">
+            <span class="four-lane-path-label">Your deck</span>
+            <strong id="fourLaneConfirmedDeckName"></strong>
+            <span id="fourLaneConfirmedDeckSummary"></span>
+          </div>
+          <fieldset class="four-lane-rival-choice" id="fourLaneRivalChoice" aria-describedby="fourLaneRivalHelp">
+            <legend>Pick a matchup</legend>
+            <p id="fourLaneRivalHelp">Each rival has its own deck and three habits that stay fixed during a duel. For Blind, choose Random Rival to keep the matchup a mystery.</p>
+            <div class="four-lane-rival-options" id="fourLaneRivalOptions"></div>
+          </fieldset>
+          <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
+            <div><h2 id="fourLaneLaunchTitle">Next: difficulty</h2><p>Choose Guided, Instinct or Blind before the duel begins.</p></div>
+            <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Choose Difficulty <span aria-hidden="true">→</span></button>
+          </section>
         </div>
 
         <p class="four-lane-preview-notice"><strong>Playable prototype — balance testing in progress.</strong> Normal Play still uses the existing three-lane game.</p>
@@ -442,7 +481,7 @@
       <div class="deck-editor-content">
         <header class="deck-editor-header">
           <div><p class="four-lane-preview-eyebrow">Four-Lane Mode · Deckbuilding</p><h1 id="deckEditorTitle" tabindex="-1">Build your deck</h1><p>Choose your cards. Their order here is not their lane order in battle.</p></div>
-          <button class="main-menu-option-button" id="deckEditorReturnButton" type="button">Return to Four-Lane Mode</button>
+          <button class="main-menu-option-button" id="deckEditorReturnButton" type="button">Return to Your Deck</button>
         </header>
         <div class="deck-editor-toolbar">
           <label>Deck name<input id="deckEditorName" maxlength="48" autocomplete="off" /></label>
@@ -1250,7 +1289,7 @@
         <section><h3>Choose a trophy</h3><p>If you win the round and won any lanes, claim one of your lane-winning cards. This still applies when extra-card points helped you win. If you won no lanes, your first unopposed card becomes the trophy. A drawn round awards no trophy.</p><p>The trophy leaves your deck for this duel. Collect 2 Fire, 2 Gust and 2 Water trophies to win the match.</p></section>
         <section><h3>Manage your own hand</h3><p>Both players start with 7 cards. Between rounds, each draws up to 2 without exceeding 7 cards in hand.</p><p>Commit 2 cards to maintain your hand size. Commit 3 or 4 to spend 1 or 2 cards from your reserves. Commit 1 to rebuild your hand by 1, unless you are already at the 7-card limit.</p><p>You and your opponent have separate decks and discard piles. All committed cards except the claimed trophy go into their owner's discard pile. Only that owner's empty draw pile can trigger a reshuffle.</p></section>
         <section><h3>Build your deck</h3><p>Each deck contains 24 cards and costs no more than 120. Include at least 4 cards of each element. You may use up to 2 copies of each Common or Uncommon card, and 1 of each Rare, Epic or Legendary. No role is required.</p><p>Deck cost is Power plus a rarity surcharge: Common/Uncommon +0, Rare +1, Epic +4, Legendary +6. It never changes combat Power. Choose a starter deck or build and save your own before the duel. Every rival follows these same deck limits.</p></section>
-        <section><h3>Choose a rival</h3><p>Versatile Duelist uses Balanced Formation. Banner Captain uses Rally Company. Cycle Weaver uses Element Weavers. Twilight Duelist uses Last Light. Choose one in the Four-Lane lobby or let Random Rival choose for you.</p><p>Each rival draws three habits from a pool that suits its deck. They stay fixed throughout the duel. Restarting or changing difficulty retains the rival, deck and habits; start again from the lobby to roll new habits or a new random rival. Rivals adapt to completed rounds, not your hidden hand or deck.</p></section>
+        <section><h3>Choose a rival</h3><p>Confirm your deck to open the rival page. Versatile Duelist uses Balanced Formation. Banner Captain uses Rally Company. Cycle Weaver uses Element Weavers. Twilight Duelist uses Last Light. Choose one or let Random Rival choose for you. Use Back to Your Deck to change your deck before starting.</p><p>Each rival draws three habits from a pool that suits its deck. They stay fixed throughout the duel. Restarting or changing difficulty retains the rival, deck and habits; start again from the lobby to roll new habits or a new random rival. Rivals adapt to completed rounds, not your hidden hand or deck.</p></section>
         <section><h3>Read your opponent</h3><p>Guided shows the opponent's elements and Power ranges. Instinct conceals their formation but reveals three persistent habits. Blind conceals formation, habits and the in-game rival identity. Select Random Rival if you also want to deduce the deck style yourself. Previous Rounds History records all four lanes after a round is complete.</p></section>
       </div>
       <button class="primary-button" data-close-four-lane-rules type="button">Return</button>

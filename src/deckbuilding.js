@@ -146,7 +146,7 @@
   const PRESETS = Object.freeze([
     {
       id: "balanced", name: "Balanced Formation",
-      description: "An even mix of elements and roles, with room for different lane orders.",
+      description: "A mix of all four roles. Try different lane orders and adapt as you play.",
       cards: [
         "cinder-kit", "cinder-kit", "sizzle-mittens", "teapot-tabby", "flaskfoot-felix", "flaskfoot-felix", "lucan-cinderclay", "charmae-emberhem",
         "sir-squall", "kitewhisker", "windlass-whiskers", "windlass-whiskers", "dandelion-dash", "dandelion-dash", "jiawen-barleybreeze", "aakith-wayfinder",
@@ -155,7 +155,7 @@
     },
     {
       id: "rally", name: "Rally Company",
-      description: "Vanguards supported by Rally cards. No Link or Finisher cards required.",
+      description: "Pair Vanguards with Rally cards to strengthen your opening lanes.",
       cards: [
         "candle-pounce", "beacon-burmilla", "cinder-kit", "cinder-kit", "charmae-emberhem", "charmae-emberhem", "lucan-cinderclay", "lucan-cinderclay",
         "sir-squall", "hidayn-windbrace", "kitewhisker", "kitewhisker", "aakith-wayfinder", "aakith-wayfinder", "jiawen-barleybreeze", "jiawen-barleybreeze",
@@ -164,7 +164,7 @@
     },
     {
       id: "link", name: "Element Weavers",
-      description: "Link-heavy formations reward alternating elements without needing Rally cards.",
+      description: "Alternate elements to activate Link bonuses across your formation.",
       cards: [
         "sizzle-mittens", "shazmir-ashveil", "teapot-tabby", "teapot-tabby", "flaskfoot-felix", "toastie-toe-beans", "cinder-kit", "beacon-burmilla",
         "gale-groomer", "whisker-whirl", "windlass-whiskers", "windlass-whiskers", "dandelion-dash", "belfry-bobtail", "kitewhisker", "hidayn-windbrace",
@@ -173,7 +173,7 @@
     },
     {
       id: "finisher", name: "Last Light",
-      description: "Finisher-heavy formations save their strongest finish for the last committed card.",
+      description: "Choose which Finisher to commit last for its +1 Power bonus. Earlier Finishers still fight normally.",
       cards: [
         // Keep the Finisher identity, but avoid paying for two legends at the
         // expense of the supporting lanes. Every rival uses this same preset.

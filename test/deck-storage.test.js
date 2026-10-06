@@ -145,27 +145,31 @@ test("blocked reads, blocked writes and full storage do not block session decks 
   }
 });
 
-test("launch snapshots the selected deck; later saved edits cannot alter restart or difficulty-change decks", () => {
+test("confirmation snapshots the selected deck; later saved edits cannot alter launch, restart or difficulty-change decks", () => {
   const store = api.createDeckStore(catalog, memory());
   const saved = store.save(custom("Rally run", starters[1]));
   const start = gameSource.indexOf("function showDifficultyChooser(");
-  const source = gameSource.slice(start, gameSource.indexOf("\n}", start) + 2);
+  const confirmStart = gameSource.indexOf("function confirmFourLaneDeck(");
+  const source = gameSource.slice(start, gameSource.indexOf("\n}", start) + 2)
+    + "\n" + gameSource.slice(confirmStart, gameSource.indexOf("\n}", confirmStart) + 2);
   const context = {
     constructedDecks: api, fourLaneDeckCatalog: catalog,
     fourLaneOpponents: { createEncounter: () => ({ deck: starters[0], traits: [] }) },
     fourLaneOpponentRoster: [], selectedFourLaneOpponent: "random",
     fourLaneDeckEditor: { getSelectedDeck: () => store.getDeck() },
+    showFourLaneLobbyStep() {}, confirmedFourLaneDeck: null,
     isFourLaneMode: () => true, hideFourLanePreview: () => {}, stopTutorialMode: () => {},
     closeGameMenu: () => {}, setGameMenuVisibility: () => {}, state: { locked: false },
     document: { querySelector: () => ({}), body: { classList: { remove: () => {} } } },
     ui: { mainMenuScreen: {}, difficultyDialog: { open: true } },
   };
   runInNewContext(source, context);
+  context.confirmFourLaneDeck();
+  store.save(custom("Finisher replacement", starters[3]), saved.id);
   context.showDifficultyChooser("four-lane");
   const snapshot = context.matchFourLaneDeck;
   assert.equal(snapshot.name, "Rally run");
   assert.ok(Object.isFrozen(snapshot) && Object.isFrozen(snapshot.cards));
-  store.save(custom("Finisher replacement", starters[3]), saved.id);
   assert.deepEqual([...snapshot.cards], [...starters[1].cards]);
   context.showDifficultyChooser("game");
   assert.equal(context.matchFourLaneDeck, snapshot);

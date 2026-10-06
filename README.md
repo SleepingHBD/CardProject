@@ -58,7 +58,9 @@ The AI's deck preference rewards *active* Rally, Link or Finisher bonuses only w
 
 #### Phase 4 — balance audit and interface polish
 
-The lobby places deck and rival selection before launching the duel, with the 12-card showcase collapsed until requested. The editor shows remaining cost and optional tips for unused budget, scarce trophy elements and Finisher-heavy decks. Tips never make a legal deck invalid; omitted roles and unequal element counts remain permitted.
+The lobby uses separate deck and rival pages. The deck page presents four ready-to-play starters with short playstyle descriptions, alongside a distinct build-your-own path and saved-deck selector. Confirm Deck snapshots the selected list and opens the rival page; Back to Your Deck allows changes before launching. Returning from difficulty selection resumes the rival page without clearing the confirmed deck. The rules overview and 12-card showcase stay collapsed until requested.
+
+The editor shows remaining cost and optional tips for unused budget, scarce trophy elements and Finisher-heavy decks. Tips never make a legal deck invalid; omitted roles and unequal element counts remain permitted.
 
 Last Light's starter/rival list was adjusted after it underperformed: one Legendary rather than two, stronger supporting Links/Vanguards, and a second Belfry Bobtail. It retains 24 cards, 118 cost, eight of each element and 12 Finishers. Card stats, scoring, role rules and saved custom lists were not changed.
 

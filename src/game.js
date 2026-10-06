@@ -693,6 +693,16 @@ const ui = {
   mainMenuFourLaneButton: document.querySelector("#mainMenuFourLaneButton"),
   fourLanePreviewScreen: document.querySelector("#fourLanePreviewScreen"),
   fourLanePreviewTitle: document.querySelector("#fourLanePreviewTitle"),
+  fourLaneDeckPage: document.querySelector("#fourLaneDeckPage"),
+  fourLaneRivalPage: document.querySelector("#fourLaneRivalPage"),
+  fourLaneDeckChoiceTitle: document.querySelector("#fourLaneDeckChoiceTitle"),
+  fourLaneRivalTitle: document.querySelector("#fourLaneRivalTitle"),
+  fourLaneDeckStep: document.querySelector("#fourLaneDeckStep"),
+  fourLaneRivalStep: document.querySelector("#fourLaneRivalStep"),
+  fourLaneConfirmDeckButton: document.querySelector("#fourLaneConfirmDeckButton"),
+  fourLaneChangeDeckButton: document.querySelector("#fourLaneChangeDeckButton"),
+  fourLaneConfirmedDeckName: document.querySelector("#fourLaneConfirmedDeckName"),
+  fourLaneConfirmedDeckSummary: document.querySelector("#fourLaneConfirmedDeckSummary"),
   fourLaneReturnButton: document.querySelector("#fourLaneReturnButton"),
   fourLaneCardGallery: document.querySelector("#fourLaneCardGallery"),
   fourLaneStartButton: document.querySelector("#fourLaneStartButton"),
@@ -753,6 +763,7 @@ let browserDeckStorage;
 try { browserDeckStorage = window.localStorage; } catch { /* Session-only decks remain usable. */ }
 const fourLaneDeckStore = constructedDecks.createDeckStore(fourLaneDeckCatalog, browserDeckStorage);
 let matchFourLaneDeck = fourLaneStarterDecks[0];
+let confirmedFourLaneDeck = null;
 const fourLaneOpponents = globalThis.ClawFourLaneOpponents;
 const fourLaneOpponentRoster = fourLaneOpponents.createRoster(fourLaneDeckCatalog);
 let selectedFourLaneOpponent = "random";
@@ -4308,7 +4319,34 @@ function renderFourLaneOpponents() {
   `).join("");
 }
 
-function showFourLanePreview() {
+function showFourLaneLobbyStep(step = "deck") {
+  const choosingRival = step === "rival" && Boolean(confirmedFourLaneDeck);
+  ui.fourLaneDeckPage.hidden = choosingRival;
+  ui.fourLaneRivalPage.hidden = !choosingRival;
+  ui.fourLaneDeckStep.removeAttribute("aria-current");
+  ui.fourLaneRivalStep.removeAttribute("aria-current");
+  (choosingRival ? ui.fourLaneRivalStep : ui.fourLaneDeckStep).setAttribute("aria-current", "step");
+  if (choosingRival) {
+    const summary = constructedDecks.validateDeck(fourLaneDeckCatalog, confirmedFourLaneDeck).summary;
+    ui.fourLaneConfirmedDeckName.textContent = confirmedFourLaneDeck.name;
+    ui.fourLaneConfirmedDeckSummary.textContent = `${summary.count} cards · ${summary.totalCost}/${constructedDecks.MAX_DECK_COST} cost · `
+      + constructedDecks.ELEMENTS.map(element => `${ELEMENTS[element].label} ${summary.elementCounts[element]}`).join(" · ");
+  } else {
+    confirmedFourLaneDeck = null;
+  }
+  ui.fourLanePreviewScreen.scrollTop = 0;
+  (choosingRival ? ui.fourLaneRivalTitle : ui.fourLaneDeckChoiceTitle).focus({ preventScroll: true });
+}
+
+function confirmFourLaneDeck() {
+  const selected = fourLaneDeckEditor.getSelectedDeck();
+  if (!constructedDecks.validateDeck(fourLaneDeckCatalog, selected).valid) return;
+  // Confirmation locks the deck for the rival/difficulty steps, not the save file.
+  confirmedFourLaneDeck = Object.freeze({ version: selected.version, name: selected.name, cards: Object.freeze([...selected.cards]) });
+  showFourLaneLobbyStep("rival");
+}
+
+function showFourLanePreview(step = "deck") {
   showMainMenu();
   ui.mainMenuScreen.hidden = true;
   fourLanePreviewBackground = [...document.querySelectorAll(".topbar, body > main")]
@@ -4318,8 +4356,7 @@ function showFourLanePreview() {
   fourLaneDeckEditor.renderLobby();
   renderFourLaneOpponents();
   renderFourLaneCards();
-  ui.fourLanePreviewScreen.scrollTop = 0;
-  ui.fourLanePreviewTitle.focus({ preventScroll: true });
+  showFourLaneLobbyStep(step);
 }
 
 function leaveFourLanePreview() {
@@ -4335,11 +4372,10 @@ function showTutorialMenu() {
 function showDifficultyChooser(returnTarget = "main") {
   pendingDuelMode = returnTarget === "four-lane" || (returnTarget === "game" && isFourLaneMode()) ? "four-lane" : "normal";
   if (returnTarget === "four-lane") {
-    const selected = fourLaneDeckEditor.getSelectedDeck();
-    if (!constructedDecks.validateDeck(fourLaneDeckCatalog, selected).valid) return;
+    if (!confirmedFourLaneDeck || !constructedDecks.validateDeck(fourLaneDeckCatalog, confirmedFourLaneDeck).valid) return;
     // Immutable snapshot: restarting/changing difficulty keeps this match's deck,
     // even if the saved selection is changed in a later lobby visit.
-    matchFourLaneDeck = Object.freeze({ version: selected.version, name: selected.name, cards: Object.freeze([...selected.cards]) });
+    matchFourLaneDeck = confirmedFourLaneDeck;
     matchFourLaneOpponent = fourLaneOpponents.createEncounter(fourLaneOpponentRoster, selectedFourLaneOpponent);
     hideFourLanePreview();
   }
@@ -4367,7 +4403,7 @@ function leaveDifficultyChooser() {
     return;
   }
   if (difficultyReturnTarget === "four-lane") {
-    showFourLanePreview();
+    showFourLanePreview("rival");
     return;
   }
   showMainMenu();
@@ -4610,8 +4646,10 @@ document.querySelector("#playAgainButton").addEventListener("click", () => {
 });
 ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("main"));
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
-ui.mainMenuFourLaneButton.addEventListener("click", showFourLanePreview);
+ui.mainMenuFourLaneButton.addEventListener("click", () => showFourLanePreview());
 ui.fourLaneReturnButton.addEventListener("click", leaveFourLanePreview);
+ui.fourLaneConfirmDeckButton.addEventListener("click", confirmFourLaneDeck);
+ui.fourLaneChangeDeckButton.addEventListener("click", () => showFourLaneLobbyStep("deck"));
 ui.fourLaneStartButton.addEventListener("click", () => showDifficultyChooser("four-lane"));
 document.querySelector("#fourLaneRivalOptions").addEventListener("change", (event) => {
   const input = event.target;
@@ -4623,7 +4661,8 @@ document.querySelector("#fourLaneRivalOptions").addEventListener("change", (even
 ui.fourLanePreviewScreen.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   event.preventDefault();
-  leaveFourLanePreview();
+  if (!ui.fourLaneRivalPage.hidden) showFourLaneLobbyStep("deck");
+  else leaveFourLanePreview();
 });
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));

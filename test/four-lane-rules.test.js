@@ -389,7 +389,7 @@ test("Normal Play still refills both hands to six from its shared deck", () => {
 
 test("four-lane lobby and rules explain two-card draws and the reserve tradeoff", () => {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  const lobby = html.slice(html.indexOf('<section class="four-lane-launch"'), html.indexOf('<section class="four-lane-card-showcase"'));
+  const lobby = html.slice(html.indexOf('<details class="four-lane-basics"'), html.indexOf('<section class="four-lane-card-showcase"'));
   const rules = html.slice(html.indexOf('<div class="four-lane-rules-content"'));
   assert.match(lobby, /Start with 7.*draw up to 2 between rounds.*exceeding 7/);
   assert.match(rules, /each draws up to 2.*exceeding 7/);

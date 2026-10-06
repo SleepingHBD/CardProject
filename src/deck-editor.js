@@ -5,6 +5,7 @@
 
   function createController({ catalog, store, cardMarkup, artworkSource, onOpen, onClose, root = document }) {
     const ids = ["fourLaneDeckSelect", "fourLaneDeckSummary", "fourLaneDeckStorageNotice", "fourLaneDeckEditorButton",
+      "fourLaneStarterOptions", "fourLaneSelectedDeckName", "fourLaneSavedHelp", "fourLaneConfirmDeckButton",
       "deckEditorScreen", "deckEditorTitle", "deckEditorReturnButton", "deckEditorName", "deckEditorLoad", "deckEditorNewButton",
       "deckEditorSaveButton", "deckEditorSaveCopyButton", "deckEditorDeleteButton", "deckEditorStats", "deckEditorErrors", "deckEditorTips",
       "deckEditorStatus", "deckEditorSearch", "deckEditorElement", "deckEditorRole", "deckEditorRarity", "deckEditorResetFilters",
@@ -39,7 +40,29 @@
     }
     function renderLobby() {
       const snapshot = store.snapshot(), deck = store.getDeck(), report = api.validateDeck(catalog, deck);
-      populate(ui.fourLaneDeckSelect, snapshot.selectedId);
+      if (!ui.fourLaneStarterOptions.children.length) {
+        ui.fourLaneStarterOptions.innerHTML = starters.map(preset => {
+          const summary = api.validateDeck(catalog, preset).summary;
+          return `<label class="four-lane-starter-option">
+            <input type="radio" name="fourLaneStarterDeck" value="starter:${preset.id}">
+            <span><b>${escape(preset.name)}</b><span class="four-lane-starter-description">${escape(preset.description)}</span>
+              <small>${summary.count} cards · ${summary.totalCost}/${api.MAX_DECK_COST} cost</small></span>
+          </label>`;
+        }).join("");
+      }
+      ui.fourLaneStarterOptions.querySelectorAll('input[name="fourLaneStarterDeck"]').forEach(input => {
+        input.checked = input.value === snapshot.selectedId;
+      });
+      const placeholder = option("", snapshot.decks.length ? "Choose a saved deck…" : "No saved decks yet");
+      placeholder.disabled = true;
+      ui.fourLaneDeckSelect.replaceChildren(placeholder, ...snapshot.decks.map(saved => option(saved.id, saved.name)));
+      ui.fourLaneDeckSelect.value = snapshot.selectedId.startsWith("custom-") ? snapshot.selectedId : "";
+      ui.fourLaneDeckSelect.disabled = !snapshot.decks.length;
+      ui.fourLaneSavedHelp.textContent = snapshot.decks.length
+        ? "Select a saved deck here instead of a starter. Decks stay in this browser."
+        : "No saved decks yet. Build and save one to see it here.";
+      ui.fourLaneSelectedDeckName.textContent = deck.name;
+      ui.fourLaneConfirmDeckButton.disabled = !report.valid;
       ui.fourLaneDeckSummary.textContent = `${report.summary.count} cards · ${report.summary.totalCost}/${api.MAX_DECK_COST} cost · `
         + api.ELEMENTS.map(element => `${elements[element].label} ${report.summary.elementCounts[element]}`).join(" · ");
       ui.fourLaneDeckStorageNotice.textContent = snapshot.notice;
@@ -164,6 +187,12 @@
       else ui.deckEditorTitle.focus({ preventScroll: true });
     }
     ui.fourLaneDeckSelect.addEventListener("change", () => { store.select(ui.fourLaneDeckSelect.value); renderLobby(); });
+    ui.fourLaneStarterOptions.addEventListener("change", event => {
+      const input = event.target;
+      if (!input.matches('input[name="fourLaneStarterDeck"]') || !input.checked) return;
+      if (!starters.some(preset => input.value === `starter:${preset.id}`)) return;
+      store.select(input.value); renderLobby();
+    });
     ui.fourLaneDeckEditorButton.addEventListener("click", open);
     ui.deckEditorReturnButton.addEventListener("click", () => close());
     ui.deckEditorName.addEventListener("input", () => { draft.name = ui.deckEditorName.value; renderSummary(); });

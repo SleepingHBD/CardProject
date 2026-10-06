@@ -33,7 +33,7 @@ test("the four-lane entry leads to a separate, initially hidden playable prototy
   assert.match(gameSource, /fourLaneStartButton\.addEventListener\("click", \(\) => showDifficultyChooser\("four-lane"\)\)/);
   assert.match(pageSource, /Normal Play still uses the existing three-lane game/);
   assert.equal((pageSource.match(/class="four-lane-preview-slot(?: is-new-lane)?"/g) || []).length, 8);
-  assert.match(gameSource, /mainMenuFourLaneButton\.addEventListener\("click", showFourLanePreview\)/);
+  assert.match(gameSource, /mainMenuFourLaneButton\.addEventListener\("click", \(\) => showFourLanePreview\(\)\)/);
   assert.match(gameSource, /mainMenuPlayButton\.addEventListener\("click", \(\) => showDifficultyChooser\("main"\)\)/);
 });
 
@@ -48,6 +48,10 @@ test("opening and leaving the preview preserves duel data and restores backgroun
     mainMenuScreen: { hidden: false },
     fourLanePreviewScreen: { hidden: true, scrollTop: 84 },
     fourLanePreviewTitle: { focus: () => { headingFocus++; } },
+    fourLaneDeckChoiceTitle: { focus: () => { headingFocus++; } },
+    fourLaneDeckPage: {}, fourLaneRivalPage: {},
+    fourLaneDeckStep: { removeAttribute() {}, setAttribute() {} },
+    fourLaneRivalStep: { removeAttribute() {}, setAttribute() {} },
     mainMenuFourLaneButton: { focus: () => { buttonFocus++; } },
   };
   const context = {
@@ -64,12 +68,15 @@ test("opening and leaving the preview preserves duel data and restores backgroun
   };
   runInNewContext([
     sourceFunction("hideFourLanePreview"),
+    sourceFunction("showFourLaneLobbyStep"),
     sourceFunction("showFourLanePreview"),
     sourceFunction("leaveFourLanePreview"),
     "showFourLanePreview()",
   ].join("\n"), context);
   assert.equal(ui.mainMenuScreen.hidden, true);
   assert.equal(ui.fourLanePreviewScreen.hidden, false);
+  assert.equal(ui.fourLaneDeckPage.hidden, false);
+  assert.equal(ui.fourLaneRivalPage.hidden, true);
   assert.equal(ui.fourLanePreviewScreen.scrollTop, 0);
   assert.equal(headingFocus, 1);
   assert.deepEqual(background.map(element => element.inert), [true, true]);
