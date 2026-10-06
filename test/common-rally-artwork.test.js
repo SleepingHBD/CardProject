@@ -47,6 +47,25 @@ test("the selected Siewen artwork is Rainkeeper, with the superseded Reedbinder 
   assert.equal(siewen.revisionHistory[0].asset, "siewen-reedbinder.png");
 });
 
+test("Siewen's seated rain-watching pose preserves his identity and original artwork", () => {
+  const siewen = manifest.cards[2];
+  assert.match(siewen.poseDescription, /Low seated right-facing three-quarter pose/);
+  assert.match(siewen.poseDescription, /amber eyes looking upward/);
+  assert.match(siewen.latestRevisionPrompt, /exactly TWO short connected forelegs and TWO short connected hind legs/);
+  assert.match(siewen.latestRevisionPrompt, /The SAME blue ceramic basin with cream rim/);
+  assert.match(siewen.latestRevisionPrompt, /The SAME short navy medieval tunic/);
+  assert.deepEqual(siewen.poseReferenceImages, ["assets/cards/four-lane/siewen-rainkeeper-original-pose.png"]);
+  assert.match(siewen.poseGenerationSource, /Built-in ImageGen/);
+  const backup = siewen.revisionHistory.at(-1);
+  assert.equal(backup.asset, "siewen-rainkeeper-original-pose.png");
+  const previousArtwork = readFileSync(new URL(backup.asset, artworkFolder));
+  const currentArtwork = readFileSync(new URL(siewen.asset, artworkFolder));
+  assert.notDeepEqual(currentArtwork, previousArtwork);
+  assert.equal(previousArtwork.readUInt32BE(16), 1254);
+  assert.equal(previousArtwork.readUInt32BE(20), 1254);
+  assert.deepEqual(siewen.intendedStats, { rarity: "common", role: "rally", power: 4 });
+});
+
 test("Lucan's side-on working pose retains his design and Jiawen keeps his original artwork", () => {
   const lucan = manifest.cards[0];
   assert.match(lucan.poseDescription, /Left-facing side-on seated working pose/);
