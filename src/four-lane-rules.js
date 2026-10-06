@@ -13,7 +13,7 @@
     finisher: Object.freeze({ ...normal.TACTICS.finisher,
       description: "Finisher: +1 when committed last in a formation of at least two cards." }),
     rally: Object.freeze({ icon: "banner", label: "Rally",
-      description: "Rally: Gives +1 Power to the card committed directly after it. No following card means no bonus." }),
+      description: "Rally: Gives +1 Power to the card committed directly before it. In Lane 1, Rally gives no bonus." }),
   });
 
   function getTacticBonus(cards, index) {
@@ -26,8 +26,8 @@
   }
 
   function getRallyBonus(cards, index) {
-    // Incoming support never amplifies what another Rally passes forward.
-    return index > 0 && cards[index] && cards[index - 1]?.tactic === "rally" ? 1 : 0;
+    // Each Rally supports the preceding card by exactly +1, even if boosted itself.
+    return index >= 0 && cards[index] && cards[index + 1]?.tactic === "rally" ? 1 : 0;
   }
 
   function scoreClash(playerCard, aiCard, playerTactic = 0, aiTactic = 0, playerRally = 0, aiRally = 0) {
@@ -121,7 +121,7 @@
       "score-reader": "Favors larger commitments when behind in trophies and smaller ones when ahead.",
       "echo-tactician": "Favors matching your last round's card count, but can adapt to your patterns.",
       "restless-dealer": "Favors changing how many cards he commits from one round to the next.",
-      "tactic-planner": "Orders cards to activate their roles and use Rally to strengthen the next card.",
+      "tactic-planner": "Orders cards to activate their roles and use Rally to strengthen the card directly before it.",
     };
     return normal.createAiTraits(random).map(trait => Object.freeze({ ...trait,
       description: descriptions[trait.id] || trait.description,

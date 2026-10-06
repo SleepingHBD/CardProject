@@ -24,8 +24,9 @@ npm run dev
 - Start with 7 cards and commit 1–4 cards per round.
 - Between rounds, draw up to 2 cards, without exceeding 7 cards in hand.
 - Two-card formations maintain hand size; three- and four-card formations spend reserves. One-card formations rebuild reserves when below the hand limit.
-- A lane win scores 2 Round Points; each extra card with no opposing card scores 1. Higher Round Points wins the round.
-- Vanguard, Link, Finisher and Rally bonuses, trophy rules, and the two-trophies-per-element match goal are unchanged.
+- A lane win scores 2 Round Points; extra cards with no opposing cards score 1 each, up to 2 extra-card points per side per round. Higher Round Points wins the round.
+- Rally gives +1 Power to the card committed directly before it. Rally in Lane 1 gives no bonus; the supported card can also earn its own role bonus.
+- A round winner claims one lane-winning card as a trophy, or the first extra card if no lanes were won. A drawn round awards no trophy. Collect two trophies of each element to win the match.
 - Normal Play retains its three lanes, six-card hands and shared-deck refill rules.
 
 ## Deploy to GitHub Pages

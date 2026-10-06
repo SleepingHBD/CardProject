@@ -41,7 +41,7 @@ test("public reads adapt when the player abandons an old push/recovery pattern",
   assert.ok(read.commitmentProbabilities[1] > .5);
 });
 
-test("joint planning keeps commitment preferences and recognises Rally/Finisher support", () => {
+test("joint planning keeps commitment preferences and puts Rally after the Vanguard it supports", () => {
   const balanced = Array.from({ length: 7 }, (_, i) => card(5,
     ["ember", "gust", "tide"][i % 3], ["vanguard", "link", "finisher", "rally"][i % 4]));
   const info = { history: [{ playerCards: balanced.slice(0, 4), aiCards: balanced.slice(0, 2) }] };
@@ -49,11 +49,11 @@ test("joint planning keeps commitment preferences and recognises Rally/Finisher 
   const measured = r.chooseAiFormation(balanced, [], [], () => .4, [{ id: "measured-planner" }], info);
   assert.equal(full.length, 4);
   assert.ok(measured.length < full.length);
-  const pair = [card(4, "gust", "rally"), card(5, "gust", "finisher")];
+  const pair = [card(5, "gust", "vanguard"), card(4, "gust", "rally")];
   const history = Array.from({ length: 6 }, () => ({ playerCards: [card(6, "gust", "none"), card(6, "gust", "none")] }));
   const formation = r.chooseAiFormation(pair, [], [], () => .4, [], { history });
   assert.deepEqual(formation, pair);
-  assert.equal(r.getRallyBonus(formation, 1) + r.getTacticBonus(formation, 1), 2);
+  assert.equal(r.getRallyBonus(formation, 0) + r.getTacticBonus(formation, 0), 2);
 });
 
 test("the joint planner returns unique own-hand references, is deterministic and does not mutate input", () => {

@@ -102,7 +102,7 @@ const FOUR_LANE_ROLES = Object.freeze({
   rally: Object.freeze({
     icon: "banner",
     label: "Rally",
-    description: "Rally: Gives +1 Power to the card committed directly after it. No following card means no bonus.",
+    description: "Rally: Gives +1 Power to the card committed directly before it. In Lane 1, Rally gives no bonus.",
   }),
 });
 const MAX_PLAY_SIZE = 3;

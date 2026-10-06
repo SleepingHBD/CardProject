@@ -197,14 +197,78 @@ test("invalid empty or five-card formations cannot bypass the mode limits", () =
   assert.throws(() => four.resolveClashes([card()], Array(5).fill(card())), RangeError);
 });
 
-test("Rally only strengthens the directly following card, stacks with its role and does not cascade", () => {
-  const formation = [card("gust", 4, "rally"), card("tide", 4, "rally"), card("ember", 5, "finisher")];
-  assert.deepEqual(formation.map((_, index) => four.getRallyBonus(formation, index)), [0, 1, 1]);
-  assert.deepEqual(formation.map((_, index) => four.getTacticBonus(formation, index)), [0, 0, 1]);
+test("Rally only strengthens the directly preceding card, stacks with its role and does not cascade", () => {
+  const formation = [card("gust", 4, "vanguard"), card("tide", 4, "rally"), card("ember", 5, "rally")];
+  assert.deepEqual(formation.map((_, index) => four.getRallyBonus(formation, index)), [1, 1, 0]);
+  assert.deepEqual(formation.map((_, index) => four.getTacticBonus(formation, index)), [1, 0, 0]);
   const resolution = four.resolveClashes(formation, [card("gust"), card("tide"), card("ember")]);
-  assert.deepEqual(resolution.lanes.map(lane => lane.player.total), [4, 5, 7]);
+  assert.deepEqual(resolution.lanes.map(lane => lane.player.total), [6, 5, 5]);
   assert.equal(four.getRallyBonus([card("gust", 4, "rally")], 0), 0);
+  assert.equal(four.getRallyBonus([card("gust", 4, "rally"), card()], 1), 0);
+  assert.equal(four.getRallyBonus(formation, -1), 0);
   assert.equal(four.getRallyBonus(formation, 3), 0);
+});
+
+test("Rally can stack with Link, but an active Finisher cannot receive Rally", () => {
+  const linked = [card("tide", 4), card("ember", 5, "link"), card("gust", 4, "rally")];
+  assert.equal(four.getTacticBonus(linked, 1), 1);
+  assert.equal(four.getRallyBonus(linked, 1), 1);
+  const finishers = [card("gust", 5, "finisher"), card("tide", 4, "rally"), card("ember", 5, "finisher")];
+  assert.equal(four.getTacticBonus(finishers, 0), 0);
+  assert.equal(four.getRallyBonus(finishers, 0), 1, "an earlier Finisher receives support but not its own role bonus");
+  assert.equal(four.getTacticBonus(finishers, 2), 1);
+  assert.equal(four.getRallyBonus(finishers, 2), 0);
+});
+
+test("an unopposed Rally supports the preceding clash without changing extra points or trophy eligibility", () => {
+  const player = [card("gust", 5, "vanguard"), card("tide", 4, "rally")];
+  const opponent = [card("gust", 5, "vanguard")];
+  const result = four.resolveClashes(player, opponent);
+  assert.equal(result.lanes[0].player.total, 7);
+  assert.equal(result.lanes[0].ai.total, 6);
+  assert.deepEqual(result.score, { player: 3, ai: 0, draw: 0 });
+  assert.equal(result.extraCardPoints.player, 1);
+  assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), [
+    { winner: "player", card: player[0], lane: 0, fixed: false },
+  ]);
+  const reverse = four.resolveClashes(opponent, player);
+  assert.deepEqual(reverse.score, { player: 0, ai: 3, draw: 0 });
+  assert.equal(reverse.lanes[0].ai.total, 7);
+});
+
+test("all role and element arrangements receive only immediate backward Rally support", () => {
+  const elements = Object.keys(normal.ELEMENTS), roles = ["vanguard", "link", "finisher", "rally"];
+  let checked = 0;
+  for (let count = 1; count <= 4; count++) for (let code = 0; code < 12 ** count; code++) {
+    let remaining = code;
+    const cards = Array.from({ length: count }, () => {
+      const type = remaining % 12; remaining = Math.floor(remaining / 12);
+      return card(elements[type % 3], 5, roles[Math.floor(type / 3)]);
+    });
+    for (let lane = 0; lane < count; lane++) {
+      const rally = four.getRallyBonus(cards, lane), tactic = four.getTacticBonus(cards, lane);
+      assert.equal(rally, Number(cards[lane + 1]?.tactic === "rally"));
+      assert.ok(rally + tactic <= 2);
+      if (cards[lane].tactic === "finisher" && tactic) assert.equal(rally, 0);
+      checked++;
+    }
+  }
+  assert.equal(checked, 88428);
+});
+
+test("Rally explanations consistently say before, including card tooltips, habits, lobby and rules", () => {
+  const description = four.TACTICS.rally.description;
+  assert.match(description, /card committed directly before it/);
+  assert.match(description, /In Lane 1, Rally gives no bonus/);
+  const context = {};
+  runInNewContext(gameSource.slice(gameSource.indexOf("const FOUR_LANE_ROLES ="), gameSource.indexOf("const MAX_PLAY_SIZE =")), context);
+  assert.equal(runInNewContext("FOUR_LANE_ROLES.rally.description", context), description);
+  const planner = four.createAiTraits(() => 0).find(value => value.id === "tactic-planner");
+  assert.match(planner.description, /Rally to strengthen the card directly before it/);
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /Rally gives \+1 Power to the card committed directly before it/);
+  assert.match(html, /Rally in Lane 2 boosts Lane 1/);
+  assert.doesNotMatch(html + gameSource + description, /Rally[^\n]{0,100}(?:directly after it|No following card|strengthen the next card)/);
 });
 
 test("Lane 4 supports Link and Finisher, and unopposed bonuses never multiply extra points", () => {
@@ -369,9 +433,9 @@ test("AI orders Rally and picks up to four unique cards without mutating its han
   assert.equal(result.length, 4);
   assert.equal(new Set(result.map(value => value.instanceId)).size, 4);
   assert.equal(JSON.stringify(hand), before);
-  const pair = four.orderAiFormation(hand.slice(0, 2), () => 0, trait("tactic-planner"));
-  assert.equal(pair[0].tactic, "rally");
-  assert.equal(pair[1].tactic, "finisher");
+  const pair = four.orderAiFormation([hand[0], hand[3]], () => 0, trait("tactic-planner"));
+  assert.equal(pair[0].tactic, "vanguard");
+  assert.equal(pair[1].tactic, "rally");
 });
 
 test("four-lane concealment returns four sealed clues and Guided has four positions", () => {
@@ -403,8 +467,8 @@ test("live personal starter decks contain all 36 cards, balanced roles, and owne
 test("bonus explanations include incoming Rally separately from the card's own role", () => {
   const context = {};
   runInNewContext(sourceFunction("getBonusBreakdown"), context);
-  assert.deepEqual(JSON.parse(JSON.stringify(context.getBonusBreakdown({ edge: 2, tactic: 1, tacticName: "Finisher", rally: 1 }))), {
-    total: 4, label: "Element Edge +2, Finisher +1, Rally received +1",
+  assert.deepEqual(JSON.parse(JSON.stringify(context.getBonusBreakdown({ edge: 2, tactic: 1, tacticName: "Vanguard", rally: 1 }))), {
+    total: 4, label: "Element Edge +2, Vanguard +1, Rally received +1",
   });
 });
 

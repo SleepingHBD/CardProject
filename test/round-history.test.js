@@ -165,7 +165,7 @@ test("history icons have definite dimensions and reopening starts at the newest 
 test("four-lane history retains Lane 4, Rally symbols and received bonuses", () => {
   const context = fixture();
   context.state.gameMode = "four-lane";
-  const player = [card("gust", 5), card("tide", 5), card("ember", 4, "rally"), card("gust", 5, "finisher")];
+  const player = [card("gust", 5), card("tide", 5), card("ember", 5, "link"), card("gust", 4, "rally")];
   const opponent = Array.from({ length: 4 }, () => card("gust", 5, "vanguard"));
   const resolution = globalThis.ClawFourLaneRules.resolveClashes(player, opponent);
   const reward = globalThis.ClawFourLaneRules.getFormationRewardOptions(player, opponent, resolution)[0];
@@ -174,7 +174,8 @@ test("four-lane history retains Lane 4, Rally symbols and received bonuses", () 
   assert.match(markup, /history-four-lanes/);
   assert.match(markup, /LANE 4/);
   assert.match(markup, /#tactic-icon-banner/);
-  assert.match(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 3), /history-cell-bonus">\+2/);
+  assert.match(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 2), /history-cell-bonus">\+4/);
+  assert.doesNotMatch(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 3), /history-cell-bonus/);
   assert.equal((markup.match(/class="history-grid-lane"/g) || []).length, 4);
 });
 
