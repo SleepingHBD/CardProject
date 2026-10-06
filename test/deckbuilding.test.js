@@ -351,10 +351,10 @@ test("deckbuilding is packaged before the game and only constructs personal Four
   assert.ok(packaging.includes('cp("src/deckbuilding.js", "dist/src/deckbuilding.js")'));
   const start = gameSource.indexOf("function freshPersonalDeck(");
   const source = gameSource.slice(start, gameSource.indexOf("\n}", start) + 2);
-  const context = { constructedDecks: decks, fourLaneDeckCatalog: catalog, matchFourLaneDeck: presets[1], fourLaneStarterDecks: presets, shuffle: value => value };
+  const context = { constructedDecks: decks, fourLaneDeckCatalog: catalog, matchFourLaneDeck: presets[1], matchFourLaneOpponent: { deck: presets[2] }, shuffle: value => value };
   runInNewContext(source, context);
   assert.equal(context.freshPersonalDeck("player").length, 24);
   assert.deepEqual(context.freshPersonalDeck("player").map(card => card.art), presets[1].cards);
-  assert.deepEqual(context.freshPersonalDeck("opponent").map(card => card.art), presets[0].cards);
+  assert.deepEqual(context.freshPersonalDeck("opponent").map(card => card.art), presets[2].cards);
   assert.match(gameSource, /state\.deck = isFourLaneMode\(\) \? freshPersonalDeck\("player"\) : freshDeck\(\)/);
 });

@@ -215,6 +215,7 @@
                 <span class="scout-seal" aria-hidden="true">&#10022;</span>
                 <div>
                   <p id="tacticsTitle">Opponent's Plan</p>
+                  <small class="four-lane-rival-info" id="fourLaneRivalInfo" hidden></small>
                   <small id="commitmentHint">Opponent's formation is ready.</small>
                   <div class="opponent-habits" id="opponentHabits" aria-label="Opponent's known habits" aria-live="polite" hidden></div>
                 </div>
@@ -364,16 +365,6 @@
           </button>
         </header>
 
-        <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
-          <div>
-            <h2 id="fourLaneLaunchTitle">Choose your deck, then duel</h2>
-            <p>Commit 1–4 cards. Start with 7 in hand, then draw up to 2 between rounds, without exceeding 7.</p>
-            <p>Each lane win earns 2 Round Points. Extra cards earn 1 each, up to 2 extra-card points per side per round.</p>
-            <p>Build a 24-card deck from the 36-card collection, or choose a starter deck. Your opponent uses the Balanced Formation starter deck for this phase; distinct rival decks come later.</p>
-          </div>
-          <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Start Four-Lane Duel</button>
-        </section>
-
         <section class="four-lane-deck-choice" aria-labelledby="fourLaneDeckChoiceTitle">
           <div>
             <h2 id="fourLaneDeckChoiceTitle">Your deck</h2>
@@ -385,13 +376,29 @@
           <button class="main-menu-option-button" id="fourLaneDeckEditorButton" type="button" aria-controls="deckEditorScreen">Build a Deck</button>
         </section>
 
-        <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
-          <div class="four-lane-card-showcase-heading">
-            <h2 id="fourLaneCardsTitle">Meet the new cards</h2>
-            <p>Nine Rally cards, plus three Uncommon cards: Fire Link, Gust Vanguard and Water Finisher.</p>
+        <fieldset class="four-lane-rival-choice" id="fourLaneRivalChoice" aria-describedby="fourLaneRivalHelp">
+          <legend>Choose your rival</legend>
+          <p id="fourLaneRivalHelp">Each rival has a different deck. Its three habits stay fixed during a duel. Start again from this screen to roll new habits. For Blind, choose Random Rival to keep the matchup a mystery.</p>
+          <div class="four-lane-rival-options" id="fourLaneRivalOptions"></div>
+        </fieldset>
+
+        <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
+          <div>
+            <h2 id="fourLaneLaunchTitle">Ready to duel?</h2>
+            <p>Commit 1–4 cards. Start with 7 in hand, then draw up to 2 between rounds, without exceeding 7.</p>
+            <p>Each lane win earns 2 Round Points. Extra cards earn 1 each, up to 2 extra-card points per side per round.</p>
+            <p>Collect two trophies of each element to win. Choose Guided, Instinct or Blind on the next screen.</p>
           </div>
-          <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Four-Lane card previews"></div>
-          <p class="four-lane-card-showcase-note">Rally gives +1 Power to the card committed directly before it. These cards are now playable in Four-Lane Mode.</p>
+          <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Start Four-Lane Duel</button>
+        </section>
+
+        <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
+          <details class="four-lane-card-disclosure">
+            <summary id="fourLaneCardsTitle">Meet the 12 new cards</summary>
+            <p>Nine Rally cards, plus three Uncommon cards: Fire Link, Gust Vanguard and Water Finisher.</p>
+            <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Four-Lane card previews"></div>
+            <p class="four-lane-card-showcase-note">Rally gives +1 Power to the card committed directly before it. These cards are now playable in Four-Lane Mode.</p>
+          </details>
         </section>
 
         <div class="four-lane-preview-layout">
@@ -460,6 +467,7 @@
             <div id="deckEditorStats"></div>
             <p class="deck-construction-rules">24 cards · 120 cost maximum<br />2 copies of each Common/Uncommon; 1 of each higher rarity. No required roles.</p>
             <ul class="deck-editor-errors" id="deckEditorErrors"></ul>
+            <aside class="deck-editor-tips" aria-labelledby="deckEditorTipsTitle" hidden><h3 id="deckEditorTipsTitle">Deck tips (optional)</h3><ul id="deckEditorTips"></ul></aside>
             <div class="deck-save-actions">
               <button class="main-menu-option-button" id="deckEditorSaveButton" type="button">Save &amp; Select Deck</button>
               <button id="deckEditorSaveCopyButton" type="button" hidden>Save as New Deck</button>
@@ -1241,8 +1249,9 @@
         </ul></section>
         <section><h3>Choose a trophy</h3><p>If you win the round and won any lanes, claim one of your lane-winning cards. This still applies when extra-card points helped you win. If you won no lanes, your first unopposed card becomes the trophy. A drawn round awards no trophy.</p><p>The trophy leaves your deck for this duel. Collect 2 Fire, 2 Gust and 2 Water trophies to win the match.</p></section>
         <section><h3>Manage your own hand</h3><p>Both players start with 7 cards. Between rounds, each draws up to 2 without exceeding 7 cards in hand.</p><p>Commit 2 cards to maintain your hand size. Commit 3 or 4 to spend 1 or 2 cards from your reserves. Commit 1 to rebuild your hand by 1, unless you are already at the 7-card limit.</p><p>You and your opponent have separate decks and discard piles. All committed cards except the claimed trophy go into their owner's discard pile. Only that owner's empty draw pile can trigger a reshuffle.</p></section>
-        <section><h3>Build your deck</h3><p>Each deck contains 24 cards and costs no more than 120. Include at least 4 cards of each element. You may use up to 2 copies of each Common or Uncommon card, and 1 of each Rare, Epic or Legendary. No role is required.</p><p>Deck cost is Power plus a rarity surcharge: Common/Uncommon +0, Rare +1, Epic +4, Legendary +6. It never changes combat Power. Choose a starter deck or build and save your own before the duel. The current opponent uses Balanced Formation; future rivals will have distinct decks.</p></section>
-        <section><h3>Read your opponent</h3><p>Guided shows the opponent's elements and Power ranges. Instinct conceals their formation but reveals three persistent habits. Blind conceals both formation and habits. Previous Rounds History records all four lanes after a round is complete.</p></section>
+        <section><h3>Build your deck</h3><p>Each deck contains 24 cards and costs no more than 120. Include at least 4 cards of each element. You may use up to 2 copies of each Common or Uncommon card, and 1 of each Rare, Epic or Legendary. No role is required.</p><p>Deck cost is Power plus a rarity surcharge: Common/Uncommon +0, Rare +1, Epic +4, Legendary +6. It never changes combat Power. Choose a starter deck or build and save your own before the duel. Every rival follows these same deck limits.</p></section>
+        <section><h3>Choose a rival</h3><p>Versatile Duelist uses Balanced Formation. Banner Captain uses Rally Company. Cycle Weaver uses Element Weavers. Twilight Duelist uses Last Light. Choose one in the Four-Lane lobby or let Random Rival choose for you.</p><p>Each rival draws three habits from a pool that suits its deck. They stay fixed throughout the duel. Restarting or changing difficulty retains the rival, deck and habits; start again from the lobby to roll new habits or a new random rival. Rivals adapt to completed rounds, not your hidden hand or deck.</p></section>
+        <section><h3>Read your opponent</h3><p>Guided shows the opponent's elements and Power ranges. Instinct conceals their formation but reveals three persistent habits. Blind conceals formation, habits and the in-game rival identity. Select Random Rival if you also want to deduce the deck style yourself. Previous Rounds History records all four lanes after a round is complete.</p></section>
       </div>
       <button class="primary-button" data-close-four-lane-rules type="button">Return</button>
     </dialog>
@@ -1263,6 +1272,7 @@
     <script defer src="./src/rules.js"></script>
     <script defer src="./src/four-lane-rules.js"></script>
     <script defer src="./src/deckbuilding.js"></script>
+    <script defer src="./src/opponents.js"></script>
     <script defer src="./src/deck-editor.js"></script>
     <script defer src="./src/audio.js"></script>
     <script defer src="./src/game.js"></script>

@@ -6,7 +6,7 @@
   function createController({ catalog, store, cardMarkup, artworkSource, onOpen, onClose, root = document }) {
     const ids = ["fourLaneDeckSelect", "fourLaneDeckSummary", "fourLaneDeckStorageNotice", "fourLaneDeckEditorButton",
       "deckEditorScreen", "deckEditorTitle", "deckEditorReturnButton", "deckEditorName", "deckEditorLoad", "deckEditorNewButton",
-      "deckEditorSaveButton", "deckEditorSaveCopyButton", "deckEditorDeleteButton", "deckEditorStats", "deckEditorErrors",
+      "deckEditorSaveButton", "deckEditorSaveCopyButton", "deckEditorDeleteButton", "deckEditorStats", "deckEditorErrors", "deckEditorTips",
       "deckEditorStatus", "deckEditorSearch", "deckEditorElement", "deckEditorRole", "deckEditorRarity", "deckEditorResetFilters",
       "deckEditorCollection", "deckEditorResults", "deckEditorSelected", "deckEditorSelectedCount", "deckEditorSelectedDetails",
       "deckEditorConfirm", "deckEditorConfirmTitle", "deckEditorConfirmText", "deckEditorConfirmCancel", "deckEditorConfirmProceed"];
@@ -72,11 +72,14 @@
     function renderSummary() {
       const report = currentReport(), { summary } = report;
       ui.deckEditorStats.innerHTML = `<div class="deck-stat-totals"><span><b>${summary.count}/${api.DECK_SIZE}</b> Cards</span>
-        <span><b>${summary.totalCost}/${api.MAX_DECK_COST}</b> Cost</span></div>
+        <span><b>${summary.totalCost}/${api.MAX_DECK_COST}</b> Cost <small>${Math.max(0, api.MAX_DECK_COST - summary.totalCost)} remaining</small></span></div>
         <div class="deck-element-counts">${api.ELEMENTS.map(element => `<span class="${summary.elementCounts[element] < api.MIN_CARDS_PER_ELEMENT ? "is-short" : ""}">${elements[element].icon} ${elements[element].label} <b>${summary.elementCounts[element]}</b><small>min. ${api.MIN_CARDS_PER_ELEMENT}</small></span>`).join("")}</div>
         <p class="deck-role-counts">${api.ROLES.map(role => `${roles[role].label} ${summary.roleCounts[role]}`).join(" · ")}</p>`;
       ui.deckEditorErrors.replaceChildren(...report.errors.map(error => { const item = root.createElement("li"); item.textContent = error.message; return item; }));
       ui.deckEditorErrors.hidden = report.valid;
+      const tips = api.getDeckTips(catalog, draft);
+      ui.deckEditorTips.replaceChildren(...tips.map(text => { const item = root.createElement("li"); item.textContent = text; return item; }));
+      ui.deckEditorTips.parentElement.hidden = !tips.length;
       ui.deckEditorSaveButton.disabled = !report.valid;
       ui.deckEditorSaveCopyButton.hidden = !editingId;
       ui.deckEditorSaveCopyButton.disabled = !report.valid;

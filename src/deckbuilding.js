@@ -131,6 +131,18 @@
     });
   }
 
+  function getDeckTips(catalog, definition) {
+    const report = validateDeck(catalog, definition);
+    if (!report.valid) return Object.freeze([]);
+    const { summary } = report, tips = [];
+    const remaining = MAX_DECK_COST - summary.totalCost;
+    if (remaining >= 8) tips.push(`${remaining} cost unused. You can afford upgrades, if they fit your strategy.`);
+    const scarce = ELEMENTS.filter(element => summary.elementCounts[element] === MIN_CARDS_PER_ELEMENT);
+    if (scarce.length) tips.push(`Only ${scarce.map(element => `${MIN_CARDS_PER_ELEMENT} ${ELEMENT_NAMES[element]} cards`).join(" and ")}. Drawing those elements for trophies may be harder.`);
+    if (summary.roleCounts.finisher > 8) tips.push("Only a Finisher committed last in a formation of at least two cards earns its role bonus. Earlier Finishers still use their normal Power and elemental edge.");
+    return Object.freeze(tips);
+  }
+
   const PRESETS = Object.freeze([
     {
       id: "balanced", name: "Balanced Formation",
@@ -163,9 +175,11 @@
       id: "finisher", name: "Last Light",
       description: "Finisher-heavy formations save their strongest finish for the last committed card.",
       cards: [
-        "comet-claw", "toastie-toe-beans", "flaskfoot-felix", "flaskfoot-felix", "cinder-kit", "cinder-kit", "teapot-tabby", "teapot-tabby",
-        "leafy-loaf", "belfry-bobtail", "dandelion-dash", "dandelion-dash", "kitewhisker", "kitewhisker", "windlass-whiskers", "windlass-whiskers",
-        "empress-ebb", "isai-tidebind", "mizzle-motley", "mizzle-motley", "wellwater-wisp", "wellwater-wisp", "rivertow-ragdoll", "rivertow-ragdoll",
+        // Keep the Finisher identity, but avoid paying for two legends at the
+        // expense of the supporting lanes. Every rival uses this same preset.
+        "comet-claw", "toastie-toe-beans", "flaskfoot-felix", "flaskfoot-felix", "cinder-kit", "cinder-kit", "shazmir-ashveil", "shazmir-ashveil",
+        "leafy-loaf", "belfry-bobtail", "belfry-bobtail", "dandelion-dash", "kitewhisker", "kitewhisker", "windlass-whiskers", "windlass-whiskers",
+        "isai-tidebind", "isai-tidebind", "mizzle-motley", "mizzle-motley", "moatgate-mau", "moatgate-mau", "moonpool-mouser", "moonpool-mouser",
       ],
     },
   ].map(preset => Object.freeze({ ...preset, version: VERSION, cards: Object.freeze(preset.cards) })));
@@ -264,6 +278,6 @@
   global.ClawDeckbuilding = Object.freeze({
     VERSION, DECK_SIZE, MAX_DECK_COST, MIN_CARDS_PER_ELEMENT, MAX_NAME_LENGTH, MAX_SAVED_DECKS, STORAGE_KEY,
     ELEMENTS, ROLES, COPY_LIMITS, RARITY_COST_BONUS,
-    createCardCatalog, validateDeck, buildDeckInstances, createStarterPresets, createDeckStore,
+    createCardCatalog, validateDeck, getDeckTips, buildDeckInstances, createStarterPresets, createDeckStore,
   });
 })(globalThis);

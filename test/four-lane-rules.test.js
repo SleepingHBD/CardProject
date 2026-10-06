@@ -137,7 +137,7 @@ test("the rules strip and dedicated Four-Lane rules explain the cap without chan
   const nodes = { ".arena": { setAttribute() {} }, "#gameTitle": {},
     ".rules-strip .rule-chip.gust": {}, ".rules-strip .rule-chip.tide": {} };
   const context = { state: { gameMode: "four-lane" }, document: { body: { dataset: {} }, querySelector: selector => nodes[selector] },
-    isFourLaneMode: () => true, renderGallery() {} };
+    isFourLaneMode: () => true, renderGallery() {}, renderFourLaneRivalInfo() {} };
   runInNewContext(sourceFunction("renderDuelMode"), context);
   context.renderDuelMode();
   assert.match(nodes[".rules-strip .rule-chip.gust"].innerHTML, /up to 2 per side per round/);
@@ -455,7 +455,8 @@ test("live personal decks use 24 validated cards, allow duplicate templates and 
   const constructedDecks = globalThis.ClawDeckbuilding;
   const fourLaneDeckCatalog = constructedDecks.createCardCatalog(cardDefinitions);
   const fourLaneStarterDecks = constructedDecks.createStarterPresets(fourLaneDeckCatalog);
-  const context = { shuffle: cards => cards, constructedDecks, fourLaneDeckCatalog, fourLaneStarterDecks, matchFourLaneDeck: fourLaneStarterDecks[0] };
+  const context = { shuffle: cards => cards, constructedDecks, fourLaneDeckCatalog, fourLaneStarterDecks,
+    matchFourLaneDeck: fourLaneStarterDecks[0], matchFourLaneOpponent: { deck: fourLaneStarterDecks[0] } };
   runInNewContext(sourceFunction("freshPersonalDeck"), context);
   const player = JSON.parse(runInNewContext('JSON.stringify(freshPersonalDeck("player"))', context));
   const opponent = JSON.parse(runInNewContext('JSON.stringify(freshPersonalDeck("opponent"))', context));

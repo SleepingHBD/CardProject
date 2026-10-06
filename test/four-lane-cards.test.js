@@ -5,6 +5,7 @@ import { runInNewContext } from "node:vm";
 
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const rulesSource = readFileSync(new URL("../src/rules.js", import.meta.url), "utf8");
+const fourLaneRulesSource = readFileSync(new URL("../src/four-lane-rules.js", import.meta.url), "utf8");
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const approvedCards = ["rare-rally-artwork.json", "uncommon-rally-artwork.json", "common-rally-artwork.json"].flatMap(file => (
   JSON.parse(readFileSync(new URL(`../assets/cards/four-lane/${file}`, import.meta.url), "utf8")).cards
@@ -27,6 +28,7 @@ function fixture() {
     shuffle: cards => cards,
   };
   runInNewContext(rulesSource, context);
+  runInNewContext(fourLaneRulesSource, context);
   context.ELEMENTS = context.ClawRules.ELEMENTS;
   context.TACTICS = context.ClawRules.TACTICS;
   runInNewContext([

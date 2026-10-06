@@ -152,6 +152,8 @@ test("launch snapshots the selected deck; later saved edits cannot alter restart
   const source = gameSource.slice(start, gameSource.indexOf("\n}", start) + 2);
   const context = {
     constructedDecks: api, fourLaneDeckCatalog: catalog,
+    fourLaneOpponents: { createEncounter: () => ({ deck: starters[0], traits: [] }) },
+    fourLaneOpponentRoster: [], selectedFourLaneOpponent: "random",
     fourLaneDeckEditor: { getSelectedDeck: () => store.getDeck() },
     isFourLaneMode: () => true, hideFourLanePreview: () => {}, stopTutorialMode: () => {},
     closeGameMenu: () => {}, setGameMenuVisibility: () => {}, state: { locked: false },

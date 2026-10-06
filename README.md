@@ -29,7 +29,7 @@ npm run dev
 - A round winner claims one lane-winning card as a trophy, or the first extra card if no lanes were won. A drawn round awards no trophy. Collect two trophies of each element to win the match.
 - Normal Play retains its three lanes, six-card hands and shared-deck refill rules.
 
-#### Deckbuilding — Phase 2 editor and constructed duels
+#### Deckbuilding — editor and constructed duels
 
 Open **Four-Lane Mode** from the main menu, choose a starter or saved deck, or select **Build a Deck**. The editor includes live validation, search and element/role/rarity filters. Save a valid deck to select it for your next duel. Starting from a starter list creates your own copy; the original starter cannot be changed or deleted. Normal Play stays unchanged.
 
@@ -41,9 +41,41 @@ Open **Four-Lane Mode** from the main menu, choose a starter or saved deck, or s
 - Four legal starter lists: Balanced Formation, Rally Company, Element Weavers and Last Light. Each uses 24 cards, but focuses on a different mix of roles.
 - Deck definitions store stable card identifiers, not editable Power values or image paths. Validation and runtime instances use the canonical game card library.
 - Up to 12 custom decks are saved in this browser's local storage, not on an account or server. Clearing site data removes them. If storage is blocked/full, decks remain usable for the session and the interface reports that they could not be persisted.
-- Restarting a duel or changing its difficulty keeps its selected deck. The opponent currently uses the legal Balanced Formation starter deck, with existing Guided/Instinct/Blind behavior. Distinct rival decks and archetypes are the next phase.
+- Restarting a duel or changing its difficulty keeps its selected deck, rival deck and habit set. Enter a new duel from the lobby to choose another rival or roll new habits.
 
-These limits are provisional, not a claim that every custom deck is balanced. Constructed duels remain part of the work-in-progress Four-Lane Mode; broader balance and exploit testing with varied decks and opponent archetypes is the next phase.
+#### Phase 3 — rival decks and playstyles
+
+The lobby now offers **Random Rival** (the default) or four specific opponents. Each follows the same 24-card, 120-cost, element-minimum and copy-limit rules as the player. These initial rivals use the corresponding legal starter lists, not stronger exclusive cards:
+
+- **Versatile Duelist** — Balanced Formation: an even role mix and the full habit pool.
+- **Banner Captain** — Rally Company: Vanguards supported by Rally, with opener/role-planning habits and measured, push or trophy-responsive commitments.
+- **Cycle Weaver** — Element Weavers: a Link-heavy deck, Role Planner and measured, echo or changing formation sizes.
+- **Twilight Duelist** — Last Light: a Finisher-heavy deck, late-strike/role-planning habits and recovery, measured or trophy-responsive commitments.
+
+Each rival rolls one motive, one formation habit and one commitment habit from deck-appropriate pools. All three remain fixed during a duel. The opponent uses these habits in every difficulty; Guided reveals live clues, Instinct reveals habits, and Blind hides both plus the in-game rival identity. Choosing a specific rival still tells you its deck theme; use Random Rival for a mystery matchup.
+
+The AI's deck preference rewards *active* Rally, Link or Finisher bonuses only when strategic choices are close. It does not force a bad formation to fit a theme. Its decisions use its own hand, public trophies, completed rounds and the public collection—not the player's custom deck, hidden hand or current selection. Normal Play and its randomized habits are unchanged.
+
+#### Phase 4 — balance audit and interface polish
+
+The lobby places deck and rival selection before launching the duel, with the 12-card showcase collapsed until requested. The editor shows remaining cost and optional tips for unused budget, scarce trophy elements and Finisher-heavy decks. Tips never make a legal deck invalid; omitted roles and unequal element counts remain permitted.
+
+Last Light's starter/rival list was adjusted after it underperformed: one Legendary rather than two, stronger supporting Links/Vanguards, and a second Belfry Bobtail. It retains 24 cards, 118 cost, eight of each element and 12 Finishers. Card stats, scoring, role rules and saved custom lists were not changed.
+
+Run the reproducible audit separately from the regression suite:
+
+```bash
+npm test
+npm run audit:deckbuilding -- 8 48103
+```
+
+The final audit ran 4,896 simulated matches: 17 legal deck lists × four rivals × nine strategy probes × eight paired seeds. Lists included the starters, low-budget and premium-heavy builds, 16/4/4 element concentrations, omission of each role, and seeded random builds. Probes included adaptive play, fixed 1/2/3/4-card commitments (limited by the actual hand), push/recovery cycles, a strong first card with cheap support, and cheap pushes against single-card play. All matches finished within 48 rounds; card ownership/counts, trophy removal, draw limits, habit persistence and the two-point extra-card cap were checked throughout.
+
+In this cohort, repeated singles won 4.0%, repeated two-card play 35.8%, adaptive play 41.4%, and the 3/1 cycle 44.3%. These are benchmark-policy results, not estimates of human win rates. No tested repeatable exploit dominated all matchups. Rally Company remains a strong starter/rival; Last Light now performs closer to the other decks. There is no claim of perfect balance or exhaustive exploit coverage.
+
+Browser QA covered custom-deck editing, saving/reloading, safe text handling, discarded-edit protection, live bonuses, four-lane history, restart/difficulty persistence, Blind information hiding, and a completed ten-round custom-deck duel. Lobby/editor layouts were checked at 1440×900, 1024×768, 844×390, 568×320, 390×844 and 320×740. Normal Play remains isolated from constructed decks and these changes.
+
+Deckbuilding's four initial implementation phases are complete. Construction limits remain provisional and Four-Lane Mode remains work in progress, ready for human playtesting rather than progression/unlock systems.
 
 ## Deploy to GitHub Pages
 

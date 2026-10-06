@@ -101,10 +101,12 @@ test("Four-Lane plans before the reveal using public inputs; Normal Play retains
   const context = { state: { aiHand: ownHand, playerWins: playerTrophies, aiWins: aiTrophies,
     aiTraits: [], previousRoundsHistory: publicHistory, difficulty: "instinct", previousPlayerCommitment: 1, previousAiCommitment: 2 },
     Math, CARD_LIBRARY: hand.slice(0, 4), FOUR_LANE_CARDS: hand.slice(4),
+    matchFourLaneOpponent: { profile: { role: "rally" } },
     isFourLaneMode: () => true,
-    duelRules: () => ({ chooseAiFormation(h, p, a, random, traits, info) {
+    duelRules: () => ({ chooseAiFormation(h, p, a, random, traits, info, role) {
       plannerCalls++; assert.equal(h, ownHand); assert.equal(p, playerTrophies); assert.equal(a, aiTrophies);
       assert.equal(info.history, publicHistory); assert.deepEqual(Object.keys(info).sort(), ["cardLibrary", "history"]);
+      assert.equal(role, "rally");
       return h.slice(0, 2);
     } }),
     chooseAiCommitment: () => { oldCalls++; return 1; },

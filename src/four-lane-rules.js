@@ -115,13 +115,36 @@
         : index < cardCount ? "full" : "empty");
   }
 
-  function createAiTraits(random = Math.random) {
+  function createAiTraits(random = Math.random, pools = null) {
     const descriptions = {
       "solo-gambler": "Favors committing 1 card when his hand needs rebuilding, but can commit more to avoid giving away rounds.",
       "measured-planner": "Favors 2-card formations when they offer a good chance to win.",
       "full-formation": "Favors 4-card pushes, then smaller formations to rebuild the opponent's hand.",
     };
-    return normal.createAiTraits(random).map(trait => Object.freeze({ ...trait,
+    let traits;
+    if (pools === null) traits = normal.createAiTraits(random);
+    else {
+      const pick = (templates, category) => {
+        const ids = pools[category];
+        if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length
+          || Array.from(ids).some(id => !templates.some(trait => trait.id === id))) {
+          throw new RangeError(`Invalid ${category} habit pool.`);
+        }
+        const roll = random();
+        if (!Number.isFinite(roll)) throw new TypeError("A habit roll must be finite.");
+        return { ...templates.find(trait => trait.id === ids[Math.floor(Math.min(.999999, Math.max(0, roll)) * ids.length)]) };
+      };
+      traits = [pick(normal.AI_MOTIVE_TRAITS, "motive"), pick(normal.AI_FORMATION_TRAITS, "formation"),
+        pick(normal.AI_COMMITMENT_TRAITS, "commitment")];
+      if (traits[0].id === "element-loyalist") {
+        const roll = random();
+        if (!Number.isFinite(roll)) throw new TypeError("An element roll must be finite.");
+        const element = Object.keys(ELEMENTS)[Math.floor(Math.min(.999999, Math.max(0, roll)) * 3)];
+        Object.assign(traits[0], { element, label: `${ELEMENTS[element].label} Loyalist`,
+          description: `Favors ${ELEMENTS[element].label} cards whenever available.` });
+      }
+    }
+    return traits.map(trait => Object.freeze({ ...trait,
       description: descriptions[trait.id] || trait.description,
     }));
   }
@@ -296,7 +319,7 @@
     return preferred?.cards;
   }
 
-  function chooseAiFormation(hand, playerWins, aiWins, random = Math.random, traits = [], publicInfo = {}) {
+  function chooseAiFormation(hand, playerWins, aiWins, random = Math.random, traits = [], publicInfo = {}, preferredRole = null) {
     if (!hand.length) return [];
     const read = readPlayerHistory(publicInfo.history || []);
     // The library is public card definitions, not a list of live player cards.
@@ -310,7 +333,8 @@
     const seeksPower = has("power-seeker");
     const plansRoles = has("tactic-planner");
     const rebuilding = has("solo-gambler") && hand.length < HAND_SIZE;
-    const hasRefinedPreference = seeksPower || plansRoles || rebuilding;
+    const roleFocus = ["rally", "link", "finisher"].includes(preferredRole) ? preferredRole : null;
+    const hasRefinedPreference = seeksPower || plansRoles || rebuilding || roleFocus;
     const loyalElement = traits.find(trait => trait.id === "element-loyalist")?.element;
     const need = counts => Object.keys(ELEMENTS).reduce((sum, element) =>
       sum + Math.max(0, TROPHIES_PER_ELEMENT - counts[element]), 0);
@@ -379,7 +403,11 @@
         const rolePreference = plansRoles
           ? bonuses.reduce((sum, bonus) => sum + bonus, 0) / (2 * count) : 0;
         const recoveryPreference = rebuilding ? (MAX_COMMITMENT - count) / (MAX_COMMITMENT - 1) : 0;
-        closePlans.push({ cards, score, preference: powerPreference + rolePreference + recoveryPreference });
+        // A rival's deck theme only breaks close strategic choices. Count active
+        // bonuses, not role labels: Rally in Lane 1 and inactive Links earn nothing.
+        const deckPreference = roleFocus ? cards.reduce((sum, card, lane) => sum + (roleFocus === "rally"
+          ? getRallyBonus(cards, lane) : card.tactic === roleFocus ? getTacticBonus(cards, lane) : 0), 0) / count : 0;
+        closePlans.push({ cards, score, preference: powerPreference + rolePreference + recoveryPreference + deckPreference });
       }
     };
     const visit = () => {

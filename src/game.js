@@ -753,6 +753,10 @@ let browserDeckStorage;
 try { browserDeckStorage = window.localStorage; } catch { /* Session-only decks remain usable. */ }
 const fourLaneDeckStore = constructedDecks.createDeckStore(fourLaneDeckCatalog, browserDeckStorage);
 let matchFourLaneDeck = fourLaneStarterDecks[0];
+const fourLaneOpponents = globalThis.ClawFourLaneOpponents;
+const fourLaneOpponentRoster = fourLaneOpponents.createRoster(fourLaneDeckCatalog);
+let selectedFourLaneOpponent = "random";
+let matchFourLaneOpponent = fourLaneOpponents.createEncounter(fourLaneOpponentRoster, "balanced");
 const fourLaneDeckEditor = globalThis.ClawDeckEditor.createController({
   catalog: fourLaneDeckCatalog, store: fourLaneDeckStore,
   cardMarkup: card => cardMarkup(card, false, -1, "four-lane-preview"),
@@ -824,6 +828,14 @@ function renderDuelMode() {
     ? "<b>TROPHY</b> Claim a lane-winning card; if you won no lanes, claim your first extra card"
     : "<b>TROPHY</b> A round win awards one played card";
   renderGallery();
+  renderFourLaneRivalInfo();
+}
+
+function renderFourLaneRivalInfo() {
+  const info = document.querySelector("#fourLaneRivalInfo");
+  const visible = isFourLaneMode() && state.difficulty !== "blind";
+  info.hidden = !visible;
+  info.textContent = visible ? `${matchFourLaneOpponent.profile.name} · ${matchFourLaneOpponent.deck.name}` : "";
 }
 
 function getPlayerFormationLimit() {
@@ -1888,7 +1900,7 @@ function freshDeck() {
 }
 
 function freshPersonalDeck(side) {
-  const definition = side === "player" ? matchFourLaneDeck : fourLaneStarterDecks[0];
+  const definition = side === "player" ? matchFourLaneDeck : matchFourLaneOpponent.deck;
   return shuffle(constructedDecks.buildDeckInstances(fourLaneDeckCatalog, definition, side));
 }
 
@@ -1938,6 +1950,7 @@ function prepareAiPlan() {
       Math.random,
       state.aiTraits,
       { history: state.previousRoundsHistory, cardLibrary: [...CARD_LIBRARY, ...FOUR_LANE_CARDS] },
+      matchFourLaneOpponent.profile.role,
     );
     state.aiTellClues = buildTellClues(state.aiPlan.length, state.difficulty);
     return;
@@ -2320,7 +2333,7 @@ function cardMarkup(
   const element = ELEMENTS[card.element];
   const isFourLanePreview = displayMode === "four-lane-preview";
   const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
-  const tactic = cardRoleDefinition(card);
+  const tactic = cardRoleDefinition(card, isFourLanePreview ? "four-lane" : state.gameMode);
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
@@ -4284,6 +4297,17 @@ function renderFourLaneCards() {
   `).join("");
 }
 
+function renderFourLaneOpponents() {
+  const choices = [{ id: "random", name: "Random Rival", theme: "Mystery matchup",
+    description: "Face one of the four rival decks. Recommended for Blind." }, ...fourLaneOpponentRoster];
+  document.querySelector("#fourLaneRivalOptions").innerHTML = choices.map(rival => `
+    <label class="four-lane-rival-option${rival.id === "random" ? " is-random" : ""}">
+      <input type="radio" name="fourLaneRival" value="${rival.id}" ${selectedFourLaneOpponent === rival.id ? "checked" : ""}>
+      <span><b>${rival.name}</b><small>${rival.theme}</small><span>${rival.description}</span></span>
+    </label>
+  `).join("");
+}
+
 function showFourLanePreview() {
   showMainMenu();
   ui.mainMenuScreen.hidden = true;
@@ -4292,6 +4316,7 @@ function showFourLanePreview() {
   fourLanePreviewBackground.forEach(({ element }) => { element.inert = true; });
   ui.fourLanePreviewScreen.hidden = false;
   fourLaneDeckEditor.renderLobby();
+  renderFourLaneOpponents();
   renderFourLaneCards();
   ui.fourLanePreviewScreen.scrollTop = 0;
   ui.fourLanePreviewTitle.focus({ preventScroll: true });
@@ -4315,6 +4340,7 @@ function showDifficultyChooser(returnTarget = "main") {
     // Immutable snapshot: restarting/changing difficulty keeps this match's deck,
     // even if the saved selection is changed in a later lobby visit.
     matchFourLaneDeck = Object.freeze({ version: selected.version, name: selected.name, cards: Object.freeze([...selected.cards]) });
+    matchFourLaneOpponent = fourLaneOpponents.createEncounter(fourLaneOpponentRoster, selectedFourLaneOpponent);
     hideFourLanePreview();
   }
   document.querySelector("#difficultyIntro").textContent =
@@ -4365,7 +4391,8 @@ async function startGame() {
   state.aiWins = [];
   state.aiPlan = [];
   state.aiTellClues = [];
-  state.aiTraits = usesPersistentAiHabits() ? createAiTraits() : [];
+  state.aiTraits = isFourLaneMode() ? [...matchFourLaneOpponent.traits]
+    : usesPersistentAiHabits() ? createAiTraits() : [];
   state.previousRoundsHistory = [];
   renderOpponentHabits();
   renderPreviousRoundsHistory();
@@ -4386,6 +4413,7 @@ async function startGame() {
   ui.battlefield.classList.remove("is-clashing");
   refillHands(true);
   prepareAiPlan();
+  if (isFourLaneMode()) renderOpponentTells();
   renderFormationControls();
   ui.playerPlayZone.innerHTML = placeholder("Preparing formation");
   ui.aiPlayZone.innerHTML = placeholder("Formation sealed");
@@ -4585,6 +4613,13 @@ ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
 ui.mainMenuFourLaneButton.addEventListener("click", showFourLanePreview);
 ui.fourLaneReturnButton.addEventListener("click", leaveFourLanePreview);
 ui.fourLaneStartButton.addEventListener("click", () => showDifficultyChooser("four-lane"));
+document.querySelector("#fourLaneRivalOptions").addEventListener("change", (event) => {
+  const input = event.target;
+  if (!input.matches('input[name="fourLaneRival"]') || !input.checked) return;
+  if (input.value === "random" || fourLaneOpponentRoster.some(rival => rival.id === input.value)) {
+    selectedFourLaneOpponent = input.value;
+  }
+});
 ui.fourLanePreviewScreen.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   event.preventDefault();

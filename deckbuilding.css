@@ -7,6 +7,20 @@
 .four-lane-deck-choice p { margin: 10px 0 0; line-height: 1.5; }
 .four-lane-deck-choice button { min-height: 48px; padding: 12px 24px; }
 .deck-storage-notice { color: #f0ce85; }
+.four-lane-rival-choice { min-width: 0; margin: 0; padding: 18px 22px 22px; border: 1px solid #a98349; border-radius: 6px; background: #0f0a0844; }
+.four-lane-rival-choice legend { padding: 0 8px; color: #f1d492; font: 800 23px/1.3 "Cinzel", serif; }
+.four-lane-rival-choice > p { margin: 0 0 16px; color: #d4c4a8; font-size: 14px; line-height: 1.6; }
+.four-lane-rival-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.four-lane-rival-option { display: flex; align-items: start; gap: 12px; padding: 16px; min-width: 0; border: 1px solid #775d3d; border-radius: 5px; background: #30231c; cursor: pointer; }
+.four-lane-rival-option.is-random { grid-column: 1 / -1; }
+.four-lane-rival-option:has(input:checked) { border-color: #f0cd78; background: #4b3623; box-shadow: inset 0 0 0 1px #f0cd7877; }
+.four-lane-rival-option:has(input:focus-visible) { outline: 3px solid #f0c864; outline-offset: 3px; }
+.four-lane-rival-option input { flex: 0 0 20px; width: 20px; height: 20px; margin: 2px 0 0; accent-color: #d7ad51; }
+.four-lane-rival-option > span { display: grid; gap: 6px; min-width: 0; line-height: 1.5; }
+.four-lane-rival-option b { color: #f3d696; font: 800 17px/1.35 "Cinzel", serif; }
+.four-lane-rival-option small { color: #eccb81; font-weight: 900; font-size: 12px; }
+.four-lane-rival-option span span { color: #d4c4a8; font-size: 13px; }
+.four-lane-rival-info:not([hidden]) { display: block; margin: 3px 0; color: #efcf89; }
 .deck-editor-screen { position: fixed; inset: 0; z-index: 1010; overflow: auto; overscroll-behavior: contain; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); color: #efddb4; background: radial-gradient(ellipse at 20% 0%, #66422c55, transparent 60%), #251b17; box-shadow: inset 0 0 0 3px #9c743a, inset 0 0 0 7px #201411; }
 .deck-editor-screen[hidden] { display: none; }
 .deck-editor-content { width: min(1440px, 100%); margin: auto; }
@@ -48,11 +62,19 @@
 .deck-card-cost { display: flex; justify-content: space-between; gap: 6px; padding: 12px 0 6px; color: #e6c985; font-size: 13px; }
 .deck-card-role { min-height: 58px; margin: 0 0 8px; color: #ddcaaa; font-size: 12px; line-height: 1.5; }
 .deck-card-controls { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; gap: 6px; text-align: center; font-weight: 900; }
-:is(.deck-card-controls, .deck-selected-row) button { min-width: 38px; min-height: 44px; padding: 0; font-size: 23px; line-height: 1; }
+:is(.deck-card-controls, .deck-selected-row) button { min-width: 44px; min-height: 44px; padding: 0; font-size: 23px; line-height: 1; }
 .deck-composition-panel { position: sticky; top: 16px; max-height: calc(100dvh - 32px); overflow: auto; padding: 20px; border: 1px solid #b08b4d; border-radius: 6px; background: #37251c; scrollbar-width: thin; }
 .deck-stat-totals { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .deck-stat-totals span { display: grid; gap: 4px; font-size: 13px; color: #d1b990; }
 .deck-stat-totals b { color: #f5d887; font: 900 24px/1.2 "Cinzel", serif; }
+.deck-stat-totals small { color: #dfc795; font-size: 11px; }
+.deck-editor-tips { margin: 14px 0; padding: 12px; border: 1px solid #927444; border-radius: 4px; background: #251912; }
+.deck-editor-tips h3 { margin: 0 0 8px; color: #ebd39d; font-size: 13px; }
+.deck-editor-tips ul { margin: 0; padding-left: 16px; color: #d6c4a2; font-size: 12px; line-height: 1.6; }
+.deck-editor-tips li + li { margin-top: 8px; }
+.four-lane-card-disclosure summary { min-height: 44px; color: #f1d492; font: 800 20px/1.4 "Cinzel", serif; cursor: pointer; }
+.four-lane-card-disclosure > p { margin: 0 0 20px; color: #d4c4a8; font-size: 14px; line-height: 1.6; }
+.four-lane-card-disclosure summary:focus-visible { outline: 3px solid #f0c864; outline-offset: 3px; }
 .deck-element-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .deck-element-counts > span { display: grid; gap: 4px; padding: 8px 3px; text-align: center; border: 1px solid #88704a; border-radius: 4px; font-size: 13px; }
 .deck-element-counts .is-short { border-color: #d29c75; color: #ffd0ae; }
@@ -68,7 +90,7 @@
 .deck-selected-details summary { cursor: pointer; min-height: 36px; font-weight: 900; }
 .deck-selected-details summary span { float: right; color: #f5d887; }
 .deck-selected-list { display: grid; gap: 8px; margin-top: 8px; }
-.deck-selected-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 22px 38px; align-items: center; gap: 7px; padding: 6px 0; border-bottom: 1px solid #80604466; }
+.deck-selected-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 22px 44px; align-items: center; gap: 7px; padding: 6px 0; border-bottom: 1px solid #80604466; }
 .deck-selected-row img { width: 36px; height: 45px; object-fit: cover; border: 1px solid #bb944e; border-radius: 3px; }
 .deck-selected-row > span { min-width: 0; display: grid; gap: 4px; }
 .deck-selected-row b { font-size: 12px; overflow-wrap: anywhere; }
@@ -90,5 +112,8 @@
   .deck-save-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .deck-save-actions > :first-child { grid-column: 1 / -1; }
   .four-lane-deck-choice { flex-direction: column; align-items: stretch; gap: 14px; }
+  .four-lane-rival-choice { padding: 14px; }
+  .four-lane-rival-options { grid-template-columns: minmax(0, 1fr); }
 }
+@media (max-width: 380px) { .deck-catalog-card .deck-card-controls { gap: 4px; grid-template-columns: minmax(44px, 1fr) 20px minmax(44px, 1fr); } }
 @media (max-width: 380px) { .deck-catalog-card { padding: 5px; } .deck-catalog-card .card-info strong { font-size: 10px; } .deck-catalog-card .card-info small { font-size: 7px; } .deck-catalog-card .card-ability small { display: none; } .deck-catalog-card .card-element { width: 22px; height: 30px; font-size: 17px; } .deck-catalog-card .card-power { width: 30px; height: 36px; } .deck-card-role { min-height: 72px; } .deck-card-cost { font-size: 11px; } .deck-card-controls { grid-template-columns: 1fr 24px 1fr; } }

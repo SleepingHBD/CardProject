@@ -152,7 +152,7 @@ test("Blind conceals live information while using persistent hidden habits", () 
   );
   assert.match(
     gameSource,
-    /state\.aiTraits = usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
+    /state\.aiTraits = isFourLaneMode\(\) \? \[\.\.\.matchFourLaneOpponent\.traits\][\s\S]*?: usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
   );
   assert.match(pageSource, /Blind[\s\S]*Identify the opponent's patterns through <b>Previous Rounds History<\/b>/);
 });

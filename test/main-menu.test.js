@@ -53,6 +53,7 @@ test("opening and leaving the preview preserves duel data and restores backgroun
   const context = {
     ui, state, fourLanePreviewBackground: [],
     renderFourLaneCards: () => {},
+    renderFourLaneOpponents: () => {},
     fourLaneDeckEditor: { close: () => {}, renderLobby: () => {} },
     document: { querySelectorAll: () => background },
     showMainMenu: () => {
