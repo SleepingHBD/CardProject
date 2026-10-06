@@ -37,8 +37,8 @@ test("new Uncommon PNG masters match the existing square Rally master dimensions
   }
 });
 
-test("the wave-rider and glider redesigns retain their exact original drafts without changing Shazmir", () => {
-  assert.equal(manifest.version, 3);
+test("the wave-rider and glider redesigns retain their exact original drafts", () => {
+  assert.equal(manifest.version, 4);
   const hidayn = manifest.cards.find(card => card.name === "Hidayn Windbrace");
   const isai = manifest.cards.find(card => card.name === "Isai Tidebind");
   assert.match(hidayn.characterDescription, /glider soldier/);
@@ -60,8 +60,23 @@ test("the wave-rider and glider redesigns retain their exact original drafts wit
     assert.equal(createHash("sha256").update(backup).digest("hex"), digest);
     assert.notDeepEqual(readFileSync(new URL(card.asset, artworkFolder)), backup);
   }
+});
+
+test("Shazmir's selected grip correction preserves the original and excludes the rejected reverse hold", () => {
   const shazmir = manifest.cards.find(card => card.name === "Shazmir Ashveil");
-  assert.equal(createHash("sha256").update(readFileSync(new URL(shazmir.asset, artworkFolder))).digest("hex"), "1e878708fc9bfc6b2c8db243c24e0fe85e4dd588c92bc7ab6b99b9242af7292d");
+  const preserved = shazmir.revisionHistory.find(revision => revision.type === "original-grip-preserved");
+  assert.equal(preserved.asset, "shazmir-ashveil-original-grip.png");
+  const backup = readFileSync(new URL(preserved.asset, artworkFolder));
+  assert.equal(createHash("sha256").update(backup).digest("hex"), "1e878708fc9bfc6b2c8db243c24e0fe85e4dd588c92bc7ab6b99b9242af7292d");
+  assert.notDeepEqual(readFileSync(new URL(shazmir.asset, artworkFolder)), backup);
+  assert.match(shazmir.latestRevisionPrompt, /NORMAL UPRIGHT FOLDING-FAN GRIP/);
+  assert.match(shazmir.latestRevisionPrompt, /NOT a reverse grip/);
+  const rejected = shazmir.revisionHistory.find(revision => revision.type === "fan-grip-reverse-hold-rejected");
+  assert.ok(rejected);
+  assert.notEqual(shazmir.generationSource, rejected.source);
+  assert.notEqual(shazmir.generationSource, preserved.source);
+  assert.equal(shazmir.asset, "shazmir-ashveil.png");
+  assert.deepEqual(shazmir.intendedStats, { rarity: "uncommon", role: "link", power: 5 });
 });
 
 test("the three framed previews fill the missing non-Rally role per element without changing normal gameplay", () => {
