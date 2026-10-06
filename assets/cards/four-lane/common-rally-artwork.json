@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 16,
   "status": "Framed card previews in the separate four-lane mode; not added to the live three-lane card pool. Rally gameplay is not active yet.",
   "generator": "Built-in ImageGen; no CLI/API fallback used.",
   "imageDimensions": {
@@ -84,7 +84,9 @@
       "proportionRefinement": "Slimmed the exposed near hind leg and reduced its oversized foreground paw while retaining a short folded feline leg, continuous haunch-to-paw connection and grounded foot. The small far hind paw and corrected two-leg layout are retained; head angle, working pose, pottery, outfit and stats remain unchanged."
     },
     {
-      "name": "Jiawen Barleybreeze",
+      "name": "Jyawaye Fieldwhisper",
+      "previousName": "Jiawen Barleybreeze",
+      "renameNote": "Display name changed to the user-selected Jyawaye Fieldwhisper. Existing asset filename, preview identifier, artwork, move, lore and stats are unchanged; historical generation prompts retain the name used when the artwork was created.",
       "basedOn": "Jia Wei",
       "gender": "male",
       "breed": "Korat",

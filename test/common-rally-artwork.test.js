@@ -9,7 +9,7 @@ const rareManifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", 
 test("Common Rally artwork preserves the three approved names, breeds and element assignments", () => {
   assert.deepEqual(manifest.cards.map(({ name, basedOn, gender, breed, element }) => ({ name, basedOn, gender, breed, element })), [
     { name: "Lucan Cinderclay", basedOn: "Lucas", gender: "male", breed: "Singapura", element: "ember" },
-    { name: "Jiawen Barleybreeze", basedOn: "Jia Wei", gender: "male", breed: "Korat", element: "gust" },
+    { name: "Jyawaye Fieldwhisper", basedOn: "Jia Wei", gender: "male", breed: "Korat", element: "gust" },
     { name: "Siewen Rainkeeper", basedOn: "Siew Hean", gender: "male", breed: "LaPerm", element: "tide" },
   ]);
   for (const card of manifest.cards) {
@@ -66,7 +66,7 @@ test("Siewen's seated rain-watching pose preserves his identity and original art
   assert.deepEqual(siewen.intendedStats, { rarity: "common", role: "rally", power: 4 });
 });
 
-test("Lucan's side-on working pose retains his design and Jiawen keeps his original artwork", () => {
+test("Lucan's side-on working pose retains his design and Jyawaye keeps his original artwork", () => {
   const lucan = manifest.cards[0];
   assert.match(lucan.poseDescription, /Left-facing side-on seated working pose/);
   assert.match(lucan.poseDescription, /green eyes looking down/);

@@ -55,6 +55,23 @@ test("all nine framed Rally cards match their approved artwork manifests", () =>
   }
 });
 
+test("Jyawaye's rename updates display and accessibility text without changing preview identity or stats", () => {
+  const context = fixture();
+  const cards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_RALLY_CARDS)", context));
+  const card = cards.find(card => card.id === "four-lane-jiawen-barleybreeze");
+  assert.equal(card.name, "Jyawaye Fieldwhisper");
+  assert.equal(card.art, "jiawen-barleybreeze");
+  assert.equal(card.artworkSource, "./assets/cards/four-lane/jiawen-barleybreeze.png");
+  assert.equal(card.move, "Harvest Breeze");
+  assert.deepEqual({ element: card.element, rarity: card.rarity, role: card.tactic, power: card.power }, {
+    element: "gust", rarity: "common", role: "rally", power: 4,
+  });
+  runInNewContext("renderFourLaneCards()", context);
+  assert.match(context.ui.fourLaneCardGallery.innerHTML, /<strong>Jyawaye Fieldwhisper<\/strong>/);
+  assert.match(context.ui.fourLaneCardGallery.innerHTML, /aria-label="Jyawaye Fieldwhisper, Gust, Common, Power 4, Rally role, preview only"/);
+  assert.doesNotMatch(context.ui.fourLaneCardGallery.innerHTML, /Jiawen Barleybreeze/);
+});
+
 test("the preview reuses Rare, Uncommon and Common frames with Rally labels, icons and safe non-playable markup", () => {
   const context = fixture();
   runInNewContext("renderFourLaneCards()", context);
