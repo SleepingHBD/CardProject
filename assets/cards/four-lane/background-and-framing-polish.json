@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "generator": "Built-in ImageGen",
+  "purpose": "Warm the near-white outer backgrounds of three Fire illustrations to match the existing collection; keep their character designs and red circles.",
+  "imageDimensions": {
+    "width": 1254,
+    "height": 1254
+  },
+  "paletteReferences": [
+    "assets/cards/cinder-kit.webp",
+    "assets/cards/teapot-tabby.webp"
+  ],
+  "cards": [
+    {
+      "name": "Lucan",
+      "asset": "lucan-cinderclay.png",
+      "preservedOriginal": "lucan-cinderclay-before-background-warmth.png",
+      "originalSha256": "5046ca95a95984b5ef554e6afa95b538c9fe4b5bdd69903ca2e2db96aa006571",
+      "currentSha256": "43740ea30dda9d84350cd40b0a43fe7f1eaf6d18ef1415e7695245a1e0a15413",
+      "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-de463aa5-02a6-4ce6-8476-b428d74cc8fe.png",
+      "prompt": "Perform a minimal background-colour edit on image 1, which is the actual card illustration to modify. Images 2 and 3 are palette references only; do not copy their characters, composition, objects or backgrounds.\nReplace only the bright near-white / pale ivory OUTER BACKDROP surrounding the existing brick-red circular field with a gently warm pale cream/parchment, approximately #f6dfb2, matching the subtle warmth of the existing Fire-card reference collection. Keep the main red circle's colour, size and shape exactly as in image 1. Keep the pale ground shadows and their geometry intact, blending the recoloured backdrop naturally into them. The cream should be quiet and light, not orange, brown or dark.\nThis is NOT a redesign or repaint. Preserve image 1's character, drawing, linework, shading, saturation, composition, camera, proportions and all object placements exactly. Lucan's exact pose, two connected hindlegs, slim tail, paw/toe anatomy, clay wheel and cups; his cream cap stopping before the ear; the two matching cream apron straps; and the red apron must remain unchanged.\nDo not recolour any white/cream fur, clothing, cap, cuffs, straps, highlights or other foreground objects. Do not apply a global warm filter. Do not modify faces, paws, eyes, ears, costume, props, or fire. Preserve the same flat illustrated trading-card art style. No text, card border, watermark, new detail or new scenery. Keep a square opaque background, the original crop, and the original dimensions if possible. The only visible difference should be that the overly white outer background is now a restrained warm cream."
+    },
+    {
+      "name": "Charmae",
+      "asset": "charmae-emberhem.png",
+      "preservedOriginal": "charmae-emberhem-before-background-warmth.png",
+      "originalSha256": "bd4d7cdd5d098399088865c1d6589c7216384a8fa99b1183b745547cb6363484",
+      "currentSha256": "97034d2bf3153cd72807df8a3d3779e9bc72436434c608b7ff464a51448ad79c",
+      "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-903d9425-927b-4d7d-9446-9ef8ad31b47e.png",
+      "prompt": "Perform a minimal background-colour edit on image 1, which is the actual card illustration to modify. Images 2 and 3 are palette references only; do not copy their characters, composition, objects or backgrounds.\nReplace only the bright near-white / pale ivory OUTER BACKDROP surrounding the existing brick-red circular field with a gently warm pale cream/parchment, approximately #f6dfb2, matching the subtle warmth of the existing Fire-card reference collection. Keep the main red circle's colour, size and shape exactly as in image 1. Keep the pale ground shadows and their geometry intact, blending the recoloured backdrop naturally into them. The cream should be quiet and light, not orange, brown or dark.\nThis is NOT a redesign or repaint. Preserve image 1's character, drawing, linework, shading, saturation, composition, camera, proportions and all object placements exactly. Charmae's brown fur, green eyes, red-and-gold tunic, sewing paws, stitching thread, red banner, table, tail, anatomy, and pose must remain unchanged.\nDo not recolour any white/cream fur, clothing, cap, cuffs, straps, highlights or other foreground objects. Do not apply a global warm filter. Do not modify faces, paws, eyes, ears, costume, props, or fire. Preserve the same flat illustrated trading-card art style. No text, card border, watermark, new detail or new scenery. Keep a square opaque background, the original crop, and the original dimensions if possible. The only visible difference should be that the overly white outer background is now a restrained warm cream."
+    },
+    {
+      "name": "Shazmir",
+      "asset": "shazmir-ashveil.png",
+      "preservedOriginal": "shazmir-ashveil-before-background-warmth.png",
+      "originalSha256": "d04f30e8ce7277be19233b929f0de2c96320db74e49be1d476d90b9df30422c8",
+      "currentSha256": "87a0d6afec158720f9c8fec357e434523c4b32543c2c1aa957243ef93a4bae74",
+      "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-c7db5f90-921e-497e-8a86-b6ef973d48cb.png",
+      "prompt": "Perform a minimal background-colour edit on image 1, which is the actual card illustration to modify. Images 2 and 3 are palette references only; do not copy their characters, composition, objects or backgrounds.\nReplace only the bright near-white / pale ivory OUTER BACKDROP surrounding the existing brick-red circular field with a gently warm pale cream/parchment, approximately #f6dfb2, matching the subtle warmth of the existing Fire-card reference collection. Keep the main red circle's colour, size and shape exactly as in image 1. Keep the pale ground shadows and their geometry intact, blending the recoloured backdrop naturally into them. The cream should be quiet and light, not orange, brown or dark.\nThis is NOT a redesign or repaint. Preserve image 1's character, drawing, linework, shading, saturation, composition, camera, proportions and all object placements exactly. Shazmir's exact crouch, connected legs, tail, tabby fur, red-and-gold clothing, flame fan, neutral grip, and exactly the existing three rounded toe groups on the fan-holding paw must remain unchanged. Do not add or redraw any fingers.\nDo not recolour any white/cream fur, clothing, cap, cuffs, straps, highlights or other foreground objects. Do not apply a global warm filter. Do not modify faces, paws, eyes, ears, costume, props, or fire. Preserve the same flat illustrated trading-card art style. No text, card border, watermark, new detail or new scenery. Keep a square opaque background, the original crop, and the original dimensions if possible. The only visible difference should be that the overly white outer background is now a restrained warm cream."
+    }
+  ],
+  "frameOnlyAdjustments": [
+    {
+      "template": "isai-tidebind",
+      "imageSha256": "53be3a6ded1a4a7bfe2207d22f1988eb1aec14fd6755ec513f629cda7bee7d26",
+      "adjustment": "Shift artwork left by 3% with a 6% image-only overscan to keep the illustration window covered. No card/frame size changes."
+    },
+    {
+      "template": "sajrin-shellwright",
+      "imageSha256": "2797355d64696579f0a30b1667d44cffe0cdc6b862b634de8ba707222efb337d",
+      "adjustment": "Move artwork down by changing the crop alignment from center 25% to center top. No image regeneration or card/frame size changes."
+    }
+  ]
+}

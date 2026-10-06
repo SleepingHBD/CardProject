@@ -365,13 +365,22 @@ body[data-duel-mode="four-lane"] .game-card[data-card-template="megwyn-windwhist
 body[data-duel-mode="four-lane"] .game-card[data-card-template="deshone-dewguard"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="charmae-emberhem"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="aakith-wayfinder"] .card-art img,
-body[data-duel-mode="four-lane"] .game-card[data-card-template="sajrin-shellwright"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="lucan-cinderclay"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="jiawen-barleybreeze"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="siewen-rainkeeper"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="shazmir-ashveil"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="hidayn-windbrace"] .card-art img,
 body[data-duel-mode="four-lane"] .game-card[data-card-template="isai-tidebind"] .card-art img { object-position: center 25%; }
+
+/* Artwork-only framing: preserve the card and its illustration window dimensions. */
+.game-card[data-card-template="isai-tidebind"] .card-art img {
+  transform: translateX(-3%) scale(1.06);
+  transform-origin: center;
+}
+
+.game-card[data-card-template="sajrin-shellwright"] .card-art img {
+  object-position: center top;
+}
 
 .history-lane-grid.history-four-lanes { grid-template-columns: 70px repeat(4, minmax(0, 1fr)); }
 
