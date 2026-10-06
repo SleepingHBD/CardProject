@@ -38,7 +38,7 @@ test("new Uncommon PNG masters match the existing square Rally master dimensions
 });
 
 test("the wave-rider and glider redesigns retain their exact original drafts", () => {
-  assert.equal(manifest.version, 4);
+  assert.equal(manifest.version, 6);
   const hidayn = manifest.cards.find(card => card.name === "Hidayn Windbrace");
   const isai = manifest.cards.find(card => card.name === "Isai Tidebind");
   assert.match(hidayn.characterDescription, /glider soldier/);
@@ -62,21 +62,52 @@ test("the wave-rider and glider redesigns retain their exact original drafts", (
   }
 });
 
-test("Shazmir's selected grip correction preserves the original and excludes the rejected reverse hold", () => {
+test("Shazmir's neutral-grip revision preserves earlier masters and excludes the rejected backhand holds", () => {
   const shazmir = manifest.cards.find(card => card.name === "Shazmir Ashveil");
   const preserved = shazmir.revisionHistory.find(revision => revision.type === "original-grip-preserved");
   assert.equal(preserved.asset, "shazmir-ashveil-original-grip.png");
   const backup = readFileSync(new URL(preserved.asset, artworkFolder));
   assert.equal(createHash("sha256").update(backup).digest("hex"), "1e878708fc9bfc6b2c8db243c24e0fe85e4dd588c92bc7ab6b99b9242af7292d");
   assert.notDeepEqual(readFileSync(new URL(shazmir.asset, artworkFolder)), backup);
-  assert.match(shazmir.latestRevisionPrompt, /NORMAL UPRIGHT FOLDING-FAN GRIP/);
-  assert.match(shazmir.latestRevisionPrompt, /NOT a reverse grip/);
+  assert.match(shazmir.latestRevisionPrompt, /NEUTRAL GRIP/);
+  assert.match(shazmir.latestRevisionPrompt, /wrist STRAIGHT/);
+  assert.match(shazmir.latestRevisionPrompt, /FAN PROJECTS FORWARD/);
   const rejected = shazmir.revisionHistory.find(revision => revision.type === "fan-grip-reverse-hold-rejected");
   assert.ok(rejected);
   assert.notEqual(shazmir.generationSource, rejected.source);
   assert.notEqual(shazmir.generationSource, preserved.source);
+  const previousBackhand = shazmir.revisionHistory.find(revision => revision.type === "previous-upright-grip-rejected-as-backhand");
+  assert.ok(previousBackhand);
+  assert.equal(previousBackhand.asset, "shazmir-ashveil-before-neutral-grip.png");
+  const previousMaster = readFileSync(new URL(previousBackhand.asset, artworkFolder));
+  assert.equal(createHash("sha256").update(previousMaster).digest("hex"), "991d0bb1631d0dca4ef71617ce3018ae3734ab79dfef2c6b42ebbd6202dd5f98");
+  assert.notDeepEqual(readFileSync(new URL(shazmir.asset, artworkFolder)), previousMaster);
+  assert.notEqual(shazmir.generationSource, previousBackhand.source);
   assert.equal(shazmir.asset, "shazmir-ashveil.png");
   assert.deepEqual(shazmir.intendedStats, { rarity: "uncommon", role: "link", power: 5 });
+});
+
+test("Shazmir's toe-count correction records its focused prompt and preserves the exact neutral-grip master", () => {
+  const shazmir = manifest.cards.find(card => card.name === "Shazmir Ashveil");
+  const previous = shazmir.revisionHistory.find(revision => revision.type === "neutral-grip-preserved-before-toe-count-correction");
+  assert.ok(previous);
+  assert.equal(previous.asset, "shazmir-ashveil-neutral-grip-before-toe-fix.png");
+  const backup = readFileSync(new URL(previous.asset, artworkFolder));
+  assert.equal(createHash("sha256").update(backup).digest("hex"), "09b7c84878066293b484cce86c4c63b86063e15821aecc5cbb631c8dd6c4f188");
+  assert.notDeepEqual(readFileSync(new URL(shazmir.asset, artworkFolder)), backup);
+  assert.notEqual(shazmir.generationSource, previous.source);
+  assert.match(previous.prompt, /ROTATE THE EXISTING OPEN FAN/);
+  assert.match(shazmir.latestRevisionPrompt, /THREE visible toe lobes TOTAL/);
+  assert.match(shazmir.latestRevisionPrompt, /TWO dividing lines/);
+  assert.match(shazmir.latestRevisionPrompt, /REMOVE THE SMALL UPPERMOST THUMB\/FINGER LOBE entirely/);
+  assert.match(shazmir.latestRevisionPrompt, /Keep arm angle, paw centre, fan pivot\/base, fan angle/);
+  assert.match(shazmir.anatomyReview, /Toe-count review is visual/);
+  const unselected = shazmir.revisionHistory.find(revision => revision.type === "toe-count-first-pass-not-selected");
+  assert.ok(unselected);
+  assert.notEqual(shazmir.generationSource, unselected.source);
+  const secondAttempt = shazmir.revisionHistory.find(revision => revision.type === "toe-count-second-pass-rejected");
+  assert.ok(secondAttempt);
+  assert.notEqual(shazmir.generationSource, secondAttempt.source);
 });
 
 test("the three framed previews fill the missing non-Rally role per element without changing normal gameplay", () => {
