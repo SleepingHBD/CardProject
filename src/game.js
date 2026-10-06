@@ -86,6 +86,26 @@ const FOUR_LANE_RALLY_CARDS = Object.freeze([
   art,
   artworkSource: `./assets/cards/four-lane/${art}.png`,
 })));
+const FOUR_LANE_UNCOMMON_CARDS = Object.freeze([
+  ["ember", 5, "Shazmir Ashveil", "Ashen Flourish", "A little flourish. A lot of fire.", "link", "shazmir-ashveil"],
+  ["gust", 5, "Hidayn Windbrace", "Firstwind Descent", "First to land. Ready to stand.", "vanguard", "hidayn-windbrace"],
+  ["tide", 5, "Isai Tidebind", "Closing Current", "One last wave. No way back.", "finisher", "isai-tidebind"],
+].map(([element, power, name, move, lore, tactic, art]) => Object.freeze({
+  id: `four-lane-${art}`,
+  element,
+  power,
+  name,
+  move,
+  lore,
+  rarity: "uncommon",
+  tactic,
+  art,
+  artworkSource: `./assets/cards/four-lane/${art}.png`,
+})));
+const FOUR_LANE_CARDS = Object.freeze([
+  ...FOUR_LANE_RALLY_CARDS,
+  ...FOUR_LANE_UNCOMMON_CARDS,
+]);
 const FOUR_LANE_ROLES = Object.freeze({
   rally: Object.freeze({
     icon: "banner",
@@ -2204,7 +2224,9 @@ function cardMarkup(
   const element = ELEMENTS[card.element];
   const isFourLanePreview = displayMode === "four-lane-preview";
   const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
-  const tactic = (isFourLanePreview ? FOUR_LANE_ROLES[card.tactic] : TACTICS[card.tactic]) || TACTICS.link;
+  const tactic = (isFourLanePreview ? FOUR_LANE_ROLES[card.tactic] : null)
+    || TACTICS[card.tactic]
+    || TACTICS.link;
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
@@ -2233,7 +2255,7 @@ function cardMarkup(
     <button
       class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${cardUsesPhotographicArtwork(card.art) ? " uses-photographic-art" : ""}${isFormationCard ? " selected formation-card" : ""}"
       data-card-template="${card.art}"
-      ${isFourLanePreview ? `data-card-preview="four-lane" aria-label="${displayName}, ${element.label}, ${rarityLabel}, Power ${card.power}, Rally role, preview only"` : ""}
+      ${isFourLanePreview ? `data-card-preview="four-lane" aria-label="${displayName}, ${element.label}, ${rarityLabel}, Power ${card.power}, ${tactic.label} role, preview only"` : ""}
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       type="button"
     >
@@ -4123,7 +4145,7 @@ function hideFourLanePreview() {
 }
 
 function renderFourLaneCards() {
-  ui.fourLaneCardGallery.innerHTML = FOUR_LANE_RALLY_CARDS.map((card) => `
+  ui.fourLaneCardGallery.innerHTML = FOUR_LANE_CARDS.map((card) => `
     <div class="four-lane-card-item" role="listitem">
       ${cardMarkup(card, false, -1, "four-lane-preview")}
     </div>

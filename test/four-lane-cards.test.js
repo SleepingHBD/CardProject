@@ -9,6 +9,7 @@ const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8
 const approvedCards = ["rare-rally-artwork.json", "uncommon-rally-artwork.json", "common-rally-artwork.json"].flatMap(file => (
   JSON.parse(readFileSync(new URL(`../assets/cards/four-lane/${file}`, import.meta.url), "utf8")).cards
 ));
+const additionalUncommons = JSON.parse(readFileSync(new URL("../assets/cards/four-lane/uncommon-expansion-artwork.json", import.meta.url), "utf8")).cards;
 
 function sourceFunction(name) {
   const start = gameSource.indexOf(`function ${name}(`);
@@ -72,26 +73,58 @@ test("Jyawaye's rename updates display and accessibility text without changing p
   assert.doesNotMatch(context.ui.fourLaneCardGallery.innerHTML, /Jiawen Barleybreeze/);
 });
 
-test("the preview reuses Rare, Uncommon and Common frames with Rally labels, icons and safe non-playable markup", () => {
+test("the preview reuses rarity frames with correct role labels, icons and safe non-playable markup", () => {
   const context = fixture();
   runInNewContext("renderFourLaneCards()", context);
   const markup = context.ui.fourLaneCardGallery.innerHTML;
   assert.equal((markup.match(/class="game-card element-\w+ rarity-rare/g) || []).length, 3);
-  assert.equal((markup.match(/class="game-card element-\w+ rarity-uncommon/g) || []).length, 3);
+  assert.equal((markup.match(/class="game-card element-\w+ rarity-uncommon/g) || []).length, 6);
   assert.equal((markup.match(/class="game-card element-\w+ rarity-common/g) || []).length, 3);
-  assert.equal((markup.match(/data-card-preview="four-lane"/g) || []).length, 9);
+  assert.equal((markup.match(/data-card-preview="four-lane"/g) || []).length, 12);
   assert.equal((markup.match(/<b>6<\/b>/g) || []).length, 3);
-  assert.equal((markup.match(/<b>5<\/b>/g) || []).length, 3);
+  assert.equal((markup.match(/<b>5<\/b>/g) || []).length, 6);
   assert.equal((markup.match(/<b>4<\/b>/g) || []).length, 3);
   assert.equal((markup.match(/href="#tactic-icon-banner"/g) || []).length, 18);
-  assert.equal((markup.match(/\sdisabled/g) || []).length, 9);
+  assert.equal((markup.match(/\sdisabled/g) || []).length, 12);
   assert.equal((markup.match(/, Rare, Power 6, Rally role, preview only/g) || []).length, 3);
   assert.equal((markup.match(/, Uncommon, Power 5, Rally role, preview only/g) || []).length, 3);
   assert.equal((markup.match(/, Common, Power 4, Rally role, preview only/g) || []).length, 3);
-  assert.doesNotMatch(markup, /data-card-id|draggable="true"|>Link<|>Vanguard</);
+  for (const role of ["Link", "Vanguard", "Finisher"]) {
+    assert.equal((markup.match(new RegExp(`, Uncommon, Power 5, ${role} role, preview only`, "g")) || []).length, 1);
+  }
+  for (const icon of ["chain", "shield", "sword"]) {
+    assert.equal((markup.match(new RegExp(`href="#tactic-icon-${icon}"`, "g")) || []).length, 2);
+  }
+  assert.doesNotMatch(markup, /data-card-id|draggable="true"/);
   assert.match(pageSource, /symbol id="tactic-icon-banner"/);
   assert.match(pageSource, /id="fourLaneCardGallery" role="list"/);
   assert.match(pageSource, /their gameplay bonus is not active yet/);
+});
+
+test("all three additional Uncommon frames match the approved final artwork and intended roles", () => {
+  const context = fixture();
+  const cards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_UNCOMMON_CARDS)", context));
+  assert.equal(cards.length, 3);
+  const allCards = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_CARDS)", context));
+  assert.equal(allCards.length, 12);
+  assert.equal(new Set(allCards.map(card => card.id)).size, 12);
+  for (const approved of additionalUncommons) {
+    const card = cards.find(card => card.name === approved.name);
+    assert.ok(card);
+    assert.equal(card.element, approved.element);
+    assert.equal(card.move, approved.move);
+    assert.equal(card.lore, approved.lore);
+    assert.deepEqual({ rarity: card.rarity, role: card.tactic, power: card.power }, approved.intendedStats);
+    assert.equal(card.artworkSource, `./assets/cards/four-lane/${approved.asset}`);
+    assert.ok(existsSync(new URL(`../${card.artworkSource}`, import.meta.url)));
+    assert.ok(Object.isFrozen(runInNewContext(`FOUR_LANE_UNCOMMON_CARDS[${cards.indexOf(card)}]`, context)));
+    const markup = runInNewContext(`cardMarkup(FOUR_LANE_UNCOMMON_CARDS[${cards.indexOf(card)}], false, -1, "four-lane-preview")`, context);
+    const role = context.TACTICS[card.tactic];
+    assert.match(markup, new RegExp(`#tactic-icon-${role.icon}`));
+    assert.match(markup, new RegExp(`${role.label} role, preview only`));
+    assert.doesNotMatch(markup, /Rally|data-card-id|draggable="true"/);
+  }
+  assert.match(pageSource, /Nine Rally cards, plus three Uncommon cards/);
 });
 
 test("each element has one Rare, one Uncommon and one Common Rally preview", () => {
@@ -103,13 +136,15 @@ test("each element has one Rare, one Uncommon and one Common Rally preview", () 
   }
 });
 
-test("Rally card previews do not change the normal library, deck or role scoring", () => {
+test("four-lane card previews do not change the normal library, deck or role scoring", () => {
   const context = fixture();
   const deck = JSON.parse(runInNewContext("JSON.stringify(freshDeck())", context));
   assert.equal(runInNewContext("CARD_LIBRARY.length", context), 24);
   assert.equal(runInNewContext("MAX_PLAY_SIZE", context), 3);
   assert.equal(deck.length, 39);
   assert.ok(deck.every(card => card.tactic !== "rally" && !card.artworkSource));
+  const previewArts = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_CARDS.map(card => card.art))", context));
+  assert.ok(deck.every(card => !previewArts.includes(card.art)));
   assert.deepEqual(Object.keys(context.TACTICS), ["vanguard", "link", "finisher"]);
   const normalMarkup = runInNewContext("cardMarkup(CARD_LIBRARY[1])", context);
   assert.match(normalMarkup, /assets\/cards\/candle-pounce.webp/);
@@ -117,15 +152,15 @@ test("Rally card previews do not change the normal library, deck or role scoring
   assert.doesNotMatch(normalMarkup, /data-card-preview|Rally/);
 });
 
-test("updating artwork preferences cannot replace a Rally preview with a missing normal-card image", () => {
+test("updating artwork preferences cannot replace any four-lane preview with a missing normal-card image", () => {
   const context = fixture();
-  const preview = {
-    dataset: { cardTemplate: "deshone-dewguard", cardPreview: "four-lane" },
+  const previews = JSON.parse(runInNewContext("JSON.stringify(FOUR_LANE_CARDS)", context)).map(card => ({
+    dataset: { cardTemplate: card.art, cardPreview: "four-lane" },
     querySelector: () => { throw new Error("preview artwork must not be overwritten"); },
-  };
+  }));
   context.document = {
     documentElement: { dataset: {} },
-    querySelectorAll: () => [preview],
+    querySelectorAll: () => previews,
   };
   assert.doesNotThrow(() => runInNewContext(sourceFunction("updateDisplayedCardArtwork") + "\nupdateDisplayedCardArtwork()", context));
 });
