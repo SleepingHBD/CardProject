@@ -352,8 +352,8 @@ body[data-duel-mode="four-lane"] .control-panel .tactics-board {
 
 @media (min-width: 900px) {
   body[data-duel-mode="four-lane"] .control-panel {
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
-    align-content: stretch;
+    grid-template-rows: auto minmax(0, auto) auto auto;
+    align-content: center;
   }
 }
 

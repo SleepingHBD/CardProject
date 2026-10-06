@@ -4,7 +4,7 @@
   const { ELEMENTS, ELEMENT_EDGE_BONUS, TROPHIES_PER_ELEMENT } = normal;
   const MAX_COMMITMENT = 4;
   const HAND_SIZE = 7;
-  const ROUND_DRAW = 3;
+  const ROUND_DRAW = 2;
   const TACTICS = Object.freeze({
     ...normal.TACTICS,
     link: Object.freeze({ ...normal.TACTICS.link,

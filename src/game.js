@@ -1879,9 +1879,10 @@ function drawCard() {
 
 function refillHands(openingHand = false) {
   if (isFourLaneMode()) {
-    const amount = openingHand ? 7 : 3;
-    const player = duelRules().replenishHand(state.deck, state.discardPile, state.playerHand, amount);
-    const opponent = duelRules().replenishHand(state.aiDeck, state.aiDiscardPile, state.aiHand, amount);
+    const rules = duelRules();
+    const amount = openingHand ? rules.HAND_SIZE : rules.ROUND_DRAW;
+    const player = rules.replenishHand(state.deck, state.discardPile, state.playerHand, amount);
+    const opponent = rules.replenishHand(state.aiDeck, state.aiDiscardPile, state.aiHand, amount);
     return player.reshuffled || opponent.reshuffled;
   }
   let reshuffled = false;
@@ -2739,6 +2740,7 @@ function renderCollection(target, cards) {
 }
 
 function renderRound() {
+  ui.deckStatusText.removeAttribute("title");
   if (tutorial.active && tutorial.phase === "tour") {
     ui.roundLabel.textContent = "INTERFACE TOUR";
   } else if (tutorial.active && tutorial.mode === "lesson") {
@@ -2762,7 +2764,10 @@ function renderRound() {
     return;
   }
   if (isFourLaneMode()) {
-    ui.deckStatusText.innerHTML = `<strong>${state.playerHand.length}/7</strong> in hand · <strong id="deckCount">${state.deck.length}</strong> in your draw pile · ${state.discardPile.length} discarded<br><small>Draw up to 3 next round · your own deck reshuffles only when empty</small>`;
+    const rules = duelRules();
+    const discardCopy = state.discardPile.length ? ` · ${state.discardPile.length} discarded` : "";
+    ui.deckStatusText.innerHTML = `<strong id="deckCount">${state.deck.length}</strong> cards in draw pile${discardCopy}`;
+    ui.deckStatusText.title = `${state.playerHand.length}/${rules.HAND_SIZE} cards in hand; ${state.discardPile.length} discarded. Draw up to ${rules.ROUND_DRAW} next round without exceeding ${rules.HAND_SIZE}. Only your own empty deck reshuffles.`;
     ui.deckCount = document.querySelector("#deckCount");
     return;
   }

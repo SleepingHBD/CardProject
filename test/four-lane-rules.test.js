@@ -19,7 +19,7 @@ const sourceFunction = name => {
 test("four-lane constants and roles are isolated from Normal Play", () => {
   assert.equal(four.MAX_COMMITMENT, 4);
   assert.equal(four.HAND_SIZE, 7);
-  assert.equal(four.ROUND_DRAW, 3);
+  assert.equal(four.ROUND_DRAW, 2);
   assert.equal(four.LANE_WIN_POINTS, 2);
   assert.equal(four.EXTRA_CARD_POINTS, 1);
   assert.equal(normal.MAX_COMMITMENT, 3);
@@ -124,7 +124,7 @@ test("a no-lane-win victory claims the first unopposed card, never another extra
   ]);
 });
 
-test("seven-card opening deals and three-card replenishment respect the hand cap", () => {
+test("seven-card opening deals and two-card replenishment respect the hand cap", () => {
   const deck = Array.from({ length: 36 }, (_, index) => card("gust", 5, "none", `player-${index}`));
   const hand = [];
   assert.equal(four.replenishHand(deck, [], hand, 7).drawn, 7);
@@ -132,21 +132,90 @@ test("seven-card opening deals and three-card replenishment respect the hand cap
   hand.splice(0, 1);
   assert.equal(four.replenishHand(deck, [], hand).drawn, 1);
   hand.splice(0, 4);
-  assert.equal(four.replenishHand(deck, [], hand).drawn, 3);
-  assert.equal(hand.length, 6);
+  assert.equal(four.replenishHand(deck, [], hand).drawn, 2);
+  assert.equal(hand.length, 5);
 });
 
-test("four-card pushes run down 7 to 6 to 5 to 4 to 3; small plays rebuild reserves", () => {
+test("four-card pushes spend reserves and legal small plays rebuild up to seven", () => {
   const deck = Array(40).fill(card());
   const hand = Array(7).fill(card());
-  for (const expected of [6, 5, 4, 3]) {
-    hand.splice(0, 4);
+  for (const [commitment, expected] of [[4, 5], [4, 3], [3, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7]]) {
+    assert.ok(commitment <= hand.length);
+    hand.splice(0, commitment);
     four.replenishHand(deck, [], hand);
     assert.equal(hand.length, expected);
   }
-  hand.splice(0, 1);
-  four.replenishHand(deck, [], hand);
-  assert.equal(hand.length, 5);
+});
+
+test("two-card formations maintain hand size while repeated three-card formations deplete it", () => {
+  const deck = Array(40).fill(card());
+  const hand = Array(7).fill(card());
+  for (let round = 0; round < 5; round++) {
+    hand.splice(0, 2);
+    assert.equal(four.replenishHand(deck, [], hand).drawn, 2);
+    assert.equal(hand.length, 7);
+  }
+  for (const expected of [6, 5, 4, 3, 2]) {
+    hand.splice(0, 3);
+    assert.equal(four.replenishHand(deck, [], hand).drawn, 2);
+    assert.equal(hand.length, expected);
+  }
+});
+
+test("live four-lane refills deal seven initially, then at most two to both players", () => {
+  const context = {
+    state: { deck: [], discardPile: [], playerHand: [], aiDeck: [], aiDiscardPile: [], aiHand: [] },
+    isFourLaneMode: () => true,
+    duelRules: () => four,
+  };
+  const resetDecks = () => {
+    context.state.deck = Array.from({ length: 36 }, (_, index) => card("gust", 5, "none", `player-${index}`));
+    context.state.aiDeck = Array.from({ length: 36 }, (_, index) => card("gust", 5, "none", `opponent-${index}`));
+    context.state.playerHand = [];
+    context.state.aiHand = [];
+  };
+  runInNewContext(sourceFunction("refillHands"), context);
+  for (let playerCount = 1; playerCount <= 4; playerCount++) {
+    resetDecks();
+    assert.equal(context.refillHands(true), false);
+    assert.deepEqual([context.state.playerHand.length, context.state.aiHand.length], [7, 7]);
+    assert.deepEqual([context.state.deck.length, context.state.aiDeck.length], [29, 29]);
+    const opponentCount = 5 - playerCount;
+    context.state.playerHand.splice(0, playerCount);
+    context.state.aiHand.splice(0, opponentCount);
+    context.refillHands();
+    assert.equal(context.state.playerHand.length, Math.min(7, 7 - playerCount + 2));
+    assert.equal(context.state.aiHand.length, Math.min(7, 7 - opponentCount + 2));
+    assert.equal(context.state.deck.length, 29 - Math.min(2, playerCount));
+    assert.equal(context.state.aiDeck.length, 29 - Math.min(2, opponentCount));
+  }
+});
+
+test("Normal Play still refills both hands to six from its shared deck", () => {
+  const context = {
+    state: { deck: Array.from({ length: 39 }, (_, index) => card("gust", 5, "none", `shared-${index}`)), playerHand: [], aiHand: [] },
+    HAND_SIZE: 6,
+    isFourLaneMode: () => false,
+    duelRules: () => { throw new Error("Normal Play must not use the four-lane draw limit"); },
+  };
+  context.drawCard = () => ({ card: context.state.deck.pop() || null, reshuffled: false });
+  runInNewContext(sourceFunction("refillHands"), context);
+  context.refillHands(true);
+  assert.deepEqual([context.state.playerHand.length, context.state.aiHand.length, context.state.deck.length], [6, 6, 27]);
+  context.state.playerHand.splice(0, 3);
+  context.state.aiHand.splice(0, 4);
+  context.refillHands();
+  assert.deepEqual([context.state.playerHand.length, context.state.aiHand.length, context.state.deck.length], [6, 6, 20]);
+});
+
+test("four-lane lobby and rules explain two-card draws and the reserve tradeoff", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const lobby = html.slice(html.indexOf('<section class="four-lane-launch"'), html.indexOf('<section class="four-lane-card-showcase"'));
+  const rules = html.slice(html.indexOf('<div class="four-lane-rules-content"'));
+  assert.match(lobby, /Start with 7.*draw up to 2 between rounds.*exceeding 7/);
+  assert.match(rules, /each draws up to 2.*exceeding 7/);
+  assert.match(rules, /Commit 2 cards to maintain.*Commit 3 or 4 to spend 1 or 2.*Commit 1 to rebuild/);
+  assert.doesNotMatch(lobby + rules, /draw up to 3/);
 });
 
 test("only the owner's empty deck reshuffles and trophy cards stay outside circulation", () => {
@@ -157,7 +226,7 @@ test("only the owner's empty deck reshuffles and trophy cards stay outside circu
   const before = JSON.stringify(opponentDiscard);
   assert.equal(four.replenishHand(playerDeck, playerDiscard, playerHand, 1).reshuffled, false);
   assert.equal(playerDiscard.length, 1);
-  assert.equal(four.replenishHand(playerDeck, playerDiscard, playerHand, 3, () => 0).reshuffled, true);
+  assert.equal(four.replenishHand(playerDeck, playerDiscard, playerHand, four.ROUND_DRAW, () => 0).reshuffled, true);
   assert.equal(playerDiscard.length, 0);
   assert.equal(JSON.stringify(opponentDiscard), before);
   assert.ok(playerHand.every(value => value.instanceId.startsWith("player-")));
@@ -244,7 +313,7 @@ test("100 seeded complete duels conserve each personal deck and exclude trophies
     });
     const traits = four.createAiTraits(random);
     const previous = {};
-    sides.forEach(side => four.replenishHand(side.deck, side.discard, side.hand, 7, random));
+    sides.forEach(side => four.replenishHand(side.deck, side.discard, side.hand, four.HAND_SIZE, random));
     let completed = false;
     for (let round = 0; round < 300; round++) {
       const [player, opponent] = sides;
@@ -269,7 +338,7 @@ test("100 seeded complete duels conserve each personal deck and exclude trophies
       });
       if (sides.some(side => normal.hasCompletedElementSet(side.trophies))) { completed = true; break; }
       sides.forEach(side => {
-        reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 3, random).reshuffled);
+        reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, random).reshuffled);
         assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
       });
       previous.player = playerCount;
@@ -282,9 +351,40 @@ test("100 seeded complete duels conserve each personal deck and exclude trophies
 
 test("four-lane compact layouts reserve controls and contain result labels", () => {
   const css = readFileSync(new URL("../four-lane-preview.css", import.meta.url), "utf8");
-  assert.match(css, /body\[data-duel-mode="four-lane"\] \.control-panel \{[^}]*grid-template-rows: auto minmax\(0, 1fr\) auto auto;/);
+  assert.match(css, /body\[data-duel-mode="four-lane"\] \.control-panel \{[^}]*grid-template-rows: auto minmax\(0, auto\) auto auto;[^}]*align-content: center;/);
   assert.match(css, /body\[data-duel-mode="four-lane"\] \.control-panel \.tactics-board \{[^}]*overflow-y: auto;/);
   assert.match(css, /body\[data-duel-mode="four-lane"\] \.lane-result \{[^}]*min-width: 0;[^}]*width: 100%;/);
+});
+
+test("four-lane deck status uses Normal Play's compact row and clears mode-specific tooltips", () => {
+  const context = {
+    state: { gameMode: "four-lane", round: 2, deck: Array(26), discardPile: Array(3), playerHand: Array(4) },
+    tutorial: { active: false, phase: "idle" },
+    ui: {
+      roundLabel: {},
+      deckStatusText: { removeAttribute(name) { delete this[name]; } },
+    },
+    document: { querySelector: () => ({}) },
+    duelRules: () => four,
+  };
+  context.isFourLaneMode = () => context.state.gameMode === "four-lane";
+  runInNewContext(sourceFunction("renderRound"), context);
+  context.renderRound();
+  const fourLaneMarkup = context.ui.deckStatusText.innerHTML;
+  assert.equal(fourLaneMarkup, '<strong id="deckCount">26</strong> cards in draw pile · 3 discarded');
+  assert.match(context.ui.deckStatusText.title, /4\/7 cards in hand.*Draw up to 2.*Only your own empty deck reshuffles/);
+
+  context.state.gameMode = "normal";
+  context.renderRound();
+  assert.equal(context.ui.deckStatusText.innerHTML, fourLaneMarkup);
+  assert.equal(context.ui.deckStatusText.title, undefined);
+
+  context.ui.deckStatusText.title = "stale four-lane information";
+  context.tutorial.active = true;
+  context.tutorial.phase = "tour";
+  context.renderRound();
+  assert.equal(context.ui.roundLabel.textContent, "INTERFACE TOUR");
+  assert.equal(context.ui.deckStatusText.title, undefined);
 });
 
 test("committed four-lane controls do not advertise a new three-card formation during clashes", () => {
