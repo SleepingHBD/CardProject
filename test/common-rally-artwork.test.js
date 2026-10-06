@@ -8,7 +8,7 @@ const rareManifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", 
 
 test("Common Rally artwork preserves the three approved names, breeds and element assignments", () => {
   assert.deepEqual(manifest.cards.map(({ name, basedOn, gender, breed, element }) => ({ name, basedOn, gender, breed, element })), [
-    { name: "Lucan Crustkeeper", basedOn: "Lucas", gender: "male", breed: "Singapura", element: "ember" },
+    { name: "Lucan Cinderclay", basedOn: "Lucas", gender: "male", breed: "Singapura", element: "ember" },
     { name: "Jiawen Barleybreeze", basedOn: "Jia Wei", gender: "male", breed: "Korat", element: "gust" },
     { name: "Siewen Rainkeeper", basedOn: "Siew Hean", gender: "male", breed: "LaPerm", element: "tide" },
   ]);
@@ -18,6 +18,21 @@ test("Common Rally artwork preserves the three approved names, breeds and elemen
     assert.match(card.anatomyReview, /Four feline limbs total/);
   }
   assert.match(manifest.generator, /Built-in ImageGen/);
+});
+
+test("Lucan's current design is Cinderclay, with the old baker retained only as artwork history", () => {
+  const lucan = manifest.cards[0];
+  assert.equal(lucan.asset, "lucan-cinderclay.png");
+  assert.equal(lucan.move, "Kilnkindle");
+  assert.equal(lucan.lore, "Small cups. Warm company.");
+  assert.match(lucan.characterDescription, /Singapura village potter/);
+  assert.match(lucan.costumeDescription, /terracotta-red/);
+  assert.match(lucan.prompt, /pottery wheel/);
+  assert.match(lucan.prompt, /CLAY CUP/);
+  assert.equal(lucan.previousName, "Lucan Crustkeeper");
+  assert.equal(lucan.revisionHistory[0].asset, "lucan-crustkeeper.png");
+  const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
+  assert.doesNotMatch(gameSource, /Lucan Crustkeeper|lucan-crustkeeper|Warm Welcome/);
 });
 
 test("the selected Siewen artwork is Rainkeeper, with the superseded Reedbinder design recorded separately", () => {
@@ -30,6 +45,46 @@ test("the selected Siewen artwork is Rainkeeper, with the superseded Reedbinder 
   assert.match(siewen.cropReview, /Both eyes/);
   assert.equal(siewen.previousName, "Siewen Reedbinder");
   assert.equal(siewen.revisionHistory[0].asset, "siewen-reedbinder.png");
+});
+
+test("Lucan's side-on working pose retains his design and Jiawen keeps his original artwork", () => {
+  const lucan = manifest.cards[0];
+  assert.match(lucan.poseDescription, /Left-facing side-on seated working pose/);
+  assert.match(lucan.poseDescription, /green eyes looking down/);
+  assert.match(lucan.proportionRefinementPrompt, /exactly TWO coherent hind legs/);
+  assert.match(lucan.proportionRefinementPrompt, /NEAR HIND LEG AND PAW/);
+  assert.match(lucan.farHindLegAttachmentPrompt, /anatomical RIGHT hind paw/);
+  assert.match(lucan.farHindLegAttachmentPrompt, /ONE SHORT, slim, folded sepia lower leg/);
+  assert.match(lucan.farHindLegAttachment, /short tapered ankle/);
+  assert.match(lucan.costumeDescription, /original small cream folded linen work cap is restored/);
+  assert.match(lucan.headgearRestoration, /both ears and eyes remain visible/);
+  assert.match(lucan.headgearRestorationPrompt, /HEADGEAR REFERENCE ONLY/);
+  assert.match(lucan.headgearRestorationPrompt, /preserve this corrected connection exactly/);
+  assert.match(lucan.capEarSeparation, /distinct warm-black contour/);
+  assert.match(lucan.capEarSeparationPrompt, /band BEHIND the near ear/);
+  assert.match(lucan.capBandTrim, /stops before the near ear's dark-brown rim/);
+  assert.match(lucan.capBandTrimPrompt, /TRIM BACK/);
+  assert.match(lucan.capBandTrimPrompt, /about 50-60 pixels/);
+  assert.match(lucan.capBandFit, /without cloth inside or beneath the ear/);
+  assert.match(lucan.capBandFitPrompt, /about 15-20 pixels/);
+  assert.match(lucan.capBandFitPrompt, /FLUSH against the OUTSIDE LEFT contour/);
+  assert.match(lucan.apronStrapCorrection, /Both shoulder straps now match/);
+  assert.match(lucan.costumeDescription, /matching cream-white shoulder straps/);
+  assert.match(lucan.strapRecolourPrompt, /RIGHT shoulder strap of his apron from red to CREAM-WHITE/);
+  assert.match(lucan.apronStrapJunction, /ends at the top seam/);
+  assert.match(lucan.latestRevisionPrompt, /REMOVE the little WHITE RECTANGULAR PATCH/);
+  assert.equal(lucan.strapJunctionRejectedPrompts.length, 2);
+  assert.match(lucan.proportionRefinement, /reduced its oversized foreground paw/);
+  assert.match(lucan.anatomyCorrection, /Removed the separate sepia knee\/leg projection/);
+  assert.match(lucan.rejectedRevisionPrompts[0].reason, /three hind legs/);
+  assert.equal(lucan.revisionHistory.at(-1).asset, "lucan-cinderclay-front-pose.png");
+  const previousArtwork = readFileSync(new URL(lucan.revisionHistory.at(-1).asset, artworkFolder));
+  const currentArtwork = readFileSync(new URL(lucan.asset, artworkFolder));
+  assert.notDeepEqual(currentArtwork, previousArtwork);
+  assert.equal(manifest.cards[1].asset, "jiawen-barleybreeze.png");
+  assert.match(manifest.cards[1].prompt, /low braced three-quarter feline stance/);
+  assert.match(manifest.cards[1].latestRevisionPrompt, /same two supporting|both paw contacts/);
+  assert.deepEqual(lucan.intendedStats, { rarity: "common", role: "rally", power: 4 });
 });
 
 test("Common Rally PNG masters match the square dimensions of the existing Rally artwork", () => {
