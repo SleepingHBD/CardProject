@@ -38,7 +38,7 @@ test("new Uncommon PNG masters match the existing square Rally master dimensions
 });
 
 test("the wave-rider and glider redesigns retain their exact original drafts", () => {
-  assert.equal(manifest.version, 6);
+  assert.equal(manifest.version, 7);
   const hidayn = manifest.cards.find(card => card.name === "Hidayn Windbrace");
   const isai = manifest.cards.find(card => card.name === "Isai Tidebind");
   assert.match(hidayn.characterDescription, /glider soldier/);
@@ -108,6 +108,23 @@ test("Shazmir's toe-count correction records its focused prompt and preserves th
   const secondAttempt = shazmir.revisionHistory.find(revision => revision.type === "toe-count-second-pass-rejected");
   assert.ok(secondAttempt);
   assert.notEqual(shazmir.generationSource, secondAttempt.source);
+});
+
+test("Isai's right-facing head edit retains the exact previous wave-rider master and head-only edit intent", () => {
+  const isai = manifest.cards.find(card => card.name === "Isai Tidebind");
+  const previous = isai.revisionHistory.find(revision => revision.type === "wave-rider-head-left-preserved");
+  assert.ok(previous);
+  assert.equal(previous.asset, "isai-tidebind-before-head-turn.png");
+  const backup = readFileSync(new URL(previous.asset, artworkFolder));
+  assert.equal(createHash("sha256").update(backup).digest("hex"), "598e4f264269cc05738005ecae94adadb53cfde6a84760902e0d5cdb5777fed6");
+  assert.notDeepEqual(readFileSync(new URL(isai.asset, artworkFolder)), backup);
+  assert.notEqual(isai.generationSource, previous.source);
+  assert.match(previous.prompt, /LOW SURFING CROUCH/);
+  assert.match(isai.latestRevisionPrompt, /turn ONLY Isai's HEAD toward the RIGHT SIDE OF THE CARD/);
+  assert.match(isai.latestRevisionPrompt, /DO NOT MIRROR THE WHOLE IMAGE/);
+  assert.match(isai.poseDescription, /head turned toward the right side of the card/);
+  assert.equal(isai.asset, "isai-tidebind.png");
+  assert.deepEqual(isai.intendedStats, { rarity: "uncommon", role: "finisher", power: 5 });
 });
 
 test("the three framed previews fill the missing non-Rally role per element without changing normal gameplay", () => {
