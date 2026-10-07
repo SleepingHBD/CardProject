@@ -16,13 +16,13 @@ function rule(css, selector) {
   return match[1];
 }
 
-test("the production courtyard uses the seated-leg correction at its original dimensions", () => {
+test("the production courtyard uses the crisp painted refinement at its original dimensions", () => {
   const image = readFileSync(new URL(`../${artworkPath}`, import.meta.url));
   assert.equal(image.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
   assert.equal(image.readUInt32BE(16), 1672);
   assert.equal(image.readUInt32BE(20), 941);
   assert.equal(createHash("sha256").update(image).digest("hex"),
-    "a9c38911fbc656be767a96e3499a342bc723685f819167a43610806240e58faa");
+    "026d4e2441e2f21fdb4468034a101c9ea8361d00b1acbf96eb92b4a53a4ae6db");
 });
 
 test("the style-match keeps the exact previous courtyard and main-menu reference intact", () => {
@@ -104,6 +104,31 @@ test("Gale's seated-leg correction preserves the previous release and original c
   }
   const master = readFileSync(new URL(`../assets/backgrounds/${history.asset}`, import.meta.url));
   assert.equal(createHash("sha256").update(master).digest("hex"), history.sha256);
+});
+
+test("the crisp refinement preserves the corrected legs, previous release and main-menu reference", () => {
+  const history = JSON.parse(readFileSync(new URL("../assets/backgrounds/four-lane-courtyard-draft-v13.json", import.meta.url), "utf8"));
+  assert.equal(history.productionAsset, "four-lane-lobby-courtyard.png");
+  assert.equal(history.preservedPreviousDraft, "four-lane-courtyard-draft-v12.png");
+  assert.equal(history.preservedPreviousRelease, "four-lane-courtyard-draft-v12.png");
+  assert.match(history.generator, /Built-in ImageGen/);
+  assert.match(history.prompt, /STYLE REFERENCE ONLY/);
+  assert.match(history.prompt, /TWO separately visible hind legs/);
+  assert.match(history.prompt, /refinement, NOT a redesign/);
+  assert.match(history.prompt, /do not sharpen the entire image uniformly/i);
+  assert.deepEqual(history.imageDimensions, { width: 1672, height: 941 });
+  assert.deepEqual(history.references.map(reference => reference.path), [
+    "assets/backgrounds/four-lane-courtyard-draft-v12.png",
+    "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png",
+  ]);
+  assert.equal(history.references[0].sha256, "a9c38911fbc656be767a96e3499a342bc723685f819167a43610806240e58faa");
+  assert.equal(history.references[1].sha256, "b51afa1025f74da85e350dc58b012058132f923a0b2742fc9fd4851818c689bb");
+  for (const reference of history.references) {
+    const source = readFileSync(new URL(`../${reference.path}`, import.meta.url));
+    assert.equal(createHash("sha256").update(source).digest("hex"), reference.sha256);
+  }
+  const master = readFileSync(new URL(`../assets/backgrounds/${history.asset}`, import.meta.url));
+  assert.equal(createHash("sha256").update(master).digest("hex"), history.sha256);
   const production = readFileSync(new URL(`../${artworkPath}`, import.meta.url));
   assert.deepEqual(production, master);
 });
@@ -149,7 +174,7 @@ test("static packaging includes the approved release asset but excludes preview 
   const include = runInNewContext(`(${filter[1]})`);
   assert.equal(include("assets/backgrounds/four-lane-lobby-courtyard.png"), true);
   assert.equal(include("assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png"), true);
-  for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
+  for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]) {
     assert.equal(include(`assets/backgrounds/four-lane-courtyard-draft-v${version}.png`), false);
     assert.equal(include(`assets\\backgrounds\\four-lane-courtyard-draft-v${version}.json`), false);
   }

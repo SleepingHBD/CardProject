@@ -1,0 +1,35 @@
+{
+  "version": 13,
+  "date": "2026-10-07",
+  "status": "Implemented in the Super Secret Stuff WIP lobby",
+  "asset": "four-lane-courtyard-draft-v13.png",
+  "productionAsset": "four-lane-lobby-courtyard.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v12.png",
+  "preservedPreviousRelease": "four-lane-courtyard-draft-v12.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-7de2478b-6b1b-4b70-870c-b4bd3748a857.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "sha256": "026d4e2441e2f21fdb4468034a101c9ea8361d00b1acbf96eb92b4a53a4ae6db",
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v12.png",
+      "role": "Preserved exact current courtyard edit target, including Gale's corrected two visible legs",
+      "sha256": "a9c38911fbc656be767a96e3499a342bc723685f819167a43610806240e58faa"
+    },
+    {
+      "path": "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png",
+      "role": "STYLE REFERENCE ONLY; unchanged",
+      "sha256": "b51afa1025f74da85e350dc58b012058132f923a0b2742fc9fd4851818c689bb"
+    }
+  ],
+  "changes": [
+    "Refine painted character contours, faces, fur shapes, garment seams and shadow separation to match the main menu's clearer drawing.",
+    "Strengthen selected foreground crate, step, banner and trident edges without a global sharpening filter or new surface texture.",
+    "Preserve Gale's two visible hind legs and paws, two front paws and separate tail, as well as Ebb's focused trident-cleaning pose and anatomy.",
+    "Retain the courtyard composition, original dimensions, UI, main-menu reference, gameplay and previous release."
+  ],
+  "prompt": "Use case: style-transfer.\nAsset type: Project: Prowl production Super Secret Stuff WIP lobby background.\nInput images: Image 1 is the CURRENT COURTYARD EDIT TARGET, with Gale's corrected two visible hind legs. Image 2 is the MAIN MENU STYLE REFERENCE ONLY; do not edit it or import its cats, battle poses, magic, scenery or layout.\nPrimary request: make Image 1 read as crisp and clearly drawn as Image 2, fixing the slightly fuzzy/airbrushed appearance. This is a restrained edge-definition and local-contrast refinement, NOT a redesign or a new scene.\nCHARACTERS: Give Gale and Ebb the confident fine dark contours and clean, distinct painted shadow planes seen on Image 2's characters. Refine the existing eye rims, pupils, nose, muzzle, whiskers, ear shapes, paw contours and garment seams so they are readable and crisp, while preserving their exact facial identity, proportions and expression. Render fur as a few clean shaped clumps, not fuzzy blended hair or scratchy hair-by-hair detail. Separate green fabric, gold trim, white fur and adjacent shadows on Gale; navy/teal fabric, gold trim, silver-grey fur and cloth on Ebb. Keep dimensional hand-painted shading; do not flatten into vector art or introduce 3D/plush rendering.\nFOREGROUND: Improve selected contours and shadow separation on the existing crate edges, nearest stone steps, banner hems and trident. Preserve the restrained painted surfaces. Do not add stone fractures, texture noise, brick outlines everywhere, grain, bloom or artificial sharpening halos. Keep naturally softer distant architecture and sky; do not sharpen the entire image uniformly.\nSTRICT INVARIANTS: Preserve Image 1's wide 1672 x 941 full-bleed framing, camera, perspective, positions, scale, palette, lighting, sunset cloud shapes and quiet courtyard mood. No resizing, zooming or crop. Gale remains the IVORY-WHITE cat sitting at the LEFT on the same crate, same teal eyes, goggles, closed-mouth expression, green scarf and green/gold coat. Preserve his TWO separately visible hind legs and two rounded hind paws hanging beside each other with a clear gap, TWO existing front paws and ONE separate fluffy tail curling to the right. No crossed/hidden leg, extra toes, detached paw or tail mistaken for a leg.\nEbb remains on the RIGHT steps, same silver-grey fur, crown, pearls, clothes, focused NON-SMILING expression and trident-cleaning pose with the same pale cloth, two attached hind legs/paws and ONE separate fluffy tail. Preserve her front-paw grips, trident and all anatomy.\nKeep all walls, arches, towers, crenellations, paving, crates, barrels, torches, pool/reflections, foliage and mountains exactly in place. Preserve the left Fire banner, three central Gust/Fire/Water banners, and right Water banner hanging from its horizontal wall-mounted bar. No upper-right green flags or poles.\nAvoid: any new object or character, altered poses or costumes, globally increased saturation, hard black outlines on every surface, sharpen-filter halos, noise, photorealism, blur, softness, UI, text, logos, border or watermark. Opaque landscape.\nGoal: the same crisp cartoon drawing with controlled painted shading as the main menu, while preserving the current courtyard and recently corrected legs."
+}
