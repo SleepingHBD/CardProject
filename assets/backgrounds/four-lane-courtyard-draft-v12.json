@@ -1,0 +1,35 @@
+{
+  "version": 12,
+  "date": "2026-10-07",
+  "status": "Implemented in the Super Secret Stuff WIP lobby",
+  "asset": "four-lane-courtyard-draft-v12.png",
+  "productionAsset": "four-lane-lobby-courtyard.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v11.png",
+  "preservedPreviousRelease": "four-lane-courtyard-draft-v11.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-e2f2ee54-f99a-430b-af0e-eec755dfd39c.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "sha256": "a9c38911fbc656be767a96e3499a342bc723685f819167a43610806240e58faa",
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v11.png",
+      "role": "Preserved exact current lobby edit target",
+      "sha256": "e5c32cf46e7392f2cf1a88a3b86c047d990eb9667c000323b4cb6bb2869d13b7"
+    },
+    {
+      "path": "assets/cards/gale-groomer.webp",
+      "role": "CARD CHARACTER REFERENCE ONLY; unchanged",
+      "sha256": "9f6729b4d94541d6e284f99caedbbae84cdd838a843d44b2a4945ffaaf8defe3"
+    }
+  ],
+  "changes": [
+    "Replace Gale Groomer's overlapping seated hind legs with two distinct short ivory-white legs and paws hanging down in front of the crate.",
+    "Keep his two existing front paws and one separate fluffy tail, original head, goggles, expression and green-and-gold costume.",
+    "Retain the courtyard composition, Empress Ebb, banners, lighting and illustrated rendering style.",
+    "Preserve the prior production artwork and original Gale Groomer card unchanged; no gameplay or layout changes."
+  ],
+  "prompt": "Use case: precise-object-edit.\nAsset type: Project: Prowl production lobby background for Super Secret Stuff WIP.\nInput images: Image 1 is the CURRENT LOBBY ARTWORK EDIT TARGET. Image 2 is Gale Groomer's CARD CHARACTER REFERENCE ONLY; do not edit the card or import its background or standing pose.\nPrimary request: make both of Gale Groomer's hind legs clearly visible in Image 1. Edit ONLY the lower body of the white cat seated on the wooden crate at the far LEFT of the scene. His current crossed/overlapping hind legs read as one leg. Give him a natural relaxed seated pose with TWO distinct short ivory-white hind legs hanging down in front of the crate, each visibly connected to its own hip beneath the green coat and ending in one rounded feline paw. Place the two hind paws beside each other with a small clear gap and believable perspective. Keep the proportions stubby like the current card collection; no human legs. Adjust only the coat hem and local crate/shadows as necessary to show the two legs. Preserve his TWO existing front paws, one resting on the crate and the other on his lap. Preserve ONE separate fluffy tail curling behind him toward the right; do not turn the tail into a third leg.\nSTRICT INVARIANTS: Keep Gale's head, face, teal eyes, closed-mouth expression, ivory-white fur, bronze goggles, green scarf and green-and-gold coat design exactly the same. Keep his seated position, overall scale and casual mood. Preserve the entire rest of Image 1: Empress Ebb and both her attached hind legs, her separate tail, focused non-smiling trident-cleaning pose, crown, clothes, trident and cloth; all castle architecture, crates, torches, banners, courtyard paving, pool, foliage, mountains and sunset sky. No new objects or characters. Preserve the current art style, crisp cartoon contours, painted shading, lighting, colors, camera and wide 1672 x 941 composition. No restyling, texture pass, blur, global color changes, cropping, UI, text, border or watermark. Opaque full-bleed landscape.\nAnatomy check: Gale must have exactly TWO hind legs/paws clearly visible, TWO existing front paws and ONE tail; no extra limbs, floating feet or duplicated toes."
+}
