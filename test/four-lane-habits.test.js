@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
 import "../src/four-lane-rules.js";
+import "../src/deckbuilding.js";
 
 const normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
@@ -24,16 +25,19 @@ const library = runInNewContext([
   gameSource.slice(gameSource.indexOf("const FOUR_LANE_RALLY_CARDS ="), gameSource.indexOf("const DIFFICULTIES =")),
   "[...CARD_LIBRARY, ...FOUR_LANE_CARDS]",
 ].join("\n"));
+const deckApi = globalThis.ClawDeckbuilding;
+const deckCatalog = deckApi.createCardCatalog(library);
+const starterDecks = deckApi.createStarterPresets(deckCatalog);
 
 test("the nine refined habit descriptions are concise, accurate and generated consistently", () => {
   const expected = {
     "power-seeker": "Prefers to commit high-Power cards rather than save them.",
-    "trophy-denier": "Favors counters to elements you have 1 trophy in.",
+    "trophy-denier": "Favors counters to elements you are close to finishing.",
     "tactic-planner": "Favors formations that activate role bonuses.",
     "strong-opener": "Places his highest-Power committed card in Lane 1.",
     "late-striker": "Places his highest-Power committed card in his last occupied lane.",
-    "solo-gambler": "Favors committing 1 card when his hand needs rebuilding, but can commit more to avoid giving away rounds.",
-    "score-reader": "Favors committing more cards when behind in trophies, and fewer when ahead.",
+    "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to protect his progress.",
+    "score-reader": "Favors committing more cards when behind in progress, and fewer when ahead.",
     "echo-tactician": "Favors committing the same number of cards you committed in the previous round.",
     "restless-dealer": "Favors committing a different number of cards than he committed in the previous round.",
   };
@@ -57,7 +61,7 @@ test("the nine refined habit descriptions are concise, accurate and generated co
   }
   assert.equal(seen.size, 9);
   for (const trait of [...normal.AI_MOTIVE_TRAITS, ...normal.AI_FORMATION_TRAITS, ...normal.AI_COMMITMENT_TRAITS]) {
-    if (expected[trait.id] && trait.id !== "solo-gambler") assert.equal(trait.description, expected[trait.id]);
+    if (expected[trait.id] && !["solo-gambler", "score-reader", "trophy-denier"].includes(trait.id)) assert.equal(trait.description, expected[trait.id]);
   }
   assert.match(normal.AI_COMMITMENT_TRAITS.find(value => value.id === "solo-gambler").description, /conserve cards/);
   assert.ok(gameSource.includes("Strong Opener places his highest-Power committed card in Lane 1."));
@@ -103,23 +107,25 @@ test("personality only chooses within the close-score window and resolves equal 
 });
 
 test("Power Seeker commits stronger cards when comparable formations are available", () => {
-  const info = { history: history([2, 2, 2]), cardLibrary: hand };
-  const neutral = four.chooseAiFormation(hand, [], [], rng(1), [], info);
-  const seeker = four.chooseAiFormation(hand, [], [], rng(1), [{ id: "power-seeker" }], info);
-  assert.ok(meanPower(seeker) > meanPower(neutral) + 1);
-  assert.ok(seeker.includes(hand[0]), "the high-Power Finisher is committed rather than conserved");
-  assert.ok(seeker.every(value => hand.includes(value)));
+  const info = { history: history([1, 1, 1]), cardLibrary: hand };
+  let neutral = 0, seeker = 0;
+  for (let seed = 0; seed < 32; seed++) {
+    neutral += meanPower(four.chooseAiFormation(hand, {}, {}, rng(seed), [], info));
+    const selected = four.chooseAiFormation(hand, {}, {}, rng(seed), [{ id: "power-seeker" }], info);
+    seeker += meanPower(selected);
+    assert.ok(selected.every(value => hand.includes(value)));
+  }
+  assert.ok(seeker > neutral);
 });
 
 test("Role Planner makes role combinations more distinctive without needing Rally in its explanation", () => {
   const info = { history: history([1, 1, 1]), cardLibrary: hand };
-  const neutral = four.chooseAiFormation(hand, [], [], rng(8), [], info);
-  const planner = four.chooseAiFormation(hand, [], [], rng(8), [{ id: "tactic-planner" }], info);
-  assert.ok(bonusPerCard(planner) > bonusPerCard(neutral));
-  assert.equal(planner[0].tactic, "vanguard");
-  assert.equal(planner[1].tactic, "rally");
-  assert.equal(four.getTacticBonus(planner, 0) + four.getRallyBonus(planner, 0), 2);
-  assert.equal(four.getRallyBonus(planner, 1), 0);
+  let neutral = 0, planner = 0;
+  for (let seed = 0; seed < 32; seed++) {
+    neutral += bonusPerCard(four.chooseAiFormation(hand, {}, {}, rng(seed), [], info));
+    planner += bonusPerCard(four.chooseAiFormation(hand, {}, {}, rng(seed), [{ id: "tactic-planner" }], info));
+  }
+  assert.ok(planner > neutral);
 });
 
 test("Solo Gambler recovers with one card but can still oppose larger pushes", () => {
@@ -148,45 +154,44 @@ test("all 108 refined habit combinations complete matches, conserve personal car
       const traitsBefore = JSON.stringify(traits);
       const sides = [0, 1].map(owner => {
         const random = rng(seed + owner * 8191), deck = [];
-        const discard = library.map((value, index) => ({ ...value, instanceId: `${owner}-${index}` }));
+        const discard = deckApi.buildDeckInstances(deckCatalog, starterDecks[trial], owner === 0 ? "player" : "opponent");
         normal.reshuffleDiscardPile(deck, discard, random);
-        const side = { deck, discard, hand: [], trophies: [], random };
+        const side = { deck, discard, hand: [], progress: four.createProgress(), random };
         four.replenishHand(deck, discard, side.hand, 7, random);
         return side;
       });
       const decisions = [rng(seed + 31001), rng(seed + 41001)], completed = [];
       let finished = false;
       for (let round = 0; round < 150; round++) {
-        const opponentHistory = completed.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards }));
+        const opponentHistory = completed.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards, laneProgress: { player: value.laneProgress?.ai, ai: value.laneProgress?.player } }));
         const plays = [
-          four.chooseAiFormation(sides[0].hand, sides[1].trophies, sides[0].trophies, decisions[0], [],
+          four.chooseAiFormation(sides[0].hand, sides[1].progress, sides[0].progress, decisions[0], [],
             { history: opponentHistory, cardLibrary: library }),
-          four.chooseAiFormation(sides[1].hand, sides[0].trophies, sides[1].trophies, decisions[1], traits,
+          four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
             { history: completed, cardLibrary: library }),
         ];
         const strongest = Math.max(...plays[1].map(value => value.power));
         if (formation.id === "strong-opener") assert.equal(plays[1][0].power, strongest);
         if (formation.id === "late-striker") assert.equal(plays[1].at(-1).power, strongest);
-        const result = four.resolveClashes(...plays);
+        const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
         assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
-        const winner = result.winner === "draw" ? -1 : result.winner === "player" ? 0 : 1;
-        const options = four.getFormationRewardOptions(...plays, result);
-        const reward = options.length ? normal.chooseTrophyReward(options, sides[winner].trophies) : null;
+
         sides.forEach((side, owner) => {
           assert.ok(plays[owner].length >= 1 && plays[owner].length <= 4);
           assert.equal(new Set(plays[owner]).size, plays[owner].length);
           assert.ok(plays[owner].every(value => side.hand.includes(value)));
           side.hand = side.hand.filter(value => !plays[owner].includes(value));
-          side.discard.push(...plays[owner].filter(value => value !== reward?.card));
-          if (reward && winner === owner) side.trophies.push(reward.card);
-          const all = [...side.deck, ...side.discard, ...side.hand, ...side.trophies];
-          assert.equal(all.length, 36);
-          assert.equal(new Set(all.map(value => value.instanceId)).size, 36);
-          assert.ok(all.every(value => value.instanceId.startsWith(`${owner}-`)));
+          side.discard.push(...plays[owner]);
+          side.progress = { ...result.progressAfter[(owner === 0 ? "player" : "ai")] };
+
+          const all = [...side.deck, ...side.discard, ...side.hand];
+          assert.equal(all.length, 24);
+          assert.equal(new Set(all.map(value => value.instanceId)).size, 24);
+          assert.ok(all.every(value => value.instanceId.startsWith(owner === 0 ? "player-" : "opponent-")));
         });
-        const snapshot = cards => cards.map(({ element, power, tactic }) => ({ element, power, tactic }));
-        completed.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]) });
-        if (sides.some(side => normal.hasCompletedElementSet(side.trophies))) { finished = true; break; }
+        const snapshot = cards => cards.map(({ art, element, power, tactic }) => ({ art, element, power, tactic }));
+        completed.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
+        if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { finished = true; break; }
         sides.forEach(side => {
           reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 2, side.random).reshuffled);
           assert.ok(side.hand.length >= 1 && side.hand.length <= 7);

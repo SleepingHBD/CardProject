@@ -123,7 +123,7 @@
     const serial = ++deckSerial;
     const copies = Object.create(null);
     // Return an unshuffled mutable runtime deck. The game's existing shuffle,
-    // hand, discard and trophy lifecycle remain responsible for these instances.
+    // The duel's hand and discard lifecycle owns these runtime instances.
     return definition.cards.map(key => {
       const template = catalog.byKey[key];
       const copy = copies[key] = (copies[key] || 0) + 1;
@@ -138,7 +138,7 @@
     const remaining = MAX_DECK_COST - summary.totalCost;
     if (remaining >= 8) tips.push(`${remaining} cost unused. You can afford upgrades, if they fit your strategy.`);
     const scarce = ELEMENTS.filter(element => summary.elementCounts[element] === MIN_CARDS_PER_ELEMENT);
-    if (scarce.length) tips.push(`Only ${scarce.map(element => `${MIN_CARDS_PER_ELEMENT} ${ELEMENT_NAMES[element]} cards`).join(" and ")}. Drawing those elements for trophies may be harder.`);
+    if (scarce.length) tips.push(`Only ${scarce.map(element => `${MIN_CARDS_PER_ELEMENT} ${ELEMENT_NAMES[element]} cards`).join(" and ")}. Finishing those elements may take longer.`);
     if (summary.roleCounts.finisher > 8) tips.push("Only a Finisher committed last in a formation of at least two cards earns its role bonus. Earlier Finishers still use their normal Power and elemental edge.");
     return Object.freeze(tips);
   }
@@ -146,40 +146,38 @@
   const PRESETS = Object.freeze([
     {
       id: "balanced", name: "Balanced Formation",
-      description: "A mix of all four roles. Try different lane orders and adapt as you play.",
+      description: "All four roles and eight cards per element. Adapt your lane order to the progress you still need.",
       cards: [
-        "cinder-kit", "cinder-kit", "sizzle-mittens", "teapot-tabby", "flaskfoot-felix", "flaskfoot-felix", "lucan-cinderclay", "charmae-emberhem",
-        "sir-squall", "kitewhisker", "windlass-whiskers", "windlass-whiskers", "dandelion-dash", "dandelion-dash", "jiawen-barleybreeze", "aakith-wayfinder",
-        "wellwater-wisp", "moatgate-mau", "bubble-bengal", "rivertow-ragdoll", "mizzle-motley", "isai-tidebind", "siewen-rainkeeper", "sajrin-shellwright",
+        "toastie-toe-beans", "teapot-tabby", "shazmir-ashveil", "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "toastie-toe-beans",
+        "belfry-bobtail", "kitewhisker", "aakith-wayfinder", "aakith-wayfinder", "whisker-whirl", "leafy-loaf", "whisker-whirl", "jiawen-barleybreeze",
+        "isai-tidebind", "sajrin-shellwright", "moatgate-mau", "isai-tidebind", "wellwater-wisp", "wellwater-wisp", "moonpool-mouser", "bubble-bengal",
       ],
     },
     {
       id: "rally", name: "Rally Company",
-      description: "Pair Vanguards with Rally cards to strengthen your opening lanes.",
+      description: "Rally support strengthens the preceding lane. A few Links and Finishers offer alternative formations.",
       cards: [
-        "candle-pounce", "beacon-burmilla", "cinder-kit", "cinder-kit", "charmae-emberhem", "charmae-emberhem", "lucan-cinderclay", "lucan-cinderclay",
-        "sir-squall", "hidayn-windbrace", "kitewhisker", "kitewhisker", "aakith-wayfinder", "aakith-wayfinder", "jiawen-barleybreeze", "jiawen-barleybreeze",
-        "moatgate-mau", "moatgate-mau", "wellwater-wisp", "wellwater-wisp", "sajrin-shellwright", "sajrin-shellwright", "siewen-rainkeeper", "siewen-rainkeeper",
+        "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "hareth-hearthbeat", "toastie-toe-beans", "flaskfoot-felix", "teapot-tabby",
+        "hidayn-windbrace", "hidayn-windbrace", "kitewhisker", "jiawen-barleybreeze", "jiawen-barleybreeze", "megwyn-windwhistle", "aakith-wayfinder", "aakith-wayfinder",
+        "deshone-dewguard", "isai-tidebind", "isai-tidebind", "sajrin-shellwright", "moatgate-mau", "siewen-rainkeeper", "siewen-rainkeeper", "moonpool-mouser",
       ],
     },
     {
       id: "link", name: "Element Weavers",
-      description: "Alternate elements to activate Link bonuses across your formation.",
+      description: "Alternate elements for Link bonuses. Rally and defensive openings help secure the elements you need.",
       cards: [
-        "sizzle-mittens", "shazmir-ashveil", "teapot-tabby", "teapot-tabby", "flaskfoot-felix", "toastie-toe-beans", "cinder-kit", "beacon-burmilla",
-        "gale-groomer", "whisker-whirl", "windlass-whiskers", "windlass-whiskers", "dandelion-dash", "belfry-bobtail", "kitewhisker", "hidayn-windbrace",
-        "bubble-bengal", "moonpool-mouser", "rivertow-ragdoll", "rivertow-ragdoll", "mizzle-motley", "isai-tidebind", "wellwater-wisp", "moatgate-mau",
+        "hareth-hearthbeat", "shazmir-ashveil", "shazmir-ashveil", "teapot-tabby", "flaskfoot-felix", "beacon-burmilla", "cinder-kit", "charmae-emberhem",
+        "aakith-wayfinder", "windlass-whiskers", "windlass-whiskers", "belfry-bobtail", "belfry-bobtail", "kitewhisker", "jiawen-barleybreeze", "megwyn-windwhistle",
+        "siewen-rainkeeper", "rivertow-ragdoll", "wellwater-wisp", "riptide-rook", "moonpool-mouser", "moonpool-mouser", "isai-tidebind", "sajrin-shellwright",
       ],
     },
     {
       id: "finisher", name: "Last Light",
-      description: "Choose which Finisher to commit last for its +1 Power bonus. Earlier Finishers still fight normally.",
+      description: "Finish a two-to-four-card formation with a Finisher. Links and Rally support keep the earlier lanes competitive.",
       cards: [
-        // Keep the Finisher identity, but avoid paying for two legends at the
-        // expense of the supporting lanes. Every rival uses this same preset.
-        "comet-claw", "toastie-toe-beans", "flaskfoot-felix", "flaskfoot-felix", "cinder-kit", "cinder-kit", "shazmir-ashveil", "shazmir-ashveil",
-        "leafy-loaf", "belfry-bobtail", "belfry-bobtail", "dandelion-dash", "kitewhisker", "kitewhisker", "windlass-whiskers", "windlass-whiskers",
-        "isai-tidebind", "isai-tidebind", "mizzle-motley", "mizzle-motley", "moatgate-mau", "moatgate-mau", "moonpool-mouser", "moonpool-mouser",
+        "lucan-cinderclay", "lucan-cinderclay", "toastie-toe-beans", "toastie-toe-beans", "flaskfoot-felix", "beacon-burmilla", "beacon-burmilla", "hareth-hearthbeat",
+        "dandelion-dash", "belfry-bobtail", "belfry-bobtail", "aakith-wayfinder", "whisker-whirl", "whisker-whirl", "windlass-whiskers", "hidayn-windbrace",
+        "sajrin-shellwright", "deshone-dewguard", "moatgate-mau", "moatgate-mau", "bubble-bengal", "isai-tidebind", "isai-tidebind", "moonpool-mouser",
       ],
     },
   ].map(preset => Object.freeze({ ...preset, version: VERSION, cards: Object.freeze(preset.cards) })));

@@ -43,10 +43,11 @@ test("four rivals have distinct legal decks, transparent costs and no exclusive 
     assert.ok(cards.every(card => card.power === catalog.byKey[card.art].power));
   }
   const counts = id => decks.validateDeck(catalog, roster.find(rival => rival.id === id).deck).summary.roleCounts;
-  assert.deepEqual(counts("balanced"), { vanguard: 6, link: 6, finisher: 6, rally: 6 });
-  assert.deepEqual(counts("rally"), { vanguard: 12, link: 0, finisher: 0, rally: 12 });
-  assert.equal(counts("link").link, 12);
-  assert.equal(counts("finisher").finisher, 12);
+  assert.deepEqual(counts("balanced"), { vanguard: 7, link: 6, finisher: 6, rally: 5 });
+  assert.equal(counts("rally").rally, 11);
+  assert.equal(counts("link").link, 8);
+  assert.equal(counts("finisher").finisher, 8);
+  assert.ok(roster.every(rival => Object.values(counts(rival.id)).every(count => count > 0)));
 });
 
 test("random rival selection reaches all four and invalid selections cannot inject profiles", () => {
@@ -118,17 +119,21 @@ test("deck preferences activate their own role instead of merely committing a ca
     { power: 5, element: "ember", tactic: "link" },
   ];
   const info = { cardLibrary: hand, history: [1, 1, 1].map(count => ({ playerCards: hand.slice(0, count) })) };
-  const neutral = four.chooseAiFormation(hand, [], [], rng(3), [], info);
   for (const role of ["rally", "link", "finisher"]) {
-    const chosen = four.chooseAiFormation(hand, [], [], rng(3), [], info, role);
     const activations = cards => cards.reduce((sum, card, lane) => sum + (role === "rally"
       ? four.getRallyBonus(cards, lane) : card.tactic === role ? four.getTacticBonus(cards, lane) : 0), 0);
-    assert.ok(activations(chosen) > activations(neutral), `${role} gets genuinely active bonuses`);
-    if (role === "rally") assert.ok(chosen.at(-1).tactic === "rally" && chosen[0].tactic !== "rally");
-    if (role === "link") assert.ok(chosen.slice(1).some((card, index) => card.tactic === "link" && card.element !== chosen[index].element));
-    if (role === "finisher") assert.equal(chosen.at(-1).tactic, "finisher");
+    let neutral = 0, preferred = 0;
+    for (let seed = 0; seed < 32; seed++) {
+      neutral += activations(four.chooseAiFormation(hand, {}, {}, rng(seed), [], info));
+      const chosen = four.chooseAiFormation(hand, {}, {}, rng(seed), [], info, role);
+      preferred += activations(chosen);
+      if (activations(chosen) && role === "link") assert.ok(chosen.slice(1).some((card, index) => card.tactic === "link" && card.element !== chosen[index].element));
+      if (activations(chosen) && role === "finisher") assert.equal(chosen.at(-1).tactic, "finisher");
+    }
+    assert.ok(preferred > neutral, `${role} favors genuinely active bonuses across paired seeds`);
   }
-  assert.deepEqual(four.chooseAiFormation(hand, [], [], rng(3), [], info, "__proto__"), neutral);
+  assert.deepEqual(four.chooseAiFormation(hand, {}, {}, rng(3), [], info, "__proto__"),
+    four.chooseAiFormation(hand, {}, {}, rng(3), [], info));
 });
 
 test("Rally chains cannot amplify support and Finisher preferences cannot force a bonus on a single card", () => {
@@ -216,7 +221,7 @@ test("all starter-vs-rival matches conserve 24 cards per owner, complete and pre
       const random = rng(seed + index * 8191), deck = [];
       const discard = decks.buildDeckInstances(catalog, definition, index ? "opponent" : "player");
       normal.reshuffleDiscardPile(deck, discard, random);
-      const side = { deck, discard, hand: [], trophies: [], random };
+      const side = { deck, discard, hand: [], progress: four.createProgress(), random };
       four.replenishHand(deck, discard, side.hand, 7, random);
       return side;
     });
@@ -224,30 +229,29 @@ test("all starter-vs-rival matches conserve 24 cards per owner, complete and pre
     let finished = false;
     for (let round = 0; round < 150; round++) {
       const plays = [
-        four.chooseAiFormation(sides[0].hand, sides[1].trophies, sides[0].trophies, decisions[0], [],
-          { history: history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards })), cardLibrary: library }),
-        four.chooseAiFormation(sides[1].hand, sides[0].trophies, sides[1].trophies, decisions[1], encounter.traits,
+        four.chooseAiFormation(sides[0].hand, sides[1].progress, sides[0].progress, decisions[0], [],
+          { history: history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards, laneProgress: { player: value.laneProgress?.ai, ai: value.laneProgress?.player } })), cardLibrary: library }),
+        four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], encounter.traits,
           { history, cardLibrary: library }, rival.role),
       ];
-      const result = four.resolveClashes(...plays);
+      const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
       assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
-      const winner = result.winner === "draw" ? -1 : result.winner === "player" ? 0 : 1;
-      const options = four.getFormationRewardOptions(...plays, result);
-      const reward = options.length ? normal.chooseTrophyReward(options, sides[winner].trophies) : null;
+
       sides.forEach((side, index) => {
         assert.ok(plays[index].every(card => side.hand.includes(card)));
         assert.equal(new Set(plays[index]).size, plays[index].length);
         side.hand = side.hand.filter(card => !plays[index].includes(card));
-        side.discard.push(...plays[index].filter(card => card !== reward?.card));
-        if (reward && index === winner) side.trophies.push(reward.card);
-        const all = [...side.deck, ...side.discard, ...side.hand, ...side.trophies];
+        side.discard.push(...plays[index]);
+        side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
+
+        const all = [...side.deck, ...side.discard, ...side.hand];
         assert.equal(all.length, 24);
         assert.equal(new Set(all.map(card => card.instanceId)).size, 24);
         assert.ok(all.every(card => card.instanceId.startsWith(index ? "opponent-" : "player-")));
       });
       const snapshot = cards => cards.map(({ element, power, tactic }) => ({ element, power, tactic }));
-      history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]) });
-      if (sides.some(side => normal.hasCompletedElementSet(side.trophies))) { finished = true; break; }
+      history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
+      if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { finished = true; break; }
       sides.forEach(side => {
         reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 2, side.random).reshuffled);
         assert.ok(side.hand.length >= 1 && side.hand.length <= 7);

@@ -61,7 +61,7 @@ test("saved records contain only canonical definition fields and never mutable r
   assert.deepEqual(Object.keys(raw.decks[0]).sort(), ["cards", "id", "name", "version"]);
   assert.equal(raw.decks[0].name, name, "names are data; the editor renders them as text");
   assert.ok(raw.decks[0].cards.every(key => typeof key === "string"));
-  assert.equal(api.buildDeckInstances(catalog, saved, "player")[0].power, 4);
+  assert.equal(api.buildDeckInstances(catalog, saved, "player")[0].power, catalog.byKey[saved.cards[0]].power);
   assert.equal(store.getDeck().artworkSource, undefined);
 });
 

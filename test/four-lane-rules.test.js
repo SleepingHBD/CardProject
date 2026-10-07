@@ -48,16 +48,17 @@ test("the first two extra cards score, their total is capped, and every other co
   assert.deepEqual([0, 1, 2, 3].map(index => four.getExtraCardLanePoints(index, 1)), [0, 1, 1, 0]);
 });
 
-test("four versus one must draw after a lane loss and still wins after a lane win or draw", () => {
-  for (const [power, score, winner, trophyLane] of [[3, 2, "draw", null], [5, 2, "player", 1], [9, 4, "player", 0]]) {
+test("four versus one keeps progress for both sides and never offers a trophy", () => {
+  for (const [power, score, winner] of [[3, 2, "draw"], [5, 2, "player"], [9, 4, "player"]]) {
     const player = [card("gust", power), card("tide", 3), card("ember", 3), card("gust", 3)];
     const opponent = [card("gust", 5)];
-    const result = four.resolveClashes(player, opponent);
+    const result = four.resolveProgress(player, opponent);
     assert.equal(result.score.player, score);
     assert.equal(result.winner, winner);
     const options = four.getFormationRewardOptions(player, opponent, result);
-    assert.equal(options[0]?.lane ?? null, trophyLane);
-    assert.equal(options.length, trophyLane === null ? 0 : 1);
+    assert.deepEqual(options, []);
+    assert.deepEqual(result.progressGains.player, { ember: 1, gust: power > 5 ? 2 : 0, tide: 1 });
+    assert.equal(result.progressGains.ai.gust, power < 5 ? 2 : 0);
     const reverse = four.resolveClashes(opponent, player);
     assert.equal(reverse.winner, winner === "player" ? "ai" : "draw");
     assert.equal(reverse.extraCardPoints.ai, 2);
@@ -78,17 +79,17 @@ test("Guided previews, forecasts and formation messages show a zero-point third 
     ui: { matchupForecast: { style: {} } }, renderOpponentTells: () => {},
   };
   context.setMessage = (title, detail) => { context.message = { title, detail }; };
-  runInNewContext(["getExtraCardPoints", "getExtraCardLanePoints", "getFormationBonusPreview", "renderMatchupForecast", "updateFormationMessage"]
+  runInNewContext(["roundPointLabel", "getExtraCardPoints", "getExtraCardLanePoints", "getFormationBonusPreview", "renderMatchupForecast", "updateFormationMessage"]
     .map(sourceFunction).join("\n"), context);
   assert.equal(context.getFormationBonusPreview(selected, 1).text, "+1");
   assert.equal(context.getFormationBonusPreview(selected, 2).text, "+1");
   assert.equal(context.getFormationBonusPreview(selected, 3).text, "+0");
-  assert.match(context.getFormationBonusPreview(selected, 3).label, /2-point extra-card cap/);
+  assert.match(context.getFormationBonusPreview(selected, 3).label, /first two extra cards/);
   context.renderMatchupForecast();
   assert.equal((context.ui.matchupForecast.innerHTML.match(/EXTRA CARD \+1/g) || []).length, 2);
   assert.match(context.ui.matchupForecast.innerHTML, /EXTRA CARD \+0/);
   context.updateFormationMessage();
-  assert.match(context.message.detail, /3 extra cards add 2 Round Points \(the 2-point cap\)/);
+  assert.match(context.message.detail, /3 extra cards add up to 2 progress \(first two only\)/);
   context.concealsOpponentFormation = () => true;
   context.renderMatchupForecast();
   const sealed = context.ui.matchupForecast.innerHTML;
@@ -119,12 +120,12 @@ test("the Guided plan heading uses earned extra points, and sealed headings reve
     concealsOpponentFormation: () => false, renderOpponentHabits() {},
     ui: { tacticsTitle: {}, commitmentHint: {}, opponentTells: {} },
   };
-  runInNewContext(["getExtraCardPoints", "renderOpponentTells"].map(sourceFunction).join("\n"), context);
+  runInNewContext(["roundPointLabel", "getExtraCardPoints", "renderOpponentTells"].map(sourceFunction).join("\n"), context);
   context.renderOpponentTells();
-  assert.match(context.ui.commitmentHint.textContent, /Your 3 extra cards add 2 Round Points \(the 2-point cap\)/);
+  assert.match(context.ui.commitmentHint.textContent, /Your 3 extra cards add up to 2 progress \(first two only\)/);
   context.state.aiPlan = [card(), card(), card(), card()]; context.state.selectedCardIds = ["1"];
   context.renderOpponentTells();
-  assert.match(context.ui.commitmentHint.textContent, /3 opposing extra cards add 2 Round Points/);
+  assert.match(context.ui.commitmentHint.textContent, /3 opposing extra cards add up to 2 progress/);
   context.state.difficulty = "instinct"; context.concealsOpponentFormation = () => true;
   context.renderOpponentTells();
   assert.equal(context.ui.commitmentHint.textContent, "Instinct · Formation size and cards concealed");
@@ -135,19 +136,24 @@ test("the Guided plan heading uses earned extra points, and sealed headings reve
 
 test("the rules strip and dedicated Four-Lane rules explain the cap without changing Normal Play copy", () => {
   const nodes = { ".arena": { setAttribute() {} }, "#gameTitle": {},
+    "#roundScore small": {}, "#resultCardsLabel": {}, "#previousRoundsHistoryIntro": {}, ".rules-strip .rule-chip.ember": {},
     ".rules-strip .rule-chip.gust": {}, ".rules-strip .rule-chip.tide": {} };
   const context = { state: { gameMode: "four-lane" }, document: { body: { dataset: {} }, querySelector: selector => nodes[selector] },
     isFourLaneMode: () => true, renderGallery() {}, renderFourLaneRivalInfo() {} };
   runInNewContext(sourceFunction("renderDuelMode"), context);
   context.renderDuelMode();
-  assert.match(nodes[".rules-strip .rule-chip.gust"].innerHTML, /up to 2 per side per round/);
+  assert.match(nodes[".rules-strip .rule-chip.gust"].innerHTML, /first two unopposed cards/);
+  assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /Both sides keep the progress.*earlier progress counts/);
+  assert.doesNotMatch(nodes["#previousRoundsHistoryIntro"].textContent, /trophy/);
   context.isFourLaneMode = () => false; context.renderDuelMode();
   assert.equal(nodes[".rules-strip .rule-chip.gust"].innerHTML, "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point");
+  assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /earlier trophy counts/);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const fourRules = html.slice(html.indexOf('id="fourLaneRulesDialog"'));
-  assert.match(fourRules, /2 extra-card points per side per round/);
-  assert.match(fourRules, /Only your first two extra cards score; a third adds 0/);
-  assert.match(fourRules, /4 cards against 1 and lose Lane 1.*round draws/);
+  assert.match(fourRules, /first two cards with no opposing card/);
+  assert.match(fourRules, /third extra card adds 0/);
+  assert.match(fourRules, /6 Fire, 6 Gust and 6 Water progress/);
+  assert.match(fourRules, /Both sides keep the progress/);
 });
 
 test("all 228 abstract outcomes use symmetric 2-per-win scoring and a two-point extra-card cap", () => {
@@ -175,17 +181,7 @@ test("all 228 abstract outcomes use symmetric 2-per-win scoring and a two-point 
         assert.equal(reverse.score.player, resolution.score.ai);
         assert.equal(reverse.score.ai, resolution.score.player);
         const options = four.getFormationRewardOptions(player, opponent, resolution);
-        if (resolution.winner === "draw") assert.deepEqual(options, []);
-        else {
-          assert.ok(options.length > 0);
-          const wins = resolution.results.filter(winner => winner === resolution.winner).length;
-          assert.equal(options.length, wins || 1);
-          for (const option of options) {
-            assert.equal(option.fixed, wins === 0);
-            if (wins) assert.equal(resolution.results[option.lane], resolution.winner);
-            else assert.equal(option.lane, paired);
-          }
-        }
+        assert.deepEqual(options, []);
         checked++;
       }
     }
@@ -221,7 +217,7 @@ test("Rally can stack with Link, but an active Finisher cannot receive Rally", (
   assert.equal(four.getRallyBonus(finishers, 2), 0);
 });
 
-test("an unopposed Rally supports the preceding clash without changing extra points or trophy eligibility", () => {
+test("an unopposed Rally supports the preceding clash without multiplying progress", () => {
   const player = [card("gust", 5, "vanguard"), card("tide", 4, "rally")];
   const opponent = [card("gust", 5, "vanguard")];
   const result = four.resolveClashes(player, opponent);
@@ -229,9 +225,8 @@ test("an unopposed Rally supports the preceding clash without changing extra poi
   assert.equal(result.lanes[0].ai.total, 6);
   assert.deepEqual(result.score, { player: 3, ai: 0, draw: 0 });
   assert.equal(result.extraCardPoints.player, 1);
-  assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), [
-    { winner: "player", card: player[0], lane: 0, fixed: false },
-  ]);
+  assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), []);
+  assert.deepEqual(four.resolveProgress(player, opponent).progressGains.player, { ember: 0, gust: 2, tide: 1 });
   const reverse = four.resolveClashes(opponent, player);
   assert.deepEqual(reverse.score, { player: 0, ai: 3, draw: 0 });
   assert.equal(reverse.lanes[0].ai.total, 7);
@@ -282,25 +277,24 @@ test("Lane 4 supports Link and Finisher, and unopposed bonuses never multiply ex
   assert.equal(four.getTacticBonus([card("gust", 5, "finisher")], 0), 0);
 });
 
-test("an extra-points victory with a won lane still requires the lane-winning trophy", () => {
+test("four-lane raw point summaries never offer a trophy while Normal Play retains its reward", () => {
   const player = [card("gust", 9), card("gust", 3), card("gust", 3), card("gust", 3)];
   const opponent = [card("gust", 3), card("gust", 9)];
   const result = four.resolveClashes(player, opponent);
   assert.equal(result.decidedBy, "extra-cards");
   const options = four.getFormationRewardOptions(player, opponent, result);
-  assert.deepEqual(options, [{ winner: "player", card: player[0], lane: 0, fixed: false }]);
+  assert.deepEqual(options, []);
   // Normal Play deliberately retains its old trophy eligibility.
   const normalResult = normal.resolveClashes(player.slice(0, 3), opponent);
   assert.equal(normal.getFormationRewardOptions(player.slice(0, 3), opponent, normalResult)[0].lane, 2);
 });
 
-test("a no-lane-win victory claims the first unopposed card, never another extra card", () => {
+test("a no-lane-win formation automatically gains from its first two extra cards", () => {
   const player = [card("gust", 3), card("tide", 4), card("ember", 6), card("gust", 9)];
   const opponent = [card("gust", 3)];
   const result = four.resolveClashes(player, opponent);
-  assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), [
-    { winner: "player", card: player[1], lane: 1, fixed: true },
-  ]);
+  assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), []);
+  assert.deepEqual(four.resolveProgress(player, opponent).progressGains.player, { ember: 1, gust: 0, tide: 1 });
 });
 
 test("seven-card opening deals and two-card replenishment respect the hand cap", () => {
@@ -465,7 +459,8 @@ test("live personal decks use 24 validated cards, allow duplicate templates and 
   assert.ok(new Set(player.map(value => value.art)).size < 24);
   for (const element of ["ember", "gust", "tide"]) {
     for (const role of ["vanguard", "link", "finisher", "rally"]) {
-      assert.equal(player.filter(value => value.element === element && value.tactic === role).length, 2);
+      assert.equal(player.filter(value => value.element === element && value.tactic === role).length,
+        fourLaneStarterDecks[0].cards.filter(key => fourLaneDeckCatalog.byKey[key].element === element && fourLaneDeckCatalog.byKey[key].tactic === role).length);
     }
   }
   const ids = new Set(player.map(value => value.instanceId));
@@ -480,21 +475,24 @@ test("bonus explanations include incoming Rally separately from the card's own r
   });
 });
 
-test("100 seeded complete duels conserve each personal deck and exclude trophies from reshuffles", () => {
+test("100 seeded complete duels conserve all 24 personal cards without exiling trophies", () => {
   const context = {};
   runInNewContext([
     gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE =")),
     gameSource.slice(gameSource.indexOf("const FOUR_LANE_RALLY_CARDS ="), gameSource.indexOf("const DIFFICULTIES =")),
   ].join("\n"), context);
   const library = JSON.parse(runInNewContext("JSON.stringify([...CARD_LIBRARY, ...FOUR_LANE_CARDS])", context));
+  const deckApi = globalThis.ClawDeckbuilding;
+  const catalog = deckApi.createCardCatalog(library);
+  const starters = deckApi.createStarterPresets(catalog);
   let reshuffles = 0;
   for (let match = 0; match < 100; match++) {
     let seed = match + 1;
     const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
     const sides = ["player", "ai"].map(side => {
       const deck = [];
-      normal.reshuffleDiscardPile(deck, library.map((value, index) => ({ ...value, instanceId: `${side}-${index}` })), random);
-      return { deck, discard: [], hand: [], trophies: [] };
+      normal.reshuffleDiscardPile(deck, deckApi.buildDeckInstances(catalog, starters[match % 4], side === "player" ? "player" : "opponent"), random);
+      return { deck, discard: [], hand: [], progress: four.createProgress() };
     });
     const traits = four.createAiTraits(random);
     const history = [];
@@ -504,31 +502,30 @@ test("100 seeded complete duels conserve each personal deck and exclude trophies
       const [player, opponent] = sides;
       const playerCount = Math.min(player.hand.length, match % 5 === 4 ? 1 + Math.floor(random() * 4) : 1 + match % 5);
       const formations = [
-        four.chooseAiCards(player.hand, playerCount, opponent.trophies, player.trophies, random),
-        four.chooseAiFormation(opponent.hand, player.trophies, opponent.trophies, random, traits,
+        four.chooseAiCards(player.hand, playerCount, opponent.progress, player.progress, random),
+        four.chooseAiFormation(opponent.hand, player.progress, opponent.progress, random, traits,
           { history, cardLibrary: library }),
       ];
-      const resolution = four.resolveClashes(...formations);
-      const options = four.getFormationRewardOptions(...formations, resolution);
-      const winnerIndex = resolution.winner === "player" ? 0 : 1;
-      const reward = options.length ? normal.chooseTrophyReward(options, sides[winnerIndex].trophies) : null;
+      const resolution = four.resolveProgress(...formations, sides[0].progress, sides[1].progress);
+
       sides.forEach((side, index) => {
         side.hand = side.hand.filter(value => !formations[index].includes(value));
-        side.discard.push(...formations[index].filter(value => value !== reward?.card));
-        if (reward && index === winnerIndex) side.trophies.push(reward.card);
-        const all = [...side.deck, ...side.discard, ...side.hand, ...side.trophies];
-        assert.equal(all.length, 36, `match ${match}, round ${round}, side ${index}`);
-        assert.equal(new Set(all.map(value => value.instanceId)).size, 36);
-        assert.ok(all.every(value => value.instanceId.startsWith(index === 0 ? "player-" : "ai-")));
+        side.discard.push(...formations[index]);
+        side.progress = { ...resolution.progressAfter[(index === 0 ? "player" : "ai")] };
+
+        const all = [...side.deck, ...side.discard, ...side.hand];
+        assert.equal(all.length, 24, `match ${match}, round ${round}, side ${index}`);
+        assert.equal(new Set(all.map(value => value.instanceId)).size, 24);
+        assert.ok(all.every(value => value.instanceId.startsWith(index === 0 ? "player-" : "opponent-")));
       });
-      history.push({ playerCards: formations[0], aiCards: formations[1] });
-      if (sides.some(side => normal.hasCompletedElementSet(side.trophies))) { completed = true; break; }
+      history.push({ playerCards: formations[0], aiCards: formations[1], laneProgress: resolution.laneProgress });
+      if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { completed = true; break; }
       sides.forEach(side => {
         reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, random).reshuffled);
         assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
       });
     }
-    assert.equal(completed, true, `seeded match ${match} should reach the trophy goal`);
+    assert.equal(completed, true, `seeded match ${match} should reach the elemental progress goal`);
   }
   assert.ok(reshuffles > 0, "long duels must exercise owner-specific recycling");
 });

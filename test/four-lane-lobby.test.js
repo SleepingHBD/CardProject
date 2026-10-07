@@ -121,10 +121,10 @@ test("all starter descriptions are concise and explain their actual role identit
     assert.ok(deck.description.length <= 140);
     assert.ok(api.validateDeck(catalog, deck).valid);
   }
-  assert.match(starters[0].description, /all four roles/);
-  assert.match(starters[1].description, /Vanguards.*Rally/);
+  assert.match(starters[0].description, /All four roles/);
+  assert.match(starters[1].description, /Rally support.*preceding lane/);
   assert.match(starters[2].description, /Alternate elements.*Link/);
-  assert.match(starters[3].description, /Finisher.*last.*\+1/);
+  assert.match(starters[3].description, /Finisher.*Links and Rally/);
 });
 
 test("starter cards and saved decks remain mutually exclusive, with safe names and useful empty states", () => {
@@ -165,6 +165,6 @@ test("starter cards and saved decks remain mutually exclusive, with safe names a
   assert.equal(select.value, "");
   assert.equal(radios[0], originalRadio, "radio focus is preserved during a selection change");
   assert.deepEqual(radios.filter(input => input.checked).map(input => input.value), ["starter:finisher"]);
-  assert.match(options.markup, /Earlier Finishers still fight normally/);
+  assert.match(options.markup, /earlier lanes competitive/);
   assert.equal(ui.fourLaneConfirmDeckButton.disabled, false);
 });

@@ -1,136 +1,89 @@
-// Reproducible, public-information-only strategy benchmark. Not a proof of balance.
-// Usage: node scripts/audit-four-lane-ai.js solo-farm [baseline] [seeds-per-profile]
+// Paired starter comparison using the live elemental-progress planner on both sides.
+// Usage: node scripts/audit-four-lane-ai.js [paired-seeds=32] [seed=48103]
+// This is a reproducible strategy benchmark, not a proof of human-play balance.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
+import { pathToFileURL } from "node:url";
+import { catalog, library, rng } from "./audit-deckbuilding.js";
 
-const policy = process.argv[2] || "solo-farm";
-const baseline = process.argv[3] === "baseline";
-const trials = Number(process.argv[4] || 12);
-const policies = ["one", "two", "three", "four", "cycle-3-1", "cycle-4-1-1", "cheap-second", "two-rally", "hoard-premiums", "habit-reader", "solo-farm", "history-counter"];
-assert.ok(policies.includes(policy));
-assert.ok(Number.isInteger(trials) && trials >= 1 && trials <= 100);
-const context = {};
-Function("globalThis", readFileSync(new URL("../src/rules.js", import.meta.url), "utf8"))(context);
-// The retained commitment-then-greedy helpers provide the old-AI control group
-// under the current scoring rules (including the extra-card cap).
-const fourSource = readFileSync(new URL("../src/four-lane-rules.js", import.meta.url), "utf8");
-Function("globalThis", fourSource)(context);
-const n = context.ClawRules, r = context.ClawFourLaneRules;
-const game = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
-const library = Function(game.slice(game.indexOf("const CARD_LIBRARY ="), game.indexOf("const HAND_SIZE ="))
-  + game.slice(game.indexOf("const FOUR_LANE_RALLY_CARDS ="), game.indexOf("const DIFFICULTIES ="))
-  + ";return [...CARD_LIBRARY,...FOUR_LANE_CARDS];")();
-const elements = Object.keys(n.ELEMENTS);
-const rng = seed => { let x = seed >>> 0; return () => ((x = (Math.imul(x, 1664525) + 1013904223) >>> 0) / 2 ** 32); };
-const permutations = cards => cards.length < 2 ? [[...cards]] : cards.flatMap((card, index) =>
-  permutations(cards.filter((_, other) => index !== other)).map(rest => [card, ...rest]));
-function order(cards) {
-  return permutations(cards).map(formation => ({ formation,
-    score: formation.reduce((sum, card, i) => sum + (r.getTacticBonus(formation, i) + r.getRallyBonus(formation, i)) * 4, 0)
-      + formation.at(-1).power * .02 })).sort((a, b) => b.score - a.score)[0].formation;
-}
-function select(side, round, counts, traits) {
-  const { hand, trophies } = side, needs = n.getElementTrophyCounts(trophies);
-  const ordered = [...hand].sort((a, b) => (b.power + (needs[b.element] < 2 ? .7 : 0) + (b.tactic === "vanguard" ? .25 : 0))
-    - (a.power + (needs[a.element] < 2 ? .7 : 0) + (a.tactic === "vanguard" ? .25 : 0)));
-  let count = policies.indexOf(policy) + 1, prediction = 2;
-  if (policy === "cycle-3-1") count = [3, 1][round % 2];
-  if (policy === "cycle-4-1-1") count = [4, 1, 1][round % 3];
-  if (["cheap-second", "two-rally", "hoard-premiums"].includes(policy)) count = 2;
-  if (policy === "habit-reader") {
-    const ids = traits.map(trait => trait.id), recent = counts.slice(-4);
-    const mean = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : 2.5;
-    prediction = ids.includes("solo-gambler") ? 1 : ids.includes("measured-planner") ? 2 : ids.includes("full-formation") ? 4 : Math.round(mean);
-    count = hand.length <= 3 ? 1 : prediction === 1 && hand.length >= 6 ? 4 : hand.length >= 5 ? 3 : 2;
-  }
-  if (policy === "solo-farm") count = hand.length >= 6 ? 4 : 1;
-  if (policy === "history-counter") {
-    for (let period = 3; period >= 1; period--) if (counts.length >= period * 2) {
-      const tail = counts.slice(-period * 2);
-      if (tail.slice(0, period).every((value, i) => value === tail[i + period])) { prediction = tail[0]; break; }
-    }
-    count = prediction === 1 && hand.length >= 6 ? 4 : 2;
-  }
-  count = Math.min(Math.max(count, 1), 4, hand.length);
-  if (policy === "solo-farm" && count === 4) {
-    const cheap = [...hand].sort((a, b) => a.power - b.power), first = cheap[0];
-    const trophy = cheap.find(card => card !== first && needs[card.element] < 2) || cheap[1];
-    return [first, trophy, ...cheap.filter(card => card !== first && card !== trophy).slice(0, 2)];
-  }
-  if (["cheap-second", "two-rally", "history-counter"].includes(policy) && count === 2) {
-    let best, score = -Infinity;
-    for (const first of hand) for (const second of hand) if (first !== second) {
-      const pair = [first, second], totals = pair.map((card, i) => card.power + r.getTacticBonus(pair, i) + r.getRallyBonus(pair, i));
-      const value = policy === "cheap-second" ? totals[0] - second.power * .15 + (needs[first.element] < 2 ? .25 : 0)
-        : policy === "history-counter" ? (prediction === 1 ? totals[0] - second.power * .15 : Math.min(...totals) * 3 + totals[0] + totals[1])
-          : totals[0] + totals[1] + first.power * .05;
-      if (value > score) { best = pair; score = value; }
-    }
-    return best;
-  }
-  return order((policy === "hoard-premiums" && hand.length >= 4 ? ordered.slice(2) : ordered).slice(0, count));
-}
-function setup(seed) {
-  return [0, 1].map(owner => {
-    const deck = [], random = rng(seed + owner * 1000003);
-    n.reshuffleDiscardPile(deck, library.map((card, i) => ({ ...card, instanceId: owner + "-" + i })), random);
-    const side = { deck, hand: [], discard: [], trophies: [], random };
-    r.replenishHand(deck, side.discard, side.hand, r.HAND_SIZE, random);
-    return side;
+const normal = globalThis.ClawRules, rules = globalThis.ClawFourLaneRules;
+const decks = globalThis.ClawDeckbuilding;
+const starters = decks.createStarterPresets(catalog);
+
+export function compareStarters(left, right, seed, maxRounds = 150) {
+  const sides = [left, right].map((definition, side) => {
+    const random = rng(seed + side * 8191), deck = [];
+    normal.reshuffleDiscardPile(deck, decks.buildDeckInstances(catalog, definition, side ? "opponent" : "player"), random);
+    const value = { deck, discard: [], hand: [], progress: rules.createProgress(), random, decisions: rng(seed + 31001 + side * 10000) };
+    rules.replenishHand(deck, value.discard, value.hand, 7, random);
+    return value;
   });
-}
-const totals = { policy, baseline, matches: 0, wins: 0, rounds: 0, reshuffles: 0, longest: 0,
-  aiCounts: [0, 0, 0, 0], byCommitment: {}, planningCalls: 0, planningMs: 0, maxPlanningMs: 0 };
-const started = performance.now();
-function duel(seed, traits) {
-  const sides = setup(seed), decisionRng = rng(seed + 4000007), history = [], previous = {}, counts = [];
-  for (let round = 0; round < 150; round++) {
-    if (performance.now() - started > 52000) throw Error("52-second benchmark deadline; use fewer seeds per profile");
-    const begin = performance.now();
-    const ai = baseline ? r.chooseAiCards(sides[1].hand, r.chooseAiCommitment(sides[1].hand.length,
-      sides[0].trophies, sides[1].trophies, decisionRng, traits, previous), sides[0].trophies, sides[1].trophies, decisionRng, traits)
-      : r.chooseAiFormation(sides[1].hand, sides[0].trophies, sides[1].trophies, decisionRng, traits,
-        { history, cardLibrary: library });
-    const elapsed = performance.now() - begin;
-    totals.planningCalls++; totals.planningMs += elapsed; totals.maxPlanningMs = Math.max(totals.maxPlanningMs, elapsed);
-    const cards = [select(sides[0], round, counts, traits), ai];
-    totals.aiCounts[ai.length - 1]++;
-    totals.byCommitment[traits.at(-1).id].aiCounts[ai.length - 1]++;
-    const result = r.resolveClashes(...cards), winner = result.winner === "draw" ? -1 : result.winner === "player" ? 0 : 1;
-    const options = r.getFormationRewardOptions(...cards, result);
-    const reward = options.length ? n.chooseTrophyReward(options, sides[winner].trophies) : null;
-    sides.forEach((side, i) => {
-      assert.ok(cards[i].length >= 1 && cards[i].length <= 4 && new Set(cards[i]).size === cards[i].length);
-      assert.ok(cards[i].every(card => side.hand.includes(card)));
-      side.hand = side.hand.filter(card => !cards[i].includes(card));
-      side.discard.push(...cards[i].filter(card => card !== reward?.card));
-      if (reward && i === winner) side.trophies.push(reward.card);
-      const all = [...side.hand, ...side.deck, ...side.discard, ...side.trophies];
-      assert.equal(all.length, 36); assert.equal(new Set(all.map(card => card.instanceId)).size, 36);
-      assert.ok(all.every(card => card.instanceId.startsWith(i + "-")));
+  const history = [], counts = [[0, 0, 0, 0], [0, 0, 0, 0]];
+  let reshuffles = 0;
+  for (let round = 1; round <= maxRounds; round++) {
+    const reversed = history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards,
+      laneProgress: { player: value.laneProgress.ai, ai: value.laneProgress.player } }));
+    // Both planners read only their own hand and public information.
+    const plays = sides.map((side, index) => rules.chooseAiFormation(side.hand, sides[1 - index].progress, side.progress,
+      side.decisions, [], { history: index ? history : reversed, cardLibrary: library }));
+    const result = rules.resolveProgress(...plays, sides[0].progress, sides[1].progress);
+    sides.forEach((side, index) => {
+      const cards = plays[index];
+      assert.ok(cards.length >= 1 && cards.length <= 4 && new Set(cards).size === cards.length);
+      assert.ok(cards.every(card => side.hand.includes(card)));
+      counts[index][cards.length - 1]++;
+      side.hand = side.hand.filter(card => !cards.includes(card));
+      side.discard.push(...cards);
+      side.progress = { ...result.progressAfter[index ? "ai" : "player"] };
+      const all = [...side.hand, ...side.deck, ...side.discard];
+      assert.equal(all.length, 24);
+      assert.equal(new Set(all.map(card => card.instanceId)).size, 24);
+      assert.ok(all.every(card => card.instanceId.startsWith(index ? "opponent-" : "player-")));
     });
-    history.push({ playerCards: cards[0].map(({ element, power, tactic }) => ({ element, power, tactic })),
-      aiCards: cards[1].map(({ element, power, tactic }) => ({ element, power, tactic })) });
-    counts.push(ai.length); previous.player = cards[0].length; previous.ai = ai.length;
-    const completed = sides.findIndex(side => n.hasCompletedElementSet(side.trophies));
-    if (completed >= 0) { totals.rounds += round + 1; totals.longest = Math.max(totals.longest, round + 1); return completed; }
-    sides.forEach(side => { totals.reshuffles += Number(r.replenishHand(side.deck, side.discard, side.hand, r.ROUND_DRAW, side.random).reshuffled); });
+    const snapshot = cards => cards.map(({ art, power, element, tactic }) => ({ art, power, element, tactic }));
+    history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
+    if (result.matchWinner) return { winner: result.matchWinner, rounds: round, counts, reshuffles };
+    sides.forEach(side => {
+      const refill = rules.replenishHand(side.deck, side.discard, side.hand, 2, side.random);
+      assert.ok(refill.drawn <= 2 && side.hand.length >= 1 && side.hand.length <= 7);
+      reshuffles += Number(refill.reshuffled);
+    });
   }
-  throw Error("Match stalled");
+  return { winner: "stalled", rounds: maxRounds, counts, reshuffles };
 }
-let profile = 0;
-for (const motive of n.AI_MOTIVE_TRAITS) for (const formation of n.AI_FORMATION_TRAITS) for (const commitment of n.AI_COMMITMENT_TRAITS) {
-  const group = totals.byCommitment[commitment.id] ||= { wins: 0, matches: 0, aiCounts: [0, 0, 0, 0] };
-  for (let trial = 0; trial < trials; trial++) {
-    const traits = [motive.id === "element-loyalist" ? { ...motive, element: elements[trial % 3] } : motive, formation, commitment];
-    const won = Number(duel(100000 + profile * 100 + trial, traits) === 0);
-    totals.matches++; totals.wins += won; group.matches++; group.wins += won;
+
+export async function auditStarters({ trials = 32, seed = 48103, progress = () => {} } = {}) {
+  assert.ok(Number.isInteger(trials) && trials >= 1 && trials <= 500);
+  assert.ok(Number.isInteger(seed) && seed >= 0 && seed <= 0xffffffff);
+  const started = performance.now(), cells = [], counts = [0, 0, 0, 0];
+  const totals = Object.fromEntries(starters.map(deck => [deck.id, { matches: 0, wins: 0, draws: 0 }]));
+  let matches = 0, stalls = 0, rounds = 0, longest = 0, reshuffles = 0;
+  for (let left = 0; left < starters.length; left++) for (let right = 0; right < starters.length; right++) {
+    const cell = { left: starters[left].id, right: starters[right].id, matches: 0, wins: 0, draws: 0 };
+    for (let trial = 0; trial < trials; trial++) {
+      // Same paired seed in both seats, independent shuffle/decision streams.
+      const result = compareStarters(starters[left], starters[right], (seed + Math.min(left, right) * 100003
+        + Math.max(left, right) * 1009 + trial * 101) >>> 0);
+      matches++; cell.matches++; rounds += result.rounds; longest = Math.max(longest, result.rounds); reshuffles += result.reshuffles;
+      stalls += Number(result.winner === "stalled");
+      cell.wins += Number(result.winner === "player"); cell.draws += Number(result.winner === "draw");
+      for (const [index, starter] of [[0, starters[left]], [1, starters[right]]]) {
+        const total = totals[starter.id]; total.matches++;
+        total.wins += Number(result.winner === (index ? "ai" : "player")); total.draws += Number(result.winner === "draw");
+        counts.forEach((_, count) => { counts[count] += result.counts[index][count]; });
+      }
+      if (matches % 64 === 0) { progress(matches + "/" + starters.length ** 2 * trials + " paired starter duels"); await new Promise(resolve => setImmediate(resolve)); }
+    }
+    cells.push({ ...cell, matchScorePercent: +((cell.wins + cell.draws * .5) / cell.matches * 100).toFixed(1) });
   }
-  profile++;
+  return { seed, trials, matches, stalls, avgRounds: +(rounds / matches).toFixed(1), longest, reshuffles, counts,
+    durationMs: Math.round(performance.now() - started),
+    starters: Object.fromEntries(Object.entries(totals).map(([key, value]) => [key, { ...value,
+      matchScorePercent: +((value.wins + value.draws * .5) / value.matches * 100).toFixed(1) }])), cells };
 }
-totals.winPercent = +(totals.wins / totals.matches * 100).toFixed(1);
-totals.avgRounds = +(totals.rounds / totals.matches).toFixed(1);
-totals.avgPlanningMs = +(totals.planningMs / totals.planningCalls).toFixed(3);
-totals.durationMs = Math.round(performance.now() - started);
-console.log(JSON.stringify(totals));
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const report = await auditStarters({ trials: Number(process.argv[2] || 32), seed: Number(process.argv[3] || 48103), progress: message => console.error(message) });
+  console.log(JSON.stringify(report, null, 2));
+  if (report.stalls) process.exitCode = 1;
+}

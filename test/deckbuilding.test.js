@@ -72,12 +72,12 @@ test("bad canonical definitions, duplicate keys, sparse catalogs and constructed
 test("starter decks are legal, distinct and preserve optional roles", () => {
   assert.equal(presets.length, 4);
   assert.equal(new Set(presets.map(preset => preset.cards.slice().sort().join(","))).size, 4);
-  const expectedCosts = [119, 120, 120, 118];
+  const expectedCosts = [119, 119, 120, 120];
   const expectedRoles = [
-    { vanguard: 6, link: 6, finisher: 6, rally: 6 },
-    { vanguard: 12, link: 0, finisher: 0, rally: 12 },
-    { vanguard: 6, link: 12, finisher: 6, rally: 0 },
-    { vanguard: 6, link: 6, finisher: 12, rally: 0 },
+    { vanguard: 7, link: 6, finisher: 6, rally: 5 },
+    { vanguard: 7, link: 2, finisher: 4, rally: 11 },
+    { vanguard: 5, link: 8, finisher: 4, rally: 7 },
+    { vanguard: 5, link: 5, finisher: 8, rally: 6 },
   ];
   presets.forEach((preset, index) => {
     const report = decks.validateDeck(catalog, preset);
@@ -100,15 +100,15 @@ test("save-shaped deck definitions survive JSON, renames, reordered catalogs and
   const rebuilt = decks.createCardCatalog(reordered);
   assert.deepEqual(decks.validateDeck(rebuilt, stored).summary, decks.validateDeck(catalog, stored).summary);
   assert.ok(decks.validateDeck(rebuilt, stored).valid);
-  assert.equal(decks.buildDeckInstances(rebuilt, stored, "player")[0].name, "Cinder Kit renamed");
-  assert.equal(decks.buildDeckInstances(rebuilt, stored, "player")[0].templateId, "cinder-kit");
+  assert.equal(decks.buildDeckInstances(rebuilt, stored, "player")[0].name, "Toastie Toe Beans renamed");
+  assert.equal(decks.buildDeckInstances(rebuilt, stored, "player")[0].templateId, "toastie-toe-beans");
 });
 
 test("exact deck size is enforced independently of the budget", () => {
   assert.ok(codes(definition(presets[0].cards.slice(1))).includes("deck-size"));
   assert.ok(codes(definition([...presets[0].cards, "teapot-tabby"])).includes("deck-size"));
   assert.ok(codes(definition([])).includes("deck-size"));
-  assert.equal(decks.validateDeck(catalog, presets[1]).summary.totalCost, 120);
+  assert.equal(decks.validateDeck(catalog, presets[2]).summary.totalCost, 120);
   const costly = presets[0].cards.slice();
   costly[costly.indexOf("cinder-kit")] = "comet-claw";
   const report = decks.validateDeck(catalog, definition(costly));
@@ -154,8 +154,13 @@ test("a deck can omit Vanguard, or any other role, with no hidden role quotas", 
   const report = decks.validateDeck(catalog, definition(noVanguard));
   assert.ok(report.valid, JSON.stringify(report.errors));
   assert.equal(report.summary.roleCounts.vanguard, 0);
-  for (const role of decks.ROLES) assert.ok([report, ...presets.map(preset => decks.validateDeck(catalog, preset))]
-    .some(value => value.valid && value.summary.roleCounts[role] === 0));
+  for (const role of decks.ROLES) {
+    const pool = catalog.cards.filter(card => card.tactic !== role).flatMap(card => Array(card.copyLimit).fill(card))
+      .sort((a, b) => a.cost - b.cost);
+    const chosen = decks.ELEMENTS.flatMap(element => pool.filter(card => card.element === element).slice(0, 8));
+    const omitted = decks.validateDeck(catalog, definition(chosen.map(card => card.key)));
+    assert.ok(omitted.valid); assert.equal(omitted.summary.roleCounts[role], 0);
+  }
 });
 
 test("the current cost budget rules out all three Legendaries even with the cheapest legal fillers", () => {
@@ -226,7 +231,7 @@ test("malformed imports, forged card stats, prototype keys and pathological inpu
   assert.equal(enormous.errors[0].code, "input-too-large");
   const forgedMetadata = { ...presets[0], power: 999, cost: 0, elementCounts: { ember: 24 } };
   assert.equal(decks.validateDeck(catalog, forgedMetadata).summary.totalCost, 119);
-  assert.equal(decks.buildDeckInstances(catalog, forgedMetadata, "player")[0].power, 4);
+  assert.equal(decks.buildDeckInstances(catalog, forgedMetadata, "player")[0].power, 5);
 });
 
 test("runtime instances preserve canonical Power, isolate owners/copies/builds, and never mutate definitions", () => {
@@ -236,7 +241,8 @@ test("runtime instances preserve canonical Power, isolate owners/copies/builds, 
     decks.buildDeckInstances(catalog, saved, "player")];
   assert.equal(new Set(built.flat().map(card => card.instanceId)).size, 72);
   assert.notEqual(built[0][0], built[0][1]);
-  assert.equal(built[0][0].templateId, built[0][1].templateId);
+  const matchingCopy = built[0].find((card, index) => index > 0 && card.templateId === built[0][0].templateId);
+  assert.ok(matchingCopy);
   assert.ok(built[0].every(card => card.instanceId.startsWith("player-")));
   assert.ok(built[1].every(card => card.instanceId.startsWith("opponent-")));
   for (const card of built.flat()) {
@@ -244,8 +250,8 @@ test("runtime instances preserve canonical Power, isolate owners/copies/builds, 
     assert.equal(card.tactic, catalog.byKey[card.templateId].tactic);
   }
   built[0][0].power = 99;
-  assert.equal(built[0][1].power, 4);
-  assert.equal(built[2][0].power, 4);
+  assert.equal(matchingCopy.power, 5);
+  assert.equal(built[2][0].power, 5);
   assert.equal(catalog.byKey["cinder-kit"].power, 4);
   assert.equal(JSON.stringify(saved), before);
   assert.throws(() => decks.buildDeckInstances(catalog, definition([]), "player"), RangeError);
@@ -255,8 +261,7 @@ test("runtime instances preserve canonical Power, isolate owners/copies/builds, 
 });
 
 test("runtime deck cost has no effect on lane Power, role bonuses or Rally", () => {
-  const cards = decks.buildDeckInstances(catalog, presets[0], "player");
-  const own = [cards.find(card => card.art === "sir-squall"), cards.find(card => card.art === "lucan-cinderclay")];
+  const own = [catalog.byKey["sir-squall"], catalog.byKey["lucan-cinderclay"]];
   const enemy = [{ element: "gust", power: 9, tactic: "vanguard" }];
   const result = four.resolveClashes(own, enemy);
   assert.equal(own[0].cost, 15);
@@ -271,7 +276,7 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
     const random = rng(seed + index * 8191), deck = [];
     const discard = decks.buildDeckInstances(catalog, preset, owners[index]);
     normal.reshuffleDiscardPile(deck, discard, random);
-    const side = { deck, discard, hand: [], trophies: [], random };
+    const side = { deck, discard, hand: [], progress: four.createProgress(), random };
     four.replenishHand(deck, discard, side.hand, 7, random);
     return side;
   });
@@ -279,40 +284,38 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
   const traitsBefore = JSON.stringify(traits);
   let reshuffles = 0;
   for (let round = 0; round < 150; round++) {
-    const reversedHistory = history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards }));
+    const reversedHistory = history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards, laneProgress: { player: value.laneProgress?.ai, ai: value.laneProgress?.player } }));
     // Public card collection only. Never pass the opposing preset, deck or hand.
     const plays = [
-      four.chooseAiFormation(sides[0].hand, sides[1].trophies, sides[0].trophies, decisions[0], [],
+      four.chooseAiFormation(sides[0].hand, sides[1].progress, sides[0].progress, decisions[0], [],
         { history: reversedHistory, cardLibrary: library }),
-      four.chooseAiFormation(sides[1].hand, sides[0].trophies, sides[1].trophies, decisions[1], traits,
+      four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
         { history, cardLibrary: library }),
     ];
     const strongest = Math.max(...plays[1].map(card => card.power));
     if (traits.some(trait => trait.id === "strong-opener")) assert.equal(plays[1][0].power, strongest);
     if (traits.some(trait => trait.id === "late-striker")) assert.equal(plays[1].at(-1).power, strongest);
-    const result = four.resolveClashes(...plays);
+    const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
     assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
-    const winner = result.winner === "draw" ? -1 : result.winner === "player" ? 0 : 1;
-    const options = four.getFormationRewardOptions(...plays, result);
-    const reward = options.length ? normal.chooseTrophyReward(options, sides[winner].trophies) : null;
-    if (reward) assert.ok(plays[winner].includes(reward.card));
+
     sides.forEach((side, index) => {
       assert.ok(plays[index].length >= 1 && plays[index].length <= 4);
       assert.equal(new Set(plays[index]).size, plays[index].length);
       assert.ok(plays[index].every(card => side.hand.includes(card)));
       side.hand = side.hand.filter(card => !plays[index].includes(card));
-      side.discard.push(...plays[index].filter(card => card !== reward?.card));
-      if (reward && index === winner) side.trophies.push(reward.card);
-      const all = [...side.deck, ...side.discard, ...side.hand, ...side.trophies];
+      side.discard.push(...plays[index]);
+        side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
+
+      const all = [...side.deck, ...side.discard, ...side.hand];
       assert.equal(all.length, 24);
       assert.equal(new Set(all.map(card => card.instanceId)).size, 24);
       assert.ok(all.every(card => card.instanceId.startsWith(`${owners[index]}-`)));
-      assert.ok(side.trophies.every(card => !side.deck.includes(card) && !side.discard.includes(card) && !side.hand.includes(card)));
+
     });
     const snapshot = cards => cards.map(({ element, power, tactic }) => ({ element, power, tactic }));
-    history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]) });
+    history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
     assert.equal(JSON.stringify(traits), traitsBefore);
-    if (sides.some(side => normal.hasCompletedElementSet(side.trophies))) return { rounds: round + 1, reshuffles };
+    if (sides.some(side => four.getProgressTotal(side.progress) === 18)) return { rounds: round + 1, reshuffles };
     sides.forEach(side => {
       reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 2, side.random).reshuffled);
       assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
@@ -321,7 +324,7 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
   assert.fail(`Match did not finish: ${playerPreset.id}/${opponentPreset.id}, seed ${seed}`);
 }
 
-test("all starter matchups complete with 24-card recycling, ownership and trophy exclusion intact", () => {
+test("all starter matchups complete with 24-card recycling and no card removed as a trophy", () => {
   let matches = 0, reshuffles = 0;
   for (const player of presets) for (const opponent of presets) for (let trial = 0; trial < 4; trial++) {
     const result = simulateMatch(player, opponent, 1100 + matches * 131);

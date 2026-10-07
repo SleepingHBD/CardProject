@@ -8,7 +8,7 @@ import "../src/four-lane-rules.js";
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const { ELEMENTS, TACTICS, resolveClashes, getFormationRewardOptions, getElementTrophyCounts } = globalThis.ClawRules;
-const functions = ["cardRoleDefinition", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
+const functions = ["cardRoleDefinition", "progressGainMarkup", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
   .map((name) => gameSource.match(new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`))?.[0]);
 assert.ok(functions.every(Boolean), "all history helpers must be loaded from the implementation");
 
@@ -16,7 +16,8 @@ const card = (element, power, tactic = "link") => ({ element, power, tactic, art
 function fixture() {
   const state = { round: 1, difficulty: "blind", previousRoundsHistory: [], playerWins: [], aiWins: [] };
   const context = {
-    ELEMENTS, TACTICS, state, getElementTrophyCounts,
+    ELEMENTS, TACTICS, state, getElementTrophyCounts, structuredClone,
+    isFourLaneMode: () => state.gameMode === "four-lane",
     ClawFourLaneRules: globalThis.ClawFourLaneRules,
     FOUR_LANE_ROLES: globalThis.ClawFourLaneRules.TACTICS,
     DIFFICULTIES: { blind: { label: "Blind" }, instinct: { label: "Instinct" }, guided: { label: "Guided" } },
@@ -167,7 +168,7 @@ test("four-lane history retains Lane 4, Rally symbols and received bonuses", () 
   context.state.gameMode = "four-lane";
   const player = [card("gust", 5), card("tide", 5), card("ember", 5, "link"), card("gust", 4, "rally")];
   const opponent = Array.from({ length: 4 }, () => card("gust", 5, "vanguard"));
-  const resolution = globalThis.ClawFourLaneRules.resolveClashes(player, opponent);
+  const resolution = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
   const reward = globalThis.ClawFourLaneRules.getFormationRewardOptions(player, opponent, resolution)[0];
   context.recordCompletedRound(reward, player, opponent, resolution);
   const markup = context.ui.previousRoundsHistoryList.innerHTML;
@@ -184,21 +185,20 @@ test("four-lane history records capped points, labels the third extra +0, and gi
     const context = fixture(); context.state.gameMode = "four-lane";
     const weak = Array.from({ length: 4 }, () => card("gust", 3)), strong = [card("gust", 9)];
     const player = larger === "player" ? weak : strong, opponent = larger === "player" ? strong : weak;
-    const result = globalThis.ClawFourLaneRules.resolveClashes(player, opponent);
+    const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
     assert.equal(result.winner, "draw");
     context.recordCompletedRound(null, player, opponent, result);
     const entry = context.state.previousRoundsHistory[0];
     assert.equal(entry.extraCardPoints[larger], 2);
     assert.equal(entry.trophy, null);
-    assert.match(context.ui.previousRoundsHistoryList.innerHTML, /No trophy claimed/);
-    assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Extra \+0 · Cap reached/);
-    assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Round Points.*2-point cap reached/);
-    assert.equal((context.historyFormationGridMarkup(entry).match(/>Extra \+1 Round Point</g) || []).length, 2);
+    assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Progress gained/);
+    assert.doesNotMatch(context.ui.previousRoundsHistoryList.innerHTML, /No trophy claimed|Round Points/);
+    assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Extra \+0 Gust/);
+    assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Gust progress/);
+    assert.equal((context.historyFormationGridMarkup(entry).match(/>Extra \+1 Gust</g) || []).length, 2);
     result.extraCardPoints[larger] = 0;
     assert.equal(entry.extraCardPoints[larger], 2, "history snapshots, rather than aliases, earned points");
-    delete entry.extraCardPoints;
-    assert.equal(context.historyExtraCardLanePoints(entry, larger, 3), 0, "older entries can recover the cap from their recorded score");
-    entry.score[larger] = 3;
-    assert.equal(context.historyExtraCardLanePoints(entry, larger, 3), 1, "a historical uncapped score is not retroactively rewritten");
+    result.laneProgress[larger][1] = 0;
+    assert.equal(entry.laneProgress[larger][1], 1, "credited lane progress is snapshotted, not reinterpreted");
   }
 });

@@ -8,27 +8,27 @@
   const definitions = [
     {
       id: "balanced", name: "Versatile Duelist", deckId: "balanced", role: null, theme: "Mixed roles",
-      description: "An adaptable deck with an even mix of all four roles.",
+      description: "An adaptable mix of all four roles, pursuing the elements still needed.",
       habits: { motive: allIds(normal.AI_MOTIVE_TRAITS), formation: allIds(normal.AI_FORMATION_TRAITS),
         commitment: allIds(normal.AI_COMMITMENT_TRAITS) },
     },
     {
       id: "rally", name: "Banner Captain", deckId: "rally", role: "rally", theme: "Vanguard + Rally",
-      description: "Vanguards backed by Rally support. No Link or Finisher cards.",
+      description: "Rally-heavy support for strong lanes, with Link and Finisher alternatives.",
       habits: { motive: ["trophy-hunter", "power-seeker", "trophy-denier"],
         formation: ["strong-opener", "tactic-planner"],
         commitment: ["measured-planner", "full-formation", "score-reader"] },
     },
     {
       id: "link", name: "Cycle Weaver", deckId: "link", role: "link", theme: "Link combinations",
-      description: "A Link-heavy deck that rewards alternating elements. No Rally cards.",
+      description: "Alternates elements for Link bonuses, backed by Rally and solid opening cards.",
       habits: { motive: ["trophy-hunter", "counter-scholar", "trophy-denier"],
         formation: ["tactic-planner"],
         commitment: ["measured-planner", "echo-tactician", "restless-dealer"] },
     },
     {
       id: "finisher", name: "Twilight Duelist", deckId: "finisher", role: "finisher", theme: "Finisher endings",
-      description: "A Finisher-heavy deck that threatens the last occupied lane. No Rally cards.",
+      description: "Finisher endings backed by Link and Rally support in earlier lanes.",
       habits: { motive: ["trophy-hunter", "power-seeker", "momentum-rider"],
         formation: ["late-striker", "tactic-planner"],
         commitment: ["solo-gambler", "measured-planner", "score-reader"] },

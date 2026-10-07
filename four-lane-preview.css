@@ -509,3 +509,80 @@ body[data-duel-mode="four-lane"] .game-card[data-card-template="isai-tidebind"] 
     grid-column: 1 / -1;
   }
 }
+/* Progress counters share the existing board nameplates without six tiny dots. */
+body[data-duel-mode="four-lane"] .collection::before { content: "PROGRESS · 6 EACH"; }
+body[data-duel-mode="four-lane"] .elemental-progress-goal {
+  min-width: 34px;
+  gap: 2px;
+}
+body[data-duel-mode="four-lane"] .elemental-progress-goal > strong {
+  color: #f5dda3;
+  font-size: 15px;
+  line-height: 1;
+}
+body[data-duel-mode="four-lane"] .elemental-progress-goal > strong small { font-size: 9px; opacity: .8; }
+body[data-duel-mode="four-lane"] .elemental-progress-meter {
+  display: block;
+  width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background: #1e1711;
+  overflow: hidden;
+}
+body[data-duel-mode="four-lane"] .elemental-progress-meter i {
+  display: block;
+  height: 100%;
+  background: #d1a85b;
+}
+body[data-duel-mode="four-lane"] .elemental-progress-goal.is-complete { border-color: #ead18b; }
+.progress-gain-row { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; font-size: 11px; line-height: 1.3; }
+.progress-gain-row > b { min-width: 55px; }
+.progress-gain-row > strong { display: inline-flex; align-items: center; gap: 3px; color: #f0d595; }
+.progress-gain-row small { font-size: inherit; }
+.history-trophy:has(.progress-gain-row) { display: grid; gap: 4px; }
+
+/* Round gains need labels and room; the idle seal keeps its original shape. */
+body[data-duel-mode="four-lane"] .duel-table .versus-badge.progress-round-summary {
+  left: 4px;
+  top: 50%;
+  width: 82px;
+  max-width: calc(100% - 24px);
+  height: auto;
+  padding: 6px 4px;
+  gap: 4px;
+  border-radius: 6px;
+  font: 800 11px/1.2 "Nunito", sans-serif;
+  text-align: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.progress-round-heading {
+  font-size: 9px;
+  letter-spacing: .025em;
+}
+
+.progress-round-values {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  width: 100%;
+}
+
+.progress-round-values > span { display: flex; align-items: center; justify-content: space-between; gap: 3px; }
+.progress-round-values small { font-size: 9px; color: #dfcda6; }
+.progress-round-values b { font-size: 18px; line-height: 1; font-variant-numeric: tabular-nums; }
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 600px) {
+  body[data-duel-mode="four-lane"] .duel-table .versus-badge.progress-round-summary {
+    left: 4px;
+    width: 76px;
+    max-width: calc(100% - 12px);
+    padding: 4px;
+    gap: 3px;
+  }
+  .progress-round-heading { font-size: 7px; }
+  .progress-round-values { gap: 2px; }
+  .progress-round-values small { font-size: 8px; }
+  .progress-round-values b { font-size: 16px; }
+}

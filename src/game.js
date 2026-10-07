@@ -606,6 +606,8 @@ const state = {
   aiHand: [],
   playerWins: [],
   aiWins: [],
+  playerProgress: { ember: 0, gust: 0, tide: 0 },
+  aiProgress: { ember: 0, gust: 0, tide: 0 },
   aiPlan: [],
   aiTellClues: [],
   aiTraits: [],
@@ -811,7 +813,11 @@ function cardRoleDefinition(card, mode = state.gameMode) {
 function getTacticBonus(...args) { return duelRules().getTacticBonus(...args); }
 function getRallyBonus(cards, index) { return isFourLaneMode() ? duelRules().getRallyBonus(cards, index) : 0; }
 function scoreClash(...args) { return duelRules().scoreClash(...args); }
-function resolveClashes(...args) { return duelRules().resolveClashes(...args); }
+function resolveClashes(playerCards, aiCards) {
+  return isFourLaneMode()
+    ? duelRules().resolveProgress(playerCards, aiCards, state.playerProgress, state.aiProgress)
+    : duelRules().resolveClashes(playerCards, aiCards);
+}
 function getFormationRewardOptions(...args) { return duelRules().getFormationRewardOptions(...args); }
 function buildTellClues(...args) { return duelRules().buildTellClues(...args); }
 function chooseAiCommitment(...args) { return duelRules().chooseAiCommitment(...args); }
@@ -828,15 +834,27 @@ function getExtraCardLanePoints(index, opposingCount) {
     : index >= opposingCount ? EXTRA_CARD_POINTS : 0;
 }
 
+function roundPointLabel(points = 1) {
+  return isFourLaneMode() ? "progress" : `Round ${points === 1 ? "Point" : "Points"}`;
+}
+
 function renderDuelMode() {
   document.body.dataset.duelMode = state.gameMode;
   document.querySelector(".arena").setAttribute("aria-label", `${isFourLaneMode() ? "Four" : "Three"}-lane dueling table`);
   document.querySelector("#gameTitle").textContent = isFourLaneMode() ? "Four-Lane Duel · WIP" : "Trial of the Elements";
+  document.querySelector("#roundScore small").textContent = isFourLaneMode() ? "TOTAL PROGRESS" : "ROUNDS WON";
+  document.querySelector("#resultCardsLabel").textContent = isFourLaneMode() ? "Your progress / 18" : "Trophy slots";
+  document.querySelector("#previousRoundsHistoryIntro").textContent = isFourLaneMode()
+    ? "Cards show element, base Power + bonus, and role. Both sides keep the progress shown below. Open Details for calculations and earlier progress counts."
+    : "Results are from your perspective. Cards show element, base Power + bonus, and role. Open Details for calculations and earlier trophy counts.";
+  document.querySelector(".rules-strip .rule-chip.ember").innerHTML = isFourLaneMode()
+    ? "<b>LANE</b> A lane win adds +2 to the winning card's element"
+    : "<b>LANE</b> Every lane win scores 2";
   document.querySelector(".rules-strip .rule-chip.gust").innerHTML = isFourLaneMode()
-    ? "<b>EXTRA</b> Extra cards add 1 Round Point each, up to 2 per side per round"
+    ? "<b>EXTRA</b> Your first two unopposed cards add +1 to their elements"
     : "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point";
   document.querySelector(".rules-strip .rule-chip.tide").innerHTML = isFourLaneMode()
-    ? "<b>TROPHY</b> Claim a lane-winning card; if you won no lanes, claim your first extra card"
+    ? "<b>GOAL</b> Reach 6 Fire, 6 Gust and 6 Water progress to win"
     : "<b>TROPHY</b> A round win awards one played card";
   renderGallery();
   renderFourLaneRivalInfo();
@@ -1956,8 +1974,8 @@ function prepareAiPlan() {
   if (isFourLaneMode()) {
     state.aiPlan = duelRules().chooseAiFormation(
       state.aiHand,
-      state.playerWins,
-      state.aiWins,
+      state.playerProgress,
+      state.aiProgress,
       Math.random,
       state.aiTraits,
       { history: state.previousRoundsHistory, cardLibrary: [...CARD_LIBRARY, ...FOUR_LANE_CARDS] },
@@ -2029,9 +2047,9 @@ function renderOpponentTells() {
   const formationStatus = playerCardCount === 0
     ? `Build 1–${getMaxPlaySize()} cards`
     : aiExtraCards
-      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${aiExtraPoints} Round ${aiExtraPoints === 1 ? "Point" : "Points"}${aiExtraCards > aiExtraPoints ? " (the 2-point cap)" : ""}`
+      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}`
       : playerExtraCards
-        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraPoints} Round ${playerExtraPoints === 1 ? "Point" : "Points"}${playerExtraCards > playerExtraPoints ? " (the 2-point cap)" : ""}`
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}`
         : "Equal formation size";
   ui.commitmentHint.textContent =
     `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationStatus}`;
@@ -2188,8 +2206,8 @@ function renderMatchupForecast() {
         <span class="forecast-chip forecast-extra-card">
           <i>${index + 1}</i>
           <b>◆ EXTRA CARD +${points}</b>
-          <span class="forecast-equation"><strong>+${points} ROUND ${points === 1 ? "POINT" : "POINTS"}</strong></span>
-          <small>${points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
+          <span class="forecast-equation"><strong>+${points} ${isFourLaneMode() ? ELEMENTS[playerCard.element].label.toUpperCase() + " PROGRESS" : roundPointLabel(points).toUpperCase()}</strong></span>
+          <small>${isFourLaneMode() ? points ? "No opposing card; +1 if this element still needs progress" : "Only the first two unopposed cards add progress" : points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
         </span>
       `;
     }
@@ -2248,7 +2266,14 @@ function renderMatchupForecast() {
 
 function renderAftermathBreakdown(playerCards, resolution) {
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${Math.max(1, resolution.lanes.length)}, minmax(0, 1fr))`;
-  const summary = `
+  const summary = isFourLaneMode() ? `
+    <span class="forecast-chip round-points-summary">
+      <b>ELEMENTAL PROGRESS GAINED</b>
+      ${progressGainMarkup(resolution.progressGains.player, "You")}
+      ${progressGainMarkup(resolution.progressGains.ai, "Opponent")}
+      <small>Each element stops at 6. Both sides keep their gains.</small>
+    </span>
+  ` : `
     <span class="forecast-chip round-points-summary">
       <b>ROUND POINTS · ${resolution.score.player}–${resolution.score.ai}</b>
       <span class="forecast-equation">
@@ -2270,7 +2295,7 @@ function renderAftermathBreakdown(playerCards, resolution) {
     return `
       <span class="forecast-chip forecast-${className} aftermath-chip">
         <i>${index + 1}</i>
-        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}</b>
+        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}${isFourLaneMode() && resolution.laneProgress.player[index] ? ` · +${resolution.laneProgress.player[index]} ${ELEMENTS[playerCards[index].element].label}` : ""}</b>
         <span class="forecast-equation">
           <em>${playerCards[index].power} BASE</em><span>+</span><strong>${bonus.total} BONUS</strong><span>=</span><strong>${lane.player.total} TOTAL</strong>
         </span>
@@ -2364,7 +2389,7 @@ function cardMarkup(
     : "";
   const resolvedBonusBadge = isPlayedCard || isExtraCard
     ? `
-      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? extraPoints ? `Extra card with no opposing card; adds ${extraPoints} Round Point` : "Extra card; adds 0 Round Points because the 2-point extra-card cap is reached" : "Bonus not yet resolved"}">
+      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? extraPoints ? `Extra card with no opposing card; adds ${isFourLaneMode() ? "up to " : ""}${extraPoints} ${roundPointLabel(extraPoints)}` : `Extra card; adds 0 ${roundPointLabel(0)} because only the first two extra cards score` : "Bonus not yet resolved"}">
         <small>${isExtraCard ? extraPoints ? "EXTRA" : "CAP" : "BONUS"}</small>
         <b>${isExtraCard ? `+${extraPoints}` : "+?"}</b>
       </span>
@@ -2506,8 +2531,8 @@ function getFormationBonusPreview(selectedCards, index) {
     const points = getExtraCardLanePoints(index, state.aiPlan.length);
     return {
       text: `+${points}`,
-      label: points ? `Extra card with no opposing card; adds ${points} Round Point instead of clashing`
-        : "Extra card; adds 0 Round Points because the 2-point extra-card cap is reached",
+      label: points ? `Extra card with no opposing card; adds ${isFourLaneMode() ? "up to " : ""}${points} ${roundPointLabel(points)} instead of clashing`
+        : `Extra card; adds 0 ${roundPointLabel(0)} because only the first two extra cards score`,
       extraCard: true,
     };
   }
@@ -2650,10 +2675,11 @@ function updateFormationMessage() {
     : count === 0
       ? `Choose one to ${isFourLaneMode() ? "four" : "three"} cards using the opponent's visible plan.`
       : playerExtraCards
-        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraPoints} Round ${playerExtraPoints === 1 ? "Point" : "Points"}${playerExtraCards > playerExtraPoints ? " (the 2-point cap)" : ""}.`
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}.`
         : aiExtraCards
-          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraPoints} Round ${aiExtraPoints === 1 ? "Point" : "Points"}${aiExtraCards > aiExtraPoints ? " (the 2-point cap)" : ""}.`
-          : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of the opponent's cards.";
+          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${isFourLaneMode() ? "up to " : ""}${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}.`
+          : isFourLaneMode() ? "Each won lane adds +2 to its card's element. Both sides keep their progress; each element stops at 6."
+            : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of the opponent's cards.";
   setMessage(title, detail);
   renderOpponentTells();
 }
@@ -2785,6 +2811,10 @@ function renderGallery() {
 }
 
 function renderCollection(target, cards) {
+  if (isFourLaneMode()) {
+    renderElementProgress(target, target === ui.playerCollection ? state.playerProgress : state.aiProgress);
+    return;
+  }
   const counts = getElementTrophyCounts(cards);
   const progress = getTrophyProgress(cards);
   target.setAttribute(
@@ -2807,6 +2837,23 @@ function renderCollection(target, cards) {
       </span>
     `;
   }).join("");
+}
+
+function renderElementProgress(target, progress) {
+  const rules = duelRules(), counts = rules.getElementProgress(progress);
+  target.setAttribute("aria-label", Object.entries(ELEMENTS).map(([key, element]) => `${element.label} ${counts[key]} of ${rules.PROGRESS_PER_ELEMENT}`).join(", "));
+  target.innerHTML = Object.entries(ELEMENTS).map(([key, element]) => `
+    <span class="trophy-goal elemental-progress-goal element-${key}${counts[key] === rules.PROGRESS_PER_ELEMENT ? " is-complete" : ""}" title="${element.label}: ${counts[key]} / ${rules.PROGRESS_PER_ELEMENT} progress">
+      <b aria-hidden="true">${element.icon}</b>
+      <strong>${counts[key]}<small>/${rules.PROGRESS_PER_ELEMENT}</small></strong>
+      <span class="elemental-progress-meter" aria-hidden="true"><i style="width:${counts[key] / rules.PROGRESS_PER_ELEMENT * 100}%"></i></span>
+    </span>`).join("");
+}
+
+function progressGainMarkup(gains, label) {
+  const entries = Object.entries(ELEMENTS).filter(([key]) => gains[key] > 0);
+  return `<span class="progress-gain-row"><b>${label}</b>${entries.length ? entries.map(([key, element]) =>
+    `<strong class="element-${key}"><span aria-hidden="true">${element.icon}</span> +${gains[key]} <small>${element.label}</small></strong>`).join("") : "<small>No progress</small>"}</span>`;
 }
 
 function renderRound() {
@@ -2855,6 +2902,12 @@ function renderRound() {
 }
 
 function renderRoundScore() {
+  if (isFourLaneMode()) {
+    ui.playerRoundScore.textContent = duelRules().getProgressTotal(state.playerProgress);
+    ui.aiRoundScore.textContent = duelRules().getProgressTotal(state.aiProgress);
+    ui.roundScore.setAttribute("aria-label", `Total elemental progress: You ${ui.playerRoundScore.textContent} of 18, Opponent ${ui.aiRoundScore.textContent} of 18. Each element must reach 6.`);
+    return;
+  }
   ui.playerRoundScore.textContent = state.playerRoundWins;
   ui.aiRoundScore.textContent = state.aiRoundWins;
   ui.roundScore.setAttribute(
@@ -2885,6 +2938,13 @@ function recordCompletedRound(reward, playerCards, aiCards, resolution) {
     winner: resolution.winner,
     score: { ...resolution.score },
     extraCardPoints: { ...resolution.extraCardPoints },
+    ...(resolution.progressGains ? {
+      progressGains: structuredClone(resolution.progressGains),
+      progressBefore: structuredClone(resolution.progressBefore),
+      progressAfter: structuredClone(resolution.progressAfter),
+      laneProgress: structuredClone(resolution.laneProgress),
+      matchWinner: resolution.matchWinner,
+    } : {}),
     laneResults: resolution.lanes.map((lane) => ({
       winner: lane.winner,
       playerTotal: lane.player.total,
@@ -2916,6 +2976,7 @@ function historyProgressMarkup(counts, label) {
 }
 
 function historyExtraCardLanePoints(entry, side, index) {
+  if (entry.mode === "four-lane") return entry.laneProgress?.[side]?.[index] || 0;
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   // Store earned points, rather than reinterpreting an old round with today's
   // rules. Older in-memory entries can recover that number from their score.
@@ -2937,7 +2998,8 @@ function historyLaneCellMarkup(entry, side, index) {
   const element = ELEMENTS[card.element];
   const tactic = cardRoleDefinition(card, entry.mode);
   const outcome = isExtra
-    ? historyExtraCardLanePoints(entry, side, index) ? "Extra +1 Round Point" : "Extra +0 · Cap reached"
+    ? entry.mode === "four-lane" ? `Extra +${historyExtraCardLanePoints(entry, side, index)} ${element.label}`
+      : historyExtraCardLanePoints(entry, side, index) ? "Extra +1 Round Point" : "Extra +0 · Cap reached"
     : side === "player"
       ? lane?.winner === "draw" ? "Draw" : lane?.winner === "player" ? "Win" : "Loss"
       : "";
@@ -2995,12 +3057,13 @@ function historyLaneCalculationMarkup(entry, side, index) {
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   const card = cards[index];
   if (!card) return `<span aria-label="No card">—</span>`;
+  if (!opposingCards[index] && entry.mode === "four-lane") return `Extra card: <b>+${historyExtraCardLanePoints(entry, side, index)} ${ELEMENTS[card.element].label} progress</b> (first two only; element capped at 6)`;
   if (!opposingCards[index]) return historyExtraCardLanePoints(entry, side, index)
     ? "Extra card: <b>+1 Round Point</b>" : "Extra card: <b>+0 Round Points</b> · 2-point cap reached";
   const lane = entry.laneResults[index];
   const total = side === "player" ? lane.playerTotal : lane.aiTotal;
   const bonus = total - card.power;
-  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>`;
+  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>${entry.mode === "four-lane" ? `<br />+${entry.laneProgress[side][index]} ${ELEMENTS[card.element].label} progress` : ""}`;
 }
 
 function historyRoundDetailsMarkup(entry) {
@@ -3013,9 +3076,9 @@ function historyRoundDetailsMarkup(entry) {
       <div class="history-details-content">
         <p class="history-detail-context">${entry.mode === "four-lane" ? "Four-Lane Mode · " : ""}${DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
         <div class="history-progress-before">
-          <span class="history-progress-label">Trophies before this round</span>
-          ${historyProgressMarkup(entry.trophyProgressBefore.player, "You")}
-          ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Opponent")}
+          <span class="history-progress-label">${entry.mode === "four-lane" ? "Progress before this round (6 per element)" : "Trophies before this round"}</span>
+          ${historyProgressMarkup(entry.progressBefore?.player || entry.trophyProgressBefore.player, "You")}
+          ${historyProgressMarkup(entry.progressBefore?.ai || entry.trophyProgressBefore.ai, "Opponent")}
         </div>
         <table class="history-calculation-table">
           <caption>Lane calculations</caption>
@@ -3045,7 +3108,7 @@ function renderPreviousRoundsHistory() {
     ui.previousRoundsHistoryList.innerHTML = `
       <div class="previous-rounds-history-empty">
         <strong>No completed rounds yet.</strong>
-        <span>The first entry will appear after the clash and trophy decision.</span>
+        <span>${isFourLaneMode() ? "The first entry will appear after the lanes resolve." : "The first entry will appear after the clash and trophy decision."}</span>
       </div>
     `;
     return;
@@ -3054,7 +3117,9 @@ function renderPreviousRoundsHistory() {
   ui.previousRoundsHistoryList.innerHTML = [...state.previousRoundsHistory]
     .reverse()
     .map((entry) => {
-      const winnerLabel = entry.winner === "player"
+      const winnerLabel = entry.mode === "four-lane" ? entry.matchWinner === "draw" ? "Duel drawn"
+        : entry.matchWinner === "player" ? "You won the duel" : entry.matchWinner === "ai" ? "You lost the duel" : "Progress gained"
+        : entry.winner === "player"
         ? "You won"
         : entry.winner === "ai"
           ? "You lost"
@@ -3066,18 +3131,18 @@ function renderPreviousRoundsHistory() {
           <header>
             <h3 class="history-entry-heading">
               <span class="history-round-number">ROUND <strong>${entry.round}</strong></span>
-              <span class="history-round-result history-round-result-${entry.winner}">${winnerLabel}</span>
+              <span class="history-round-result history-round-result-${entry.mode === "four-lane" ? entry.matchWinner || "draw" : entry.winner}">${winnerLabel}</span>
             </h3>
-            <span class="history-scoreline" aria-label="Round Points: You ${entry.score.player}, Opponent ${entry.score.ai}">
-              <b>${entry.score.player}</b>
+            <span class="history-scoreline" aria-label="${entry.mode === "four-lane" ? "Progress gained" : "Round Points"}: You ${entry.score.player}, Opponent ${entry.score.ai}">
+              <b>${entry.mode === "four-lane" ? "+" : ""}${entry.score.player}</b>
               <i aria-hidden="true">–</i>
-              <b>${entry.score.ai}</b>
-              <small>Round Points</small>
+              <b>${entry.mode === "four-lane" ? "+" : ""}${entry.score.ai}</b>
+              <small>${entry.mode === "four-lane" ? "Progress" : "Round Points"}</small>
             </span>
           </header>
           ${historyFormationGridMarkup(entry)}
           <footer class="history-trophy">
-            ${entry.trophy
+            ${entry.mode === "four-lane" ? progressGainMarkup(entry.progressGains.player, "You") + progressGainMarkup(entry.progressGains.ai, "Opponent") : entry.trophy
               ? `<span>${trophyOwner}</span><strong class="history-trophy-element"><span aria-hidden="true">${trophyElement.icon}</span> ${trophyElement.label}</strong>`
               : `<span>No trophy claimed</span>`}
           </footer>
@@ -3824,7 +3889,8 @@ function playRound() {
     ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount);
     setMessage(
       `${playerCards.length} cards against ${aiCards.length}!`,
-      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point${isFourLaneMode() ? ", up to 2 per side per round" : ""}.`,
+      isFourLaneMode() ? `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}. A win adds +2 to its element; the first two extra cards add +1 each. Elements stop at 6.`
+        : `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point.`,
     );
     audio.reveal(aiCards.length);
     const resolution = await animateClashes(playerCards, aiCards);
@@ -3838,6 +3904,7 @@ function playRound() {
 }
 
 function getCompletedMatchWinner(roundWinner) {
+  if (isFourLaneMode()) return duelRules().getProgressMatchWinner(state.playerProgress, state.aiProgress);
   const playerCompletedSet = hasCompletedElementSet(state.playerWins);
   const aiCompletedSet = hasCompletedElementSet(state.aiWins);
 
@@ -3890,6 +3957,10 @@ function completeRoundReward(
 }
 
 function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCards, aiCards)) {
+  if (isFourLaneMode()) {
+    completeProgressRound(playerCards, aiCards, resolution);
+    return;
+  }
   const { results, score, winner, decidedBy } = resolution;
   const rewardOptions = getFormationRewardOptions(
     playerCards,
@@ -3964,6 +4035,73 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   completeRoundReward(reward, playerCards, aiCards, resolution);
 }
 
+function renderProgressLaneResults(playerCards, aiCards, resolution) {
+  for (const [side, cards, zone] of [["player", playerCards, ui.playerPlayZone], ["ai", aiCards, ui.aiPlayZone]]) {
+    const lanes = [...zone.querySelectorAll(".clash-card")];
+    cards.forEach((card, index) => {
+      const lane = lanes[index], gain = resolution.laneProgress[side][index];
+      if (!lane) return;
+      const result = lane.querySelector(".lane-result");
+      const element = ELEMENTS[card.element].label;
+      if (index < resolution.results.length) {
+        if (resolution.results[index] === side && result) {
+          result.innerHTML += `<small>+${gain} ${element.toUpperCase()} PROGRESS</small>`;
+          result.title += ` Earned ${gain} ${element} progress; goal capped at 6.`;
+        }
+        return;
+      }
+      const eligible = getExtraCardLanePoints(index, resolution.results.length) > 0;
+      const label = !eligible ? "CAP" : gain ? "EXTRA" : "COMPLETE";
+      const explanation = !eligible ? "Only the first two extra cards earn progress."
+        : gain ? `Earned ${gain} ${element} progress.` : `${element} progress was already complete.`;
+      const badge = lane.querySelector(".card-bonus-badge");
+      if (badge) {
+        badge.innerHTML = `<small>${label}</small><b>+${gain}</b>`;
+        badge.setAttribute("aria-label", explanation);
+        badge.title = explanation;
+      }
+      if (result) {
+        result.textContent = `${label} +${gain}${gain ? ` ${element.toUpperCase()}` : ""}`;
+        result.title = explanation;
+      }
+    });
+  }
+}
+
+function completeProgressRound(playerCards, aiCards, resolution) {
+  clearTrophyClaim();
+  recordCompletedRound(null, playerCards, aiCards, resolution);
+  state.playerProgress = { ...resolution.progressAfter.player };
+  state.aiProgress = { ...resolution.progressAfter.ai };
+  state.discardPile.push(...playerCards);
+  state.aiDiscardPile.push(...aiCards);
+  state.pendingMatchWinner = resolution.matchWinner;
+  renderProgressLaneResults(playerCards, aiCards, resolution);
+  ui.versusBadge.className = "versus-badge has-score progress-round-summary";
+  ui.versusBadge.innerHTML = `
+    <small class="progress-round-heading">Progress gained this round</small>
+    <span class="progress-round-values">
+      <span><small>You</small><b>+${resolution.score.player}</b></span>
+      <span><small>Opponent</small><b>+${resolution.score.ai}</b></span>
+    </span>`;
+  const gained = (counts) => Object.entries(ELEMENTS).filter(([key]) => counts[key] > 0)
+    .map(([key, element]) => `+${counts[key]} ${element.label}`).join(", ") || "no progress";
+  setMessage(resolution.matchWinner === "draw" ? "Both complete the elements — duel drawn!"
+    : resolution.matchWinner === "player" ? "You completed all three elements!"
+      : resolution.matchWinner === "ai" ? "The opponent completed all three elements."
+        : "Both sides keep their elemental progress.",
+    `You: ${gained(resolution.progressGains.player)}. Opponent: ${gained(resolution.progressGains.ai)}.`);
+  audio.roundResult(resolution.matchWinner === "draw" ? "draw" : resolution.matchWinner === "player" ? "win"
+    : resolution.matchWinner === "ai" ? "loss" : resolution.score.player > resolution.score.ai ? "win" : resolution.score.player < resolution.score.ai ? "loss" : "draw");
+  renderCollection(ui.playerCollection, []);
+  renderCollection(ui.aiCollection, []);
+  renderRound(); renderRoundScore();
+  renderAftermathBreakdown(playerCards, resolution);
+  restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
+  setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
+  ui.menuButton.disabled = false;
+}
+
 async function nextRound() {
   clearCinematicRemains();
   clearTrophyClaim();
@@ -3974,6 +4112,7 @@ async function nextRound() {
   const drawnCardCount = Math.max(0, state.playerHand.length - previousHandSize);
 
   if (!state.playerHand.length || !state.aiHand.length) {
+    if (isFourLaneMode()) { endGame("draw"); return; }
     const playerProgress = getTrophyProgress(state.playerWins);
     const aiProgress = getTrophyProgress(state.aiWins);
     const winner = playerProgress === aiProgress
@@ -4015,19 +4154,22 @@ async function endGame(winner) {
   state.locked = true;
   ui.menuButton.disabled = true;
   const won = winner === "player";
-  document.querySelector("#resultEyebrow").textContent = won ? "MATCH COMPLETE" : "A NOBLE DUEL";
-  document.querySelector("#resultTitle").textContent = won
+  const drawn = winner === "draw";
+  document.querySelector("#resultEyebrow").textContent = drawn ? "MATCH DRAWN" : won ? "MATCH COMPLETE" : "A NOBLE DUEL";
+  document.querySelector("#resultTitle").textContent = drawn ? "An evenly matched duel!" : won
     ? "A purr-fect victory!"
     : "The opponent prevails!";
-  const resultSummary = won
+  const resultSummary = isFourLaneMode() ? drawn ? "Both players reached 6 Fire, 6 Gust and 6 Water in the same round."
+    : won ? "You reached 6 Fire, 6 Gust and 6 Water first." : "The opponent reached 6 Fire, 6 Gust and 6 Water first."
+    : won
     ? "You claimed two trophies from every element."
     : "The opponent completed all six elemental trophy slots first.";
   document.querySelector("#resultText").textContent =
-    `${resultSummary} Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`;
+    `${resultSummary}${isFourLaneMode() ? " Every committed card stays in its owner's deck cycle." : ` Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`}`;
   document.querySelector("#resultRounds").textContent = state.round;
-  document.querySelector("#resultCards").textContent = getTrophyProgress(state.playerWins);
+  document.querySelector("#resultCards").textContent = isFourLaneMode() ? duelRules().getProgressTotal(state.playerProgress) : getTrophyProgress(state.playerWins);
   await playDeckTransition("ending");
-  audio.matchResult(won);
+  if (drawn) audio.roundResult("draw"); else audio.matchResult(won);
   if (!ui.resultDialog.open) ui.resultDialog.showModal();
 }
 
@@ -4429,6 +4571,8 @@ async function startGame() {
   state.aiTellClues = [];
   state.aiTraits = isFourLaneMode() ? [...matchFourLaneOpponent.traits]
     : usesPersistentAiHabits() ? createAiTraits() : [];
+  state.playerProgress = { ember: 0, gust: 0, tide: 0 };
+  state.aiProgress = { ember: 0, gust: 0, tide: 0 };
   state.previousRoundsHistory = [];
   renderOpponentHabits();
   renderPreviousRoundsHistory();

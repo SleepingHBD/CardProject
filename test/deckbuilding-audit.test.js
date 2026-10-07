@@ -56,20 +56,28 @@ test("the same duel seed reproduces choices and outcomes without mutating a cust
 test("Last Light retains its identity and legal budget while improving support lanes, not card stats", () => {
   const preset = api.createStarterPresets(catalog).find(deck => deck.id === "finisher");
   const report = api.validateDeck(catalog, preset);
-  assert.equal(report.summary.totalCost, 118);
-  assert.equal(report.summary.rarityCounts.legendary, 1);
+  assert.equal(report.summary.totalCost, 120);
+  assert.equal(report.summary.rarityCounts.legendary, 0);
   assert.deepEqual(report.summary.elementCounts, { ember: 8, gust: 8, tide: 8 });
-  assert.deepEqual(report.summary.roleCounts, { vanguard: 6, link: 6, finisher: 12, rally: 0 });
-  assert.equal(preset.cards.reduce((sum, key) => sum + catalog.byKey[key].power, 0), 111);
-  assert.equal(report.summary.copies["shazmir-ashveil"], 2);
-  assert.equal(report.summary.copies["moonpool-mouser"], 2);
+  assert.deepEqual(report.summary.roleCounts, { vanguard: 5, link: 5, finisher: 8, rally: 6 });
+  assert.equal(preset.cards.reduce((sum, key) => sum + catalog.byKey[key].power, 0), 117);
+  assert.equal(report.summary.copies["beacon-burmilla"], 2);
+  assert.equal(report.summary.copies["isai-tidebind"], 2);
 });
 
 test("deck tips are non-blocking, use one consistent budget and do not imply omitted roles are invalid", () => {
   const low = probes.find(deck => deck.id === "low-cost"), skew = probes.find(deck => deck.id === "heavy-ember");
   assert.match(api.getDeckTips(catalog, low).join(" "), /30 cost unused/);
   assert.match(api.getDeckTips(catalog, skew).join(" "), /Only 4 Gust cards and 4 Water cards/);
-  assert.match(api.getDeckTips(catalog, roster[3].deck).join(" "), /Only a Finisher committed last.*at least two cards/);
+  const finisherHeavy = { ...low, cards: api.ELEMENTS.flatMap(element => {
+    const options = catalog.cards.filter(card => card.element === element)
+      .flatMap(card => Array(card.copyLimit).fill(card))
+      .sort((a, b) => Number(b.tactic === "finisher" && b.cost <= 6) - Number(a.tactic === "finisher" && a.cost <= 6) || a.cost - b.cost);
+    return options.slice(0, 8).map(card => card.key);
+  }) };
+  assert.ok(api.validateDeck(catalog, finisherHeavy).valid);
+  assert.ok(api.validateDeck(catalog, finisherHeavy).summary.roleCounts.finisher > 8);
+  assert.match(api.getDeckTips(catalog, finisherHeavy).join(" "), /Only a Finisher committed last.*at least two cards/);
   for (const role of api.ROLES) {
     const deck = probes.find(value => value.id === `no-${role}`);
     const before = JSON.stringify(deck);
