@@ -37,6 +37,17 @@ test("the four-lane entry leads to a separate, initially hidden playable prototy
   assert.match(gameSource, /mainMenuPlayButton\.addEventListener\("click", \(\) => showDifficultyChooser\("main"\)\)/);
 });
 
+test("the experimental mode uses Super Secret Stuff WIP without changing its internal identity", () => {
+  assert.match(pageSource, /aria-label="Super Secret Stuff WIP"/);
+  assert.match(pageSource, /<span>Super Secret Stuff<\/span><span class="four-lane-menu-badge" aria-hidden="true">WIP<\/span>/);
+  assert.match(pageSource, /id="fourLanePreviewTitle" tabindex="-1">Super Secret Stuff WIP<\/h1>/);
+  assert.match(pageSource, /Super Secret Stuff WIP · Deckbuilding/);
+  assert.match(pageSource, /Close Super Secret Stuff WIP rules/);
+  assert.doesNotMatch(pageSource, /Four-Lane Mode|Four-Lane Rules/);
+  assert.match(sourceFunction("renderDuelMode"), /isFourLaneMode\(\) \? "Super Secret Stuff WIP" : "Trial of the Elements"/);
+  assert.match(sourceFunction("isFourLaneMode"), /state\.gameMode === "four-lane"/);
+});
+
 test("opening and leaving the preview preserves duel data and restores background focusability", () => {
   const background = [{ inert: false }, { inert: true }];
   const state = { selectedCardIds: ["kept-card"], playerHand: ["kept-hand"], round: 4, locked: true };

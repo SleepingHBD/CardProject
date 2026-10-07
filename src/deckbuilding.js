@@ -90,7 +90,7 @@
     for (let index = 0; index < summary.count; index++) {
       const key = definition.cards[index];
       if (typeof key !== "string" || !Object.hasOwn(catalog.byKey, key)) {
-        add("unknown-card", `Card ${index + 1} is not in the Four-Lane collection.`);
+        add("unknown-card", `Card ${index + 1} is not in this mode's collection.`);
         continue;
       }
       const card = catalog.byKey[key];

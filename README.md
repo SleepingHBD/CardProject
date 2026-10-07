@@ -18,7 +18,7 @@ npm run dev
 - Win by collecting two Fire trophies, two Gust trophies, and two Water trophies.
 - Non-trophy cards enter the discard pile and reshuffle into the draw pile when needed.
 
-### Four-Lane Mode (work in progress)
+### Super Secret Stuff WIP
 
 - Each player has a separate 24-card deck and discard pile, chosen from a 36-card collection.
 - Start with 7 cards and commit 1–4 cards per round.
@@ -35,7 +35,7 @@ npm run dev
 
 #### Deckbuilding — editor and constructed duels
 
-Open **Four-Lane Mode** from the main menu, choose a starter or saved deck, or select **Build a Deck**. The editor includes live validation, search and element/role/rarity filters. Save a valid deck to select it for your next duel. Starting from a starter list creates your own copy; the original starter cannot be changed or deleted. Normal Play stays unchanged.
+Open **Super Secret Stuff WIP** from the main menu, choose a starter or saved deck, or select **Build a Deck**. The editor includes live validation, search and element/role/rarity filters. Save a valid deck to select it for your next duel. Starting from a starter list creates your own copy; the original starter cannot be changed or deleted. Normal Play stays unchanged.
 
 - Exactly 24 cards, with a maximum deck cost of 120.
 - At least 4 Fire, 4 Gust and 4 Water cards; equal element counts are not required.
@@ -82,7 +82,7 @@ In this cohort, repeated singles won 0%, repeated two-card play 14.9%, adaptive 
 
 Regression tests cover constructed decks and storage, all 108 habit combinations, all four roles, actual goal clipping, simultaneous completion, history snapshots and recycling. An independent oracle checks 10,000 randomized formations against production progress scoring and side reversal. Normal Play remains isolated from constructed decks and these changes.
 
-Deckbuilding's four initial implementation phases are complete. Construction limits remain provisional and Four-Lane Mode remains work in progress, ready for human playtesting rather than progression/unlock systems.
+Deckbuilding's four initial implementation phases are complete. Construction limits remain provisional and Super Secret Stuff WIP remains work in progress, ready for human playtesting rather than progression/unlock systems.
 
 ## Deploy to GitHub Pages
 

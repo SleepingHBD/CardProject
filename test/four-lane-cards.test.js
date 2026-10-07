@@ -122,7 +122,7 @@ test("the preview reuses rarity frames with correct role labels, icons and safe 
   assert.doesNotMatch(markup, /data-card-id|draggable="true"/);
   assert.match(pageSource, /symbol id="tactic-icon-banner"/);
   assert.match(pageSource, /id="fourLaneCardGallery" role="list"/);
-  assert.match(pageSource, /These cards are now playable in Four-Lane Mode/);
+  assert.match(pageSource, /These cards are now playable in Super Secret Stuff WIP/);
 });
 
 test("all three additional Uncommon frames match the approved final artwork and intended roles", () => {

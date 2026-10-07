@@ -841,7 +841,7 @@ function roundPointLabel(points = 1) {
 function renderDuelMode() {
   document.body.dataset.duelMode = state.gameMode;
   document.querySelector(".arena").setAttribute("aria-label", `${isFourLaneMode() ? "Four" : "Three"}-lane dueling table`);
-  document.querySelector("#gameTitle").textContent = isFourLaneMode() ? "Four-Lane Duel · WIP" : "Trial of the Elements";
+  document.querySelector("#gameTitle").textContent = isFourLaneMode() ? "Super Secret Stuff WIP" : "Trial of the Elements";
   document.querySelector("#roundScore small").textContent = isFourLaneMode() ? "TOTAL PROGRESS" : "ROUNDS WON";
   document.querySelector("#resultCardsLabel").textContent = isFourLaneMode() ? "Your progress / 18" : "Trophy slots";
   document.querySelector("#previousRoundsHistoryIntro").textContent = isFourLaneMode()
@@ -2783,7 +2783,7 @@ function renderGallery() {
   }
 
   ui.galleryIntro.textContent = sortedCards.length === library.length
-    ? `All ${library.length} cards available in ${isFourLaneMode() ? "Four-Lane Mode" : "Normal Play"}.`
+    ? `All ${library.length} cards available in ${isFourLaneMode() ? "Super Secret Stuff WIP" : "Normal Play"}.`
     : `Showing ${sortedCards.length} of ${library.length} cards.`;
   ui.archiveSort.value = state.archiveSort;
   ui.archiveSortSummary.textContent = ARCHIVE_SORT_SUMMARIES[state.archiveSort];
@@ -3074,7 +3074,7 @@ function historyRoundDetailsMarkup(entry) {
     <details class="history-details">
       <summary>Details</summary>
       <div class="history-details-content">
-        <p class="history-detail-context">${entry.mode === "four-lane" ? "Four-Lane Mode · " : ""}${DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
+        <p class="history-detail-context">${entry.mode === "four-lane" ? "Super Secret Stuff WIP · " : ""}${DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
         <div class="history-progress-before">
           <span class="history-progress-label">${entry.mode === "four-lane" ? "Progress before this round (6 per element)" : "Trophies before this round"}</span>
           ${historyProgressMarkup(entry.progressBefore?.player || entry.trophyProgressBefore.player, "You")}
