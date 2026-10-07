@@ -16,13 +16,13 @@ function rule(css, selector) {
   return match[1];
 }
 
-test("the production courtyard uses the fur-corrected render at its original dimensions", () => {
+test("the production courtyard uses the refined painted render at its original dimensions", () => {
   const image = readFileSync(new URL(`../${artworkPath}`, import.meta.url));
   assert.equal(image.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
   assert.equal(image.readUInt32BE(16), 1672);
   assert.equal(image.readUInt32BE(20), 941);
   assert.equal(createHash("sha256").update(image).digest("hex"),
-    "573663d288201d8b2b75fb4eeb71a27234d804b7446b59d4dc81b232a2279f96");
+    "e5c32cf46e7392f2cf1a88a3b86c047d990eb9667c000323b4cb6bb2869d13b7");
 });
 
 test("the style-match keeps the exact previous courtyard and main-menu reference intact", () => {
@@ -53,10 +53,38 @@ test("Gale's fur correction preserves the previous courtyard and original card r
     const source = readFileSync(new URL(`../${reference.path}`, import.meta.url));
     assert.equal(createHash("sha256").update(source).digest("hex"), reference.sha256);
   }
-  const production = readFileSync(new URL(`../${artworkPath}`, import.meta.url));
   const master = readFileSync(new URL(`../assets/backgrounds/${history.asset}`, import.meta.url));
-  assert.deepEqual(production, master);
   assert.equal(createHash("sha256").update(master).digest("hex"), history.sha256);
+  assert.equal(history.sha256, "573663d288201d8b2b75fb4eeb71a27234d804b7446b59d4dc81b232a2279f96");
+});
+
+test("the rendering refinements preserve every source pass and leave the main menu unchanged", () => {
+  for (const version of [9, 10, 11]) {
+    const history = JSON.parse(readFileSync(new URL(`../assets/backgrounds/four-lane-courtyard-draft-v${version}.json`, import.meta.url), "utf8"));
+    assert.equal(history.productionAsset, "four-lane-lobby-courtyard.png");
+    assert.equal(history.preservedPreviousDraft, `four-lane-courtyard-draft-v${version - 1}.png`);
+    assert.match(history.generator, /Built-in ImageGen/);
+    assert.match(history.prompt, /STYLE REFERENCE ONLY/);
+    assert.match(history.prompt, /IVORY-WHITE/);
+    assert.match(history.prompt, /two.*hind legs\/paws and one separate fluffy tail/i);
+    assert.deepEqual(history.imageDimensions, { width: 1672, height: 941 });
+    assert.equal(history.references[1].path, "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png");
+    assert.equal(history.references[1].sha256, "b51afa1025f74da85e350dc58b012058132f923a0b2742fc9fd4851818c689bb");
+    for (const reference of history.references) {
+      const source = readFileSync(new URL(`../${reference.path}`, import.meta.url));
+      assert.equal(createHash("sha256").update(source).digest("hex"), reference.sha256);
+    }
+    const master = readFileSync(new URL(`../assets/backgrounds/${history.asset}`, import.meta.url));
+    assert.equal(createHash("sha256").update(master).digest("hex"), history.sha256);
+    if (version === 11) {
+      const production = readFileSync(new URL(`../${artworkPath}`, import.meta.url));
+      assert.deepEqual(production, master);
+      assert.equal(history.preservedPreviousRelease, "four-lane-courtyard-draft-v10.png");
+      assert.match(history.prompt, /STONEWORK AND EDGE HIERARCHY/);
+      assert.match(history.prompt, /SKY/);
+      assert.match(history.prompt, /CHARACTER FINISH/);
+    }
+  }
 });
 
 test("the artwork is a portable, cover-sized background scoped to the lobby only", () => {
@@ -100,7 +128,7 @@ test("static packaging includes the approved release asset but excludes preview 
   const include = runInNewContext(`(${filter[1]})`);
   assert.equal(include("assets/backgrounds/four-lane-lobby-courtyard.png"), true);
   assert.equal(include("assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png"), true);
-  for (const version of [1, 2, 3, 4, 5, 6, 7, 8]) {
+  for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
     assert.equal(include(`assets/backgrounds/four-lane-courtyard-draft-v${version}.png`), false);
     assert.equal(include(`assets\\backgrounds\\four-lane-courtyard-draft-v${version}.json`), false);
   }

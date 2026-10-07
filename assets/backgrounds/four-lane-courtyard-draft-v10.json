@@ -1,0 +1,35 @@
+{
+  "version": 10,
+  "date": "2026-10-07",
+  "status": "Implemented in the Four-Lane Mode lobby",
+  "asset": "four-lane-courtyard-draft-v10.png",
+  "productionAsset": "four-lane-lobby-courtyard.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v9.png",
+  "preservedPreviousRelease": "four-lane-courtyard-draft-v8.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-a567e586-b731-4fd0-9505-87a153b359ad.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "sha256": "5538f3ac1c8ec445aeff52c7a7745aad84bff4fea7d827a656d7700903411eee",
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v9.png",
+      "role": "Preserved exact intermediate edit target",
+      "sha256": "e1b064a80a1c2dd34bcdc335c2f48a2a173b8fc8b8d343a5573e0abe0ac9b2be"
+    },
+    {
+      "path": "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png",
+      "role": "STYLE REFERENCE ONLY; not modified",
+      "sha256": "b51afa1025f74da85e350dc58b012058132f923a0b2742fc9fd4851818c689bb"
+    }
+  ],
+  "changes": [
+    "Refine the two cats' overly uniform ink contours into softer, varied painted contours with textured dimensional shading.",
+    "Integrate ivory-white Gale and silver-grey Empress Ebb into local torchlight and cooler twilight shadows without changing poses or clothing.",
+    "Keep the existing courtyard framing, banners, trident-polishing action and two hind legs plus one tail for Empress Ebb.",
+    "Keep the main-menu reference, card art, lobby layout, warm UI palette, performance fix and gameplay code unchanged."
+  ],
+  "prompt": "Use case: style-transfer / identity-preserve.\nInput images: Image 1 is the REFINED COURTYARD EDIT TARGET. Image 2 is the MAIN MENU STYLE REFERENCE ONLY.\n\nMake one focused refinement to Image 1: refine the painted rendering of the TWO CATS so their outline weight and dimensional shading match the cats in Image 2. Keep the courtyard environment from Image 1 and do not further brighten it or change its composition.\n\nThe current cats still have overly bold, uniform near-black ink contours and flat graphic patches. Replace only that rendering treatment with Image 2's finer, variable dark-charcoal painted contours, textured blended shadows and convincing rounded forms. Retain expressive clear eyes and feline facial details, but allow some outline edges to soften into the shaded fur or cloth rather than circling every form with a heavy black stroke. This must be painted detail, NOT blur or soft focus. Match the polished illustrated shading of Sir Squall's fur/cloth and Comet Claw's rounded face and paws in Image 2 without importing their identities or poses.\n\nGale Groomer, LEFT, remains the same IVORY-WHITE cat with teal eyes, goggles and green/gold clothes, seated casually on the wooden crate. Model his white fur with subtle neutral grey/lavender shadow planes and restrained amber edge reflections, so his head, body, paws, legs and tail belong to the twilight scene rather than reading as a bright white sticker. His base fur is still white, NOT beige or ginger. Empress Ebb, RIGHT, retains silver-grey fur and cool shaded volumes, crown, pearls, navy/teal-and-gold outfit, focused non-smiling face and cloth polishing the same diagonal golden trident. Give her fur, sleeves and paws the same carefully rounded painterly shading.\n\nSTRICT INVARIANTS: exact current wide framing and scene layout, camera/perspective, character size and position, breed identities, facial features, eye colours, expressions, all clothing designs and colours, goggles, crowns, pearl necklace, cloth, trident shape and grip. Preserve both existing seated poses. Ebb has TWO attached hind legs/paws and ONE separate fluffy tail, not a missing leg. No added toes, human fingers, limbs or props. Keep all Image 1 courtyard stones, torches, sunset, clouds, arches, pool, foliage, crates, barrels and banners as they are. Right Water banner remains hung from a HORIZONTAL wall bar; no reinstated upper-right green flags/poles. Keep the open centre empty. Do not import Image 2's battle, fire/wind spells, characters or castle layout.\n\nChange ONLY the two cats' outline/shading treatment and their local environmental lighting integration, not anatomy, costume, pose or background geometry. Same sharp full-bleed opaque 1672 x 941 landscape. No text, UI, borders or watermark."
+}

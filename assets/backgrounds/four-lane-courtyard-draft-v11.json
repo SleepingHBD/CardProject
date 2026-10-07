@@ -1,0 +1,36 @@
+{
+  "version": 11,
+  "date": "2026-10-07",
+  "status": "Implemented in the Four-Lane Mode lobby",
+  "asset": "four-lane-courtyard-draft-v11.png",
+  "productionAsset": "four-lane-lobby-courtyard.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v10.png",
+  "preservedPreviousRelease": "four-lane-courtyard-draft-v10.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-52180f34-9d8c-467d-b9c1-f5e3031530a0.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "sha256": "e5c32cf46e7392f2cf1a88a3b86c047d990eb9667c000323b4cb6bb2869d13b7",
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v10.png",
+      "role": "Preserved exact current courtyard edit target",
+      "sha256": "5538f3ac1c8ec445aeff52c7a7745aad84bff4fea7d827a656d7700903411eee"
+    },
+    {
+      "path": "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png",
+      "role": "STYLE REFERENCE ONLY; unchanged",
+      "sha256": "b51afa1025f74da85e350dc58b012058132f923a0b2742fc9fd4851818c689bb"
+    }
+  ],
+  "changes": [
+    "Group the jagged small cloud marks into larger, softly connected dusk cloud masses.",
+    "Reduce angular mottled stone-surface noise and competing distant edges while keeping block seams, architectural layout and sharp foreground silhouettes.",
+    "Use cleaner character fur clumps and controlled shadow planes without changing character designs, ivory-white Gale fur, expressions, poses or clothing.",
+    "Preserve Ebb's trident-polishing action, two attached hind legs/paws and one separate tail, plus all banner placements.",
+    "Keep the main-menu artwork, card artwork, lobby layout, UI palette, performance guard and gameplay code unchanged."
+  ],
+  "prompt": "Use case: style-transfer.\nAsset type: production Four-Lane Mode lobby background for Project: Prowl.\nInput images: Image 1 is the CURRENT COURTYARD EDIT TARGET. Image 2 is the unchanged MAIN MENU STYLE REFERENCE ONLY.\n\nPrimary request: resolve the remaining rendering-style differences between these images. Keep the entire scene layout of Image 1, but match Image 2's restrained painted surface detail, broad cloud masses and clean cartoon character forms. This is NOT a redesign, not an extra-detail pass.\n\n1. STONEWORK AND EDGE HIERARCHY: Repaint only the surface treatment of the courtyard walls, towers, steps and paving. The current surfaces are too busy, with many tiny angular grey/orange fracture patches, scratchy flecks and strongly outlined chips across every block. Remove most of that small mottled surface noise. Use broader smooth stone colour planes with sparing worn texture, gentle dimensional shading and selected highlights like the stones in Image 2. Keep the existing block positions, seams, perspective and architectural silhouettes; do not flatten them into vector rectangles. Reduce contrast of background mortar and distant stone edges so they recede instead of every brick competing for attention. Foreground silhouettes and objects remain sharp. Simplify by repainting, NOT by Gaussian blur, soft-focus or lower resolution.\n\n2. SKY: Keep the current sunset position, dusk colours and cloud flow, but group the many tiny sharp jagged cloud marks into larger softly connected cloud masses, as in Image 2. Paint calm broad dark purple/blue cloud shapes and restrained warm undersides. Reduce the repetitive small orange shards, zigzags and crispy tiny brush marks. Preserve natural cloud depth and the existing orange horizon; do not replace the sky with a flat gradient, empty sky, daylight or photorealistic clouds.\n\n3. CHARACTER FINISH: Retain both cats' exact character designs, facial identity, expression, size and poses. Simplify the overly textured fur rendering into clean readable fur clumps and broad controlled shadow planes like Sir Squall's illustrated face in Image 2. Use subtle painterly transitions, but not scratchy hair-by-hair detail, airbrushed plush-toy fur, fuzzy cheeks or rounded 3D mascot rendering. Keep confident fine variable dark contours, expressive crisp eyes and paws, readable clothing shapes and gentle dimensional shading. Do not enlarge or shrink the eyes, reshape the muzzle, change the breed or redesign the costumes. No additional fur detail. Gale still has IVORY-WHITE base fur with restrained neutral-grey shadows and warm light on torch-facing edges, not a beige or orange fur wash. Ebb still has silver-grey fur. Keep the existing balanced local torch illumination; do not add bloom, new effects or an overall colour filter.\n\nSTRICT INVARIANTS: Preserve Image 1's wide 1672 x 941 framing, camera, perspective, open central courtyard and all object placements. Gale Groomer sits casually on the LEFT crate: white cat, teal eyes, bronze goggles, green-and-gold coat/scarf, same closed-mouth expression, paws, legs and one fluffy tail. Empress Ebb sits on the RIGHT stone steps: crown, pearls, navy/teal-and-gold clothes, focused NON-SMILING expression, polishing the same diagonal golden trident with the pale cloth. Preserve her two attached hind legs/paws and ONE separate fluffy tail. Do not confuse a tail with a leg. Preserve correct paw anatomy and grips; no extra toes, fingers or limbs.\nKeep all arches, walls, crenellations, mountain silhouettes, torches, pool and its reflections, foliage, crates, barrels, clothing and banners in place. The right Water banner stays suspended from its short HORIZONTAL wall-mounted bar, not a vertical flagpole. Keep the left Fire banner and the three central Gust/Fire/Water wall banners. Removed upper-right green flags/poles remain absent. No imported cats, battle poses, armour, spell effects or castle layout from Image 2.\n\nGoal: Image 1 should have the same balance of clean cartoon drawing and softly painted cinematic shading as Image 2, with less surface noise, not more texture. Preserve the quiet courtyard mood. No new characters or objects, no anatomy changes, cropping, UI, text, logo, borders or watermark. Opaque full-bleed sharp landscape."
+}
