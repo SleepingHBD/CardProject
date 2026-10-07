@@ -53,6 +53,13 @@ body.main-menu-active {
   overflow: hidden;
 }
 
+/* Menu screens cover the duel. Remove its underlay from rendering so an exited
+   duel cannot keep repainting animated lanes behind the menu or four-lane lobby. */
+body.main-menu-active > .topbar,
+body.main-menu-active > main {
+  display: none !important;
+}
+
 button {
   font: inherit;
 }
