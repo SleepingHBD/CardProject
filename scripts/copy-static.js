@@ -11,5 +11,6 @@ await cp("src/audio.js", "dist/src/audio.js");
 await cp("src/game.js", "dist/src/game.js");
 await cp("assets", "dist/assets", {
   recursive: true,
-  filter: (source) => !source.endsWith(".new-art.webp"),
+  filter: (source) => !source.endsWith(".new-art.webp")
+    && !/four-lane-courtyard-draft-v\d+\.(png|json)$/.test(source),
 });

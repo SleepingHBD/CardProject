@@ -1,0 +1,29 @@
+{
+  "version": 4,
+  "date": "2026-10-07",
+  "status": "Preview draft — awaiting approval; not connected to the live lobby",
+  "asset": "four-lane-courtyard-draft-v4.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v3.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-4cb71df4-0b97-46a6-ac12-08de3774b9d1.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v3.png",
+      "role": "Edit target — scene, poses, identities, anatomy and composition"
+    },
+    {
+      "path": "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png",
+      "role": "Artstyle reference — active main menu background verified in styles.css"
+    }
+  ],
+  "changes": [
+    "Repaint the whole courtyard and both cats in the main menu's cinematic illustrated style.",
+    "Introduce layered hand-painted surfaces, richer dusk shadows and warm torch highlights.",
+    "Preserve the courtyard composition, elemental banners, Gale's seated pose and Ebb's corrected legs and trident-cleaning action."
+  ],
+  "prompt": "Use case: style-transfer.\nAsset type: full-bleed wide illustrated background draft for Project Prowl's four-lane lobby.\n\nInput images: Image 1 is the courtyard image to EDIT and supplies the exact scene, characters, poses and composition. Image 2 is the artwork CURRENTLY USED BY THE MAIN MENU and is the authoritative ARTSTYLE reference only. Do not alter Image 2 and do not copy its battle composition, characters or elemental attacks.\n\nPrimary request: repaint the WHOLE of Image 1 in the same visual language as Image 2, as if both backgrounds were made by the same artist for the same game. This is a genuine rendering-style change across BOTH characters AND scenery, not merely a dark colour overlay.\n\nMatch Image 2's cinematic hand-drawn fantasy illustration: confident fine-to-medium dark contour lines, expressive compact cartoon cats, carefully layered illustrated shadows, restrained brush-textured colour shapes and material highlights, moody atmospheric depth, rich dark blue/purple shadows balanced with warm amber/orange light. Foreground stone has broad hand-painted facets and subtle worn variations, cloth has illustrated folds, metal has small shaped highlights, fur is stylised grouped tufts with restrained soft shading rather than individual hairs. The sky has layered painted cloud banks instead of flat scalloped cartoon clouds. Preserve the original cats' identities and stubby feline proportions; do not make them realistic animals or human-shaped characters. Avoid the current flat vector-like environment and heavy sticker-like character outlines. The characters and architecture must share one cohesive level of rendering and the same ambient light and subtle warm torch-facing highlights, using Image 2 as the visual benchmark. No photorealism, 3D game render, glossy plastic, hyper-detailed fur or gritty realism.\n\nKEEP Image 1's exact wide courtyard layout, camera, perspective, character scale and side positions, quiet empty centre, castle arches and wall silhouettes, stairs, crates, water channel, torches, hanging elemental banners and time-of-day setting. Maintain a calm off-duty dusk scene. Do not turn it into a battle, add flames across the floor or whirlwinds, or replace the courtyard with Image 2's castle wall setting. Fire red flame, Gust green wind spiral and Water blue droplet banners remain in the same places with clean readable symbols.\n\nGale Groomer remains the cream-white cat casually seated on the wooden crate at the far left with brass goggles, green/gold captain's coat, green scarf, blue clasp, relaxed friendly expression and the current seated pose.\nEmpress Ebb remains the silver-blue cat seated on the stone steps at the far right, coral-and-pearl crown, pearl collar and blue/teal/gold scalloped armour. Preserve her focused right-facing/downward head angle while she polishes her single gold-and-teal trident with a plain cream cloth. She is NOT smiling and not looking at Gale or the viewer. Preserve her two forelegs in the current natural trident/cloth grip, TWO distinct connected hind legs ending in TWO grey paws on the step, and ONE separate fluffy tail curling behind her at the outer right. Do not regress the corrected anatomy, hide a hind leg, treat her tail as a leg, duplicate the weapon, add fingers or detach a paw. Keep the costume's belly coverage.\n\nOnly artstyle/rendering/lighting treatment changes. EXACTLY TWO cats and no additional people, creatures, decorative silhouettes, props, text, logos, UI, buttons, card frames or watermark. Same opaque 16:9 landscape framing and broad uncluttered centre for future lobby controls."
+}

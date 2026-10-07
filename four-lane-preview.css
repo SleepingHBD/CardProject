@@ -26,8 +26,8 @@
   padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   color: #efddb4;
   background:
-    radial-gradient(ellipse at 30% 0%, #64432c66, transparent 65%),
-    linear-gradient(135deg, #2f211d, #1f1615);
+    url("./assets/backgrounds/four-lane-lobby-courtyard.png") center center / cover no-repeat,
+    #251b17;
   box-shadow: inset 0 0 0 3px #9c743a, inset 0 0 0 7px #201411;
 }
 
@@ -36,7 +36,7 @@
 }
 
 .four-lane-preview-content {
-  width: min(1120px, 100%);
+  width: min(1040px, 100%);
   margin: auto;
   min-height: 100%;
   display: flex;
@@ -49,7 +49,7 @@
   padding: 22px 16px 24px;
   border: 1px solid #98754088;
   border-radius: 6px;
-  background: #ffffff04;
+  background: #251b17ed;
 }
 
 .four-lane-card-showcase-heading {
@@ -143,6 +143,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid #ad844577;
+  border-radius: 6px;
+  background: linear-gradient(110deg, #2f211df0, #1f1615e6);
+  box-shadow: 0 8px 24px #0003;
 }
 
 .four-lane-preview-eyebrow {
@@ -295,7 +300,7 @@
   padding: 14px 18px;
   border: 1px solid #98754088;
   border-radius: 4px;
-  background: #ffffff04;
+  background: #251b17ed;
   color: #cdbd9f;
   font-size: 14px;
   line-height: 1.6;
@@ -312,7 +317,7 @@
   padding: 20px;
   border: 1px solid #bd9557;
   border-radius: 6px;
-  background: #ba8b3c12;
+  background: #2f211ded;
 }
 
 .four-lane-launch h2 {

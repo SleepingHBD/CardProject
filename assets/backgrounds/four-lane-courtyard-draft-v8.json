@@ -1,0 +1,34 @@
+{
+  "version": 8,
+  "date": "2026-10-07",
+  "status": "Implemented in the Four-Lane Mode lobby",
+  "asset": "four-lane-courtyard-draft-v8.png",
+  "productionAsset": "four-lane-lobby-courtyard.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v7.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-e04e52d0-f2ea-4f6e-bc43-d8a1c0e1d27a.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "sha256": "573663d288201d8b2b75fb4eeb71a27234d804b7446b59d4dc81b232a2279f96",
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v7.png",
+      "role": "Preserved exact edit target",
+      "sha256": "fba575995afb23f122719a63ac6c12def0fb91a267fb478d0db1fdc29b6b6993"
+    },
+    {
+      "path": "assets/cards/gale-groomer.webp",
+      "role": "Fur-colour reference only; not modified",
+      "sha256": "9f6729b4d94541d6e284f99caedbbae84cdd838a843d44b2a4945ffaaf8defe3"
+    }
+  ],
+  "changes": [
+    "Make Gale Groomer's fur ivory-white rather than golden beige, matching his card artwork.",
+    "Retain warm torchlight highlights and shaded fur texture without changing his clothing, pose or silhouette.",
+    "Preserve the courtyard composition, Empress Ebb, banner layout and crisp illustrated finish.",
+    "Keep the brown-and-gold UI, main-menu asset, card artwork and gameplay code unchanged."
+  ],
+  "prompt": "Use case: precise-object-edit / identity-preserve.\nAsset: existing wide landscape Four-Lane lobby background for Project: Prowl.\nImage 1 is the CURRENT COURTYARD TO EDIT. Image 2 is Gale Groomer's actual CARD ART, a FUR-COLOUR REFERENCE ONLY.\n\nMake one precise change to Image 1: recolour ONLY the fur of Gale Groomer, the seated cat on the far LEFT wooden crate, from its overly beige/golden base to the light ivory-white fur shown in Image 2. Apply consistently to his face, cheek fluff, throat/chest, exposed forepaws, hind legs, feet and fluffy tail. His fur should read as a WHITE CAT, not a ginger or golden cream cat. Retain the current painted fur texture, contour shapes, lighting direction and shading depth. Use gentle neutral/cool grey shadows and restrained warm ivory highlights on torch-facing edges, rather than a tan wash covering the whole body. Keep the pink nose/inner ears, teal-blue eyes, bronze goggles and green-and-gold clothing exactly their current colours. Do not whiten clothing or metal. Do not overexpose the fur or add a glow.\n\nSTRICT INVARIANTS: Image 1's existing composition, framing, camera, sharp illustrated finish and environment must remain the same. Preserve Gale's casual seated pose, closed-mouth expression, anatomy, paw shapes, green coat, scarf, goggles, belt and crate. Image 2 supplies FUR COLOUR ONLY: do NOT import its pointing pose, open mouth, ship, sails, daylight, background or simpler rendering. Keep the current courtyard's detailed cinematic illustration style.\n\nDo not change Empress Ebb at the right: same silver-blue fur, crown, outfit, pearl collar, focused non-smiling expression, polishing her diagonal trident with a pale cloth; retain TWO attached hind legs/paws and ONE separate fluffy tail. Do not modify any other character, object or background pixel unnecessarily. Preserve all courtyard architecture, stonework, open centre, torches, sunset, clouds, pool, foliage, barrels, crates and banner positions. The right Water banner stays wall-hung from its short HORIZONTAL bar, not a vertical flagpole. The removed upper-right green flags and poles remain absent.\n\nChange only Gale's fur colour in Image 1. No redesign, added figures, limbs, props, UI, text, logos, borders or watermark. Opaque landscape; preserve the original wide aspect ratio and 1672 x 941 framing."
+}

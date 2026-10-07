@@ -1,0 +1,34 @@
+{
+  "version": 7,
+  "date": "2026-10-07",
+  "status": "Implemented in the Four-Lane Mode lobby",
+  "asset": "four-lane-courtyard-draft-v7.png",
+  "productionAsset": "four-lane-lobby-courtyard.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v6.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-0ce78829-0195-47bc-bcd3-659f4fba6188.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "sha256": "fba575995afb23f122719a63ac6c12def0fb91a267fb478d0db1fdc29b6b6993",
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v6.png",
+      "role": "Preserved exact edit target",
+      "sha256": "cbd58f326073e207981a3a3c0afa70dfef6a43da49c73a524b108ab853c931d0"
+    },
+    {
+      "path": "assets/backgrounds/main-menu-sir-squall-vs-comet-claw.png",
+      "role": "Authoritative style reference only; not modified",
+      "sha256": "b51afa1025f74da85e350dc58b012058132f923a0b2742fc9fd4851818c689bb"
+    }
+  ],
+  "changes": [
+    "Refine edge definition, stonework, fabric and fur detail, painted shading and material rendering to match the main-menu artwork.",
+    "Preserve the courtyard composition, character identities, outfits, casual poses, correct hind limbs and distinct Ebb tail.",
+    "Retain the horizontal wall-mounted Water banner, removed upper-right flags and smoothed Ebb forehead fur.",
+    "Keep the restored brown-and-gold lobby UI and untinted background rendering unchanged."
+  ],
+  "prompt": "Use case: style-transfer.\nAsset type: replacement full-screen Four-Lane Mode lobby illustration for Project: Prowl.\nInput images: Image 1 is the EXISTING COURTYARD artwork to EDIT. Image 2 is the EXISTING MAIN MENU artwork, the authoritative STYLE REFERENCE ONLY. Do not copy Image 2's battle scene into Image 1.\n\nPrimary request: Refine and re-render Image 1 so these two illustrations look painted and inked by the exact same artist for the same game. Match Image 2's crisp, controlled hand-drawn edge definition, contour weight, fine surface detail, nuanced shading, brushwork, restrained colours and cinematic material rendering. This is not a new scene or a character redesign. Preserve Image 1's composition, perspective, architecture, characters, identities, positions, clothing, poses and props. Match the finish throughout the characters AND the environment, not just one or the other.\n\nStyle/medium: Image 2's polished illustrated feline fantasy style: compact, stubby cat proportions, expressive feline features, clean dark contours of the SAME thin-to-medium weight as Image 2, fine controlled fur and fabric detail, hand-painted textured shading, convincing illustrated stone/wood/metal. Sharp and well-resolved foreground and middle-ground features, crisp masonry joints and prop edges, clear eyes and paw silhouettes, subtle natural atmospheric depth only in the distant landscape. Retain deliberate brush texture without smeary, muddy or blurred edges. Do not switch to a flat cartoon, thick black comic outlines, photorealism, 3D rendering or an airbrushed soft-focus treatment. No sharpening halos, artificial grain, glow haze or depth-of-field blur. Do not add a global blue filter.\n\nInvariants: Same full-bleed wide landscape framing and camera position, approximately 1672 x 941 aspect ratio. Keep the large open courtyard centre available for lobby UI. Gale Groomer remains seated casually on the left crate: cream fur, green-and-gold clothing, goggles on his forehead, the same expression, two connected hind legs and natural paws. Empress Ebb stays seated at the right on the steps: silver-blue fur, crown, navy/teal-and-gold clothing, pearl collar, focused NOT smiling, looking toward her trident while polishing it with the pale cloth. Preserve her two distinct attached hind legs/paws and her ONE separate fluffy tail on the outer right, never mistake the tail for a leg. Keep the smooth forehead-fur contour above Ebb's left eye (viewer-right).\n\nKeep the red Fire banner at the far left and the blue Water-droplet banner at the far right wall-mounted from short HORIZONTAL supports. The Water banner must not regain its old long vertical flagpole. Keep the three small Gust/Fire/Water hanging banners above the distant arches with their current emblems. The two removed green waving flags and their poles in the upper-right remain absent. Preserve the existing torch positions, pool on the right, barrels/crates, distant castle, mountains, purple/navy sunset clouds and warm orange sunset/torchlight. Refine their painted rendering to match Image 2 rather than changing their layout. Natural warm highlights and cool shadows as in Image 2, no all-over recolouring.\n\nConstraints: Only the artistic rendering/finish changes. No additional figures, limbs, fingers, flags, flagpoles or props. No transplanted sword/shield/battle effects from Image 2. No UI, writing, logos, borders, watermarks or text. Opaque landscape image."
+}

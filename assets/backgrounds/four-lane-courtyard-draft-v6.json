@@ -1,0 +1,25 @@
+{
+  "version": 6,
+  "date": "2026-10-07",
+  "status": "Preview draft — awaiting approval; not connected to the live lobby",
+  "asset": "four-lane-courtyard-draft-v6.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v5.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-6eae4398-b3be-44e4-8a88-8cf2d2279070.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v5.png",
+      "role": "Edit target"
+    }
+  ],
+  "changes": [
+    "Replace the Water banner's vertical pole with a horizontal wall-mounted support, matching the Fire banner's mounting style.",
+    "Smooth the protruding forehead fur above Ebb's left eye (viewer-right).",
+    "Preserve the cinematic rendering, composition, other banners, character poses and corrected anatomy."
+  ],
+  "prompt": "Use case: precise-object-edit.\nImage 1 is the latest courtyard artwork to EDIT. Make exactly TWO local corrections and preserve the rest of the illustration.\n\n1. WATER BANNER WALL MOUNT:\nThe large BLUE banner with the gold water-droplet emblem at the FAR RIGHT currently hangs from a long VERTICAL flagpole along its left edge. Change its support so it hangs directly against the stone wall from a SHORT HORIZONTAL wall-mounted crossbar, using the SAME wall-hung construction as the large RED Fire banner at the far LEFT. The blue cloth is suspended downward from the horizontal bar, with simple discreet brackets secured to the masonry. Keep the blue/gold colours, water emblem, pointed bottom, fabric folds, approximate size and position. Remove the ENTIRE old vertical pole, its finial, shaft and flagpole clamps; restore the narrow stone area behind it. No vertical rod running beside the banner, no freestanding staff and no pole stump. A modest horizontal bar attached to the wall is the only support. Do not change the left Fire banner or the three banners on the distant arches.\n\n2. EBB'S FOREHEAD FUR:\nOn the silver-blue cat Empress Ebb at the far right, smooth the protruding pointed fur tuft immediately ABOVE HER LEFT EYE, which is the eye on the VIEWER'S RIGHT nearest the trident. Replace that sticking-up/out spike on the upper-right forehead with a smooth compact gently curved fur contour, continuous with her forehead. This is a small fur cleanup only, not removal of her ear, eyebrow or eyelashes. Keep both ears, crown, eyes, facial expression, head angle and her focused downward/rightward gaze while polishing the trident. Do not smooth her whole head or tail or redesign her face.\n\nInvariants: retain the current cinematic hand-drawn main-menu artstyle, painted textures, sunset, cloud shapes, lighting, castle architecture, courtyard perspective and full-bleed framing. Gale Groomer stays exactly as he is. Preserve Ebb's armour, pearl collar, two forepaw trident/cloth grips, TWO distinct connected hind legs and grey paws, and ONE separate fluffy tail. Keep the two previously removed upper-right green flags and poles absent. No new characters, props, text, UI, logos or watermark. Same opaque wide landscape dimensions. Do not make other changes."
+}

@@ -1,0 +1,25 @@
+{
+  "version": 5,
+  "date": "2026-10-07",
+  "status": "Preview draft — awaiting approval; not connected to the live lobby",
+  "asset": "four-lane-courtyard-draft-v5.png",
+  "preservedPreviousDraft": "four-lane-courtyard-draft-v4.png",
+  "generator": "Built-in ImageGen, using the imagegen skill",
+  "generationSource": "C:/Users/dinie/.codex/generated_images/019f9cf1-b807-76e3-8b27-62edaa7c7e99/exec-f259badc-a8fb-4f9b-a921-d85e4e9a6548.png",
+  "imageDimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "references": [
+    {
+      "path": "assets/backgrounds/four-lane-courtyard-draft-v4.png",
+      "role": "Edit target"
+    }
+  ],
+  "changes": [
+    "Remove both small green flags and their complete poles in the upper-right sky.",
+    "Preserve the large side banners and all three hanging elemental banners.",
+    "Preserve the main-menu-matching rendering, courtyard layout and character poses."
+  ],
+  "prompt": "Use case: precise-object-edit.\nImage 1 is the current courtyard artwork to EDIT.\n\nRemove ONLY the TWO small dark-green/olive waving flags and their complete upright poles in the UPPER RIGHT sky above the castle wall:\n1. The nearer green flag on the tall slim staff around 70% of the image width, with the spear-like finial around 8% of the image height.\n2. The farther green flag on the slim staff around 78% of the image width, with the finial near the top edge around 3% of the image height.\nErase both cloth flags, BOTH entire poles all the way down to their bases behind the battlements, finials, attachment rings and any dangling cords. Leave no pole stumps or fragments. Reconstruct the painted dusk clouds and the existing distant castle/wall shapes naturally where those two flags and staffs were, matching the surrounding brushwork and lighting. Do not invent replacement flags, poles or new buildings.\n\nKeep everything else unchanged, as close to pixel-identical as possible: the current cinematic main-menu-matching hand-drawn artstyle, sky colour and sunset, full courtyard composition and perspective, castle architecture, torches, floor, water, crates, Gale Groomer on the left, Empress Ebb cleaning her trident on the right, their faces/poses/outfits and corrected anatomy.\nIMPORTANT: preserve the LARGE blue Water droplet banner at the far right and its mounting pole, the LARGE red Fire banner at the far left, and the THREE hanging element banners on the far arches including the CENTRAL-LEFT green Gust spiral banner. Those hanging banners are NOT the two flags to remove. Do not remove the left-edge spears.\nSame opaque full-bleed 16:9 landscape framing and dimensions. No other edits, additions, text or watermarks."
+}
