@@ -339,17 +339,17 @@ test("all starter matchups complete with 24-card recycling and no card removed a
   assert.ok(reshuffles > 0);
 });
 
-test("all 108 habit profiles function across the four starter decks without private opposing deck access", () => {
+test("all 144 WIP habit profiles function across the four starter decks without private opposing deck access", () => {
   let matches = 0;
-  for (const motive of normal.AI_MOTIVE_TRAITS) for (const formation of normal.AI_FORMATION_TRAITS) {
+  for (const motive of normal.AI_MOTIVE_TRAITS) for (const placement of four.AI_PLACEMENT_TRAITS) {
     for (const commitment of normal.AI_COMMITMENT_TRAITS) for (let deck = 0; deck < presets.length; deck++) {
       const traits = [motive.id === "element-loyalist"
-        ? { ...motive, element: decks.ELEMENTS[deck % 3] } : motive, formation, commitment];
+        ? { ...motive, element: decks.ELEMENTS[deck % 3] } : motive, placement, commitment];
       simulateMatch(presets[(deck + 1) % 4], presets[deck], 2100 + matches * 131, traits);
       matches++;
     }
   }
-  assert.equal(matches, 432);
+  assert.equal(matches, 576);
 });
 
 test("deckbuilding is packaged before the game and only constructs personal Four-Lane decks", () => {

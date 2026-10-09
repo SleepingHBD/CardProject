@@ -9,28 +9,28 @@
     {
       id: "balanced", name: "Versatile Duelist", deckId: "balanced", role: null, theme: "Mixed roles",
       description: "An adaptable all-rounder that mixes openers, support and Finishers. Its playstyle varies with its habits, so it is less tied to one type of formation.",
-      habits: { motive: allIds(normal.AI_MOTIVE_TRAITS), formation: allIds(normal.AI_FORMATION_TRAITS),
+      habits: { motive: allIds(normal.AI_MOTIVE_TRAITS), placement: allIds(rules.AI_PLACEMENT_TRAITS),
         commitment: allIds(normal.AI_COMMITMENT_TRAITS) },
     },
     {
       id: "rally", name: "Banner Captain", deckId: "rally", role: "rally", theme: "Vanguard + Rally",
       description: "A support-heavy rival built around adjacent Rally partnerships and Vanguard openers. Favours reinforcing key fighters while its habits shape placement and formation size.",
       habits: { motive: ["trophy-hunter", "power-seeker", "trophy-denier"],
-        formation: ["strong-opener", "tactic-planner"],
+        placement: ["left-flank", "centre-guard"],
         commitment: ["measured-planner", "full-formation", "score-reader"] },
     },
     {
       id: "link", name: "Cycle Weaver", deckId: "link", role: "link", theme: "Link combinations",
       description: "A combination-focused rival built around Link and mixed elements. Favours adjacent card combinations and pursuing trophies across Fire, Gust and Water.",
       habits: { motive: ["trophy-hunter", "counter-scholar", "trophy-denier"],
-        formation: ["tactic-planner"],
+        placement: ["left-flank", "centre-guard", "right-flank"],
         commitment: ["measured-planner", "echo-tactician", "restless-dealer"] },
     },
     {
       id: "finisher", name: "Twilight Duelist", deckId: "finisher", role: "finisher", theme: "Finisher endings",
       description: "A Finisher-heavy rival focused on a strong rightmost threat. Its habits shape whether it commits a short formation or a wider push, and where it places its cards.",
       habits: { motive: ["trophy-hunter", "power-seeker", "momentum-rider"],
-        formation: ["late-striker", "tactic-planner"],
+        placement: ["right-flank", "outer-guard"],
         commitment: ["solo-gambler", "measured-planner", "score-reader"] },
     },
   ];

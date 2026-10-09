@@ -2029,11 +2029,18 @@ function prepareAiPlan() {
 
 function renderOpponentHabits() {
   const showsHabits = state.difficulty === "instinct" && state.aiTraits.length;
+  const placementMode = state.gameMode === "four-lane";
+  const categories = { motive: "CARD CHOICE", placement: "LANE PLACEMENT", commitment: "CARD COUNT" };
   ui.opponentHabits.hidden = !showsHabits;
   ui.opponentHabits.innerHTML = showsHabits
     ? state.aiTraits.map((trait) => `
         <div class="opponent-habit">
+          ${placementMode && categories[trait.category] ? `<small class="opponent-habit-category">${categories[trait.category]}</small>` : ""}
           <b>${trait.label}</b>
+          ${placementMode && trait.category === "placement" && Array.isArray(trait.preferredLanes) ? `
+            <div class="habit-lane-map" role="img" aria-label="Favoured lanes ${trait.preferredLanes.map(lane => lane + 1).join(" and ")}; a habit, not this round's formation" title="Favoured lanes—not the current formation">
+              ${[0, 1, 2, 3].map(lane => `<i class="${trait.preferredLanes.includes(lane) ? "is-favoured" : ""}" aria-hidden="true">${lane + 1}</i>`).join("")}
+            </div>` : ""}
           <span>${trait.description}</span>
         </div>
       `).join("")
@@ -2050,7 +2057,7 @@ function renderOpponentTells() {
 
   if (concealsCommitment) {
     ui.commitmentHint.textContent = state.difficulty === "instinct"
-      ? "Instinct · Formation size and cards concealed"
+      ? state.gameMode === "four-lane" ? "Instinct · Habits are clues, not the current plan" : "Instinct · Formation size and cards concealed"
       : "Blind · Current formation and habits concealed";
     ui.opponentTells.innerHTML = "";
     ui.opponentTells.hidden = true;
@@ -3194,6 +3201,23 @@ function historyRoundDetailsMarkup(entry) {
   `;
 }
 
+function historyPlacementSummaryMarkup(entries) {
+  // Observations only: never inspect the hidden habit or this round's plan.
+  // Full four-card plays occupy every lane and cannot identify a lane preference.
+  const recent = [...entries].reverse().filter(entry => {
+    const count = entry.aiCards?.filter(Boolean).length || 0;
+    return entry.mode === "four-lane" && count >= 1 && count <= 3;
+  }).slice(0, 8);
+  if (recent.length < 2) return "";
+  const counts = [0, 1, 2, 3].map(lane => recent.filter(entry => entry.aiCards[lane]).length);
+  return `<section class="history-placement-summary" aria-label="Observed opponent lane use">
+    <div><b>OPPONENT LANE USE</b><small>Last ${recent.length} completed 1–3-card plays</small></div>
+    <div class="history-placement-counts">${counts.map((count, lane) => `
+      <span aria-label="Lane ${lane + 1}: occupied in ${count} of ${recent.length} plays"><b>${lane + 1}</b> ${count}/${recent.length}</span>
+    `).join("")}</div>
+  </section>`;
+}
+
 function renderPreviousRoundsHistory() {
   const count = state.previousRoundsHistory.length;
   ui.previousRoundsHistoryCount.textContent = count;
@@ -3211,7 +3235,8 @@ function renderPreviousRoundsHistory() {
     return;
   }
 
-  ui.previousRoundsHistoryList.innerHTML = [...state.previousRoundsHistory]
+  ui.previousRoundsHistoryList.innerHTML = (state.gameMode === "four-lane"
+    ? historyPlacementSummaryMarkup(state.previousRoundsHistory) : "") + [...state.previousRoundsHistory]
     .reverse()
     .map((entry) => {
       const winnerLabel = entry.mode === "four-lane" ? entry.matchWinner === "draw" ? "Duel drawn"
@@ -4633,7 +4658,9 @@ function showDifficultyChooser(returnTarget = "main") {
   document.querySelector("#difficultyIntro").textContent =
     `Build one to ${pendingDuelMode === "four-lane" ? "four" : "three"} cards and review completed rounds in Previous Rounds History. Guided reveals live clues, Instinct reveals habits, and Blind conceals both.`;
   document.querySelector(".instinct-option em").textContent =
-    `Build one to ${pendingDuelMode === "four-lane" ? "four" : "three"} cards directly and read the opponent's behavior.`;
+    pendingDuelMode === "four-lane"
+      ? "Read their card preference, favoured lanes and commitment habit. Their current formation stays hidden."
+      : "Build one to three cards directly and read the opponent's behavior.";
   difficultyReturnTarget = returnTarget;
   difficultyPreviousLockedState = state.locked;
   stopTutorialMode();

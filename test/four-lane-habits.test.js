@@ -30,7 +30,7 @@ const deckApi = globalThis.ClawDeckbuilding;
 const deckCatalog = deckApi.createCardCatalog(library);
 const starterDecks = deckApi.createStarterPresets(deckCatalog);
 
-test("the nine refined habit descriptions are concise, accurate and generated consistently", () => {
+test("WIP always generates motive, placement and commitment habits with concise accurate descriptions", () => {
   const expected = {
     "power-seeker": "Prefers to commit high-Power cards rather than save them.",
     "trophy-denier": "Favors counters to elements you are close to finishing.",
@@ -44,11 +44,11 @@ test("the nine refined habit descriptions are concise, accurate and generated co
   };
   const seen = new Set();
   for (let m = 0; m < normal.AI_MOTIVE_TRAITS.length; m++) {
-    for (let f = 0; f < normal.AI_FORMATION_TRAITS.length; f++) {
+    for (let f = 0; f < four.AI_PLACEMENT_TRAITS.length; f++) {
       for (let c = 0; c < normal.AI_COMMITMENT_TRAITS.length; c++) {
-        const rolls = [m / 6, f / 3, c / 6, 0];
+        const rolls = [m / 6, f / 4, c / 6, 0];
         const traits = four.createAiTraits(() => rolls.shift());
-        assert.deepEqual(traits.map(value => value.category), ["motive", "formation", "commitment"]);
+        assert.deepEqual(traits.map(value => value.category), ["motive", "placement", "commitment"]);
         assert.ok(traits.every(Object.isFrozen));
         for (const trait of traits) {
           assert.doesNotMatch(trait.description, /\bprogress\b/i);
@@ -61,7 +61,7 @@ test("the nine refined habit descriptions are concise, accurate and generated co
       }
     }
   }
-  assert.equal(seen.size, 9);
+  assert.equal(seen.size, 6, "legacy formation-role habits are not part of randomly generated WIP profiles");
   for (const trait of [...normal.AI_MOTIVE_TRAITS, ...normal.AI_FORMATION_TRAITS, ...normal.AI_COMMITMENT_TRAITS]) {
     if (expected[trait.id] && !["solo-gambler", "score-reader", "trophy-denier", "late-striker"].includes(trait.id)) assert.equal(trait.description, expected[trait.id]);
   }
@@ -73,7 +73,7 @@ test("the nine refined habit descriptions are concise, accurate and generated co
 });
 
 test("Instinct renders the refined explanations; Blind does not display hidden habits", () => {
-  const traitIds = ["power-seeker", "tactic-planner", "solo-gambler"];
+  const traitIds = ["power-seeker", "left-flank", "solo-gambler"];
   const rolls = [2 / 6, 0, 0];
   const traits = four.createAiTraits(() => rolls.shift());
   assert.deepEqual(traits.map(value => value.id), traitIds);
@@ -158,13 +158,13 @@ test("Solo Gambler recovers with one card but can still oppose larger pushes", (
   assert.equal(normal.chooseAiCommitment(6, [], [], () => .5, trait), 1, "Normal Play's original AI is unchanged");
 });
 
-test("all 108 refined habit combinations complete matches, conserve personal cards and preserve ordering promises", () => {
+test("all 144 WIP habit combinations complete matches, conserve personal cards and preserve stable identities", () => {
   let matches = 0, reshuffles = 0;
-  for (const motive of normal.AI_MOTIVE_TRAITS) for (const formation of normal.AI_FORMATION_TRAITS) {
+  for (const motive of normal.AI_MOTIVE_TRAITS) for (const placement of four.AI_PLACEMENT_TRAITS) {
     for (const commitment of normal.AI_COMMITMENT_TRAITS) for (let trial = 0; trial < 3; trial++) {
       const seed = 1000 + matches * 131;
       const traits = [motive.id === "element-loyalist"
-        ? { ...motive, element: ["ember", "gust", "tide"][trial] } : motive, formation, commitment];
+        ? { ...motive, element: ["ember", "gust", "tide"][trial] } : motive, placement, commitment];
       const traitsBefore = JSON.stringify(traits);
       const sides = [0, 1].map(owner => {
         const random = rng(seed + owner * 8191), deck = [];
@@ -184,9 +184,6 @@ test("all 108 refined habit combinations complete matches, conserve personal car
           four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
             { history: completed, cardLibrary: library }),
         ];
-        const strongest = Math.max(...occupied(plays[1]).map(value => value.power));
-        if (formation.id === "strong-opener") assert.equal(plays[1][0].power, strongest);
-        if (formation.id === "late-striker") assert.equal(plays[1].findLast(Boolean).power, strongest);
         const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
         assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
 
@@ -217,6 +214,6 @@ test("all 108 refined habit combinations complete matches, conserve personal car
       matches++;
     }
   }
-  assert.equal(matches, 324);
+  assert.equal(matches, 432);
   assert.ok(reshuffles > 0, "complete matches exercise personal deck recycling");
 });

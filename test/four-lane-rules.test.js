@@ -281,7 +281,7 @@ test("Rally explanations consistently use the immediate physical left lane, and 
   const gameDescription = runInNewContext("FOUR_LANE_ROLES.rally.description", context);
   assert.match(gameDescription, /lane immediately to its left/);
   assert.match(gameDescription, /empty lane breaks the support/);
-  const planner = four.createAiTraits(() => 0).find(value => value.id === "tactic-planner");
+  const planner = normal.AI_FORMATION_TRAITS.find(value => value.id === "tactic-planner");
   assert.equal(planner.description, "Favors formations that activate role bonuses.");
   assert.doesNotMatch(planner.description, /Rally/i);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
@@ -447,7 +447,7 @@ test("four-lane habits create legal commitments including four, and Full Formati
       }
     }
   }
-  assert.match(four.createAiTraits(() => .5).find(value => value.category === "formation").description, /./);
+  assert.match(four.createAiTraits(() => .5).find(value => value.category === "placement").description, /./);
 });
 
 test("AI orders Rally and picks up to four unique cards without mutating its hand", () => {

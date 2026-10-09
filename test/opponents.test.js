@@ -63,17 +63,17 @@ test("random rival selection reaches all four and invalid selections cannot inje
   assert.throws(() => opponents.createEncounter(roster, "balanced", () => Infinity), TypeError);
 });
 
-test("all 153 allowed habit combinations are canonical, persistent and appropriate to their rival's deck", () => {
+test("all 207 allowed placement-habit combinations are canonical, persistent and appropriate to their rival's deck", () => {
   let checked = 0;
   for (const rival of roster) {
-    const { motive, formation, commitment } = rival.habits;
+    const { motive, placement, commitment } = rival.habits;
     const combinations = new Set();
-    for (let m = 0; m < motive.length; m++) for (let f = 0; f < formation.length; f++) for (let c = 0; c < commitment.length; c++) {
-      const rolls = [(m + .1) / motive.length, (f + .1) / formation.length, (c + .1) / commitment.length, .9];
+    for (let m = 0; m < motive.length; m++) for (let f = 0; f < placement.length; f++) for (let c = 0; c < commitment.length; c++) {
+      const rolls = [(m + .1) / motive.length, (f + .1) / placement.length, (c + .1) / commitment.length, .9];
       const encounter = opponents.createEncounter(roster, rival.id, () => rolls.shift());
       assert.ok(Object.isFrozen(encounter) && Object.isFrozen(encounter.traits));
-      assert.deepEqual(encounter.traits.map(trait => trait.category), ["motive", "formation", "commitment"]);
-      assert.deepEqual(encounter.traits.map(trait => trait.id), [motive[m], formation[f], commitment[c]]);
+      assert.deepEqual(encounter.traits.map(trait => trait.category), ["motive", "placement", "commitment"]);
+      assert.deepEqual(encounter.traits.map(trait => trait.id), [motive[m], placement[f], commitment[c]]);
       assert.ok(encounter.traits.every(Object.isFrozen));
       assert.ok(encounter.traits.every(trait => trait.label && trait.description));
       assert.doesNotMatch(encounter.traits[2].description, /3 cards for maximum/);
@@ -88,21 +88,20 @@ test("all 153 allowed habit combinations are canonical, persistent and appropria
       assert.ok(committed.length >= 1 && committed.length <= 4);
       assert.equal(new Set(committed).size, committed.length);
       assert.ok(committed.every(card => hand.includes(card)));
-      if (formation[f] === "strong-opener") assert.equal(plan[0].power, Math.max(...committed.map(card => card.power)));
-      if (formation[f] === "late-striker") assert.equal(committed.at(-1).power, Math.max(...committed.map(card => card.power)));
       assert.equal(JSON.stringify(encounter), before);
       checked++;
     }
-    assert.equal(combinations.size, motive.length * formation.length * commitment.length);
+    assert.equal(combinations.size, motive.length * placement.length * commitment.length);
   }
-  assert.equal(checked, 153);
+  assert.equal(checked, 207);
 });
 
 test("rival habit pools reject typos, empty pools and duplicates rather than creating missing habits", () => {
   const valid = roster[1].habits;
-  for (const formation of [[], ["strong-opner"], ["strong-opener", "strong-opener"], new Array(1), null]) {
-    assert.throws(() => four.createAiTraits(() => 0, { ...valid, formation }), RangeError);
+  for (const placement of [[], ["left-flnk"], ["left-flank", "left-flank"], new Array(1), null]) {
+    assert.throws(() => four.createAiTraits(() => 0, { ...valid, placement }), RangeError);
   }
+  assert.throws(() => four.createAiTraits(() => 0, { ...valid, formation: ["strong-opener"] }), RangeError);
   for (const element of ["ember", "gust", "tide"]) {
     const roll = decks.ELEMENTS.indexOf(element) / 3;
     const values = [0, 0, 0, roll];

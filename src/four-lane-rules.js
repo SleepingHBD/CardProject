@@ -11,6 +11,18 @@
   const MAX_MATCH_ROUNDS = 150;
   // Personality breaks close strategic decisions, not clearly worse outcomes.
   const HABIT_SCORE_WINDOW = .75;
+  // Placement is a readable tendency, not a promise to stay in losing lanes.
+  const PLACEMENT_HABIT_RATE = .8;
+  const PLACEMENT_ESCAPE_MARGIN = 1.5;
+  const AI_PLACEMENT_TRAITS = Object.freeze([
+    { id: "left-flank", label: "Left Flank", preferredLanes: [0, 1] },
+    { id: "right-flank", label: "Right Flank", preferredLanes: [2, 3] },
+    { id: "centre-guard", label: "Centre Guard", preferredLanes: [1, 2] },
+    { id: "outer-guard", label: "Outer Guard", preferredLanes: [0, 3] },
+  ].map(trait => Object.freeze({ ...trait, category: "placement",
+    preferredLanes: Object.freeze(trait.preferredLanes),
+    description: `Usually prioritises Lanes ${trait.preferredLanes[0] + 1} and ${trait.preferredLanes[1] + 1}. Can shift when those lanes are risky.`,
+  })));
   const TACTICS = Object.freeze({
     ...normal.TACTICS,
     vanguard: Object.freeze({ ...normal.TACTICS.vanguard,
@@ -26,6 +38,14 @@
   const countFormationCards = cards => Array.isArray(cards) ? cards.filter(Boolean).length : 0;
   const getFormationMask = cards => Array.isArray(cards)
     ? cards.reduce((mask, card, lane) => mask | (card ? 1 << lane : 0), 0) : 0;
+  function isPreferredPlacement(cards, trait) {
+    const canonical = AI_PLACEMENT_TRAITS.find(template => template.id === (typeof trait === "string" ? trait : trait?.id));
+    if (!canonical || !Array.isArray(cards) || cards.length > MAX_COMMITMENT) return false;
+    const count = countFormationCards(cards), mask = getFormationMask(cards);
+    if (!count) return false;
+    const preferred = canonical.preferredLanes.reduce((value, lane) => value | 1 << lane, 0);
+    return count <= 2 ? (mask & ~preferred) === 0 : (mask & preferred) === preferred;
+  }
   function normalizeFormation(cards) {
     if (!Array.isArray(cards) || cards.length < 1 || cards.length > MAX_COMMITMENT) {
       throw new RangeError("A formation must occupy one to four of the four lanes.");
@@ -202,28 +222,28 @@
       "late-striker": "Places his highest-Power committed card in his rightmost occupied lane.",
       "tactic-planner": "Favors formations that activate role bonuses.",
     };
-    let traits;
-    if (pools === null) traits = normal.createAiTraits(random);
-    else {
-      const pick = (templates, category) => {
-        const ids = pools[category];
-        if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length
-          || Array.from(ids).some(id => !templates.some(trait => trait.id === id))) {
-          throw new RangeError(`Invalid ${category} habit pool.`);
-        }
-        const roll = random();
-        if (!Number.isFinite(roll)) throw new TypeError("A habit roll must be finite.");
-        return { ...templates.find(trait => trait.id === ids[Math.floor(Math.min(.999999, Math.max(0, roll)) * ids.length)]) };
-      };
-      traits = [pick(normal.AI_MOTIVE_TRAITS, "motive"), pick(normal.AI_FORMATION_TRAITS, "formation"),
-        pick(normal.AI_COMMITMENT_TRAITS, "commitment")];
-      if (traits[0].id === "element-loyalist") {
-        const roll = random();
-        if (!Number.isFinite(roll)) throw new TypeError("An element roll must be finite.");
-        const element = Object.keys(ELEMENTS)[Math.floor(Math.min(.999999, Math.max(0, roll)) * 3)];
-        Object.assign(traits[0], { element, label: `${ELEMENTS[element].label} Loyalist`,
-          description: `Favors ${ELEMENTS[element].label} cards whenever available.` });
+    if (pools !== null && (typeof pools !== "object" || Array.isArray(pools)
+      || Object.hasOwn(pools, "formation"))) {
+      throw new RangeError("WIP habit pools must use motive, placement and commitment categories.");
+    }
+    const pick = (templates, category) => {
+      const ids = pools === null ? templates.map(trait => trait.id) : pools[category];
+      if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length
+        || Array.from(ids).some(id => !templates.some(trait => trait.id === id))) {
+        throw new RangeError(`Invalid ${category} habit pool.`);
       }
+      const roll = random();
+      if (!Number.isFinite(roll)) throw new TypeError("A habit roll must be finite.");
+      return { ...templates.find(trait => trait.id === ids[Math.floor(Math.min(.999999, Math.max(0, roll)) * ids.length)]) };
+    };
+    const traits = [pick(normal.AI_MOTIVE_TRAITS, "motive"), pick(AI_PLACEMENT_TRAITS, "placement"),
+      pick(normal.AI_COMMITMENT_TRAITS, "commitment")];
+    if (traits[0].id === "element-loyalist") {
+      const roll = random();
+      if (!Number.isFinite(roll)) throw new TypeError("An element roll must be finite.");
+      const element = Object.keys(ELEMENTS)[Math.floor(Math.min(.999999, Math.max(0, roll)) * 3)];
+      Object.assign(traits[0], { element, label: `${ELEMENTS[element].label} Loyalist`,
+        description: `Favors ${ELEMENTS[element].label} cards whenever available.` });
     }
     const labels = { "trophy-hunter": "Goal Hunter", "trophy-denier": "Goal Denier" };
     return traits.map(trait => Object.freeze({ ...trait, label: labels[trait.id] || trait.label,
@@ -519,6 +539,10 @@
       - (ELEMENTS[opposing].beats === element ? ELEMENT_EDGE_BONUS : 0)));
     const prepare = plan => ({ ...plan, elements: plan.cards.map(card => card ? keys.indexOf(card.element) : -1) });
     const beliefs = scenarios.map(prepare);
+    const placement = AI_PLACEMENT_TRAITS.find(template => traits.some(trait => trait.id === template.id));
+    const placementRoll = placement ? random() : null;
+    if (placement && !Number.isFinite(placementRoll)) throw new TypeError("A placement habit roll must be finite.");
+    const anchored = placement && Math.min(.999999, Math.max(0, placementRoll)) < PLACEMENT_HABIT_RATE;
     // Solo Gambler places more value on hand recovery, but the match-winning
     // utility still outweighs conservation. This is an AI preference, not a rule.
     const recoveryValue = has("solo-gambler") && hand.length < HAND_SIZE ? 2 : 1;
@@ -571,7 +595,7 @@
       return value + (complete && !opposingComplete ? 15 : opposingComplete && !complete ? -15 : 0);
     };
     const closePlans = [];
-    let bestScore = -Infinity;
+    let bestScore = -Infinity, preferredBestScore = -Infinity;
     for (const cards of enumerateFormations(hand)) {
       const plan = prepare(planFormation(cards));
       const strongest = Math.max(...cards.filter(Boolean).map(card => card.power));
@@ -581,7 +605,12 @@
       for (const belief of beliefs) score += belief.weight * evaluateForecast(plan, belief);
       score += Math.min(.999999, Math.max(0, random())) * .025;
       bestScore = Math.max(bestScore, score);
-      closePlans.push({ cards, score, preference: preference(plan) });
+      const preferred = placement && isPreferredPlacement(cards, placement);
+      if (preferred) preferredBestScore = Math.max(preferredBestScore, score);
+      closePlans.push({ cards, score, preference: preference(plan), preferred });
+    }
+    if (anchored && preferredBestScore > -Infinity && bestScore - preferredBestScore <= PLACEMENT_ESCAPE_MARGIN) {
+      return selectCloseHabitPlan(closePlans.filter(plan => plan.preferred), preferredBestScore) || [];
     }
     return selectCloseHabitPlan(closePlans, bestScore) || [];
   }
@@ -589,7 +618,8 @@
   global.ClawFourLaneRules = Object.freeze({ ELEMENTS, ELEMENT_EDGE_BONUS, TROPHIES_PER_ELEMENT,
     TACTICS, MAX_COMMITMENT, HAND_SIZE, ROUND_DRAW, MAX_EXTRA_CARD_POINTS, LANE_WIN_POINTS: 2, EXTRA_CARD_POINTS: 1,
     PROGRESS_PER_ELEMENT, DRY_ROUND_WARNING, MAX_MATCH_ROUNDS, MAX_ROUNDS: MAX_MATCH_ROUNDS,
-    countFormationCards, getFormationMask, normalizeFormation,
+    countFormationCards, getFormationMask, normalizeFormation, isPreferredPlacement,
+    AI_PLACEMENT_TRAITS, PLACEMENT_HABIT_RATE, PLACEMENT_ESCAPE_MARGIN,
     createProgress, getElementProgress, getProgressTotal, getProgressMatchWinner, resolveProgress,
     getTacticBonus, getRallyBonus, getExtraCardPoints, getExtraCardLanePoints, scoreClash, resolveClashes, getFormationRewardOptions,
     replenishHand, buildTellClues, createAiTraits, chooseAiCommitment, chooseAiCards, orderAiFormation,

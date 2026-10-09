@@ -8,7 +8,7 @@ import "../src/four-lane-rules.js";
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const { ELEMENTS, TACTICS, resolveClashes, getFormationRewardOptions, getElementTrophyCounts } = globalThis.ClawRules;
-const functions = ["cardRoleDefinition", "progressGainMarkup", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
+const functions = ["cardRoleDefinition", "progressGainMarkup", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "historyPlacementSummaryMarkup", "renderPreviousRoundsHistory"]
   .map((name) => gameSource.match(new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`))?.[0]);
 assert.ok(functions.every(Boolean), "all history helpers must be loaded from the implementation");
 
