@@ -146,7 +146,7 @@
   const PRESETS = Object.freeze([
     {
       id: "balanced", name: "Balanced Formation",
-      description: "All four roles and eight cards per element. Adapt your lane order to the progress you still need.",
+      description: "All four roles and eight cards per element. Adapt your lane order to the trophies you still need.",
       cards: [
         "toastie-toe-beans", "teapot-tabby", "shazmir-ashveil", "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "toastie-toe-beans",
         "belfry-bobtail", "kitewhisker", "aakith-wayfinder", "aakith-wayfinder", "whisker-whirl", "leafy-loaf", "whisker-whirl", "jiawen-barleybreeze",

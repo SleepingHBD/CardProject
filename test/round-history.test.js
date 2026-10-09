@@ -191,14 +191,33 @@ test("four-lane history records capped points, labels the third extra +0, and gi
     const entry = context.state.previousRoundsHistory[0];
     assert.equal(entry.extraCardPoints[larger], 2);
     assert.equal(entry.trophy, null);
-    assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Progress gained/);
+    assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Trophies earned/);
     assert.doesNotMatch(context.ui.previousRoundsHistoryList.innerHTML, /No trophy claimed|Round Points/);
     assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Extra \+0 Gust/);
-    assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Gust progress/);
+    assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Gust trophies/);
     assert.equal((context.historyFormationGridMarkup(entry).match(/>Extra \+1 Gust</g) || []).length, 2);
     result.extraCardPoints[larger] = 0;
     assert.equal(entry.extraCardPoints[larger], 2, "history snapshots, rather than aliases, earned points");
     result.laneProgress[larger][1] = 0;
     assert.equal(entry.laneProgress[larger][1], 1, "credited lane progress is snapshotted, not reinterpreted");
   }
+});
+
+test("four-lane history calls automatic gains trophies, including singular and zero gains", () => {
+  const context = fixture(); context.state.gameMode = "four-lane";
+  const player = [card("ember", 9), card("tide", 3)], opponent = [card("ember", 3)];
+  const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
+  context.recordCompletedRound(null, player, opponent, result);
+  const entry = context.state.previousRoundsHistory[0];
+  assert.match(context.historyLaneCalculationMarkup(entry, "player", 0), /\+2 Fire trophies/);
+  assert.match(context.historyLaneCalculationMarkup(entry, "player", 1), /\+1 Water trophy<\/b>/);
+  assert.match(context.historyLaneCalculationMarkup(entry, "ai", 0), /\+0 Fire trophies/);
+  assert.match(context.historyRoundDetailsMarkup(entry), /Trophies before this round \(6 per element\)/);
+  const markup = context.ui.previousRoundsHistoryList.innerHTML;
+  assert.match(markup, /aria-label="Trophies earned: You 3, Opponent 0"/);
+  assert.match(markup, /No trophies earned/);
+  assert.doesNotMatch(markup.replace(/<[^>]*>/g, " "), /\bprogress\b|Round Points/i);
+  context.state.gameMode = "normal";
+  context.renderPreviousRoundsHistory();
+  assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Trophies earned/);
 });

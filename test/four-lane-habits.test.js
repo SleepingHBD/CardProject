@@ -36,8 +36,8 @@ test("the nine refined habit descriptions are concise, accurate and generated co
     "tactic-planner": "Favors formations that activate role bonuses.",
     "strong-opener": "Places his highest-Power committed card in Lane 1.",
     "late-striker": "Places his highest-Power committed card in his last occupied lane.",
-    "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to protect his progress.",
-    "score-reader": "Favors committing more cards when behind in progress, and fewer when ahead.",
+    "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to earn trophies.",
+    "score-reader": "Favors committing more cards when behind on trophies, and fewer when ahead.",
     "echo-tactician": "Favors committing the same number of cards you committed in the previous round.",
     "restless-dealer": "Favors committing a different number of cards than he committed in the previous round.",
   };
@@ -50,6 +50,7 @@ test("the nine refined habit descriptions are concise, accurate and generated co
         assert.deepEqual(traits.map(value => value.category), ["motive", "formation", "commitment"]);
         assert.ok(traits.every(Object.isFrozen));
         for (const trait of traits) {
+          assert.doesNotMatch(trait.description, /\bprogress\b/i);
           if (expected[trait.id]) {
             seen.add(trait.id);
             assert.equal(trait.description, expected[trait.id]);

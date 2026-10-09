@@ -509,8 +509,8 @@ body[data-duel-mode="four-lane"] .game-card[data-card-template="isai-tidebind"] 
     grid-column: 1 / -1;
   }
 }
-/* Progress counters share the existing board nameplates without six tiny dots. */
-body[data-duel-mode="four-lane"] .collection::before { content: "PROGRESS · 6 EACH"; }
+/* Trophy counters share the existing board nameplates without six tiny dots. */
+body[data-duel-mode="four-lane"] .collection::before { content: "TROPHIES · 6 EACH"; }
 body[data-duel-mode="four-lane"] .elemental-progress-goal {
   min-width: 34px;
   gap: 2px;

@@ -14,6 +14,34 @@ const fn = name => {
 const card = (element, power = 5, tactic = "none") => Object.freeze({ element, power, tactic, art: "qa", name: "QA" });
 const progress = (ember = 0, gust = 0, tide = 0) => ({ ember, gust, tide });
 
+test("WIP trophy labels pluralize counts without changing Normal Play Round Points", () => {
+  const context = { isFourLaneMode: () => true };
+  runInNewContext(fn("roundPointLabel"), context);
+  assert.equal(context.roundPointLabel(0), "trophies");
+  assert.equal(context.roundPointLabel(1), "trophy");
+  assert.equal(context.roundPointLabel(2), "trophies");
+  context.isFourLaneMode = () => false;
+  assert.equal(context.roundPointLabel(1), "Round Point");
+  assert.equal(context.roundPointLabel(2), "Round Points");
+});
+
+test("lobby and trophy counters explain lane-earned trophies and preserve work-in-progress labels", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../four-lane-preview.css", import.meta.url), "utf8");
+  const deck = readFileSync(new URL("../src/deckbuilding.js", import.meta.url), "utf8");
+  const lobby = html.slice(html.indexOf('<details class="four-lane-basics"'), html.indexOf('<section class="four-lane-card-showcase"'));
+  assert.match(lobby, /2 trophies of your card's element/);
+  assert.match(lobby, /each earn 1 trophy of their own element/);
+  assert.match(lobby, /6 Fire, 6 Gust and 6 Water trophies/);
+  assert.match(lobby, /Unlike Normal Play, trophies are awarded automatically for individual lanes/);
+  assert.match(lobby, /all committed cards stay in their owner's deck cycle/);
+  assert.doesNotMatch(lobby, /\bprogress\b/i);
+  assert.match(css, /content: "TROPHIES · 6 EACH"/);
+  assert.doesNotMatch(css, /content: "PROGRESS/);
+  assert.match(deck, /Adapt your lane order to the trophies you still need/);
+  assert.match(html, /Work in progress/);
+});
+
 test("split lanes award both sides their own winning elements, independent of a round winner", () => {
   const result = rules.resolveProgress([card("ember", 9), card("gust", 3)],
     [card("ember", 3), card("gust", 9), card("tide", 3)]);
@@ -107,7 +135,7 @@ test("board results distinguish capped extras from completed elements and keep c
     ui: { playerPlayZone: { querySelectorAll: () => lanes }, aiPlayZone: { querySelectorAll: () => [] } } };
   runInNewContext(fn("renderProgressLaneResults"), context);
   context.renderProgressLaneResults(cards, [card("ember", 3)], result);
-  assert.match(lanes[0].label.innerHTML, /\+1 FIRE PROGRESS/);
+  assert.match(lanes[0].label.innerHTML, /\+1 FIRE TROPHY/);
   assert.equal(lanes[0].badge.innerHTML, "BONUS +2");
   assert.equal(lanes[1].label.textContent, "COMPLETE +0");
   assert.match(lanes[1].badge.attributes["aria-label"], /already complete/);
@@ -137,7 +165,7 @@ test("live completion records detached progress, recycles every card, skips trop
   assert.equal(state.playerRoundWins + state.aiRoundWins, 0);
   assert.equal(calls.audio, "draw"); assert.match(calls.message[0], /duel drawn/);
   assert.equal(context.ui.versusBadge.className, "versus-badge has-score progress-round-summary");
-  assert.match(context.ui.versusBadge.innerHTML, /Progress gained this round/);
+  assert.match(context.ui.versusBadge.innerHTML, /Trophies earned this round/);
   assert.match(context.ui.versusBadge.innerHTML, /<small>You<\/small><b>\+2<\/b>/);
   assert.match(context.ui.versusBadge.innerHTML, /<small>Opponent<\/small><b>\+2<\/b>/);
   assert.equal(context.ui.menuButton.disabled, false);
@@ -167,7 +195,9 @@ test("progress counters and totals use six per element, while Normal Play still 
   runInNewContext(["renderElementProgress", "renderCollection", "renderRoundScore"].map(fn).join("\n"), context);
   context.renderCollection(target, []); context.renderRoundScore();
   assert.match(target.innerHTML, /6<small>\/6<\/small>/);
-  assert.match(target.attributes["aria-label"], /Fire 6 of 6, Gust 3 of 6, Water 1 of 6/);
+  assert.match(target.attributes["aria-label"], /Fire 6 of 6 trophies, Gust 3 of 6 trophies, Water 1 of 6 trophies/);
+  assert.match(target.innerHTML, /title="Fire trophies: 6 \/ 6"/);
+  assert.match(context.ui.roundScore.attributes["aria-label"], /Total trophies:.*Collect 6 trophies of each element/);
   assert.equal(context.ui.playerRoundScore.textContent, 10);
   context.isFourLaneMode = () => false;
   context.renderCollection(target, [card("ember")]); context.renderRoundScore();

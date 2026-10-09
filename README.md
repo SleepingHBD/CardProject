@@ -24,13 +24,13 @@ npm run dev
 - Start with 7 cards and commit 1–4 cards per round.
 - Between rounds, draw up to 2 cards, without exceeding 7 cards in hand.
 - Two-card formations maintain hand size; three- and four-card formations spend reserves. One-card formations rebuild reserves when below the hand limit.
-- Win by reaching **6 Fire, 6 Gust and 6 Water progress**. Completing one element does not replace another.
-- Each lane win adds +2 progress to the winning card's own element. Tied or lost lanes add nothing.
-- The first two cards with no opposing card add +1 to their own elements. The third extra adds nothing, even if an earlier extra's element was already complete.
-- Both sides retain their gains after every round. Each element stops at 6, including partial gains when only one point is needed.
+- Win by collecting **6 Fire, 6 Gust and 6 Water trophies**. Completing one element does not replace another.
+- Each lane win earns 2 trophies of the winning card's own element. Tied or lost lanes earn nothing.
+- The first two cards with no opposing card each earn 1 trophy of their own element. The third extra earns nothing, even if an earlier extra's element was already complete.
+- Both sides keep their trophies after every round. Each element stops at 6, including partial gains when only one trophy is needed.
 - Resolve all lanes before checking victory. If both sides finish their goals in the same round, the duel is drawn.
 - Rally gives +1 Power to the card committed directly before it. Rally in Lane 1 gives no bonus; the supported card can also earn its own role bonus.
-- Every committed card returns to its owner's discard pile, including winning cards. There are no trophy claims or exiled cards in this mode.
+- Unlike Normal Play, trophies are awarded automatically for individual lanes and are counters, not claimed cards. Every committed card returns to its owner's discard pile, including winning cards. No cards are removed from the deck cycle as trophies.
 - Normal Play retains its three lanes, six-card hands and shared-deck refill rules.
 
 #### Deckbuilding — editor and constructed duels
@@ -58,7 +58,7 @@ The lobby now offers **Random Rival** (the default) or four specific opponents. 
 
 Each rival rolls one motive, one formation habit and one commitment habit from deck-appropriate pools. All three remain fixed during a duel. The opponent uses these habits in every difficulty; Guided reveals live clues, Instinct reveals habits, and Blind hides both plus the in-game rival identity. Choosing a specific rival still tells you its deck theme; use Random Rival for a mystery matchup.
 
-The AI's deck preference rewards *active* Rally, Link or Finisher bonuses only when strategic choices are close. It does not force a bad formation to fit a theme. Its decisions use its own hand, public elemental progress, completed rounds and the public collection—not the player's custom deck, hidden hand or current selection. It avoids wasting gains on completed elements, considers denial and simultaneous completion, and weighs hand recovery against a push. Goal Hunter, Goal Denier, Momentum Rider, Counter Scholar and Score Reader use progress rather than trophy claims; Normal Play and its randomized habits are unchanged.
+The AI's deck preference rewards *active* Rally, Link or Finisher bonuses only when strategic choices are close. It does not force a bad formation to fit a theme. Its decisions use its own hand, public trophy counts, completed rounds and the public collection—not the player's custom deck, hidden hand or current selection. It avoids wasting gains on completed elements, considers denial and simultaneous completion, and weighs hand recovery against a push. Goal Hunter, Goal Denier, Momentum Rider, Counter Scholar and Score Reader use automatically earned trophies rather than card claims; Normal Play and its randomized habits are unchanged.
 
 #### Phase 4 — balance audit and interface polish
 
@@ -66,7 +66,7 @@ The lobby uses separate deck and rival pages. The deck page presents four ready-
 
 The editor shows remaining cost and optional tips for unused budget, scarce goal elements and Finisher-heavy decks. Tips never make a legal deck invalid; omitted roles and unequal element counts remain permitted.
 
-All four starter/rival decks were rebuilt for elemental progress. Each has eight cards of every element and all four roles; specialized starters include support alternatives rather than a rigid single-role lineup. Their costs are Balanced 119, Rally 119, Link 120 and Finisher 120. Existing saved custom decks, card stats, role bonuses and construction costs are unchanged.
+All four starter/rival decks were rebuilt for lane-earned trophies. Each has eight cards of every element and all four roles; specialized starters include support alternatives rather than a rigid single-role lineup. Their costs are Balanced 119, Rally 119, Link 120 and Finisher 120. Existing saved custom decks, card stats, role bonuses and construction costs are unchanged.
 
 Run the reproducible audit separately from the regression suite:
 
@@ -80,7 +80,7 @@ The elemental-progress audit ran 4,896 simulated matches: 17 legal deck lists ×
 
 In this cohort, repeated singles won 0%, repeated two-card play 14.9%, adaptive play 29.4%, and the 3/1 cycle 18.2%. These probe policies include intentionally weak decks and are not estimates of human win rates. No tested fixed rhythm dominated all matchups. A separate 2,048-match neutral-planner comparison tested starters in both seats: match scores including half a point for draws were Balanced 51.0%, Rally 52.4%, Link 46.2%, Finisher 50.3%. All finished within 23 rounds. Link remains slightly weaker in this sample; there is no claim of perfect balance or exhaustive exploit coverage.
 
-Regression tests cover constructed decks and storage, all 108 habit combinations, all four roles, actual goal clipping, simultaneous completion, history snapshots and recycling. An independent oracle checks 10,000 randomized formations against production progress scoring and side reversal. Normal Play remains isolated from constructed decks and these changes.
+Regression tests cover constructed decks and storage, all 108 habit combinations, all four roles, actual goal clipping, simultaneous completion, history snapshots and recycling. An independent oracle checks 10,000 randomized formations against production trophy scoring and side reversal. Normal Play remains isolated from constructed decks and these changes.
 
 Deckbuilding's four initial implementation phases are complete. Construction limits remain provisional and Super Secret Stuff WIP remains work in progress, ready for human playtesting rather than progression/unlock systems.
 

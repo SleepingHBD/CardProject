@@ -124,7 +124,7 @@
       matchWinner: getProgressMatchWinner(progressAfter.player, progressAfter.ai) };
   }
 
-  // Four-Lane progress is automatic and never removes a card as a trophy.
+  // Four-Lane trophies are automatic counters; no card is removed as a trophy.
   function getFormationRewardOptions() { return []; }
 
   function replenishHand(deck, discardPile, hand, drawLimit = ROUND_DRAW, random = Math.random) {
@@ -151,11 +151,11 @@
     const descriptions = {
       "trophy-hunter": "Favors elements he still needs to finish.",
       "trophy-denier": "Favors counters to elements you are close to finishing.",
-      "counter-scholar": "Favors counters to the element of your last card that earned progress.",
-      "momentum-rider": "Favors the element of his last card that earned progress.",
-      "score-reader": "Favors committing more cards when behind in progress, and fewer when ahead.",
-      "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to protect his progress.",
-      "measured-planner": "Favors committing 2 cards to earn progress without shrinking his hand.",
+      "counter-scholar": "Favors counters to the element of your last card that earned trophies.",
+      "momentum-rider": "Favors the element of his last card that earned trophies.",
+      "score-reader": "Favors committing more cards when behind on trophies, and fewer when ahead.",
+      "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to earn trophies.",
+      "measured-planner": "Favors committing 2 cards to earn trophies without shrinking his hand.",
       "full-formation": "Favors 4-card pushes, then smaller formations to rebuild the opponent's hand.",
     };
     let traits;

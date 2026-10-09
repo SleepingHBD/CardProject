@@ -835,26 +835,26 @@ function getExtraCardLanePoints(index, opposingCount) {
 }
 
 function roundPointLabel(points = 1) {
-  return isFourLaneMode() ? "progress" : `Round ${points === 1 ? "Point" : "Points"}`;
+  return isFourLaneMode() ? points === 1 ? "trophy" : "trophies" : `Round ${points === 1 ? "Point" : "Points"}`;
 }
 
 function renderDuelMode() {
   document.body.dataset.duelMode = state.gameMode;
   document.querySelector(".arena").setAttribute("aria-label", `${isFourLaneMode() ? "Four" : "Three"}-lane dueling table`);
   document.querySelector("#gameTitle").textContent = isFourLaneMode() ? "Super Secret Stuff WIP" : "Trial of the Elements";
-  document.querySelector("#roundScore small").textContent = isFourLaneMode() ? "TOTAL PROGRESS" : "ROUNDS WON";
-  document.querySelector("#resultCardsLabel").textContent = isFourLaneMode() ? "Your progress / 18" : "Trophy slots";
+  document.querySelector("#roundScore small").textContent = isFourLaneMode() ? "TOTAL TROPHIES" : "ROUNDS WON";
+  document.querySelector("#resultCardsLabel").textContent = isFourLaneMode() ? "Your trophies / 18" : "Trophy slots";
   document.querySelector("#previousRoundsHistoryIntro").textContent = isFourLaneMode()
-    ? "Cards show element, base Power + bonus, and role. Both sides keep the progress shown below. Open Details for calculations and earlier progress counts."
+    ? "Cards show element, base Power + bonus, and role. Both sides keep the trophies shown below. Open Details for calculations and earlier trophy counts."
     : "Results are from your perspective. Cards show element, base Power + bonus, and role. Open Details for calculations and earlier trophy counts.";
   document.querySelector(".rules-strip .rule-chip.ember").innerHTML = isFourLaneMode()
-    ? "<b>LANE</b> A lane win adds +2 to the winning card's element"
+    ? "<b>LANE</b> A lane win earns 2 trophies of the winning card's element"
     : "<b>LANE</b> Every lane win scores 2";
   document.querySelector(".rules-strip .rule-chip.gust").innerHTML = isFourLaneMode()
-    ? "<b>EXTRA</b> Your first two unopposed cards add +1 to their elements"
+    ? "<b>EXTRA</b> Your first two unopposed cards each earn 1 trophy of their element"
     : "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point";
   document.querySelector(".rules-strip .rule-chip.tide").innerHTML = isFourLaneMode()
-    ? "<b>GOAL</b> Reach 6 Fire, 6 Gust and 6 Water progress to win"
+    ? "<b>GOAL</b> Collect 6 Fire, 6 Gust and 6 Water trophies to win"
     : "<b>TROPHY</b> A round win awards one played card";
   renderGallery();
   renderFourLaneRivalInfo();
@@ -2206,8 +2206,8 @@ function renderMatchupForecast() {
         <span class="forecast-chip forecast-extra-card">
           <i>${index + 1}</i>
           <b>◆ EXTRA CARD +${points}</b>
-          <span class="forecast-equation"><strong>+${points} ${isFourLaneMode() ? ELEMENTS[playerCard.element].label.toUpperCase() + " PROGRESS" : roundPointLabel(points).toUpperCase()}</strong></span>
-          <small>${isFourLaneMode() ? points ? "No opposing card; +1 if this element still needs progress" : "Only the first two unopposed cards add progress" : points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
+          <span class="forecast-equation"><strong>+${points} ${isFourLaneMode() ? ELEMENTS[playerCard.element].label.toUpperCase() + (points === 1 ? " TROPHY" : " TROPHIES") : roundPointLabel(points).toUpperCase()}</strong></span>
+          <small>${isFourLaneMode() ? points ? "No opposing card; +1 trophy if you have fewer than 6 of this element" : "Only the first two unopposed cards earn trophies" : points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
         </span>
       `;
     }
@@ -2268,10 +2268,10 @@ function renderAftermathBreakdown(playerCards, resolution) {
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${Math.max(1, resolution.lanes.length)}, minmax(0, 1fr))`;
   const summary = isFourLaneMode() ? `
     <span class="forecast-chip round-points-summary">
-      <b>ELEMENTAL PROGRESS GAINED</b>
+      <b>TROPHIES EARNED</b>
       ${progressGainMarkup(resolution.progressGains.player, "You")}
       ${progressGainMarkup(resolution.progressGains.ai, "Opponent")}
-      <small>Each element stops at 6. Both sides keep their gains.</small>
+      <small>Each element stops at 6 trophies. Both sides keep the trophies they earn.</small>
     </span>
   ` : `
     <span class="forecast-chip round-points-summary">
@@ -2295,7 +2295,7 @@ function renderAftermathBreakdown(playerCards, resolution) {
     return `
       <span class="forecast-chip forecast-${className} aftermath-chip">
         <i>${index + 1}</i>
-        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}${isFourLaneMode() && resolution.laneProgress.player[index] ? ` · +${resolution.laneProgress.player[index]} ${ELEMENTS[playerCards[index].element].label}` : ""}</b>
+        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}${isFourLaneMode() && resolution.laneProgress.player[index] ? ` · +${resolution.laneProgress.player[index]} ${ELEMENTS[playerCards[index].element].label} ${resolution.laneProgress.player[index] === 1 ? "trophy" : "trophies"}` : ""}</b>
         <span class="forecast-equation">
           <em>${playerCards[index].power} BASE</em><span>+</span><strong>${bonus.total} BONUS</strong><span>=</span><strong>${lane.player.total} TOTAL</strong>
         </span>
@@ -2678,7 +2678,7 @@ function updateFormationMessage() {
         ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}.`
         : aiExtraCards
           ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${isFourLaneMode() ? "up to " : ""}${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}.`
-          : isFourLaneMode() ? "Each won lane adds +2 to its card's element. Both sides keep their progress; each element stops at 6."
+          : isFourLaneMode() ? "Each won lane earns 2 trophies of its card's element. Both sides keep their trophies; each element stops at 6."
             : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of the opponent's cards.";
   setMessage(title, detail);
   renderOpponentTells();
@@ -2841,9 +2841,9 @@ function renderCollection(target, cards) {
 
 function renderElementProgress(target, progress) {
   const rules = duelRules(), counts = rules.getElementProgress(progress);
-  target.setAttribute("aria-label", Object.entries(ELEMENTS).map(([key, element]) => `${element.label} ${counts[key]} of ${rules.PROGRESS_PER_ELEMENT}`).join(", "));
+  target.setAttribute("aria-label", Object.entries(ELEMENTS).map(([key, element]) => `${element.label} ${counts[key]} of ${rules.PROGRESS_PER_ELEMENT} trophies`).join(", "));
   target.innerHTML = Object.entries(ELEMENTS).map(([key, element]) => `
-    <span class="trophy-goal elemental-progress-goal element-${key}${counts[key] === rules.PROGRESS_PER_ELEMENT ? " is-complete" : ""}" title="${element.label}: ${counts[key]} / ${rules.PROGRESS_PER_ELEMENT} progress">
+    <span class="trophy-goal elemental-progress-goal element-${key}${counts[key] === rules.PROGRESS_PER_ELEMENT ? " is-complete" : ""}" title="${element.label} trophies: ${counts[key]} / ${rules.PROGRESS_PER_ELEMENT}">
       <b aria-hidden="true">${element.icon}</b>
       <strong>${counts[key]}<small>/${rules.PROGRESS_PER_ELEMENT}</small></strong>
       <span class="elemental-progress-meter" aria-hidden="true"><i style="width:${counts[key] / rules.PROGRESS_PER_ELEMENT * 100}%"></i></span>
@@ -2853,7 +2853,7 @@ function renderElementProgress(target, progress) {
 function progressGainMarkup(gains, label) {
   const entries = Object.entries(ELEMENTS).filter(([key]) => gains[key] > 0);
   return `<span class="progress-gain-row"><b>${label}</b>${entries.length ? entries.map(([key, element]) =>
-    `<strong class="element-${key}"><span aria-hidden="true">${element.icon}</span> +${gains[key]} <small>${element.label}</small></strong>`).join("") : "<small>No progress</small>"}</span>`;
+    `<strong class="element-${key}"><span aria-hidden="true">${element.icon}</span> +${gains[key]} <small>${element.label}</small></strong>`).join("") : "<small>No trophies earned</small>"}</span>`;
 }
 
 function renderRound() {
@@ -2905,7 +2905,7 @@ function renderRoundScore() {
   if (isFourLaneMode()) {
     ui.playerRoundScore.textContent = duelRules().getProgressTotal(state.playerProgress);
     ui.aiRoundScore.textContent = duelRules().getProgressTotal(state.aiProgress);
-    ui.roundScore.setAttribute("aria-label", `Total elemental progress: You ${ui.playerRoundScore.textContent} of 18, Opponent ${ui.aiRoundScore.textContent} of 18. Each element must reach 6.`);
+    ui.roundScore.setAttribute("aria-label", `Total trophies: You ${ui.playerRoundScore.textContent} of 18, Opponent ${ui.aiRoundScore.textContent} of 18. Collect 6 trophies of each element.`);
     return;
   }
   ui.playerRoundScore.textContent = state.playerRoundWins;
@@ -3057,13 +3057,16 @@ function historyLaneCalculationMarkup(entry, side, index) {
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   const card = cards[index];
   if (!card) return `<span aria-label="No card">—</span>`;
-  if (!opposingCards[index] && entry.mode === "four-lane") return `Extra card: <b>+${historyExtraCardLanePoints(entry, side, index)} ${ELEMENTS[card.element].label} progress</b> (first two only; element capped at 6)`;
+  if (!opposingCards[index] && entry.mode === "four-lane") {
+    const gain = historyExtraCardLanePoints(entry, side, index);
+    return `Extra card: <b>+${gain} ${ELEMENTS[card.element].label} ${gain === 1 ? "trophy" : "trophies"}</b> (first two only; element capped at 6 trophies)`;
+  }
   if (!opposingCards[index]) return historyExtraCardLanePoints(entry, side, index)
     ? "Extra card: <b>+1 Round Point</b>" : "Extra card: <b>+0 Round Points</b> · 2-point cap reached";
   const lane = entry.laneResults[index];
   const total = side === "player" ? lane.playerTotal : lane.aiTotal;
   const bonus = total - card.power;
-  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>${entry.mode === "four-lane" ? `<br />+${entry.laneProgress[side][index]} ${ELEMENTS[card.element].label} progress` : ""}`;
+  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>${entry.mode === "four-lane" ? `<br />+${entry.laneProgress[side][index]} ${ELEMENTS[card.element].label} ${entry.laneProgress[side][index] === 1 ? "trophy" : "trophies"}` : ""}`;
 }
 
 function historyRoundDetailsMarkup(entry) {
@@ -3076,7 +3079,7 @@ function historyRoundDetailsMarkup(entry) {
       <div class="history-details-content">
         <p class="history-detail-context">${entry.mode === "four-lane" ? "Super Secret Stuff WIP · " : ""}${DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
         <div class="history-progress-before">
-          <span class="history-progress-label">${entry.mode === "four-lane" ? "Progress before this round (6 per element)" : "Trophies before this round"}</span>
+          <span class="history-progress-label">${entry.mode === "four-lane" ? "Trophies before this round (6 per element)" : "Trophies before this round"}</span>
           ${historyProgressMarkup(entry.progressBefore?.player || entry.trophyProgressBefore.player, "You")}
           ${historyProgressMarkup(entry.progressBefore?.ai || entry.trophyProgressBefore.ai, "Opponent")}
         </div>
@@ -3118,7 +3121,7 @@ function renderPreviousRoundsHistory() {
     .reverse()
     .map((entry) => {
       const winnerLabel = entry.mode === "four-lane" ? entry.matchWinner === "draw" ? "Duel drawn"
-        : entry.matchWinner === "player" ? "You won the duel" : entry.matchWinner === "ai" ? "You lost the duel" : "Progress gained"
+        : entry.matchWinner === "player" ? "You won the duel" : entry.matchWinner === "ai" ? "You lost the duel" : "Trophies earned"
         : entry.winner === "player"
         ? "You won"
         : entry.winner === "ai"
@@ -3133,11 +3136,11 @@ function renderPreviousRoundsHistory() {
               <span class="history-round-number">ROUND <strong>${entry.round}</strong></span>
               <span class="history-round-result history-round-result-${entry.mode === "four-lane" ? entry.matchWinner || "draw" : entry.winner}">${winnerLabel}</span>
             </h3>
-            <span class="history-scoreline" aria-label="${entry.mode === "four-lane" ? "Progress gained" : "Round Points"}: You ${entry.score.player}, Opponent ${entry.score.ai}">
+            <span class="history-scoreline" aria-label="${entry.mode === "four-lane" ? "Trophies earned" : "Round Points"}: You ${entry.score.player}, Opponent ${entry.score.ai}">
               <b>${entry.mode === "four-lane" ? "+" : ""}${entry.score.player}</b>
               <i aria-hidden="true">–</i>
               <b>${entry.mode === "four-lane" ? "+" : ""}${entry.score.ai}</b>
-              <small>${entry.mode === "four-lane" ? "Progress" : "Round Points"}</small>
+              <small>${entry.mode === "four-lane" ? "Trophies" : "Round Points"}</small>
             </span>
           </header>
           ${historyFormationGridMarkup(entry)}
@@ -4045,15 +4048,15 @@ function renderProgressLaneResults(playerCards, aiCards, resolution) {
       const element = ELEMENTS[card.element].label;
       if (index < resolution.results.length) {
         if (resolution.results[index] === side && result) {
-          result.innerHTML += `<small>+${gain} ${element.toUpperCase()} PROGRESS</small>`;
-          result.title += ` Earned ${gain} ${element} progress; goal capped at 6.`;
+          result.innerHTML += `<small>+${gain} ${element.toUpperCase()} ${gain === 1 ? "TROPHY" : "TROPHIES"}</small>`;
+          result.title += ` Earned ${gain} ${element} ${gain === 1 ? "trophy" : "trophies"}; goal capped at 6 trophies.`;
         }
         return;
       }
       const eligible = getExtraCardLanePoints(index, resolution.results.length) > 0;
       const label = !eligible ? "CAP" : gain ? "EXTRA" : "COMPLETE";
-      const explanation = !eligible ? "Only the first two extra cards earn progress."
-        : gain ? `Earned ${gain} ${element} progress.` : `${element} progress was already complete.`;
+      const explanation = !eligible ? "Only the first two extra cards earn trophies."
+        : gain ? `Earned ${gain} ${element} ${gain === 1 ? "trophy" : "trophies"}.` : `${element} trophy collection was already complete.`;
       const badge = lane.querySelector(".card-bonus-badge");
       if (badge) {
         badge.innerHTML = `<small>${label}</small><b>+${gain}</b>`;
@@ -4079,17 +4082,17 @@ function completeProgressRound(playerCards, aiCards, resolution) {
   renderProgressLaneResults(playerCards, aiCards, resolution);
   ui.versusBadge.className = "versus-badge has-score progress-round-summary";
   ui.versusBadge.innerHTML = `
-    <small class="progress-round-heading">Progress gained this round</small>
+    <small class="progress-round-heading">Trophies earned this round</small>
     <span class="progress-round-values">
       <span><small>You</small><b>+${resolution.score.player}</b></span>
       <span><small>Opponent</small><b>+${resolution.score.ai}</b></span>
     </span>`;
   const gained = (counts) => Object.entries(ELEMENTS).filter(([key]) => counts[key] > 0)
-    .map(([key, element]) => `+${counts[key]} ${element.label}`).join(", ") || "no progress";
-  setMessage(resolution.matchWinner === "draw" ? "Both complete the elements — duel drawn!"
-    : resolution.matchWinner === "player" ? "You completed all three elements!"
-      : resolution.matchWinner === "ai" ? "The opponent completed all three elements."
-        : "Both sides keep their elemental progress.",
+    .map(([key, element]) => `+${counts[key]} ${element.label} ${counts[key] === 1 ? "trophy" : "trophies"}`).join(", ") || "no trophies";
+  setMessage(resolution.matchWinner === "draw" ? "Both collected all required trophies — duel drawn!"
+    : resolution.matchWinner === "player" ? "You collected 6 trophies of every element!"
+      : resolution.matchWinner === "ai" ? "The opponent collected 6 trophies of every element."
+        : "Both sides keep the trophies they earn.",
     `You: ${gained(resolution.progressGains.player)}. Opponent: ${gained(resolution.progressGains.ai)}.`);
   audio.roundResult(resolution.matchWinner === "draw" ? "draw" : resolution.matchWinner === "player" ? "win"
     : resolution.matchWinner === "ai" ? "loss" : resolution.score.player > resolution.score.ai ? "win" : resolution.score.player < resolution.score.ai ? "loss" : "draw");
@@ -4159,8 +4162,8 @@ async function endGame(winner) {
   document.querySelector("#resultTitle").textContent = drawn ? "An evenly matched duel!" : won
     ? "A purr-fect victory!"
     : "The opponent prevails!";
-  const resultSummary = isFourLaneMode() ? drawn ? "Both players reached 6 Fire, 6 Gust and 6 Water in the same round."
-    : won ? "You reached 6 Fire, 6 Gust and 6 Water first." : "The opponent reached 6 Fire, 6 Gust and 6 Water first."
+  const resultSummary = isFourLaneMode() ? drawn ? "Both players collected 6 Fire, 6 Gust and 6 Water trophies in the same round."
+    : won ? "You collected 6 Fire, 6 Gust and 6 Water trophies first." : "The opponent collected 6 Fire, 6 Gust and 6 Water trophies first."
     : won
     ? "You claimed two trophies from every element."
     : "The opponent completed all six elemental trophy slots first.";

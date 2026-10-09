@@ -89,7 +89,7 @@ test("Guided previews, forecasts and formation messages show a zero-point third 
   assert.equal((context.ui.matchupForecast.innerHTML.match(/EXTRA CARD \+1/g) || []).length, 2);
   assert.match(context.ui.matchupForecast.innerHTML, /EXTRA CARD \+0/);
   context.updateFormationMessage();
-  assert.match(context.message.detail, /3 extra cards add up to 2 progress \(first two only\)/);
+  assert.match(context.message.detail, /3 extra cards add up to 2 trophies \(first two only\)/);
   context.concealsOpponentFormation = () => true;
   context.renderMatchupForecast();
   const sealed = context.ui.matchupForecast.innerHTML;
@@ -122,10 +122,10 @@ test("the Guided plan heading uses earned extra points, and sealed headings reve
   };
   runInNewContext(["roundPointLabel", "getExtraCardPoints", "renderOpponentTells"].map(sourceFunction).join("\n"), context);
   context.renderOpponentTells();
-  assert.match(context.ui.commitmentHint.textContent, /Your 3 extra cards add up to 2 progress \(first two only\)/);
+  assert.match(context.ui.commitmentHint.textContent, /Your 3 extra cards add up to 2 trophies \(first two only\)/);
   context.state.aiPlan = [card(), card(), card(), card()]; context.state.selectedCardIds = ["1"];
   context.renderOpponentTells();
-  assert.match(context.ui.commitmentHint.textContent, /3 opposing extra cards add up to 2 progress/);
+  assert.match(context.ui.commitmentHint.textContent, /3 opposing extra cards add up to 2 trophies/);
   context.state.difficulty = "instinct"; context.concealsOpponentFormation = () => true;
   context.renderOpponentTells();
   assert.equal(context.ui.commitmentHint.textContent, "Instinct · Formation size and cards concealed");
@@ -143,8 +143,10 @@ test("the rules strip and dedicated Four-Lane rules explain the cap without chan
   runInNewContext(sourceFunction("renderDuelMode"), context);
   context.renderDuelMode();
   assert.match(nodes[".rules-strip .rule-chip.gust"].innerHTML, /first two unopposed cards/);
-  assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /Both sides keep the progress.*earlier progress counts/);
-  assert.doesNotMatch(nodes["#previousRoundsHistoryIntro"].textContent, /trophy/);
+  assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /Both sides keep the trophies.*earlier trophy counts/);
+  assert.doesNotMatch(nodes["#previousRoundsHistoryIntro"].textContent, /progress/i);
+  assert.equal(nodes["#roundScore small"].textContent, "TOTAL TROPHIES");
+  assert.equal(nodes["#resultCardsLabel"].textContent, "Your trophies / 18");
   context.isFourLaneMode = () => false; context.renderDuelMode();
   assert.equal(nodes[".rules-strip .rule-chip.gust"].innerHTML, "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point");
   assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /earlier trophy counts/);
@@ -152,8 +154,11 @@ test("the rules strip and dedicated Four-Lane rules explain the cap without chan
   const fourRules = html.slice(html.indexOf('id="fourLaneRulesDialog"'));
   assert.match(fourRules, /first two cards with no opposing card/);
   assert.match(fourRules, /third extra card adds 0/);
-  assert.match(fourRules, /6 Fire, 6 Gust and 6 Water progress/);
-  assert.match(fourRules, /Both sides keep the progress/);
+  assert.match(fourRules, /6 Fire, 6 Gust and 6 Water trophies/);
+  assert.match(fourRules, /Both sides keep the trophies/);
+  assert.match(fourRules, /Unlike Normal Play, trophies are counters, not claimed cards/);
+  assert.match(fourRules, /all committed cards go to their owner's discard pile/);
+  assert.doesNotMatch(fourRules, /\bprogress\b/i);
 });
 
 test("all 228 abstract outcomes use symmetric 2-per-win scoring and a two-point extra-card cap", () => {
