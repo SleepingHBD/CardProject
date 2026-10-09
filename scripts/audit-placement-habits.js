@@ -112,6 +112,7 @@ export function simulatePlacementMatch(starterIndex, placementIndex, policy, see
   const history = [], decisions = [rng(seed + 31001), rng(seed + 41001)];
   const result = { winner: "draw", roundLimitDraw: false, rounds: 0, playerCards: 0, playerTrophies: 0,
     playerCounts: [0, 0, 0, 0],
+    stackedVanguardRallyRounds: [0, 0],
     opponentCounts: [0, 0, 0, 0], preferredByCount: [0, 0, 0], totalByCount: [0, 0, 0], maxPlanningMs: 0 };
   for (let round = 0; round < four.MAX_MATCH_ROUNDS; round++) {
     const ai = four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
@@ -121,6 +122,10 @@ export function simulatePlacementMatch(starterIndex, placementIndex, policy, see
       policy, round, history, placement, decisions[0]);
     result.maxPlanningMs = Math.max(result.maxPlanningMs, performance.now() - start);
     const plays = [player, ai], resolved = four.resolveProgress(player, ai, sides[0].progress, sides[1].progress);
+    plays.forEach((formation, owner) => {
+      result.stackedVanguardRallyRounds[owner] += Number(formation.some((value, lane) => value?.tactic === "vanguard"
+        && four.getTacticBonus(formation, lane) === 1 && four.getRallyBonus(formation, lane) === 1));
+    });
     result.rounds++; result.playerCards += player.filter(Boolean).length;
     result.playerCounts[player.filter(Boolean).length - 1]++;
     result.playerTrophies += resolved.score.player;
@@ -159,7 +164,7 @@ export function simulatePlacementMatch(starterIndex, placementIndex, policy, see
 export function runPlacementAudit(trials = 1, seed = 746381) {
   assert.ok(Number.isSafeInteger(trials) && trials >= 1 && trials <= 8);
   const start = performance.now(), groups = Object.fromEntries(placementPolicies.map(policy => [policy,
-    { matches: 0, wins: 0, draws: 0, capDraws: 0, rounds: 0, longest: 0, cards: 0, trophies: 0, counts: [0, 0, 0, 0] }]));
+    { matches: 0, wins: 0, draws: 0, capDraws: 0, rounds: 0, longest: 0, cards: 0, trophies: 0, counts: [0, 0, 0, 0], stacked: [0, 0] }]));
   const consistency = four.AI_PLACEMENT_TRAITS.map(trait => ({ id: trait.id, preferred: [0, 0, 0], partial: [0, 0, 0], full: 0 }));
   const paired = [], planningMs = [];
   for (let trial = 0; trial < trials; trial++) for (let starter = 0; starter < 4; starter++) for (let placement = 0; placement < 4; placement++) {
@@ -173,6 +178,7 @@ export function runPlacementAudit(trials = 1, seed = 746381) {
       group.capDraws += Number(result.roundLimitDraw); group.rounds += result.rounds; group.longest = Math.max(group.longest, result.rounds);
       group.cards += result.playerCards; group.trophies += result.playerTrophies;
       result.playerCounts.forEach((count, index) => { group.counts[index] += count; });
+      result.stackedVanguardRallyRounds.forEach((count, index) => { group.stacked[index] += count; });
       for (let count = 0; count < 3; count++) {
         consistency[placement].preferred[count] += result.preferredByCount[count];
         consistency[placement].partial[count] += result.totalByCount[count];
@@ -187,6 +193,7 @@ export function runPlacementAudit(trials = 1, seed = 746381) {
     scorePct: +(100 * (group.wins + group.draws * .5) / group.matches).toFixed(1),
     meanRounds: +(group.rounds / group.matches).toFixed(1), longest: group.longest,
     meanCardsPerRound: +(group.cards / group.rounds).toFixed(2), commitments: group.counts,
+    stackedVanguardRallyRounds: { player: group.stacked[0], opponent: group.stacked[1] },
     trophiesPerCard: +(group.trophies / group.cards).toFixed(3),
   }]));
   const camps = placementPolicies.filter(policy => !["adaptive", "rotating-pair", "rotating-three", "full-push"].includes(policy));

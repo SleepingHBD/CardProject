@@ -26,7 +26,7 @@
   const TACTICS = Object.freeze({
     ...normal.TACTICS,
     vanguard: Object.freeze({ ...normal.TACTICS.vanguard,
-      description: "Vanguard: +1 Power in Lane 1." }),
+      description: "Vanguard: +1 Power when it is your leftmost card and you commit at least two cards." }),
     link: Object.freeze({ ...normal.TACTICS.link,
       description: "Link: +1 Power when the lane immediately to its left holds your card of a different element. An empty lane breaks the link." }),
     finisher: Object.freeze({ ...normal.TACTICS.finisher,
@@ -61,7 +61,7 @@
   function getTacticBonus(cards, index) {
     const card = cards[index];
     if (!card) return 0;
-    if (card.tactic === "vanguard") return index === 0 ? 1 : 0;
+    if (card.tactic === "vanguard") return countFormationCards(cards) >= 2 && index === cards.findIndex(Boolean) ? 1 : 0;
     if (card.tactic === "link") return cards[index - 1] && cards[index - 1].element !== card.element ? 1 : 0;
     if (card.tactic === "finisher") return countFormationCards(cards) >= 2 && index === cards.findLastIndex(Boolean) ? 1 : 0;
     return 0;

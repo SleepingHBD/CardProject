@@ -242,7 +242,7 @@ test("an unopposed Rally supports the preceding clash without multiplying progre
   const opponent = [card("gust", 5, "vanguard")];
   const result = four.resolveClashes(player, opponent);
   assert.equal(result.lanes[0].player.total, 7);
-  assert.equal(result.lanes[0].ai.total, 6);
+  assert.equal(result.lanes[0].ai.total, 5);
   assert.deepEqual(result.score, { player: 3, ai: 0, draw: 0 });
   assert.equal(result.extraCardPoints.player, 1);
   assert.deepEqual(four.getFormationRewardOptions(player, opponent, result), []);

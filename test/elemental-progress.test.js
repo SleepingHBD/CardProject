@@ -93,7 +93,8 @@ test("10,000 seeded formations agree with an independent scoring oracle and side
   const oracle = (a, b, pa, pb) => {
     a = [...a, ...Array(4 - a.length).fill(null)]; b = [...b, ...Array(4 - b.length).fill(null)];
     const values = (cards, other) => cards.map((c, i) => !c ? 0 : c.power
-      + (c.tactic === "vanguard" && i === 0 || c.tactic === "link" && cards[i - 1] && cards[i - 1].element !== c.element
+      + (c.tactic === "vanguard" && cards.filter(Boolean).length >= 2 && i === cards.findIndex(Boolean)
+        || c.tactic === "link" && cards[i - 1] && cards[i - 1].element !== c.element
         || c.tactic === "finisher" && cards.filter(Boolean).length >= 2 && i === cards.findLastIndex(Boolean) ? 1 : 0)
       + Number(cards[i + 1]?.tactic === "rally") + (other[i] && beats[c.element] === other[i].element ? 2 : 0));
     const aa = values(a, b), bb = values(b, a), out = [{ ...pa }, { ...pb }], credited = [Array(4).fill(0), Array(4).fill(0)];
@@ -286,5 +287,10 @@ test("Solo Gambler still spends support to complete a goal instead of recovering
   const hand = [card("gust", 5, "vanguard"), card("gust", 4, "rally")];
   const history = Array.from({ length: 6 }, () => ({ playerCards: [{ element: "gust", power: 6, tactic: "none" }, { element: "gust", power: 6, tactic: "none" }] }));
   const chosen = rules.chooseAiFormation(hand, {}, progress(6, 4, 6), () => .4, [{ id: "solo-gambler" }], { history });
-  assert.deepEqual(chosen, [...hand, null, null]);
+  assert.deepEqual(chosen.filter(Boolean), hand);
+  const leadingLane = chosen.findIndex(Boolean);
+  assert.equal(chosen[leadingLane + 1], hand[1]);
+  assert.equal(rules.getTacticBonus(chosen, leadingLane) + rules.getRallyBonus(chosen, leadingLane), 2);
+  const resolved = rules.resolveProgress(chosen, history.at(-1).playerCards, progress(6, 4, 6));
+  assert.equal(resolved.matchWinner, "player", "Solo Gambler spends support to finish, wherever the leading pair is placed");
 });

@@ -266,7 +266,7 @@ test("runtime deck cost has no effect on lane Power, role bonuses or Rally", () 
   const result = four.resolveClashes(own, enemy);
   assert.equal(own[0].cost, 15);
   assert.equal(result.lanes[0].player.total, 11);
-  assert.equal(result.lanes[0].ai.total, 10);
+  assert.equal(result.lanes[0].ai.total, 9);
   assert.equal(result.winner, "player");
 });
 

@@ -15,9 +15,9 @@ function oracle(a, b, pa = progress(), pb = progress()) {
   const formations = [a, b], after = [{ ...pa }, { ...pb }], gains = [progress(), progress()], wins = [0, 0];
   const laneGains = [Array(4).fill(0), Array(4).fill(0)], extra = [Array(4).fill(0), Array(4).fill(0)];
   const totals = formations.map(formation => {
-    const count = occupied(formation).length, last = formation.findLastIndex(Boolean);
+    const count = occupied(formation).length, first = formation.findIndex(Boolean), last = formation.findLastIndex(Boolean);
     return formation.map((value, lane) => !value ? 0 : value.power
-      + Number(value.tactic === "vanguard" && lane === 0
+      + Number(value.tactic === "vanguard" && count >= 2 && lane === first
         || value.tactic === "link" && formation[lane - 1] && formation[lane - 1].element !== value.element
         || value.tactic === "finisher" && count >= 2 && lane === last)
       + Number(formation[lane + 1]?.tactic === "rally"));

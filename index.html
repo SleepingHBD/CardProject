@@ -463,7 +463,7 @@
               <aside class="four-lane-preview-roadmap" aria-labelledby="fourLaneRoadmapTitle">
                 <h2 id="fourLaneRoadmapTitle">Role bonuses</h2>
                 <ol>
-                  <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-shield"></use></svg> Vanguard</h3><p>Gets +1 Power in Lane 1.</p></li>
+                  <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-shield"></use></svg> Vanguard</h3><p>Commit at least two cards. If your leftmost committed card is a Vanguard, it gains +1 Power.</p></li>
                   <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-chain"></use></svg> Link</h3><p>Gets +1 Power if the card in the neighbouring lane to its left has a different element. A gap breaks the bonus.</p></li>
                   <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-sword"></use></svg> Finisher</h3><p>Gets +1 Power as your rightmost card, with at least two cards committed.</p></li>
                   <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-banner"></use></svg> Rally</h3><p>Gives +1 Power to the card in the neighbouring lane to its left. A gap breaks support.</p></li>
@@ -936,7 +936,7 @@
       <p class="eyebrow">THE WHISKERKEEP COLLECTION</p>
       <h2>Card Archive</h2>
       <p class="gallery-intro" id="galleryIntro">All cards currently available in the game.</p>
-      <div class="gallery-legend tactic-legend" aria-label="Card Formation Roles">
+      <div class="gallery-legend tactic-legend" id="galleryRoleLegend" aria-label="Card Formation Roles">
         <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-shield"></use></svg></b> Vanguard · +1 in Lane 1</span>
         <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-chain"></use></svg></b> Link · +1 when the card before the Link has a different element from the Link card</span>
         <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-sword"></use></svg></b> Finisher · +1 when last in a 2–3 card formation</span>
@@ -1311,7 +1311,7 @@
         <section><h3>Win lanes to earn trophies</h3><p>Clash Total = printed Power + Element Edge + your card's role bonus + received Rally bonus. The higher total wins the lane; equal totals draw.</p><p>Fire beats Gust, Gust beats Water, and Water beats Fire. The element with the advantage gains +2 Power.</p><p>A lane win earns <b>2 trophies of the winning card's element</b>. A drawn or lost lane earns 0.</p><p><b>Both sides keep the trophies they earn.</b> There is no overall round winner or trophy choice. For example, if your Fire card wins Lane 1 and the opponent's Water card wins Lane 2, you earn 2 Fire trophies and the opponent earns 2 Water trophies.</p></section>
         <section><h3>Unlock unopposed trophies</h3><p>An unopposed card has no opposing card in its lane. <b>Each lane you win unlocks one of your unopposed cards</b> to earn 1 trophy of its own element, up to <b>two unopposed trophies per round</b>. One lane win unlocks one card, not every unopposed card.</p><p>Rewards go from Lane 1 to Lane 4, skipping unopposed cards whose element already has 6 trophies. A lane win still unlocks a reward even when the winning card's element is complete.</p><p><b>No lane wins means no unopposed trophies.</b> Drawn lanes do not unlock rewards. Avoiding every battle earns nothing. Power and role bonuses never increase an unopposed card's 1 trophy.</p></section>
         <section><h3>Four formation roles</h3><ul>
-          <li><b>Vanguard:</b> +1 when committed in Lane 1.</li>
+          <li><b>Vanguard:</b> Commit at least two cards. If your leftmost committed card is a Vanguard, it gains +1 Power. Empty lanes do not matter; the other card can be anywhere to its right. A lone Vanguard gets no bonus, and a card of any role to its left prevents activation. Placement order does not matter.</li>
           <li><b>Link:</b> +1 when the card in the neighbouring lane to its left has a different element. An empty lane to its left gives no bonus.</li>
           <li><b>Finisher:</b> +1 when it is your rightmost card and you commit at least two cards. It does not have to occupy Lane 4. A lone Finisher gets no bonus.</li>
           <li><b>Rally:</b> Gives +1 Power to the card in the neighbouring lane to its left—not itself. For example, Rally in Lane 3 boosts Lane 2, but cannot reach Lane 1 if Lane 2 is empty. Rally in Lane 1 gives no bonus. The receiving card can also earn its own role bonus. Each Rally gives only +1, even if it receives a boost.</li>

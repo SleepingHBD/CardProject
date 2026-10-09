@@ -50,6 +50,31 @@ test("WIP dragging into occupied lanes swaps placed cards or returns the replace
   assert.equal(ctx.state.playerHand.length, 4, "building does not discard or duplicate card instances");
 });
 
+test("WIP Vanguard uses the leftmost physical slot, never the order in which cards were clicked", () => {
+  const contexts = [fixture(), fixture()];
+  for (const ctx of contexts) {
+    ctx.state.playerHand[0].tactic = "vanguard";
+    ctx.state.playerHand[1].tactic = "rally";
+    ctx.getTacticBonus = globalThis.ClawFourLaneRules.getTacticBonus;
+    runInNewContext(fn("getKnownPlayerTacticBonus"), ctx);
+  }
+  contexts[0].toggleCardSelection("b"); contexts[0].placeCardInLane("b", 3);
+  contexts[0].toggleCardSelection("a"); contexts[0].placeCardInLane("a", 1);
+  contexts[1].toggleCardSelection("a"); contexts[1].placeCardInLane("a", 1);
+  contexts[1].toggleCardSelection("b"); contexts[1].placeCardInLane("b", 3);
+  assert.deepEqual(plain(contexts[0].selectedFormationCards()), plain(contexts[1].selectedFormationCards()));
+  for (const ctx of contexts) {
+    assert.equal(ctx.getKnownPlayerTacticBonus(ctx.selectedFormationCards(), 1), 1,
+      "a gap between the leading Vanguard and its companion does not cancel Vanguard");
+    ctx.placeCardInLane("b", 0);
+    assert.equal(ctx.getKnownPlayerTacticBonus(ctx.selectedFormationCards(), 1), 0,
+      "moving a non-Vanguard to its left immediately removes its role bonus");
+    ctx.toggleCardSelection("b");
+    assert.equal(ctx.getKnownPlayerTacticBonus(ctx.selectedFormationCards(), 1), 0,
+      "removing the companion leaves a lone Vanguard with no role bonus");
+  }
+});
+
 test("WIP full formations permit swapping and replacement but ignore invalid lanes/cards and locked input", () => {
   const ctx = fixture(); ["a", "b", "c", "d"].forEach((id, lane) => ctx.placeCardInLane(id, lane));
   ctx.placeCardInLane("a", 3);

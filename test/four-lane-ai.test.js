@@ -132,8 +132,12 @@ test("joint planning keeps commitment preferences and puts Rally after the Vangu
   const pair = [card(5, "gust", "vanguard"), card(4, "gust", "rally")];
   const history = Array.from({ length: 6 }, () => ({ playerCards: [card(6, "gust", "none"), card(6, "gust", "none")] }));
   const formation = r.chooseAiFormation(pair, {}, { ember: 6, gust: 4, tide: 6 }, () => .4, [], { history });
-  assert.deepEqual(formation, [...pair, null, null]);
-  assert.equal(r.getRallyBonus(formation, 0) + r.getTacticBonus(formation, 0), 2);
+  assert.deepEqual(occupied(formation), pair);
+  const leadingLane = formation.findIndex(Boolean);
+  assert.equal(formation[leadingLane + 1], pair[1], "Rally is adjacent on the right of the leading Vanguard");
+  assert.equal(r.getRallyBonus(formation, leadingLane) + r.getTacticBonus(formation, leadingLane), 2);
+  const resolved = r.resolveProgress(history.at(-1).playerCards, formation, {}, { ember: 6, gust: 4, tide: 6 });
+  assert.equal(resolved.matchWinner, "ai", "a correctly supported pair completes the missing goal without a Lane 1 restriction");
 });
 
 test("the joint planner returns unique own-hand references, is deterministic and does not mutate input", () => {

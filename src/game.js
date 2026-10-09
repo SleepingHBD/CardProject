@@ -683,6 +683,7 @@ const ui = {
   galleryButton: document.querySelector("#galleryButton"),
   cardGallery: document.querySelector("#cardGallery"),
   galleryIntro: document.querySelector("#galleryIntro"),
+  galleryRoleLegend: document.querySelector("#galleryRoleLegend"),
   archiveSort: document.querySelector("#archiveSort"),
   archiveSortSummary: document.querySelector("#archiveSortSummary"),
   archiveFilters: document.querySelector("#archiveFilters"),
@@ -2854,7 +2855,20 @@ function playedCardsMarkup(cards, side, clashCount = cards.length, opposingCards
   `;
 }
 
+function galleryRoleLegendMarkup(mode = state.gameMode) {
+  const roles = mode === "four-lane"
+    ? Object.values(globalThis.ClawFourLaneRules.TACTICS).map(role => ({ icon: role.icon,
+        text: role.description.replace(`${role.label}: `, `${role.label} · `) }))
+    : [
+        { icon: TACTICS.vanguard.icon, text: "Vanguard · +1 in Lane 1" },
+        { icon: TACTICS.link.icon, text: "Link · +1 when the card before the Link has a different element from the Link card" },
+        { icon: TACTICS.finisher.icon, text: "Finisher · +1 when last in a 2–3 card formation" },
+      ];
+  return roles.map(role => `<span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-${role.icon}"></use></svg></b> ${role.text}</span>`).join("");
+}
+
 function renderGallery() {
+  ui.galleryRoleLegend.innerHTML = galleryRoleLegendMarkup();
   const library = isFourLaneMode() ? [...CARD_LIBRARY, ...FOUR_LANE_CARDS] : CARD_LIBRARY;
   const sortedCards = library.filter((card) =>
     state.archiveElements.includes(card.element)
