@@ -128,9 +128,9 @@ test("starter descriptions explain deck specialities and player preferences, not
     assert.doesNotMatch(deck.description, /\+1|Lane [1-4]|directly (before|after)/);
   }
   assert.match(starters[0].description, /adaptable all-rounder.*all four roles.*changing plans/);
-  assert.match(starters[1].description, /support-heavy.*Rally partnerships.*reinforce key lanes/);
-  assert.match(starters[2].description, /combination-focused.*Link and mixed elements.*planning card order/);
-  assert.match(starters[3].description, /Finisher-heavy.*formation endings.*closing threat/);
+  assert.match(starters[1].description, /support-heavy.*adjacent Rally partnerships.*reinforcing key lanes/);
+  assert.match(starters[2].description, /combination-focused.*Link and mixed elements.*planning card (order|positions)/);
+  assert.match(starters[3].description, /Finisher-heavy.*(formation endings|rightmost threat)/);
   const balancedRoles = Object.values(api.validateDeck(catalog, starters[0]).summary.roleCounts);
   assert.ok(Math.max(...balancedRoles) - Math.min(...balancedRoles) <= 2, "the all-rounder mixes its roles evenly");
   for (const deck of starters.slice(1)) {
@@ -183,7 +183,7 @@ test("starter cards and saved decks remain mutually exclusive, with safe names a
   assert.equal(select.value, "");
   assert.equal(radios[0], originalRadio, "radio focus is preserved during a selection change");
   assert.deepEqual(radios.filter(input => input.checked).map(input => input.value), ["starter:finisher"]);
-  assert.match(options.markup, /A Finisher-heavy deck built around strong formation endings/);
+  assert.match(options.markup, /A Finisher-heavy deck built around/);
   assert.equal(ui.fourLaneConfirmDeckButton.disabled, false);
 });
 
@@ -212,9 +212,9 @@ test("rivals explain expected playstyles while preserving uncertainty, icons and
   const profiles = globalThis.ClawFourLaneOpponents.createRoster(catalog);
   assert.ok(profiles.every(rival => rival.description.length >= 100 && rival.description.length <= 180));
   assert.match(profiles[0].description, /adaptable all-rounder.*playstyle varies with its habits/);
-  assert.match(profiles[1].description, /support-heavy.*Rally partnerships and Vanguard openers.*reinforce earlier lanes/);
-  assert.match(profiles[2].description, /combination-focused.*Link and mixed elements.*planned card sequences/);
-  assert.match(profiles[3].description, /Finisher-heavy.*formation endings.*short or longer formation/);
+  assert.match(profiles[1].description, /support-heavy.*adjacent Rally partnerships and Vanguard openers.*reinforcing key fighters/);
+  assert.match(profiles[2].description, /combination-focused.*Link and mixed elements.*adjacent card combinations/);
+  assert.match(profiles[3].description, /Finisher-heavy.*rightmost threat.*short formation or a wider push/);
   assert.ok(profiles.every(rival => !/\balways\b/i.test(rival.description)));
   assert.ok(profiles.every(rival => !/\+1|Lane [1-4]|directly (before|after)/.test(rival.description)));
   const container = {};
@@ -234,15 +234,44 @@ test("rivals explain expected playstyles while preserving uncertainty, icons and
 
 test("lobby help uses a compact numeric hierarchy while detailed rules retain every condition", () => {
   assert.match(page, /class="lobby-basics-grid"/);
-  assert.match(page, /Draw up to 2 each round\. Max\. 7/);
+  assert.match(page, /Draw up to 3 each round\. Max\. 7/);
   assert.match(page, /trophies each/);
   assert.match(page, /class="lobby-scoring-notes"/);
-  assert.match(page, /first two only/);
+  assert.match(page, /one unlock per lane win · max\. 2/);
   assert.match(page, /Unlike Normal Play, there is no trophy choice/);
   assert.match(page, /Each element stops at 6 trophies/);
-  assert.match(page, /third extra card adds 0/);
+  assert.match(page, /One lane win unlocks one card, not every unopposed card/);
   for (const symbol of ["cards", "coins", "shuffle", "trophy"]) assert.ok(page.includes(`id="lobby-icon-${symbol}" viewBox="0 0 24 24"`));
   const css = readFileSync(new URL("../deckbuilding.css", import.meta.url), "utf8");
   assert.match(css, /\.lobby-element-stats[^}]*flex-wrap:\s*wrap/);
   assert.match(css, /@media \(max-width: 600px\)[\s\S]*\.lobby-basics-grid \{ grid-template-columns: minmax\(0, 1fr\)/);
+});
+
+test("WIP guidance explains free positions, earned unopposed rewards and three-card replenishment", () => {
+  const rules = visibleCopy(page.slice(page.indexOf('id="fourLaneRulesDialog"'), page.indexOf('id="resultDialog"')));
+  assert.match(rules, /Commit 1–4 cards in any of the four lanes, one card per lane/);
+  assert.match(rules, /Gaps are allowed/);
+  assert.match(rules, /lane positions—not the order you click cards—determine/);
+  assert.match(rules, /2 trophies of the winning card's element/);
+  assert.match(rules, /Each lane you win unlocks one of your unopposed cards.*1 trophy of its own element.*two unopposed trophies per round/);
+  assert.match(rules, /Lane 1 to Lane 4, skipping unopposed cards whose element already has 6 trophies/);
+  assert.match(rules, /lane win still unlocks a reward even when the winning card's element is complete/);
+  assert.match(rules, /No lane wins means no unopposed trophies.*Drawn lanes do not unlock rewards/);
+  assert.match(rules, /rightmost card.*at least two cards.*does not have to occupy Lane 4/);
+  assert.match(rules, /neighbouring lane to its left.*empty lane to its left gives no bonus/);
+  assert.match(rules, /cannot reach Lane 1 if Lane 2 is empty/);
+  assert.match(rules, /draws up to 3 without exceeding 7/);
+  assert.match(rules, /Commit 3 cards to maintain your hand size, or 4 to spend 1/);
+  assert.match(rules, /four consecutive rounds in which neither side earns trophies/);
+  assert.match(rules, /150 rounds.*duel ends in a draw/);
+  assert.doesNotMatch(rules, /Commit 1–4 cards in order|draws up to 2|first two cards with no opposing card/);
+});
+
+test("Normal Play guidance keeps its three-lane formation, trophy choice and six-card refill", () => {
+  const normalRules = visibleCopy(page.slice(page.indexOf('id="rulebookDialog"'), page.indexOf('id="fourLaneRulesDialog"')));
+  assert.match(normalRules, /Lane 1 fights Lane 1, Lane 2 fights Lane 2, and Lane 3 fights Lane 3/);
+  assert.match(normalRules, /Winning a round awards exactly one trophy/);
+  assert.match(normalRules, /Both duelists draw up to six cards/);
+  assert.match(normalRules, /final card in a 2–3 card formation/);
+  assert.doesNotMatch(normalRules, /unlock.*unopposed|150 rounds|draws up to 3/);
 });

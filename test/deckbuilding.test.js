@@ -27,7 +27,7 @@ test("Phase 1 construction limits are explicit, immutable and independent of com
   assert.ok(Object.isFrozen(decks) && Object.isFrozen(decks.COPY_LIMITS) && Object.isFrozen(decks.RARITY_COST_BONUS));
   assert.equal(four.HAND_SIZE, 7);
   assert.equal(four.MAX_COMMITMENT, 4);
-  assert.equal(four.ROUND_DRAW, 2);
+  assert.equal(four.ROUND_DRAW, 3);
   assert.equal(four.MAX_EXTRA_CARD_POINTS, 2);
   assert.equal(normal.LANE_WIN_POINTS, 2);
 });
@@ -292,19 +292,23 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
       four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
         { history, cardLibrary: library }),
     ];
-    const strongest = Math.max(...plays[1].map(card => card.power));
+    const opposingCommitted = plays[1].filter(Boolean);
+    const strongest = Math.max(...opposingCommitted.map(card => card.power));
     if (traits.some(trait => trait.id === "strong-opener")) assert.equal(plays[1][0].power, strongest);
-    if (traits.some(trait => trait.id === "late-striker")) assert.equal(plays[1].at(-1).power, strongest);
+    if (traits.some(trait => trait.id === "late-striker")) assert.equal(opposingCommitted.at(-1).power, strongest);
     const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
-    assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
+    assert.ok(result.extraCardPoints.player <= Math.min(2, result.laneWins.player));
+    assert.ok(result.extraCardPoints.ai <= Math.min(2, result.laneWins.ai));
 
     sides.forEach((side, index) => {
-      assert.ok(plays[index].length >= 1 && plays[index].length <= 4);
-      assert.equal(new Set(plays[index]).size, plays[index].length);
-      assert.ok(plays[index].every(card => side.hand.includes(card)));
-      side.hand = side.hand.filter(card => !plays[index].includes(card));
-      side.discard.push(...plays[index]);
-        side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
+      const committed = plays[index].filter(Boolean);
+      assert.equal(plays[index].length, 4);
+      assert.ok(committed.length >= 1 && committed.length <= 4);
+      assert.equal(new Set(committed).size, committed.length);
+      assert.ok(committed.every(card => side.hand.includes(card)));
+      side.hand = side.hand.filter(card => !committed.includes(card));
+      side.discard.push(...committed);
+      side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
 
       const all = [...side.deck, ...side.discard, ...side.hand];
       assert.equal(all.length, 24);
@@ -312,12 +316,13 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
       assert.ok(all.every(card => card.instanceId.startsWith(`${owners[index]}-`)));
 
     });
-    const snapshot = cards => cards.map(({ element, power, tactic }) => ({ element, power, tactic }));
+    const snapshot = cards => cards.map(card => card
+      ? { element: card.element, power: card.power, tactic: card.tactic, art: card.art } : null);
     history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
     assert.equal(JSON.stringify(traits), traitsBefore);
     if (sides.some(side => four.getProgressTotal(side.progress) === 18)) return { rounds: round + 1, reshuffles };
     sides.forEach(side => {
-      reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 2, side.random).reshuffled);
+      reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random).reshuffled);
       assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
     });
   }

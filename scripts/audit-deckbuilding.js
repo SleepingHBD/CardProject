@@ -103,7 +103,7 @@ export function selectProbe(side, policy, round, history, random) {
   return roleOrder(ordered.slice(0, count));
 }
 
-export function simulateDuel(definition, rivalId, policy, seed, maxRounds = 150) {
+export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four.MAX_MATCH_ROUNDS) {
   const encounter = opponents.createEncounter(roster, rivalId, rng(seed + 60013));
   const habitsBefore = JSON.stringify(encounter.traits);
   const sides = [definition, encounter.deck].map((deckDefinition, index) => {
@@ -115,22 +115,24 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = 150)
   });
   sides[0].other = sides[1]; sides[1].other = sides[0];
   const decisions = [rng(seed + 31001), rng(seed + 41001)], history = [];
-  const report = { winner: "stalled", rounds: 0, draws: 0, reshuffles: 0, counts: [[0, 0, 0, 0], [0, 0, 0, 0]],
+  const report = { winner: "stalled", roundLimitDraw: false, rounds: 0, draws: 0, reshuffles: 0, counts: [[0, 0, 0, 0], [0, 0, 0, 0]],
     activations: { vanguard: 0, link: 0, finisher: 0, rally: 0 }, maxPlanningMs: 0 };
-  for (let round = 0; round < maxRounds; round++) {
+  for (let round = 0; round < Math.min(maxRounds, four.MAX_MATCH_ROUNDS); round++) {
     const start = performance.now();
     // Rival planning happens independently, before the probe chooses its cards.
     const ai = four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], encounter.traits,
       { history, cardLibrary: library }, encounter.profile.role);
     report.maxPlanningMs = Math.max(report.maxPlanningMs, performance.now() - start);
     const plays = [selectProbe(sides[0], policy, round, history, decisions[0]), ai];
-    plays.forEach((cards, side) => {
+    plays.forEach((formation, side) => {
+      const cards = formation.filter(Boolean);
       assert.ok(cards.length >= 1 && cards.length <= 4 && new Set(cards).size === cards.length);
       assert.ok(cards.every(card => sides[side].hand.includes(card)));
       report.counts[side][cards.length - 1]++;
-      cards.forEach((card, lane) => {
-        if (four.getTacticBonus(cards, lane)) report.activations[card.tactic]++;
-        if (four.getRallyBonus(cards, lane)) report.activations.rally++;
+      formation.forEach((card, lane) => {
+        if (!card) return;
+        if (four.getTacticBonus(formation, lane)) report.activations[card.tactic]++;
+        if (four.getRallyBonus(formation, lane)) report.activations.rally++;
       });
     });
     const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
@@ -139,8 +141,8 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = 150)
 
     sides.forEach((side, index) => {
       side.hand = side.hand.filter(card => !plays[index].includes(card));
-      side.discard.push(...plays[index]);
-        side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
+      side.discard.push(...plays[index].filter(Boolean));
+      side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
 
       const all = [...side.deck, ...side.discard, ...side.hand];
       assert.equal(all.length, 24);
@@ -148,24 +150,26 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = 150)
       assert.ok(all.every(card => card.instanceId.startsWith(index ? "opponent-" : "player-")));
 
     });
-    const snapshot = cards => cards.map(({ art, element, power, tactic }) => ({ art, element, power, tactic }));
+    const snapshot = cards => cards.map(card => card ? ({ art: card.art, element: card.element, power: card.power, tactic: card.tactic }) : null);
     history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
     if (result.matchWinner) { report.winner = result.matchWinner === "ai" ? "opponent" : result.matchWinner; break; }
+    if (report.rounds >= four.MAX_MATCH_ROUNDS) { report.winner = "draw"; report.roundLimitDraw = true; break; }
     sides.forEach(side => {
       const before = side.hand.length;
       const refill = four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random);
       report.reshuffles += Number(refill.reshuffled);
-      assert.ok(refill.drawn <= 2 && side.hand.length >= 1 && side.hand.length <= 7 && side.hand.length - before === refill.drawn);
+      assert.ok(refill.drawn <= four.ROUND_DRAW && side.hand.length >= 1 && side.hand.length <= 7 && side.hand.length - before === refill.drawn);
     });
   }
   assert.equal(JSON.stringify(encounter.traits), habitsBefore);
   return report;
 }
 
-function group() { return { matches: 0, playerWins: 0, matchDraws: 0, stalls: 0, rounds: 0, longest: 0 }; }
+function group() { return { matches: 0, playerWins: 0, matchDraws: 0, roundLimitDraws: 0, stalls: 0, rounds: 0, longest: 0 }; }
 function add(target, result) {
   target.matches++; target.playerWins += Number(result.winner === "player"); target.stalls += Number(result.winner === "stalled");
   target.matchDraws += Number(result.winner === "draw");
+  target.roundLimitDraws += Number(result.roundLimitDraw);
   target.rounds += result.rounds; target.longest = Math.max(target.longest, result.rounds);
 }
 function finish(target) {

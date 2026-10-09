@@ -180,27 +180,47 @@ test("four-lane history retains Lane 4, Rally symbols and received bonuses", () 
   assert.equal((markup.match(/class="history-grid-lane"/g) || []).length, 4);
 });
 
-test("four-lane history records capped points, labels the third extra +0, and gives no trophy after losing the only lane", () => {
+test("four-lane history awards no unopposed trophies after losing the only battle", () => {
   for (const larger of ["player", "ai"]) {
     const context = fixture(); context.state.gameMode = "four-lane";
     const weak = Array.from({ length: 4 }, () => card("gust", 3)), strong = [card("gust", 9)];
     const player = larger === "player" ? weak : strong, opponent = larger === "player" ? strong : weak;
     const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
-    assert.equal(result.winner, "draw");
+    assert.equal(result.winner, larger === "player" ? "ai" : "player");
     context.recordCompletedRound(null, player, opponent, result);
     const entry = context.state.previousRoundsHistory[0];
-    assert.equal(entry.extraCardPoints[larger], 2);
+    assert.equal(entry.extraCardPoints[larger], 0);
     assert.equal(entry.trophy, null);
     assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Trophies earned/);
     assert.doesNotMatch(context.ui.previousRoundsHistoryList.innerHTML, /No trophy claimed|Round Points/);
-    assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Extra \+0 Gust/);
+    assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Unopposed \+0 Gust/);
     assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Gust trophies/);
-    assert.equal((context.historyFormationGridMarkup(entry).match(/>Extra \+1 Gust</g) || []).length, 2);
-    result.extraCardPoints[larger] = 0;
-    assert.equal(entry.extraCardPoints[larger], 2, "history snapshots, rather than aliases, earned points");
-    result.laneProgress[larger][1] = 0;
-    assert.equal(entry.laneProgress[larger][1], 1, "credited lane progress is snapshotted, not reinterpreted");
+    assert.equal((context.historyFormationGridMarkup(entry).match(/>Unopposed \+1 Gust</g) || []).length, 0);
+    result.extraCardPoints[larger] = 1;
+    assert.equal(entry.extraCardPoints[larger], 0, "history snapshots, rather than aliases, earned points");
+    result.laneProgress[larger][1] = 1;
+    assert.equal(entry.laneProgress[larger][1], 0, "credited lane progress is snapshotted, not reinterpreted");
   }
+});
+
+test("sparse WIP history preserves physical lanes and explains unlocked or unrewarded cards", () => {
+  const context = fixture(); context.state.gameMode = "four-lane";
+  const player = [card("ember", 3), null, card("tide", 9), card("gust", 4)];
+  const opponent = [null, card("gust", 5), card("tide", 3), null];
+  const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
+  context.recordCompletedRound(null, player, opponent, result);
+  const entry = context.state.previousRoundsHistory[0];
+  assert.equal(entry.playerCards[1], null);
+  assert.equal(entry.aiCards[0], null);
+  assert.equal(entry.laneResults[0], null);
+  assert.match(context.historyLaneCellMarkup(entry, "player", 2), /history-cell-outcome">Win/);
+  assert.match(context.historyLaneCellMarkup(entry, "player", 0), /Unopposed \+1 Fire/);
+  assert.match(context.historyLaneCellMarkup(entry, "player", 3), /Unopposed \+0 Gust/);
+  assert.match(context.historyLaneCalculationMarkup(entry, "player", 0), /Unlocked by a lane win/);
+  assert.match(context.historyLaneCalculationMarkup(entry, "player", 3), /unlocks were used/);
+  assert.match(context.historyLaneCalculationMarkup(entry, "ai", 1), /No lane victory/);
+  assert.equal((context.historyFormationGridMarkup(entry).match(/class="history-lane-empty"/g) || []).length, 3);
+  assert.equal(JSON.stringify(entry).includes("undefined"), false);
 });
 
 test("four-lane history calls automatic gains trophies, including singular and zero gains", () => {

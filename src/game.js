@@ -102,7 +102,7 @@ const FOUR_LANE_ROLES = Object.freeze({
   rally: Object.freeze({
     icon: "banner",
     label: "Rally",
-    description: "Rally: Gives +1 Power to the card committed directly before it. In Lane 1, Rally gives no bonus.",
+    description: "Rally: Gives +1 Power to the card in the lane immediately to its left. An empty lane breaks the support.",
   }),
 });
 const MAX_PLAY_SIZE = 3;
@@ -615,6 +615,9 @@ const state = {
   previousPlayerCommitment: null,
   previousAiCommitment: null,
   selectedCardIds: [],
+  pendingLaneCardId: null,
+  dryProgressRounds: 0,
+  matchDrawReason: null,
   difficulty: null,
   archiveSort: "element",
   archiveElements: Object.keys(ELEMENT_SORT_ORDER),
@@ -805,6 +808,21 @@ function getMaxPlaySize() {
   return isFourLaneMode() ? 4 : MAX_PLAY_SIZE;
 }
 
+function formationCardCount(cards) {
+  return cards.filter(Boolean).length;
+}
+
+function selectedFormationCards() {
+  const cards = state.selectedCardIds.map(id => state.playerHand.find(card => card.instanceId === id) || null);
+  return isFourLaneMode() ? Array.from({ length: 4 }, (_, lane) => cards[lane] || null) : cards.filter(Boolean);
+}
+
+function physicalLaneElements(zone) {
+  const lanes = [];
+  zone.querySelectorAll(".clash-card").forEach(lane => { lanes[Number(lane.dataset.clashIndex)] = lane; });
+  return lanes;
+}
+
 function cardRoleDefinition(card, mode = state.gameMode) {
   const roles = mode === "four-lane" ? globalThis.ClawFourLaneRules.TACTICS : TACTICS;
   return roles[card.tactic] || FOUR_LANE_ROLES[card.tactic] || TACTICS.link;
@@ -851,7 +869,7 @@ function renderDuelMode() {
     ? "<b>LANE</b> A lane win earns 2 trophies of the winning card's element"
     : "<b>LANE</b> Every lane win scores 2";
   document.querySelector(".rules-strip .rule-chip.gust").innerHTML = isFourLaneMode()
-    ? "<b>EXTRA</b> Your first two unopposed cards each earn 1 trophy of their element"
+    ? "<b>EXTRA</b> Each lane win unlocks 1 unopposed card for +1 trophy"
     : "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point";
   document.querySelector(".rules-strip .rule-chip.tide").innerHTML = isFourLaneMode()
     ? "<b>GOAL</b> Collect 6 Fire, 6 Gust and 6 Water trophies to win"
@@ -1981,7 +1999,7 @@ function prepareAiPlan() {
       { history: state.previousRoundsHistory, cardLibrary: [...CARD_LIBRARY, ...FOUR_LANE_CARDS] },
       matchFourLaneOpponent.profile.role,
     );
-    state.aiTellClues = buildTellClues(state.aiPlan.length, state.difficulty);
+    state.aiTellClues = buildTellClues(state.aiPlan, state.difficulty);
     return;
   }
   const commitment = chooseAiCommitment(
@@ -2039,12 +2057,12 @@ function renderOpponentTells() {
     return;
   }
 
-  const playerCardCount = state.selectedCardIds.length;
+  const playerCardCount = formationCardCount(state.selectedCardIds);
   const aiExtraCards = Math.max(0, state.aiPlan.length - playerCardCount);
   const playerExtraCards = Math.max(0, playerCardCount - state.aiPlan.length);
   const aiExtraPoints = getExtraCardPoints(state.aiPlan.length, playerCardCount);
   const playerExtraPoints = getExtraCardPoints(playerCardCount, state.aiPlan.length);
-  const formationStatus = playerCardCount === 0
+  const formationStatus = isFourLaneMode() ? "Choose any lanes · gaps allowed" : playerCardCount === 0
     ? `Build 1–${getMaxPlaySize()} cards`
     : aiExtraCards
       ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}`
@@ -2052,7 +2070,7 @@ function renderOpponentTells() {
         ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}`
         : "Equal formation size";
   ui.commitmentHint.textContent =
-    `${difficultyLabel} · ${state.aiPlan.length} ${state.aiPlan.length === 1 ? "card" : "cards"} · ${formationStatus}`;
+    `${difficultyLabel} · ${formationCardCount(state.aiPlan)} ${formationCardCount(state.aiPlan) === 1 ? "card" : "cards"} · ${formationStatus}`;
   const laneLabels = Array.from({ length: getMaxPlaySize() }, (_, index) => String(index + 1));
   ui.opponentTells.innerHTML = laneLabels.map((lane, index) => {
     const card = state.aiPlan[index];
@@ -2108,6 +2126,7 @@ function renderFormationControls() {
 
 function beginFormationBuilding() {
   state.selectedCardIds = [];
+  state.pendingLaneCardId = null;
   state.locked = false;
   renderOpponentTells();
   renderFormationControls();
@@ -2120,7 +2139,8 @@ function beginFormationBuilding() {
       : state.difficulty === "blind"
         ? "Study Previous Rounds History. Build your formation."
         : "Study the plan. Build your formation.",
-    hidesFormation
+    isFourLaneMode() ? "Choose a card, then choose any lane—or drag it there. Gaps are allowed. Each lane win unlocks one unopposed card for +1 trophy."
+    : hidesFormation
       ? state.difficulty === "blind"
         ? `Place one to ${isFourLaneMode() ? "four" : "three"} cards. Study completed rounds to infer the opponent's hidden habits.`
         : `Place one to ${isFourLaneMode() ? "four" : "three"} cards. The opponent's formation stays hidden until the clash.`
@@ -2148,15 +2168,13 @@ function renderMatchupForecast() {
     return;
   }
 
-  const selectedCards = state.selectedCardIds
-    .map((instanceId) => state.playerHand.find((card) => card.instanceId === instanceId))
-    .filter(Boolean);
+  const selectedCards = selectedFormationCards();
 
-  if (!selectedCards.length) {
+  if (!formationCardCount(selectedCards)) {
     ui.matchupForecast.style.gridTemplateColumns = "";
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction">
-        Drag a card into Lane 1, or click a card below. Its bonus math will appear here.
+        ${isFourLaneMode() ? state.pendingLaneCardId ? "Now choose a lane for the selected card. You can leave any lane empty." : "Choose a card, then choose any lane—or drag it there. Gaps are allowed." : "Drag a card into Lane 1, or click a card below. Its bonus math will appear here."}
       </span>
     `;
     return;
@@ -2168,9 +2186,10 @@ function renderMatchupForecast() {
     risky: { icon: "!", title: "RISKY", className: "danger" },
   };
   const concealsCommitment = concealsOpponentFormation();
-  ui.matchupForecast.style.gridTemplateColumns = `repeat(${selectedCards.length}, minmax(0, 1fr))`;
+  ui.matchupForecast.style.gridTemplateColumns = `repeat(${formationCardCount(selectedCards)}, minmax(0, 1fr))`;
 
   ui.matchupForecast.innerHTML = selectedCards.map((playerCard, index) => {
+    if (!playerCard) return "";
     const opponentCard = state.aiPlan[index];
     const playerTactic = getKnownPlayerTacticBonus(selectedCards, index);
     const playerRally = getRallyBonus(selectedCards, index);
@@ -2201,6 +2220,11 @@ function renderMatchupForecast() {
     }
 
     if (!opponentCard) {
+      if (isFourLaneMode()) return `
+        <span class="forecast-chip forecast-extra-card">
+          <i>${index + 1}</i><b>UNOPPOSED · UP TO +1</b>
+          <small>Needs one of your lane wins to unlock. Rewarded left to right, skipping completed elements.</small>
+        </span>`;
       const points = getExtraCardLanePoints(index, state.aiPlan.length);
       return `
         <span class="forecast-chip forecast-extra-card">
@@ -2285,6 +2309,7 @@ function renderAftermathBreakdown(playerCards, resolution) {
     </span>
   `;
   const laneBreakdown = resolution.lanes.map((lane, index) => {
+    if (!lane) return "";
     const bonus = getBonusBreakdown(lane.player);
     const outcome = lane.winner === "player" ? "WIN" : lane.winner === "ai" ? "LOSS" : "DRAW";
     const className = lane.winner === "player"
@@ -2378,7 +2403,8 @@ function cardMarkup(
   const displayName = cardDisplayName(card);
   const interactionLabel = isFormationCard
     ? `Remove ${displayName} from lane ${selectedIndex + 1}`
-    : `Add ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
+    : state.gameMode === "four-lane" ? `Choose ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} role, then choose any lane`
+      : `Add ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
       <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
@@ -2455,6 +2481,12 @@ function renderHand() {
     .join("");
 
   bindCardInteractions(ui.playerHand);
+  if (isFourLaneMode()) ui.playerHand.querySelectorAll("[data-card-id]").forEach(button => {
+    const pending = button.dataset.cardId === state.pendingLaneCardId;
+    button.classList.toggle("is-lane-choice", pending);
+    button.setAttribute("aria-pressed", String(pending));
+    button.title = pending ? "Selected: choose any lane. Click again to cancel." : "Choose this card, then choose its lane.";
+  });
   ui.playerHand.ondragover = (event) => {
     if (state.locked || !state.selectedCardIds.includes(draggedCardId)) return;
     event.preventDefault();
@@ -2528,6 +2560,11 @@ function getFormationBonusPreview(selectedCards, index) {
 
   const opponentCard = state.aiPlan[index];
   if (!opponentCard) {
+    if (isFourLaneMode()) return {
+      text: `+${knownBonus}`,
+      label: `Known role bonus +${knownBonus}. Unopposed: earns 1 trophy only when unlocked by a lane win; completed elements are skipped.`,
+      extraCard: false,
+    };
     const points = getExtraCardLanePoints(index, state.aiPlan.length);
     return {
       text: `+${points}`,
@@ -2565,9 +2602,7 @@ function getFormationBonusPreview(selectedCards, index) {
 }
 
 function renderFormationBuilder() {
-  const selectedCards = state.selectedCardIds
-    .map((instanceId) => state.playerHand.find((card) => card.instanceId === instanceId))
-    .filter(Boolean);
+  const selectedCards = selectedFormationCards();
   const commitmentLimit = getPlayerFormationLimit();
 
   ui.playerPlayZone.innerHTML = `
@@ -2575,13 +2610,12 @@ function renderFormationBuilder() {
       ${Array.from({ length: getMaxPlaySize() }, (_, index) => {
         const card = selectedCards[index];
         const isLockedSlot = (state.locked || commitmentLimit === 0) && !card;
-        const isNextSlot = !state.locked
-          && index < commitmentLimit
-          && index === selectedCards.length;
+        const isNextSlot = !state.locked && (isFourLaneMode()
+          ? commitmentLimit > 0 : index < commitmentLimit && index === selectedCards.length);
         if (card) {
           const bonusPreview = getFormationBonusPreview(selectedCards, index);
           return `
-            <div class="formation-slot filled-slot" data-drop-lane="${index}">
+            <div class="formation-slot filled-slot" data-drop-lane="${index}" ${isFourLaneMode() && state.pendingLaneCardId ? 'role="button" tabindex="0"' : ""}>
               <span class="filled-lane-label">LANE ${index + 1}</span>
               ${cardMarkup(card, true, index, "formation", bonusPreview)}
             </div>
@@ -2591,11 +2625,12 @@ function renderFormationBuilder() {
           <div
             class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}${isLockedSlot ? " locked-slot" : ""}"
             data-drop-lane="${index}"
+            ${isFourLaneMode() && !state.locked ? 'role="button" tabindex="0"' : ""}
             aria-label="Lane ${index + 1}${isLockedSlot ? ", unavailable" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
           >
             <span>LANE ${index + 1}</span>
-            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
-            <small>${isLockedSlot ? "FORMATION UNAVAILABLE" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
+            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? isFourLaneMode() && state.pendingLaneCardId ? "PLACE HERE" : "DROP CARD" : "WAITING"}</b>
+            <small>${isLockedSlot ? "FORMATION UNAVAILABLE" : isNextSlot ? isFourLaneMode() ? "or choose card → lane" : "or click one below" : `Fill lane ${index}`}</small>
           </div>
         `;
       }).join("")}
@@ -2605,11 +2640,22 @@ function renderFormationBuilder() {
   bindCardInteractions(ui.playerPlayZone);
   ui.playerPlayZone.querySelectorAll("[data-drop-lane]").forEach((slot) => {
     const laneIndex = Number(slot.dataset.dropLane);
+    if (isFourLaneMode()) {
+      const chooseLane = event => {
+        if (state.locked || !state.pendingLaneCardId) return;
+        event.preventDefault();
+        event.stopPropagation();
+        placeCardInLane(state.pendingLaneCardId, laneIndex);
+      };
+      slot.addEventListener("click", chooseLane, true);
+      slot.addEventListener("keydown", event => {
+        if ((event.key === "Enter" || event.key === " ") && event.target === slot) chooseLane(event);
+      });
+    }
     slot.addEventListener("dragover", (event) => {
       if (
         state.locked
-        || laneIndex >= getPlayerFormationLimit()
-        || laneIndex > state.selectedCardIds.length
+        || (!isFourLaneMode() && (laneIndex >= getPlayerFormationLimit() || laneIndex > state.selectedCardIds.length))
       ) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
@@ -2629,9 +2675,11 @@ function renderFormationBuilder() {
 
 function placeCardInLane(instanceId, laneIndex) {
   if (state.locked || !state.playerHand.some((card) => card.instanceId === instanceId)) return;
+  if (!Number.isInteger(laneIndex) || laneIndex < 0 || laneIndex >= getMaxPlaySize()) return;
   const commitmentLimit = getPlayerFormationLimit();
   const currentIndex = state.selectedCardIds.indexOf(instanceId);
-  if (currentIndex < 0 && state.selectedCardIds.length >= commitmentLimit) {
+  if (currentIndex < 0 && formationCardCount(state.selectedCardIds) >= commitmentLimit
+    && !(isFourLaneMode() && state.selectedCardIds[laneIndex])) {
     setMessage(
       `${commitmentLimit}-card formation limit reached.`,
       "Return a card to your hand before adding another.",
@@ -2640,6 +2688,18 @@ function placeCardInLane(instanceId, laneIndex) {
     return;
   }
 
+  if (isFourLaneMode()) {
+    const slots = Array.from({ length: 4 }, (_, lane) => state.selectedCardIds[lane] || null);
+    if (currentIndex >= 0) slots[currentIndex] = slots[laneIndex];
+    slots[laneIndex] = instanceId;
+    state.selectedCardIds = slots;
+    state.pendingLaneCardId = null;
+    draggedCardId = null;
+    audio.cardFlip(true, laneIndex + 1);
+    updateFormationMessage();
+    renderHand();
+    return;
+  }
   if (currentIndex >= 0) state.selectedCardIds.splice(currentIndex, 1);
   const targetIndex = Math.min(Math.max(0, laneIndex), state.selectedCardIds.length);
   state.selectedCardIds.splice(targetIndex, 0, instanceId);
@@ -2650,7 +2710,7 @@ function placeCardInLane(instanceId, laneIndex) {
 }
 
 function updateFormationMessage() {
-  const count = state.selectedCardIds.length;
+  const count = formationCardCount(state.selectedCardIds);
   const title = count === 0
     ? "Build your formation."
     : `${count} ${count === 1 ? "card" : "cards"} placed in formation.`;
@@ -2658,7 +2718,10 @@ function updateFormationMessage() {
   const aiExtraCards = Math.max(0, state.aiPlan.length - count);
   const playerExtraPoints = getExtraCardPoints(count, state.aiPlan.length);
   const aiExtraPoints = getExtraCardPoints(state.aiPlan.length, count);
-  const detail = concealsOpponentFormation()
+  const detail = isFourLaneMode()
+    ? state.pendingLaneCardId ? "Choose any lane for the selected card. Placing it on an occupied lane returns that card to your hand."
+      : "Any lane may be left empty. Win a lane for 2 trophies; each win unlocks one unopposed card for +1 trophy."
+    : concealsOpponentFormation()
     ? count === 0
       ? state.difficulty === "instinct" && tutorial.active && currentTutorialLesson()?.freeChoice
         ? `Choose ${currentTutorialLesson().minCards || 1}–${currentTutorialLesson().maxCards || MAX_PLAY_SIZE} cards. The opponent's commitment habit is your only clue to their hidden formation size.`
@@ -2685,7 +2748,7 @@ function updateFormationMessage() {
 }
 
 function updateSelectionControls() {
-  const count = state.selectedCardIds.length;
+  const count = formationCardCount(state.selectedCardIds);
   const tutorialFormationReady = !tutorial.active || isTutorialSelectionValid();
   const lesson = tutorial.active ? currentTutorialLesson() : null;
   const minimumCards = lesson?.freeChoice
@@ -2719,7 +2782,21 @@ function updateSelectionControls() {
 
 function toggleCardSelection(instanceId) {
   if (state.locked) return;
+  if (!state.playerHand.some(card => card.instanceId === instanceId)) return;
   const selectedIndex = state.selectedCardIds.indexOf(instanceId);
+  if (isFourLaneMode()) {
+    if (selectedIndex >= 0) {
+      state.selectedCardIds[selectedIndex] = null;
+      state.pendingLaneCardId = null;
+      audio.cardFlip(false, selectedIndex + 1);
+    } else {
+      state.pendingLaneCardId = state.pendingLaneCardId === instanceId ? null : instanceId;
+      audio.cardFlip(Boolean(state.pendingLaneCardId), 1);
+    }
+    updateFormationMessage();
+    renderHand();
+    return;
+  }
   let changed = false;
 
   if (selectedIndex >= 0) {
@@ -2743,7 +2820,19 @@ function toggleCardSelection(instanceId) {
   renderHand();
 }
 
-function playedCardsMarkup(cards, side, clashCount = cards.length) {
+function playedCardsMarkup(cards, side, clashCount = cards.length, opposingCards = []) {
+  if (isFourLaneMode()) return `
+    <div class="played-cards ${side}-formation">
+      ${Array.from({ length: 4 }, (_, index) => {
+        const card = cards[index];
+        if (!card) return `<div class="played-lane-empty" data-empty-lane="${index}" aria-label="Lane ${index + 1}, no card"><span>LANE ${index + 1}</span><small>EMPTY</small></div>`;
+        const unopposed = !opposingCards[index];
+        return `<div class="clash-card${unopposed ? " result-extra-card" : ""}" data-clash-index="${index}">
+          ${cardMarkup(card, false, index, "played")}
+          <span class="lane-result">${unopposed ? "UNOPPOSED" : ""}</span>
+        </div>`;
+      }).join("")}
+    </div>`;
   return `
     <div class="played-cards ${side}-formation">
       ${cards.map((card, index) => {
@@ -2945,11 +3034,11 @@ function recordCompletedRound(reward, playerCards, aiCards, resolution) {
       laneProgress: structuredClone(resolution.laneProgress),
       matchWinner: resolution.matchWinner,
     } : {}),
-    laneResults: resolution.lanes.map((lane) => ({
+    laneResults: resolution.lanes.map((lane) => lane ? ({
       winner: lane.winner,
       playerTotal: lane.player.total,
       aiTotal: lane.ai.total,
-    })),
+    }) : null),
     trophy: reward?.card
       ? {
           winner: reward.winner,
@@ -2980,7 +3069,7 @@ function historyExtraCardLanePoints(entry, side, index) {
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   // Store earned points, rather than reinterpreting an old round with today's
   // rules. Older in-memory entries can recover that number from their score.
-  const laneWins = entry.laneResults.filter(lane => lane.winner === side).length;
+  const laneWins = entry.laneResults.filter(lane => lane?.winner === side).length;
   const points = entry.extraCardPoints?.[side] ?? Math.max(0, entry.score[side] - laneWins * 2);
   return index >= opposingCards.length && index < opposingCards.length + points ? 1 : 0;
 }
@@ -2994,11 +3083,11 @@ function historyLaneCellMarkup(entry, side, index) {
   }
 
   const lane = entry.laneResults[index];
-  const isExtra = index >= opposingCards.length;
+  const isExtra = !opposingCards[index];
   const element = ELEMENTS[card.element];
   const tactic = cardRoleDefinition(card, entry.mode);
   const outcome = isExtra
-    ? entry.mode === "four-lane" ? `Extra +${historyExtraCardLanePoints(entry, side, index)} ${element.label}`
+    ? entry.mode === "four-lane" ? `Unopposed +${historyExtraCardLanePoints(entry, side, index)} ${element.label}`
       : historyExtraCardLanePoints(entry, side, index) ? "Extra +1 Round Point" : "Extra +0 · Cap reached"
     : side === "player"
       ? lane?.winner === "draw" ? "Draw" : lane?.winner === "player" ? "Win" : "Loss"
@@ -3059,7 +3148,12 @@ function historyLaneCalculationMarkup(entry, side, index) {
   if (!card) return `<span aria-label="No card">—</span>`;
   if (!opposingCards[index] && entry.mode === "four-lane") {
     const gain = historyExtraCardLanePoints(entry, side, index);
-    return `Extra card: <b>+${gain} ${ELEMENTS[card.element].label} ${gain === 1 ? "trophy" : "trophies"}</b> (first two only; element capped at 6 trophies)`;
+    const wins = entry.laneResults.filter(lane => lane?.winner === side).length;
+    const reason = gain ? "Unlocked by a lane win."
+      : !wins ? "No lane victory to unlock this card."
+        : entry.progressAfter?.[side]?.[card.element] >= 6 ? "This element is complete; skipped."
+          : "All your lane-win unlocks were used by earlier eligible unopposed cards.";
+    return `Unopposed card: <b>+${gain} ${ELEMENTS[card.element].label} ${gain === 1 ? "trophy" : "trophies"}</b> ${reason}`;
   }
   if (!opposingCards[index]) return historyExtraCardLanePoints(entry, side, index)
     ? "Extra card: <b>+1 Round Point</b>" : "Extra card: <b>+0 Round Points</b> · 2-point cap reached";
@@ -3677,11 +3771,11 @@ function restoreCinematicAftermathRemains(playerCards, aiCards, resolution) {
     );
   });
 
-  const playerLanes = [...ui.playerPlayZone.querySelectorAll(".clash-card")];
-  const aiLanes = [...ui.aiPlayZone.querySelectorAll(".clash-card")];
+  const playerLanes = physicalLaneElements(ui.playerPlayZone);
+  const aiLanes = physicalLaneElements(ui.aiPlayZone);
 
   resolution.results.forEach((winner, index) => {
-    if (winner === "draw") return;
+    if (winner !== "player" && winner !== "ai") return;
     const winningCard = winner === "player" ? playerCards[index] : aiCards[index];
     const losingLane = winner === "player" ? aiLanes[index] : playerLanes[index];
     if (winningCard && losingLane) {
@@ -3719,8 +3813,8 @@ async function animateClashes(playerCards, aiCards) {
   const strikeDuration = reducedMotion ? 80 : cinematic ? 820 : 540;
   const collisionDelay = reducedMotion ? 20 : cinematic ? 340 : 225;
   const pauseDuration = reducedMotion ? 30 : cinematic ? 1450 : 180;
-  const playerLanes = [...ui.playerPlayZone.querySelectorAll(".clash-card")];
-  const aiLanes = [...ui.aiPlayZone.querySelectorAll(".clash-card")];
+  const playerLanes = physicalLaneElements(ui.playerPlayZone);
+  const aiLanes = physicalLaneElements(ui.aiPlayZone);
 
   await delay(reducedMotion ? 30 : 220);
   if (cinematic) await enterCinematicStage();
@@ -3731,10 +3825,10 @@ async function animateClashes(playerCards, aiCards) {
       const laneScore = resolution.lanes[index];
       const playerLane = playerLanes[index];
       const aiLane = aiLanes[index];
-      if (!playerLane || !aiLane) continue;
+      if (!laneScore || !playerLane || !aiLane) continue;
 
       setMessage(
-        `Clash ${index + 1} of ${resolution.results.length}!`,
+        isFourLaneMode() ? `Lane ${index + 1} clashes!` : `Clash ${index + 1} of ${resolution.results.length}!`,
         `${cardDisplayName(playerCards[index])} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
       );
 
@@ -3835,7 +3929,7 @@ async function animateClashes(playerCards, aiCards) {
 }
 
 function playRound() {
-  const selectedCount = state.selectedCardIds.length;
+  const selectedCount = formationCardCount(state.selectedCardIds);
   if (
     state.locked
     || selectedCount < 1
@@ -3857,26 +3951,29 @@ function playRound() {
   const tutorialRunId = tutorial.active ? tutorial.runId : null;
   setRoundAdvanceControls(false);
   ui.menuButton.disabled = true;
-  const playerCards = state.selectedCardIds
-    .map((instanceId) => removeCard(state.playerHand, instanceId))
-    .filter(Boolean);
-  if (!playerCards.length) {
+  const selectedCards = selectedFormationCards();
+  const removed = selectedCards.map(card => card ? removeCard(state.playerHand, card.instanceId) : null);
+  const playerCards = isFourLaneMode() ? removed : removed.filter(Boolean);
+  if (!formationCardCount(playerCards)) {
     ui.menuButton.disabled = false;
     return;
   }
 
   state.locked = true;
   state.selectedCardIds = [];
+  state.pendingLaneCardId = null;
   renderHand();
-  const clashCount = Math.min(playerCards.length, state.aiPlan.length);
+  const clashCount = isFourLaneMode() ? playerCards.filter((card, lane) => card && state.aiPlan[lane]).length
+    : Math.min(playerCards.length, state.aiPlan.length);
   ui.playerPlayZone.innerHTML = playedCardsMarkup(
     playerCards,
     "player",
     clashCount,
+    state.aiPlan,
   );
-  ui.aiPlayZone.innerHTML = placeholder(`Revealing the opponent's ${state.aiPlan.length}-card plan...`);
+  ui.aiPlayZone.innerHTML = placeholder(`Revealing the opponent's ${formationCardCount(state.aiPlan)}-card plan...`);
   setMessage("The sealed formation opens...", "The opponent committed this plan before your choice.");
-  audio.commit(playerCards.length);
+  audio.commit(formationCardCount(playerCards));
   if (tutorial.active) {
     tutorial.phase = "clashing";
     renderTutorialCoach();
@@ -3884,18 +3981,17 @@ function playRound() {
 
   window.setTimeout(async () => {
     if (tutorialRunId !== null && (!tutorial.active || tutorial.runId !== tutorialRunId)) return;
-    const aiCards = state.aiPlan
-      .map((card) => removeCard(state.aiHand, card.instanceId))
-      .filter(Boolean);
-    state.previousPlayerCommitment = playerCards.length;
-    state.previousAiCommitment = aiCards.length;
-    ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount);
+    const removedOpponent = state.aiPlan.map(card => card ? removeCard(state.aiHand, card.instanceId) : null);
+    const aiCards = isFourLaneMode() ? removedOpponent : removedOpponent.filter(Boolean);
+    state.previousPlayerCommitment = formationCardCount(playerCards);
+    state.previousAiCommitment = formationCardCount(aiCards);
+    ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount, playerCards);
     setMessage(
-      `${playerCards.length} cards against ${aiCards.length}!`,
-      isFourLaneMode() ? `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}. A win adds +2 to its element; the first two extra cards add +1 each. Elements stop at 6.`
+      `${formationCardCount(playerCards)} cards against ${formationCardCount(aiCards)}!`,
+      isFourLaneMode() ? `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}. Each lane win earns 2 trophies and unlocks one unopposed card for +1 trophy.`
         : `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point.`,
     );
-    audio.reveal(aiCards.length);
+    audio.reveal(formationCardCount(aiCards));
     const resolution = await animateClashes(playerCards, aiCards);
     if (tutorialRunId !== null) {
       if (!tutorial.active || tutorial.runId !== tutorialRunId) return;
@@ -4040,23 +4136,26 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
 
 function renderProgressLaneResults(playerCards, aiCards, resolution) {
   for (const [side, cards, zone] of [["player", playerCards, ui.playerPlayZone], ["ai", aiCards, ui.aiPlayZone]]) {
-    const lanes = [...zone.querySelectorAll(".clash-card")];
+    const lanes = physicalLaneElements(zone);
     cards.forEach((card, index) => {
+      if (!card) return;
       const lane = lanes[index], gain = resolution.laneProgress[side][index];
       if (!lane) return;
       const result = lane.querySelector(".lane-result");
       const element = ELEMENTS[card.element].label;
-      if (index < resolution.results.length) {
+      if (resolution.lanes[index]) {
         if (resolution.results[index] === side && result) {
           result.innerHTML += `<small>+${gain} ${element.toUpperCase()} ${gain === 1 ? "TROPHY" : "TROPHIES"}</small>`;
           result.title += ` Earned ${gain} ${element} ${gain === 1 ? "trophy" : "trophies"}; goal capped at 6 trophies.`;
         }
         return;
       }
-      const eligible = getExtraCardLanePoints(index, resolution.results.length) > 0;
-      const label = !eligible ? "CAP" : gain ? "EXTRA" : "COMPLETE";
-      const explanation = !eligible ? "Only the first two extra cards earn trophies."
-        : gain ? `Earned ${gain} ${element} ${gain === 1 ? "trophy" : "trophies"}.` : `${element} trophy collection was already complete.`;
+      const complete = resolution.progressAfter[side][card.element] >= duelRules().PROGRESS_PER_ELEMENT;
+      const label = gain ? "UNOPPOSED" : complete ? "COMPLETE" : "NO REWARD";
+      const explanation = gain ? `Unlocked by a lane win: earned ${gain} ${element} trophy.`
+        : !resolution.laneWins[side] ? "No lane victory to unlock an unopposed-card reward."
+          : complete ? `${element} trophy collection is complete; this card is skipped.`
+            : "Each lane victory unlocks one unopposed card. Earlier eligible cards used your unlocks.";
       const badge = lane.querySelector(".card-bonus-badge");
       if (badge) {
         badge.innerHTML = `<small>${label}</small><b>+${gain}</b>`;
@@ -4073,11 +4172,16 @@ function renderProgressLaneResults(playerCards, aiCards, resolution) {
 
 function completeProgressRound(playerCards, aiCards, resolution) {
   clearTrophyClaim();
+  state.dryProgressRounds = resolution.score.player + resolution.score.ai === 0 ? state.dryProgressRounds + 1 : 0;
+  if (!resolution.matchWinner && state.round >= duelRules().MAX_MATCH_ROUNDS) {
+    state.matchDrawReason = "round-limit";
+    resolution = { ...resolution, matchWinner: "draw" };
+  }
   recordCompletedRound(null, playerCards, aiCards, resolution);
   state.playerProgress = { ...resolution.progressAfter.player };
   state.aiProgress = { ...resolution.progressAfter.ai };
-  state.discardPile.push(...playerCards);
-  state.aiDiscardPile.push(...aiCards);
+  state.discardPile.push(...playerCards.filter(Boolean));
+  state.aiDiscardPile.push(...aiCards.filter(Boolean));
   state.pendingMatchWinner = resolution.matchWinner;
   renderProgressLaneResults(playerCards, aiCards, resolution);
   ui.versusBadge.className = "versus-badge has-score progress-round-summary";
@@ -4089,11 +4193,11 @@ function completeProgressRound(playerCards, aiCards, resolution) {
     </span>`;
   const gained = (counts) => Object.entries(ELEMENTS).filter(([key]) => counts[key] > 0)
     .map(([key, element]) => `+${counts[key]} ${element.label} ${counts[key] === 1 ? "trophy" : "trophies"}`).join(", ") || "no trophies";
-  setMessage(resolution.matchWinner === "draw" ? "Both collected all required trophies — duel drawn!"
+  setMessage(resolution.matchWinner === "draw" ? state.matchDrawReason === "round-limit" ? "Round limit reached — duel drawn!" : "Both collected all required trophies — duel drawn!"
     : resolution.matchWinner === "player" ? "You collected 6 trophies of every element!"
       : resolution.matchWinner === "ai" ? "The opponent collected 6 trophies of every element."
         : "Both sides keep the trophies they earn.",
-    `You: ${gained(resolution.progressGains.player)}. Opponent: ${gained(resolution.progressGains.ai)}.`);
+    `You: ${gained(resolution.progressGains.player)}. Opponent: ${gained(resolution.progressGains.ai)}.${state.dryProgressRounds >= duelRules().DRY_ROUND_WARNING && !state.pendingMatchWinner ? ` No new trophies for ${state.dryProgressRounds} rounds. Try a different lane or element; you can also restart from Menu.` : ""}`);
   audio.roundResult(resolution.matchWinner === "draw" ? "draw" : resolution.matchWinner === "player" ? "win"
     : resolution.matchWinner === "ai" ? "loss" : resolution.score.player > resolution.score.ai ? "win" : resolution.score.player < resolution.score.ai ? "loss" : "draw");
   renderCollection(ui.playerCollection, []);
@@ -4162,7 +4266,9 @@ async function endGame(winner) {
   document.querySelector("#resultTitle").textContent = drawn ? "An evenly matched duel!" : won
     ? "A purr-fect victory!"
     : "The opponent prevails!";
-  const resultSummary = isFourLaneMode() ? drawn ? "Both players collected 6 Fire, 6 Gust and 6 Water trophies in the same round."
+  const resultSummary = isFourLaneMode() ? drawn ? state.matchDrawReason === "round-limit"
+    ? `Neither side completed every element within ${duelRules().MAX_MATCH_ROUNDS} rounds. The duel ends in a draw, regardless of the trophy lead.`
+    : "Both players collected 6 Fire, 6 Gust and 6 Water trophies in the same round."
     : won ? "You collected 6 Fire, 6 Gust and 6 Water trophies first." : "The opponent collected 6 Fire, 6 Gust and 6 Water trophies first."
     : won
     ? "You claimed two trophies from every element."
@@ -4570,6 +4676,9 @@ async function startGame() {
   state.aiHand = [];
   state.playerWins = [];
   state.aiWins = [];
+  state.pendingLaneCardId = null;
+  state.dryProgressRounds = 0;
+  state.matchDrawReason = null;
   state.aiPlan = [];
   state.aiTellClues = [];
   state.aiTraits = isFourLaneMode() ? [...matchFourLaneOpponent.traits]

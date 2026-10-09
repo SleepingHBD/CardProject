@@ -31,7 +31,8 @@ test("lobby and trophy counters explain lane-earned trophies and preserve work-i
   const deck = readFileSync(new URL("../src/deckbuilding.js", import.meta.url), "utf8");
   const lobby = html.slice(html.indexOf('<details class="four-lane-basics"'), html.indexOf('<section class="four-lane-card-showcase"'));
   assert.match(lobby, /\+2<\/b> trophies of your card's element/);
-  assert.match(lobby, /\+1<\/b> trophy of that card's element · first two only/);
+  assert.match(lobby, /\+1<\/b> trophy of that card's element · one unlock per lane win · max\. 2/);
+  assert.match(lobby, /(?:lane win|victory).*unlocks|unopposed.*(?:lane win|victory)/i);
   assert.match(lobby, /<b>6<\/b> trophies each/);
   assert.match(lobby, /Unlike Normal Play, there is no trophy choice/);
   assert.match(lobby, /all committed cards stay in their owner's deck cycle/);
@@ -46,7 +47,7 @@ test("split lanes award both sides their own winning elements, independent of a 
   const result = rules.resolveProgress([card("ember", 9), card("gust", 3)],
     [card("ember", 3), card("gust", 9), card("tide", 3)]);
   assert.deepEqual(result.progressGains, { player: progress(2), ai: progress(0, 2, 1) });
-  assert.deepEqual(result.laneProgress, { player: [2, 0], ai: [0, 2, 1] });
+  assert.deepEqual(result.laneProgress, { player: [2, 0, 0, 0], ai: [0, 2, 1, 0] });
   assert.equal(result.matchWinner, null);
   assert.deepEqual(rules.getFormationRewardOptions(), []);
 });
@@ -54,10 +55,10 @@ test("split lanes award both sides their own winning elements, independent of a 
 test("goals cap individually at six, clipping shared-element wins in lane order", () => {
   const result = rules.resolveProgress([card("ember", 9), card("ember", 9), card("gust", 3), card("tide", 3)],
     [card("ember", 3)], progress(5, 6, 5));
-  assert.deepEqual(result.laneProgress.player, [1, 0, 0, 0]);
-  assert.deepEqual(result.progressAfter.player, progress(6, 6, 5));
-  assert.equal(result.matchWinner, null, "the third extra remains capped even when earlier extras earned zero");
-  assert.equal(result.score.player, 1, "summaries count actual progress, not raw lane points");
+  assert.deepEqual(result.laneProgress.player, [1, 0, 0, 1]);
+  assert.deepEqual(result.progressAfter.player, progress(6, 6, 6));
+  assert.equal(result.matchWinner, "player", "completed escorts are skipped rather than consuming the lane victory unlock");
+  assert.equal(result.score.player, 2, "summaries count actual trophies, not unclipped lane rewards");
 });
 
 test("a card of a completed element can still deny progress without earning more", () => {
@@ -72,7 +73,7 @@ test("ties earn nothing; all lanes resolve before a simultaneous completion draw
   assert.deepEqual(tied.progressGains, { player: progress(), ai: progress() });
   const result = rules.resolveProgress([card("ember", 9), card("tide", 3)],
     [card("ember", 3), card("tide", 9)], progress(4, 6, 6), progress(6, 6, 4));
-  assert.deepEqual(result.results, ["player", "ai"]);
+  assert.deepEqual(result.results, ["player", "ai", "empty", "empty"]);
   assert.deepEqual(result.progressAfter, { player: progress(6, 6, 6), ai: progress(6, 6, 6) });
   assert.equal(result.matchWinner, "draw");
 });
@@ -90,17 +91,24 @@ test("10,000 seeded formations agree with an independent scoring oracle and side
   const elements = ["ember", "gust", "tide"], roles = ["vanguard", "link", "finisher", "rally"];
   const beats = { ember: "gust", gust: "tide", tide: "ember" };
   const oracle = (a, b, pa, pb) => {
-    const values = (cards, other) => cards.map((c, i) => c.power
-      + (c.tactic === "vanguard" && i === 0 || c.tactic === "link" && i > 0 && cards[i - 1].element !== c.element
-        || c.tactic === "finisher" && cards.length >= 2 && i === cards.length - 1 ? 1 : 0)
+    a = [...a, ...Array(4 - a.length).fill(null)]; b = [...b, ...Array(4 - b.length).fill(null)];
+    const values = (cards, other) => cards.map((c, i) => !c ? 0 : c.power
+      + (c.tactic === "vanguard" && i === 0 || c.tactic === "link" && cards[i - 1] && cards[i - 1].element !== c.element
+        || c.tactic === "finisher" && cards.filter(Boolean).length >= 2 && i === cards.findLastIndex(Boolean) ? 1 : 0)
       + Number(cards[i + 1]?.tactic === "rally") + (other[i] && beats[c.element] === other[i].element ? 2 : 0));
-    const aa = values(a, b), bb = values(b, a), out = [{ ...pa }, { ...pb }], credited = [[], []];
-    for (const [side, cards, other] of [[0, a, b], [1, b, a]]) cards.forEach((c, i) => {
-      const raw = i < other.length ? (side === 0 ? aa[i] > bb[i] : bb[i] > aa[i]) ? 2 : 0
-        : i < other.length + 2 ? 1 : 0;
-      const gain = Math.min(raw, 6 - out[side][c.element]);
-      out[side][c.element] += gain; credited[side][i] = gain;
-    });
+    const aa = values(a, b), bb = values(b, a), out = [{ ...pa }, { ...pb }], credited = [Array(4).fill(0), Array(4).fill(0)];
+    for (const [side, cards, other] of [[0, a, b], [1, b, a]]) {
+      let wins = 0;
+      cards.forEach((c, i) => {
+        if (!c || !other[i] || !(side === 0 ? aa[i] > bb[i] : bb[i] > aa[i])) return;
+        wins++; const gain = Math.min(2, 6 - out[side][c.element]);
+        out[side][c.element] += gain; credited[side][i] = gain;
+      });
+      for (let i = 0, used = 0; i < 4 && used < wins; i++) {
+        const c = cards[i]; if (!c || other[i] || out[side][c.element] === 6) continue;
+        used++; out[side][c.element]++; credited[side][i] = 1;
+      }
+    }
     return { out, credited };
   };
   for (let sample = 0; sample < 10000; sample++) {
@@ -122,7 +130,7 @@ function node() {
   return { innerHTML: "", textContent: "", title: "", attributes: {}, setAttribute(key, value) { this.attributes[key] = value; } };
 }
 
-test("board results distinguish capped extras from completed elements and keep combat bonuses separate", () => {
+test("board results distinguish unlocked, completed and unfunded cards while preserving combat bonuses", () => {
   const cards = [card("ember", 9), card("ember", 4), card("gust", 4), card("tide", 4)];
   const result = rules.resolveProgress(cards, [card("ember", 3)], progress(5, 0, 0));
   const lanes = cards.map(() => {
@@ -131,24 +139,27 @@ test("board results distinguish capped extras from completed elements and keep c
     badge.innerHTML = "BONUS +2";
     return { label, badge, querySelector: selector => selector === ".lane-result" ? label : badge };
   });
-  const context = { ELEMENTS: normal.ELEMENTS, getExtraCardLanePoints: rules.getExtraCardLanePoints,
+  const context = { ELEMENTS: normal.ELEMENTS, getExtraCardLanePoints: rules.getExtraCardLanePoints, duelRules: () => rules,
     ui: { playerPlayZone: { querySelectorAll: () => lanes }, aiPlayZone: { querySelectorAll: () => [] } } };
+  context.physicalLaneElements = zone => zone === context.ui.playerPlayZone ? lanes : [];
   runInNewContext(fn("renderProgressLaneResults"), context);
   context.renderProgressLaneResults(cards, [card("ember", 3)], result);
   assert.match(lanes[0].label.innerHTML, /\+1 FIRE TROPHY/);
   assert.equal(lanes[0].badge.innerHTML, "BONUS +2");
   assert.equal(lanes[1].label.textContent, "COMPLETE +0");
-  assert.match(lanes[1].badge.attributes["aria-label"], /already complete/);
-  assert.equal(lanes[2].label.textContent, "EXTRA +1 GUST");
-  assert.equal(lanes[3].label.textContent, "CAP +0");
+  assert.match(lanes[1].badge.attributes["aria-label"], /collection is complete; this card is skipped/);
+  assert.equal(lanes[2].label.textContent, "UNOPPOSED +1 GUST");
+  assert.equal(lanes[3].label.textContent, "NO REWARD +0");
+  assert.match(lanes[3].badge.attributes["aria-label"], /Earlier eligible cards used your unlocks/);
 });
 
 test("live completion records detached progress, recycles every card, skips trophy claims and permits duel draws", () => {
   const a = [card("ember", 9), card("tide", 3)], b = [card("ember", 3), card("tide", 9)];
   const resolution = rules.resolveProgress(a, b, progress(4, 6, 6), progress(6, 6, 4));
   const state = { gameMode: "four-lane", round: 8, difficulty: "blind", playerWins: [], aiWins: [],
-    previousRoundsHistory: [], discardPile: [], aiDiscardPile: [], playerRoundWins: 0, aiRoundWins: 0 };
-  const calls = {}, context = { state, structuredClone, ELEMENTS: normal.ELEMENTS,
+    previousRoundsHistory: [], discardPile: [], aiDiscardPile: [], playerRoundWins: 0, aiRoundWins: 0,
+    dryProgressRounds: 0, matchDrawReason: null };
+  const calls = {}, context = { state, structuredClone, ELEMENTS: normal.ELEMENTS, duelRules: () => rules,
     getElementTrophyCounts: normal.getElementTrophyCounts,
     ui: { versusBadge: node(), playerCollection: {}, aiCollection: {}, menuButton: { disabled: true } },
     clearTrophyClaim: () => { calls.clear = true; }, renderPreviousRoundsHistory() {},
@@ -174,6 +185,71 @@ test("live completion records detached progress, recycles every card, skips trop
   assert.deepEqual(entry.progressAfter, resolution.progressAfter);
   resolution.progressAfter.player.ember = 0; state.playerProgress.gust = 0;
   assert.deepEqual(entry.progressAfter.player, progress(6, 6, 6), "history cannot be changed by later rounds");
+});
+
+function liveProgressContext(round = 1) {
+  const state = { gameMode: "four-lane", round, difficulty: "blind", playerWins: [], aiWins: [],
+    previousRoundsHistory: [], discardPile: [], aiDiscardPile: [], playerRoundWins: 0, aiRoundWins: 0,
+    dryProgressRounds: 0, matchDrawReason: null };
+  const calls = {}, context = { state, structuredClone, ELEMENTS: normal.ELEMENTS, duelRules: () => rules,
+    getElementTrophyCounts: normal.getElementTrophyCounts,
+    ui: { versusBadge: node(), playerCollection: {}, aiCollection: {}, menuButton: { disabled: true } },
+    clearTrophyClaim() {}, renderPreviousRoundsHistory() {}, renderProgressLaneResults() {},
+    renderCollection() {}, renderRound() {}, renderRoundScore() {}, renderAftermathBreakdown() {},
+    restoreCinematicAftermathRemains() {},
+    setRoundAdvanceControls: (show, final) => { calls.advance = [show, final]; },
+    setMessage: (title, detail) => { calls.message = [title, detail]; },
+    audio: { roundResult: value => { calls.audio = value; } } };
+  runInNewContext(["snapshotHistoryCard", "recordCompletedRound", "completeProgressRound"].map(fn).join("\n"), context);
+  return { context, state, calls };
+}
+
+test("four dry rounds warn without forcing a draw; an earned trophy resets the warning counter", () => {
+  assert.equal(rules.DRY_ROUND_WARNING, 4);
+  const { context, state, calls } = liveProgressContext();
+  const player = [null, card("gust", 9), null, null], opponent = [null, null, card("tide", 3), null];
+  for (let round = 1; round <= 12; round++) {
+    state.round = round;
+    context.completeProgressRound(player, opponent, rules.resolveProgress(player, opponent));
+    assert.equal(state.dryProgressRounds, round);
+    assert.equal(state.pendingMatchWinner, null, "avoiding battles does not trigger an early forced draw");
+    assert.equal(state.matchDrawReason, null);
+    assert.deepEqual(calls.advance, [true, false]);
+    if (round < 4) assert.doesNotMatch(calls.message[1], /No new trophies/);
+    else assert.match(calls.message[1], new RegExp(`No new trophies for ${round} rounds`));
+  }
+  const earnedPlayer = [card("ember", 9), null, null, null], earnedOpponent = [card("ember", 3), null, null, null];
+  state.round++;
+  context.completeProgressRound(earnedPlayer, earnedOpponent, rules.resolveProgress(earnedPlayer, earnedOpponent));
+  assert.equal(state.dryProgressRounds, 0);
+  assert.doesNotMatch(calls.message[1], /No new trophies/);
+  assert.ok(state.discardPile.every(Boolean) && state.aiDiscardPile.every(Boolean), "empty physical slots are never discarded as cards");
+});
+
+test("round 150 ends an incomplete duel as a draw, not a trophy-lead win; real completion takes precedence", () => {
+  assert.equal(rules.MAX_MATCH_ROUNDS, 150);
+  const a = [card("gust", 9), null, null, null], b = [card("gust", 3), null, null, null];
+  const { context, state, calls } = liveProgressContext(149);
+  const incomplete = rules.resolveProgress(a, b, progress(5, 2, 4), progress(1, 0, 1));
+  context.completeProgressRound(a, b, incomplete);
+  assert.equal(state.pendingMatchWinner, null);
+  assert.deepEqual(calls.advance, [true, false]);
+  state.round = 150;
+  context.completeProgressRound(a, b, incomplete);
+  assert.equal(incomplete.matchWinner, null, "the UI draw-limit handling does not mutate pure scoring output");
+  assert.equal(state.pendingMatchWinner, "draw");
+  assert.equal(state.matchDrawReason, "round-limit");
+  assert.equal(state.previousRoundsHistory.at(-1).matchWinner, "draw");
+  assert.deepEqual(calls.advance, [true, true]);
+  assert.equal(calls.audio, "draw");
+  assert.match(calls.message[0], /Round limit reached.*duel drawn/);
+
+  const completed = liveProgressContext(150);
+  completed.context.completeProgressRound(a, b, rules.resolveProgress(a, b, progress(6, 4, 6)));
+  assert.equal(completed.state.pendingMatchWinner, "player");
+  assert.equal(completed.state.matchDrawReason, null);
+  assert.equal(completed.calls.audio, "win");
+  assert.deepEqual(completed.calls.advance, [true, true]);
 });
 
 test("four-lane round-gain summary has its own responsive size instead of a fixed circular seal", () => {
@@ -210,5 +286,5 @@ test("Solo Gambler still spends support to complete a goal instead of recovering
   const hand = [card("gust", 5, "vanguard"), card("gust", 4, "rally")];
   const history = Array.from({ length: 6 }, () => ({ playerCards: [{ element: "gust", power: 6, tactic: "none" }, { element: "gust", power: 6, tactic: "none" }] }));
   const chosen = rules.chooseAiFormation(hand, {}, progress(6, 4, 6), () => .4, [{ id: "solo-gambler" }], { history });
-  assert.deepEqual(chosen, hand);
+  assert.deepEqual(chosen, [...hand, null, null]);
 });

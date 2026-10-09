@@ -7,6 +7,7 @@ import "../src/four-lane-rules.js";
 import "../src/deckbuilding.js";
 
 const normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
+const occupied = formation => formation.filter(Boolean);
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const rulesSource = readFileSync(new URL("../src/four-lane-rules.js", import.meta.url), "utf8");
 const rng = seed => () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
@@ -17,9 +18,9 @@ const hand = Object.freeze([card(9, "ember", "finisher"), card(8, "tide", "vangu
 const history = counts => counts.map(count => ({
   playerCards: Array.from({ length: count }, () => card(6, "gust", "none")), aiCards: [card(5)],
 }));
-const meanPower = cards => cards.reduce((sum, value) => sum + value.power, 0) / cards.length;
-const bonusPerCard = cards => cards.reduce((sum, _, lane) =>
-  sum + four.getTacticBonus(cards, lane) + four.getRallyBonus(cards, lane), 0) / cards.length;
+const meanPower = cards => occupied(cards).reduce((sum, value) => sum + value.power, 0) / occupied(cards).length;
+const bonusPerCard = cards => cards.reduce((sum, value, lane) =>
+  sum + (value ? four.getTacticBonus(cards, lane) + four.getRallyBonus(cards, lane) : 0), 0) / occupied(cards).length;
 const library = runInNewContext([
   gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE =")),
   gameSource.slice(gameSource.indexOf("const FOUR_LANE_RALLY_CARDS ="), gameSource.indexOf("const DIFFICULTIES =")),
@@ -35,7 +36,7 @@ test("the nine refined habit descriptions are concise, accurate and generated co
     "trophy-denier": "Favors counters to elements you are close to finishing.",
     "tactic-planner": "Favors formations that activate role bonuses.",
     "strong-opener": "Places his highest-Power committed card in Lane 1.",
-    "late-striker": "Places his highest-Power committed card in his last occupied lane.",
+    "late-striker": "Places his highest-Power committed card in his rightmost occupied lane.",
     "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to earn trophies.",
     "score-reader": "Favors committing more cards when behind on trophies, and fewer when ahead.",
     "echo-tactician": "Favors committing the same number of cards you committed in the previous round.",
@@ -62,8 +63,10 @@ test("the nine refined habit descriptions are concise, accurate and generated co
   }
   assert.equal(seen.size, 9);
   for (const trait of [...normal.AI_MOTIVE_TRAITS, ...normal.AI_FORMATION_TRAITS, ...normal.AI_COMMITMENT_TRAITS]) {
-    if (expected[trait.id] && !["solo-gambler", "score-reader", "trophy-denier"].includes(trait.id)) assert.equal(trait.description, expected[trait.id]);
+    if (expected[trait.id] && !["solo-gambler", "score-reader", "trophy-denier", "late-striker"].includes(trait.id)) assert.equal(trait.description, expected[trait.id]);
   }
+  assert.equal(normal.AI_FORMATION_TRAITS.find(value => value.id === "late-striker").description,
+    "Places his highest-Power committed card in his last occupied lane.", "Normal Play retains its sequential-placement wording");
   assert.match(normal.AI_COMMITMENT_TRAITS.find(value => value.id === "solo-gambler").description, /conserve cards/);
   assert.ok(gameSource.includes("Strong Opener places his highest-Power committed card in Lane 1."));
   assert.doesNotMatch(gameSource, /Strong Opener places the opponent's highest-Power card in Lane 1/);
@@ -114,17 +117,22 @@ test("Power Seeker commits stronger cards when comparable formations are availab
     neutral += meanPower(four.chooseAiFormation(hand, {}, {}, rng(seed), [], info));
     const selected = four.chooseAiFormation(hand, {}, {}, rng(seed), [{ id: "power-seeker" }], info);
     seeker += meanPower(selected);
-    assert.ok(selected.every(value => hand.includes(value)));
+    assert.ok(occupied(selected).every(value => hand.includes(value)));
   }
   assert.ok(seeker > neutral);
 });
 
 test("Role Planner makes role combinations more distinctive without needing Rally in its explanation", () => {
-  const info = { history: history([1, 1, 1]), cardLibrary: hand };
+  // This close-choice hand has a strong neutral plan without active roles and
+  // an equally useful three-card sequence activating Vanguard, Link, Finisher.
+  const plannerHand = Object.freeze([card(9, "gust", "finisher"), card(7, "ember", "link"),
+    card(7, "ember", "link"), card(9, "tide", "link"), card(5, "tide", "finisher"),
+    card(3, "ember", "vanguard"), card(8, "ember", "vanguard")]);
+  const info = { history: history([1, 1, 4]), cardLibrary: plannerHand };
   let neutral = 0, planner = 0;
   for (let seed = 0; seed < 32; seed++) {
-    neutral += bonusPerCard(four.chooseAiFormation(hand, {}, {}, rng(seed), [], info));
-    planner += bonusPerCard(four.chooseAiFormation(hand, {}, {}, rng(seed), [{ id: "tactic-planner" }], info));
+    neutral += bonusPerCard(four.chooseAiFormation(plannerHand, {}, {}, rng(seed), [], info));
+    planner += bonusPerCard(four.chooseAiFormation(plannerHand, {}, {}, rng(seed), [{ id: "tactic-planner" }], info));
   }
   assert.ok(planner > neutral);
 });
@@ -132,16 +140,21 @@ test("Role Planner makes role combinations more distinctive without needing Rall
 test("Solo Gambler recovers with one card but can still oppose larger pushes", () => {
   const trait = [{ id: "solo-gambler" }];
   const info = { history: history([1, 1, 1]), cardLibrary: hand };
-  const depleted = four.chooseAiFormation(hand.slice(0, 4), [], [], rng(1), trait, info);
-  assert.equal(depleted.length, 1);
-  const playerHand = [...hand.slice(0, 4)].filter(value => !depleted.includes(value));
+  const recoveryHand = Object.freeze([card(4, "tide", "finisher"), card(4, "gust", "vanguard"),
+    card(3, "gust", "finisher"), card(8, "gust", "vanguard")]);
+  const recoveryInfo = { history: history([3, 1, 2]), cardLibrary: recoveryHand };
+  const neutral = four.chooseAiFormation(recoveryHand, [], [], () => .4, [], recoveryInfo);
+  const depleted = four.chooseAiFormation(recoveryHand, [], [], () => .4, trait, recoveryInfo);
+  assert.equal(occupied(neutral).length, 2, "without the habit, a close-value two-card plan is preferred");
+  assert.equal(occupied(depleted).length, 1);
+  const playerHand = [...recoveryHand].filter(value => !depleted.includes(value));
   four.replenishHand([...hand.slice(4)], [], playerHand);
-  assert.equal(playerHand.length, 5, "a one-card round followed by draw-two rebuilds the hand");
+  assert.equal(playerHand.length, 6, "a one-card round followed by draw-three rebuilds the hand");
   const full = four.chooseAiFormation(hand, [], [], rng(1), trait, info);
-  assert.ok(full.length > 1, "a full hand does not trigger recovery singles");
+  assert.ok(occupied(full).length > 1, "a full hand does not trigger recovery singles");
   const push = four.chooseAiFormation(hand, [], [], rng(1), trait,
     { history: history([4, 4, 4]), cardLibrary: hand });
-  assert.ok(push.length > 1, "the habit can challenge a repeating large formation");
+  assert.ok(occupied(push).length > 1, "the habit can challenge a repeating large formation");
   assert.equal(normal.chooseAiCommitment(6, [], [], () => .5, trait), 1, "Normal Play's original AI is unchanged");
 });
 
@@ -171,18 +184,19 @@ test("all 108 refined habit combinations complete matches, conserve personal car
           four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
             { history: completed, cardLibrary: library }),
         ];
-        const strongest = Math.max(...plays[1].map(value => value.power));
+        const strongest = Math.max(...occupied(plays[1]).map(value => value.power));
         if (formation.id === "strong-opener") assert.equal(plays[1][0].power, strongest);
-        if (formation.id === "late-striker") assert.equal(plays[1].at(-1).power, strongest);
+        if (formation.id === "late-striker") assert.equal(plays[1].findLast(Boolean).power, strongest);
         const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
         assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
 
         sides.forEach((side, owner) => {
-          assert.ok(plays[owner].length >= 1 && plays[owner].length <= 4);
-          assert.equal(new Set(plays[owner]).size, plays[owner].length);
-          assert.ok(plays[owner].every(value => side.hand.includes(value)));
+          const cards = occupied(plays[owner]);
+          assert.ok(cards.length >= 1 && cards.length <= 4);
+          assert.equal(new Set(cards).size, cards.length);
+          assert.ok(cards.every(value => side.hand.includes(value)));
           side.hand = side.hand.filter(value => !plays[owner].includes(value));
-          side.discard.push(...plays[owner]);
+          side.discard.push(...cards);
           side.progress = { ...result.progressAfter[(owner === 0 ? "player" : "ai")] };
 
           const all = [...side.deck, ...side.discard, ...side.hand];
@@ -190,11 +204,11 @@ test("all 108 refined habit combinations complete matches, conserve personal car
           assert.equal(new Set(all.map(value => value.instanceId)).size, 24);
           assert.ok(all.every(value => value.instanceId.startsWith(owner === 0 ? "player-" : "opponent-")));
         });
-        const snapshot = cards => cards.map(({ art, element, power, tactic }) => ({ art, element, power, tactic }));
+        const snapshot = cards => cards.map(card => card ? ({ art: card.art, element: card.element, power: card.power, tactic: card.tactic }) : null);
         completed.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
         if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { finished = true; break; }
         sides.forEach(side => {
-          reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 2, side.random).reshuffled);
+          reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random).reshuffled);
           assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
         });
       }

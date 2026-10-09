@@ -155,7 +155,7 @@
     },
     {
       id: "rally", name: "Rally Company",
-      description: "A support-heavy deck built around Rally partnerships. Suits players who like committing cards together to reinforce key lanes, instead of relying on single-card strength.",
+      description: "A support-heavy deck built around adjacent Rally partnerships. Suits players who like reinforcing key lanes and choosing which battles to take, rather than relying on one card.",
       cards: [
         "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "hareth-hearthbeat", "toastie-toe-beans", "flaskfoot-felix", "teapot-tabby",
         "hidayn-windbrace", "hidayn-windbrace", "kitewhisker", "jiawen-barleybreeze", "jiawen-barleybreeze", "megwyn-windwhistle", "aakith-wayfinder", "aakith-wayfinder",
@@ -164,7 +164,7 @@
     },
     {
       id: "link", name: "Element Weavers",
-      description: "A combination-focused deck built around Link and mixed elements. Suits players who enjoy planning card order and spreading their trophy gains across Fire, Gust and Water.",
+      description: "A combination-focused deck built around Link and mixed elements. Suits players who enjoy planning card positions and spreading their trophy gains across Fire, Gust and Water.",
       cards: [
         "hareth-hearthbeat", "shazmir-ashveil", "shazmir-ashveil", "teapot-tabby", "flaskfoot-felix", "beacon-burmilla", "cinder-kit", "charmae-emberhem",
         "aakith-wayfinder", "windlass-whiskers", "windlass-whiskers", "belfry-bobtail", "belfry-bobtail", "kitewhisker", "jiawen-barleybreeze", "megwyn-windwhistle",
@@ -173,7 +173,7 @@
     },
     {
       id: "finisher", name: "Last Light",
-      description: "A Finisher-heavy deck built around strong formation endings. Suits players who like choosing a closing threat and shaping the earlier lanes around it.",
+      description: "A Finisher-heavy deck built around a strong rightmost threat. Suits players who like choosing a closing card and shaping the other lanes around it.",
       cards: [
         "lucan-cinderclay", "lucan-cinderclay", "toastie-toe-beans", "toastie-toe-beans", "flaskfoot-felix", "beacon-burmilla", "beacon-burmilla", "hareth-hearthbeat",
         "dandelion-dash", "belfry-bobtail", "belfry-bobtail", "aakith-wayfinder", "whisker-whirl", "whisker-whirl", "windlass-whiskers", "hidayn-windbrace",

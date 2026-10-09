@@ -83,11 +83,13 @@ test("all 153 allowed habit combinations are canonical, persistent and appropria
       const hand = decks.buildDeckInstances(catalog, encounter.deck, "opponent").slice(c % 5, c % 5 + 7);
       const plan = four.chooseAiFormation(hand, [], [], rng(100 + checked), encounter.traits,
         { cardLibrary: library, history: [] }, rival.role);
-      assert.ok(plan.length >= 1 && plan.length <= 4);
-      assert.equal(new Set(plan).size, plan.length);
-      assert.ok(plan.every(card => hand.includes(card)));
-      if (formation[f] === "strong-opener") assert.equal(plan[0].power, Math.max(...plan.map(card => card.power)));
-      if (formation[f] === "late-striker") assert.equal(plan.at(-1).power, Math.max(...plan.map(card => card.power)));
+      const committed = plan.filter(Boolean);
+      assert.equal(plan.length, 4);
+      assert.ok(committed.length >= 1 && committed.length <= 4);
+      assert.equal(new Set(committed).size, committed.length);
+      assert.ok(committed.every(card => hand.includes(card)));
+      if (formation[f] === "strong-opener") assert.equal(plan[0].power, Math.max(...committed.map(card => card.power)));
+      if (formation[f] === "late-striker") assert.equal(committed.at(-1).power, Math.max(...committed.map(card => card.power)));
       assert.equal(JSON.stringify(encounter), before);
       checked++;
     }
@@ -113,22 +115,23 @@ test("rival habit pools reject typos, empty pools and duplicates rather than cre
 
 test("deck preferences activate their own role instead of merely committing a card with that label", () => {
   const hand = [
-    { power: 9, element: "ember", tactic: "finisher" }, { power: 8, element: "tide", tactic: "vanguard" },
+    { power: 8, element: "ember", tactic: "finisher" }, { power: 8, element: "tide", tactic: "vanguard" },
     { power: 6, element: "gust", tactic: "link" }, { power: 5, element: "tide", tactic: "rally" },
     { power: 4, element: "ember", tactic: "rally" }, { power: 3, element: "gust", tactic: "finisher" },
     { power: 5, element: "ember", tactic: "link" },
   ];
   const info = { cardLibrary: hand, history: [1, 1, 1].map(count => ({ playerCards: hand.slice(0, count) })) };
   for (const role of ["rally", "link", "finisher"]) {
-    const activations = cards => cards.reduce((sum, card, lane) => sum + (role === "rally"
+    const activations = cards => cards.reduce((sum, card, lane) => sum + (!card ? 0 : role === "rally"
       ? four.getRallyBonus(cards, lane) : card.tactic === role ? four.getTacticBonus(cards, lane) : 0), 0);
     let neutral = 0, preferred = 0;
     for (let seed = 0; seed < 32; seed++) {
       neutral += activations(four.chooseAiFormation(hand, {}, {}, rng(seed), [], info));
       const chosen = four.chooseAiFormation(hand, {}, {}, rng(seed), [], info, role);
       preferred += activations(chosen);
-      if (activations(chosen) && role === "link") assert.ok(chosen.slice(1).some((card, index) => card.tactic === "link" && card.element !== chosen[index].element));
-      if (activations(chosen) && role === "finisher") assert.equal(chosen.at(-1).tactic, "finisher");
+      if (activations(chosen) && role === "link") assert.ok(chosen.some((card, lane) => card?.tactic === "link"
+        && chosen[lane - 1] && card.element !== chosen[lane - 1].element));
+      if (activations(chosen) && role === "finisher") assert.equal(chosen.filter(Boolean).at(-1).tactic, "finisher");
     }
     assert.ok(preferred > neutral, `${role} favors genuinely active bonuses across paired seeds`);
   }
@@ -140,8 +143,10 @@ test("Rally chains cannot amplify support and Finisher preferences cannot force 
   for (const role of ["rally", "finisher", "link"]) {
     const hand = [{ element: "ember", power: 6, tactic: role }];
     const plan = four.chooseAiFormation(hand, [], [], rng(1), [], {}, role);
-    assert.deepEqual(plan, hand);
-    assert.equal(four.getTacticBonus(plan, 0) + four.getRallyBonus(plan, 0), 0);
+    assert.equal(plan.length, 4);
+    assert.deepEqual(plan.filter(Boolean), hand);
+    const lane = plan.findIndex(Boolean);
+    assert.equal(four.getTacticBonus(plan, lane) + four.getRallyBonus(plan, lane), 0);
   }
   const chain = Array.from({ length: 4 }, (_, index) => ({ element: "tide", power: 4, tactic: "rally", id: index }));
   assert.deepEqual(chain.map((_, lane) => four.getRallyBonus(chain, lane)), [1, 1, 1, 0]);
@@ -206,7 +211,9 @@ test("the planner is never given the player's selected deck, private cards or cu
   for (const rival of roster) {
     const encounter = opponents.createEncounter(roster, rival.id, rng(6));
     const hand = decks.buildDeckInstances(catalog, encounter.deck, "opponent").slice(0, 7);
-    assert.ok(four.chooseAiFormation(hand, [], [], rng(7), encounter.traits, info, rival.role).length);
+    const plan = four.chooseAiFormation(hand, [], [], rng(7), encounter.traits, info, rival.role);
+    assert.equal(plan.length, 4);
+    assert.ok(plan.filter(Boolean).length >= 1);
   }
   assert.doesNotMatch(gameFunction("prepareAiPlan"), /state\.(playerHand|selectedCardIds|deck)|matchFourLaneDeck/);
 });
@@ -235,13 +242,16 @@ test("all starter-vs-rival matches conserve 24 cards per owner, complete and pre
           { history, cardLibrary: library }, rival.role),
       ];
       const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
-      assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
+      assert.ok(result.extraCardPoints.player <= Math.min(2, result.laneWins.player));
+      assert.ok(result.extraCardPoints.ai <= Math.min(2, result.laneWins.ai));
 
       sides.forEach((side, index) => {
-        assert.ok(plays[index].every(card => side.hand.includes(card)));
-        assert.equal(new Set(plays[index]).size, plays[index].length);
-        side.hand = side.hand.filter(card => !plays[index].includes(card));
-        side.discard.push(...plays[index]);
+        const committed = plays[index].filter(Boolean);
+        assert.equal(plays[index].length, 4);
+        assert.ok(committed.every(card => side.hand.includes(card)));
+        assert.equal(new Set(committed).size, committed.length);
+        side.hand = side.hand.filter(card => !committed.includes(card));
+        side.discard.push(...committed);
         side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
 
         const all = [...side.deck, ...side.discard, ...side.hand];
@@ -249,11 +259,12 @@ test("all starter-vs-rival matches conserve 24 cards per owner, complete and pre
         assert.equal(new Set(all.map(card => card.instanceId)).size, 24);
         assert.ok(all.every(card => card.instanceId.startsWith(index ? "opponent-" : "player-")));
       });
-      const snapshot = cards => cards.map(({ element, power, tactic }) => ({ element, power, tactic }));
+      const snapshot = cards => cards.map(card => card
+        ? { element: card.element, power: card.power, tactic: card.tactic, art: card.art } : null);
       history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
       if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { finished = true; break; }
       sides.forEach(side => {
-        reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, 2, side.random).reshuffled);
+        reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random).reshuffled);
         assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
       });
     }

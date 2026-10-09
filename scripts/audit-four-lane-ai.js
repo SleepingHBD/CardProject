@@ -10,7 +10,7 @@ const normal = globalThis.ClawRules, rules = globalThis.ClawFourLaneRules;
 const decks = globalThis.ClawDeckbuilding;
 const starters = decks.createStarterPresets(catalog);
 
-export function compareStarters(left, right, seed, maxRounds = 150) {
+export function compareStarters(left, right, seed, maxRounds = rules.MAX_MATCH_ROUNDS) {
   const sides = [left, right].map((definition, side) => {
     const random = rng(seed + side * 8191), deck = [];
     normal.reshuffleDiscardPile(deck, decks.buildDeckInstances(catalog, definition, side ? "opponent" : "player"), random);
@@ -20,7 +20,7 @@ export function compareStarters(left, right, seed, maxRounds = 150) {
   });
   const history = [], counts = [[0, 0, 0, 0], [0, 0, 0, 0]];
   let reshuffles = 0;
-  for (let round = 1; round <= maxRounds; round++) {
+  for (let round = 1; round <= Math.min(maxRounds, rules.MAX_MATCH_ROUNDS); round++) {
     const reversed = history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards,
       laneProgress: { player: value.laneProgress.ai, ai: value.laneProgress.player } }));
     // Both planners read only their own hand and public information.
@@ -28,7 +28,7 @@ export function compareStarters(left, right, seed, maxRounds = 150) {
       side.decisions, [], { history: index ? history : reversed, cardLibrary: library }));
     const result = rules.resolveProgress(...plays, sides[0].progress, sides[1].progress);
     sides.forEach((side, index) => {
-      const cards = plays[index];
+      const cards = plays[index].filter(Boolean);
       assert.ok(cards.length >= 1 && cards.length <= 4 && new Set(cards).size === cards.length);
       assert.ok(cards.every(card => side.hand.includes(card)));
       counts[index][cards.length - 1]++;
@@ -40,12 +40,13 @@ export function compareStarters(left, right, seed, maxRounds = 150) {
       assert.equal(new Set(all.map(card => card.instanceId)).size, 24);
       assert.ok(all.every(card => card.instanceId.startsWith(index ? "opponent-" : "player-")));
     });
-    const snapshot = cards => cards.map(({ art, power, element, tactic }) => ({ art, power, element, tactic }));
+    const snapshot = cards => cards.map(card => card ? ({ art: card.art, power: card.power, element: card.element, tactic: card.tactic }) : null);
     history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
     if (result.matchWinner) return { winner: result.matchWinner, rounds: round, counts, reshuffles };
+    if (round >= rules.MAX_MATCH_ROUNDS) return { winner: "draw", roundLimitDraw: true, rounds: round, counts, reshuffles };
     sides.forEach(side => {
-      const refill = rules.replenishHand(side.deck, side.discard, side.hand, 2, side.random);
-      assert.ok(refill.drawn <= 2 && side.hand.length >= 1 && side.hand.length <= 7);
+      const refill = rules.replenishHand(side.deck, side.discard, side.hand, rules.ROUND_DRAW, side.random);
+      assert.ok(refill.drawn <= rules.ROUND_DRAW && side.hand.length >= 1 && side.hand.length <= 7);
       reshuffles += Number(refill.reshuffled);
     });
   }
@@ -57,7 +58,7 @@ export async function auditStarters({ trials = 32, seed = 48103, progress = () =
   assert.ok(Number.isInteger(seed) && seed >= 0 && seed <= 0xffffffff);
   const started = performance.now(), cells = [], counts = [0, 0, 0, 0];
   const totals = Object.fromEntries(starters.map(deck => [deck.id, { matches: 0, wins: 0, draws: 0 }]));
-  let matches = 0, stalls = 0, rounds = 0, longest = 0, reshuffles = 0;
+  let matches = 0, stalls = 0, roundLimitDraws = 0, rounds = 0, longest = 0, reshuffles = 0;
   for (let left = 0; left < starters.length; left++) for (let right = 0; right < starters.length; right++) {
     const cell = { left: starters[left].id, right: starters[right].id, matches: 0, wins: 0, draws: 0 };
     for (let trial = 0; trial < trials; trial++) {
@@ -66,6 +67,7 @@ export async function auditStarters({ trials = 32, seed = 48103, progress = () =
         + Math.max(left, right) * 1009 + trial * 101) >>> 0);
       matches++; cell.matches++; rounds += result.rounds; longest = Math.max(longest, result.rounds); reshuffles += result.reshuffles;
       stalls += Number(result.winner === "stalled");
+      roundLimitDraws += Number(result.roundLimitDraw);
       cell.wins += Number(result.winner === "player"); cell.draws += Number(result.winner === "draw");
       for (const [index, starter] of [[0, starters[left]], [1, starters[right]]]) {
         const total = totals[starter.id]; total.matches++;
@@ -76,7 +78,7 @@ export async function auditStarters({ trials = 32, seed = 48103, progress = () =
     }
     cells.push({ ...cell, matchScorePercent: +((cell.wins + cell.draws * .5) / cell.matches * 100).toFixed(1) });
   }
-  return { seed, trials, matches, stalls, avgRounds: +(rounds / matches).toFixed(1), longest, reshuffles, counts,
+  return { seed, trials, matches, stalls, roundLimitDraws, avgRounds: +(rounds / matches).toFixed(1), longest, reshuffles, counts,
     durationMs: Math.round(performance.now() - started),
     starters: Object.fromEntries(Object.entries(totals).map(([key, value]) => [key, { ...value,
       matchScorePercent: +((value.wins + value.draws * .5) / value.matches * 100).toFixed(1) }])), cells };

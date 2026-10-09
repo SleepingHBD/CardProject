@@ -4,27 +4,46 @@
   const { ELEMENTS, ELEMENT_EDGE_BONUS, TROPHIES_PER_ELEMENT } = normal;
   const MAX_COMMITMENT = 4;
   const HAND_SIZE = 7;
-  const ROUND_DRAW = 2;
+  const ROUND_DRAW = 3;
   const MAX_EXTRA_CARD_POINTS = 2;
   const PROGRESS_PER_ELEMENT = 6;
+  const DRY_ROUND_WARNING = 4;
+  const MAX_MATCH_ROUNDS = 150;
   // Personality breaks close strategic decisions, not clearly worse outcomes.
   const HABIT_SCORE_WINDOW = .75;
   const TACTICS = Object.freeze({
     ...normal.TACTICS,
+    vanguard: Object.freeze({ ...normal.TACTICS.vanguard,
+      description: "Vanguard: +1 Power in Lane 1." }),
     link: Object.freeze({ ...normal.TACTICS.link,
-      description: "Link: +1 in Lane 2, 3 or 4 when the card directly before it has a different element." }),
+      description: "Link: +1 Power when the lane immediately to its left holds your card of a different element. An empty lane breaks the link." }),
     finisher: Object.freeze({ ...normal.TACTICS.finisher,
-      description: "Finisher: +1 when committed last in a formation of at least two cards." }),
+      description: "Finisher: +1 Power when it is your rightmost card and you commit at least two cards." }),
     rally: Object.freeze({ icon: "banner", label: "Rally",
-      description: "Rally: Gives +1 Power to the card committed directly before it. In Lane 1, Rally gives no bonus." }),
+      description: "Rally: Gives +1 Power to your card in the lane immediately to its left. It cannot boost across an empty lane." }),
   });
+
+  const countFormationCards = cards => Array.isArray(cards) ? cards.filter(Boolean).length : 0;
+  const getFormationMask = cards => Array.isArray(cards)
+    ? cards.reduce((mask, card, lane) => mask | (card ? 1 << lane : 0), 0) : 0;
+  function normalizeFormation(cards) {
+    if (!Array.isArray(cards) || cards.length < 1 || cards.length > MAX_COMMITMENT) {
+      throw new RangeError("A formation must occupy one to four of the four lanes.");
+    }
+    const slots = Array.from({ length: MAX_COMMITMENT }, (_, lane) => cards[lane] ?? null);
+    if (!countFormationCards(slots) || slots.some(card => card !== null
+      && (!ELEMENTS[card.element] || !Number.isFinite(card.power)))) {
+      throw new RangeError("A formation needs at least one valid card; empty lanes use null.");
+    }
+    return slots;
+  }
 
   function getTacticBonus(cards, index) {
     const card = cards[index];
     if (!card) return 0;
     if (card.tactic === "vanguard") return index === 0 ? 1 : 0;
-    if (card.tactic === "link") return index > 0 && cards[index - 1].element !== card.element ? 1 : 0;
-    if (card.tactic === "finisher") return cards.length >= 2 && index === cards.length - 1 ? 1 : 0;
+    if (card.tactic === "link") return cards[index - 1] && cards[index - 1].element !== card.element ? 1 : 0;
+    if (card.tactic === "finisher") return countFormationCards(cards) >= 2 && index === cards.findLastIndex(Boolean) ? 1 : 0;
     return 0;
   }
 
@@ -43,12 +62,17 @@
     return scoring;
   }
 
-  function getExtraCardPoints(cardCount, opposingCount) {
-    return Math.min(MAX_EXTRA_CARD_POINTS, Math.max(0, cardCount - opposingCount));
+  function getExtraCardPoints(cards, opposingCards, laneWins = 0) {
+    const unopposed = Array.isArray(cards) && Array.isArray(opposingCards)
+      ? cards.filter((card, lane) => card && !opposingCards[lane]).length
+      : Math.max(0, Number(cards) - Number(opposingCards));
+    return Math.min(MAX_EXTRA_CARD_POINTS, Math.max(0, laneWins), unopposed);
   }
 
-  function getExtraCardLanePoints(index, opposingCount) {
-    return index >= opposingCount && index < opposingCount + MAX_EXTRA_CARD_POINTS ? 1 : 0;
+  function getExtraCardLanePoints(index, opposingCards, cards = [], laneWins = 0) {
+    if (!Array.isArray(opposingCards) || !Array.isArray(cards) || !cards[index] || opposingCards[index]) return 0;
+    const unopposed = cards.flatMap((card, lane) => card && !opposingCards[lane] ? [lane] : []);
+    return unopposed.indexOf(index) >= 0 && unopposed.indexOf(index) < Math.min(MAX_EXTRA_CARD_POINTS, laneWins) ? 1 : 0;
   }
 
   function createProgress() { return { ember: 0, gust: 0, tide: 0 }; }
@@ -71,27 +95,27 @@
   }
 
   function resolveClashes(playerCards, aiCards) {
-    for (const formation of [playerCards, aiCards]) {
-      if (!Array.isArray(formation) || formation.length < 1 || formation.length > MAX_COMMITMENT) {
-        throw new RangeError("Four-Lane formations must contain one to four cards.");
+    const player = normalizeFormation(playerCards), ai = normalizeFormation(aiCards);
+    const results = Array(MAX_COMMITMENT).fill("empty");
+    const lanes = player.map((card, index) => {
+      if (!card || !ai[index]) {
+        results[index] = card ? "player-extra" : ai[index] ? "ai-extra" : "empty";
+        return null;
       }
-    }
-    const clashCount = Math.min(playerCards.length, aiCards.length);
-    const lanes = playerCards.slice(0, clashCount).map((card, index) => {
-      const scoring = scoreClash(card, aiCards[index],
-        getTacticBonus(playerCards, index), getTacticBonus(aiCards, index),
-        getRallyBonus(playerCards, index), getRallyBonus(aiCards, index));
+      const scoring = scoreClash(card, ai[index],
+        getTacticBonus(player, index), getTacticBonus(ai, index),
+        getRallyBonus(player, index), getRallyBonus(ai, index));
       const winner = scoring.player.total === scoring.ai.total ? "draw"
         : scoring.player.total > scoring.ai.total ? "player" : "ai";
-      return { ...scoring, winner };
+      results[index] = winner;
+      return { ...scoring, winner, lane: index };
     });
-    const results = lanes.map(lane => lane.winner);
     const laneWins = { player: 0, ai: 0, draw: 0 };
-    results.forEach(winner => { laneWins[winner]++; });
+    lanes.forEach(lane => { if (lane) laneWins[lane.winner]++; });
     const lanePoints = { player: laneWins.player * 2, ai: laneWins.ai * 2 };
     const extraCardPoints = {
-      player: getExtraCardPoints(playerCards.length, aiCards.length),
-      ai: getExtraCardPoints(aiCards.length, playerCards.length),
+      player: getExtraCardPoints(player, ai, laneWins.player),
+      ai: getExtraCardPoints(ai, player, laneWins.ai),
     };
     const score = { player: lanePoints.player + extraCardPoints.player,
       ai: lanePoints.ai + extraCardPoints.ai, draw: laneWins.draw };
@@ -99,28 +123,45 @@
     const loser = winner === "player" ? "ai" : "player";
     const decidedBy = winner === "draw" ? "draw"
       : lanePoints[winner] <= lanePoints[loser] ? "extra-cards" : "clashes";
-    return { results, lanes, laneWins, lanePoints, extraCardPoints, score, winner, decidedBy,
-      commitments: { player: playerCards.length, ai: aiCards.length } };
+    const extraCardLanePoints = {
+      player: player.map((_, lane) => getExtraCardLanePoints(lane, ai, player, laneWins.player)),
+      ai: ai.map((_, lane) => getExtraCardLanePoints(lane, player, ai, laneWins.ai)),
+    };
+    return { results, lanes, laneWins, lanePoints, extraCardPoints, extraCardLanePoints, score, winner, decidedBy,
+      commitments: { player: countFormationCards(player), ai: countFormationCards(ai) } };
   }
 
   function resolveProgress(playerCards, aiCards, playerProgress = {}, aiProgress = {}, resolution = resolveClashes(playerCards, aiCards)) {
     const progressBefore = { player: getElementProgress(playerProgress), ai: getElementProgress(aiProgress) };
     const progressAfter = { player: { ...progressBefore.player }, ai: { ...progressBefore.ai } };
     const progressGains = { player: createProgress(), ai: createProgress() };
-    const laneProgress = { player: [], ai: [] };
-    for (const [side, cards, other] of [["player", playerCards, aiCards], ["ai", aiCards, playerCards]]) {
-      cards.forEach((card, lane) => {
-        const raw = lane < other.length ? resolution.results[lane] === side ? 2 : 0
-          : getExtraCardLanePoints(lane, other.length);
+    const player = normalizeFormation(playerCards), ai = normalizeFormation(aiCards);
+    const laneProgress = { player: Array(MAX_COMMITMENT).fill(0), ai: Array(MAX_COMMITMENT).fill(0) };
+    const extraCardPoints = { player: 0, ai: 0 };
+    const extraCardLanePoints = { player: Array(MAX_COMMITMENT).fill(0), ai: Array(MAX_COMMITMENT).fill(0) };
+    for (const [side, cards, other] of [["player", player, ai], ["ai", ai, player]]) {
+      const award = (card, lane, raw) => {
         const gain = Math.min(raw, PROGRESS_PER_ELEMENT - progressAfter[side][card.element]);
         laneProgress[side][lane] = gain;
         progressAfter[side][card.element] += gain;
         progressGains[side][card.element] += gain;
+        return gain;
+      };
+      // Resolve every battle first so a later win can unlock an earlier escort.
+      cards.forEach((card, lane) => {
+        if (card && other[lane] && resolution.results[lane] === side) award(card, lane, 2);
+      });
+      let remaining = Math.min(MAX_EXTRA_CARD_POINTS, resolution.laneWins[side]);
+      cards.forEach((card, lane) => {
+        if (!remaining || !card || other[lane] || progressAfter[side][card.element] === PROGRESS_PER_ELEMENT) return;
+        extraCardLanePoints[side][lane] = award(card, lane, 1);
+        extraCardPoints[side] += extraCardLanePoints[side][lane];
+        remaining--;
       });
     }
     const score = { player: getProgressTotal(progressGains.player), ai: getProgressTotal(progressGains.ai), draw: resolution.laneWins.draw };
     return { ...resolution, score, winner: score.player === score.ai ? "draw" : score.player > score.ai ? "player" : "ai",
-      progressBefore, progressAfter, progressGains, laneProgress,
+      progressBefore, progressAfter, progressGains, laneProgress, extraCardPoints, extraCardLanePoints,
       matchWinner: getProgressMatchWinner(progressAfter.player, progressAfter.ai) };
   }
 
@@ -141,10 +182,10 @@
     return { drawn, reshuffled };
   }
 
-  function buildTellClues(cardCount, difficulty = "guided") {
+  function buildTellClues(cards, difficulty = "guided") {
     return Array.from({ length: MAX_COMMITMENT }, (_, index) =>
       difficulty === "instinct" || difficulty === "blind" ? "sealed"
-        : index < cardCount ? "full" : "empty");
+        : (Array.isArray(cards) ? cards[index] : index < cards) ? "full" : "empty");
   }
 
   function createAiTraits(random = Math.random, pools = null) {
@@ -155,8 +196,11 @@
       "momentum-rider": "Favors the element of his last card that earned trophies.",
       "score-reader": "Favors committing more cards when behind on trophies, and fewer when ahead.",
       "solo-gambler": "Favors committing 1 card to rebuild his hand, but can commit more to earn trophies.",
-      "measured-planner": "Favors committing 2 cards to earn trophies without shrinking his hand.",
-      "full-formation": "Favors 4-card pushes, then smaller formations to rebuild the opponent's hand.",
+      "measured-planner": "Favors committing 2 cards, leaving room to rebuild his hand.",
+      "full-formation": "Favors 4-card pushes, then smaller formations to rebuild his hand.",
+      "strong-opener": "Places his highest-Power committed card in Lane 1.",
+      "late-striker": "Places his highest-Power committed card in his rightmost occupied lane.",
+      "tactic-planner": "Favors formations that activate role bonuses.",
     };
     let traits;
     if (pools === null) traits = normal.createAiTraits(random);
@@ -280,11 +324,13 @@
     for (const round of history) {
       const cards = round?.playerCards;
       if (!Array.isArray(cards) || cards.length < 1 || cards.length > MAX_COMMITMENT
-        || cards.some(card => !ELEMENTS[card?.element] || !Number.isFinite(card.power))) continue;
-      estimatedHand = Math.min(HAND_SIZE, Math.max(0, estimatedHand - cards.length) + ROUND_DRAW);
-      rounds.push(cards.map(card => ({ art: card.art, element: card.element, power: card.power, tactic: card.tactic })));
+        || !countFormationCards(cards) || Array.from(cards).some(card => card !== null
+          && (!ELEMENTS[card?.element] || !Number.isFinite(card.power)))) continue;
+      estimatedHand = Math.min(HAND_SIZE, Math.max(0, estimatedHand - countFormationCards(cards)) + ROUND_DRAW);
+      rounds.push(Array.from({ length: MAX_COMMITMENT }, (_, lane) => cards[lane]
+        ? { art: cards[lane].art, element: cards[lane].element, power: cards[lane].power, tactic: cards[lane].tactic } : null));
     }
-    const counts = rounds.map(cards => cards.length);
+    const counts = rounds.map(countFormationCards);
     const weights = [.22, .36, .24, .18];
     const recent = counts.slice(-12);
     recent.forEach((count, index) => { weights[count - 1] += .3 + .7 * (index + 1) / recent.length; });
@@ -318,59 +364,120 @@
     // the next recycle. The opponent never reads the player's actual deck.
     let drawPile = 24 - HAND_SIZE, handSize = HAND_SIZE, unavailable = {};
     for (const cards of rounds) {
-      cards.forEach(card => { if (card.art) unavailable[card.art] = (unavailable[card.art] || 0) + 1; });
-      handSize -= cards.length;
+      cards.forEach(card => { if (card?.art) unavailable[card.art] = (unavailable[card.art] || 0) + 1; });
+      handSize = Math.max(0, handSize - countFormationCards(cards));
       for (let draw = 0, amount = Math.min(ROUND_DRAW, HAND_SIZE - handSize); draw < amount; draw++) {
         if (!drawPile) { drawPile = 24 - handSize; unavailable = {}; }
         drawPile--; handSize++;
       }
     }
-    return { rounds: rounds.slice(-16), estimatedHand, repeatedCount, unavailable,
-      commitmentProbabilities: weights.map(weight => weight / total) };
+    const commitmentProbabilities = weights.map(weight => weight / total);
+    const observedMasks = rounds.map(getFormationMask);
+    const maskProbabilities = Array(16).fill(0);
+    for (let count = 1; count <= MAX_COMMITMENT; count++) {
+      const shapes = FORMATION_SHAPES.filter(shape => shape.count === count);
+      const recentMasks = observedMasks.filter(mask => countMaskCards(mask) === count).slice(-12);
+      const shapeWeights = shapes.map(shape => {
+        let weight = 1;
+        recentMasks.forEach((mask, index) => { if (mask === shape.mask) weight += .5 + (index + 1) / recentMasks.length; });
+        // Position transitions are learned only from publicly finished rounds.
+        for (let index = Math.max(1, observedMasks.length - 14); index < observedMasks.length; index++) {
+          if (observedMasks[index - 1] === observedMasks.at(-1) && observedMasks[index] === shape.mask) weight += 2;
+        }
+        return weight;
+      });
+      const shapeTotal = shapeWeights.reduce((sum, value) => sum + value, 0);
+      shapes.forEach((shape, index) => { maskProbabilities[shape.mask] = commitmentProbabilities[count - 1] * shapeWeights[index] / shapeTotal; });
+    }
+    return { rounds: rounds.slice(-16), estimatedHand, estimatedDrawPile: drawPile, repeatedCount, unavailable,
+      commitmentProbabilities, maskProbabilities };
   }
 
-  function buildPlayerScenarios(read, publicCards, random) {
+  const countMaskCards = mask => [0, 1, 2, 3].filter(lane => mask & (1 << lane)).length;
+  const FORMATION_SHAPES = Object.freeze(Array.from({ length: 15 }, (_, index) => {
+    const mask = index + 1, lanes = [0, 1, 2, 3].filter(lane => mask & (1 << lane));
+    return Object.freeze({ mask, count: lanes.length, lanes: Object.freeze(lanes) });
+  }));
+
+  function planFormation(cards) {
+    const count = countFormationCards(cards), last = cards.findLastIndex(Boolean);
+    const bonuses = cards.map((card, lane) => card ? getTacticBonus(cards, lane) + getRallyBonus(cards, lane) : 0);
+    return { cards, count, last, mask: getFormationMask(cards), bonuses,
+      totals: cards.map((card, lane) => card ? card.power + bonuses[lane] : 0) };
+  }
+
+  function enumerateFormations(hand) {
+    const formations = [], slots = Array(MAX_COMMITMENT).fill(null), used = new Set();
+    const visit = lane => {
+      if (lane === MAX_COMMITMENT) {
+        if (used.size) formations.push([...slots]);
+        return;
+      }
+      slots[lane] = null; visit(lane + 1);
+      for (let index = 0; index < hand.length; index++) {
+        if (used.has(index)) continue;
+        used.add(index); slots[lane] = hand[index]; visit(lane + 1); used.delete(index);
+      }
+      slots[lane] = null;
+    };
+    visit(0);
+    return formations;
+  }
+
+  function orderForLanes(cards, lanes) {
+    let best, score = -Infinity;
+    for (const order of permutations(cards)) {
+      const slots = Array(MAX_COMMITMENT).fill(null);
+      lanes.forEach((lane, index) => { slots[lane] = order[index]; });
+      const plan = planFormation(slots), value = plan.bonuses.reduce((sum, bonus) => sum + bonus, 0);
+      if (value > score) { score = value; best = plan; }
+    }
+    return best;
+  }
+
+  function buildPlayerScenarios(read, publicCards = [], random = Math.random) {
     const fallback = Object.keys(ELEMENTS).flatMap(element =>
       [3, 4, 5, 6, 8, 9].map((power, index) => ({ element, power,
         tactic: ["rally", "link", "vanguard", "finisher"][index % 4] })));
     const copies = card => card.rarity === "common" || card.rarity === "uncommon" ? 2 : 1;
     const definitions = publicCards.length ? publicCards : fallback;
-    const pool = definitions.flatMap(card => Array(Math.max(0, copies(card) - (read.unavailable[card.art] || 0))).fill(card));
+    const pool = definitions.flatMap(card => Array(Math.max(0, copies(card) - (read.unavailable?.[card.art] || 0))).fill(card));
     const roll = () => Math.min(.999999, Math.max(0, random()));
     const scenarios = [];
     for (let count = 1; count <= MAX_COMMITMENT; count++) {
       const probability = read.commitmentProbabilities[count - 1];
       if (!probability) continue;
-      const observed = read.rounds.filter(cards => cards.length === count).slice(-5);
+      const shapes = FORMATION_SHAPES.filter(shape => shape.count === count);
+      const observed = read.rounds.filter(cards => countFormationCards(cards) === count).slice(-12);
       for (let sample = 0; sample < 4; sample++) {
-        let cards;
-        if (observed.length && sample < 2) {
-          const reference = observed[Math.floor(roll() * observed.length)];
-          const counts = {};
-          const possible = reference.every(card => {
-            if (!card.art) return true;
-            counts[card.art] = (counts[card.art] || 0) + 1;
-            return counts[card.art] <= pool.filter(candidate => candidate.art === card.art).length;
-          });
-          if (possible) cards = reference.map(card => ({ ...card }));
+        const available = [...pool], sampleHand = [];
+        while (available.length && sampleHand.length < Math.max(count, read.estimatedHand)) {
+          sampleHand.push(available.splice(Math.floor(roll() * available.length), 1)[0]);
         }
-        if (!cards) {
-          const available = [...pool];
-          const sampleHand = [];
-          while (available.length && sampleHand.length < Math.max(count, read.estimatedHand)) {
-            sampleHand.push(available.splice(Math.floor(roll() * available.length), 1)[0]);
-          }
-          sampleHand.sort((a, b) => b.power - a.power);
-          // Include conserved/cheap pushes as well as power-heavy formations.
-          cards = (sample === 3 && count > 2 ? sampleHand.slice(-count) : sampleHand.slice(0, count));
-          cards = orderAiFormation(cards, roll, [{ id: "tactic-planner" }]);
-        }
+        sampleHand.sort((a, b) => b.power - a.power);
+        // Include cheap pushes as well as power-heavy formations, without
+        // inspecting the player's current hand, deck, or selected lanes.
+        const cards = sample === 3 && count > 2 ? sampleHand.slice(-count) : sampleHand.slice(0, count);
         if (cards.length !== count) continue;
-        scenarios.push({ cards, weight: probability / 4,
-          totals: cards.map((card, index) => card.power + getTacticBonus(cards, index) + getRallyBonus(cards, index)) });
+        shapes.forEach(shape => {
+          let plan;
+          const matching = observed.filter(reference => getFormationMask(reference) === shape.mask).slice(-5);
+          if (matching.length && sample < 2) {
+            const reference = matching[Math.floor(roll() * matching.length)], counts = {};
+            const possible = reference.filter(Boolean).every(card => {
+              if (!card.art) return true;
+              counts[card.art] = (counts[card.art] || 0) + 1;
+              return counts[card.art] <= pool.filter(candidate => candidate.art === card.art).length;
+            });
+            if (possible) plan = planFormation(reference.map(card => card ? { ...card } : null));
+          }
+          plan ||= orderForLanes(cards, shape.lanes);
+          scenarios.push({ ...plan, weight: (read.maskProbabilities?.[shape.mask] ?? probability / shapes.length) / 4 });
+        });
       }
     }
-    return scenarios;
+    const total = scenarios.reduce((sum, scenario) => sum + scenario.weight, 0);
+    return total ? scenarios.map(scenario => ({ ...scenario, weight: scenario.weight / total })) : [];
   }
 
   function selectCloseHabitPlan(plans, bestScore) {
@@ -388,7 +495,7 @@
     const read = readPlayerHistory(publicInfo.history || []);
     const scenarios = buildPlayerScenarios(read, publicInfo.cardLibrary || [], random);
     const previousRound = publicInfo.history?.at(-1);
-    const previous = { player: previousRound?.playerCards?.length, ai: previousRound?.aiCards?.length };
+    const previous = { player: countFormationCards(previousRound?.playerCards), ai: countFormationCards(previousRound?.aiCards) };
     const prior = getCommitmentWeights(hand.length, playerWins, aiWins, traits, previous);
     const ownCounts = getElementProgress(aiWins), playerCounts = getElementProgress(playerWins);
     const has = id => traits.some(trait => trait.id === id);
@@ -398,101 +505,93 @@
       for (const round of [...(publicInfo.history || [])].reverse()) {
         const cards = side === "player" ? round.playerCards : round.aiCards;
         for (let lane = (cards?.length || 0) - 1; lane >= 0; lane--) {
-          if (round.laneProgress?.[side]?.[lane] > 0) return cards[lane].element;
+          if (cards?.[lane] && round.laneProgress?.[side]?.[lane] > 0) return cards[lane].element;
         }
       }
       return null;
     };
     const lastOwn = lastElement("ai"), lastPlayer = lastElement("player");
-    const utility = (gains, counts) => Object.keys(ELEMENTS).reduce((sum, element) => {
-      const deficit = PROGRESS_PER_ELEMENT - counts[element];
-      return sum + Math.min(deficit, gains[element]) * (1 + (Math.max(...Object.values(counts)) - counts[element]) * .07)
-        + Number(deficit > 0 && gains[element] >= deficit);
-    }, 0);
+    const keys = Object.keys(ELEMENTS), own = keys.map(key => ownCounts[key]), other = keys.map(key => playerCounts[key]);
+    const ownWeights = own.map(value => 1 + (Math.max(...own) - value) * .07);
+    const otherWeights = other.map(value => 1 + (Math.max(...other) - value) * .07);
+    const edgeMargins = keys.map(element => keys.map(opposing =>
+      (ELEMENTS[element].beats === opposing ? ELEMENT_EDGE_BONUS : 0)
+      - (ELEMENTS[opposing].beats === element ? ELEMENT_EDGE_BONUS : 0)));
+    const prepare = plan => ({ ...plan, elements: plan.cards.map(card => card ? keys.indexOf(card.element) : -1) });
+    const beliefs = scenarios.map(prepare);
     // Solo Gambler places more value on hand recovery, but the match-winning
     // utility still outweighs conservation. This is an AI preference, not a rule.
     const recoveryValue = has("solo-gambler") && hand.length < HAND_SIZE ? 2 : 1;
     const penalty = count => recoveryValue * [0, 3.1, 1.8, .85, .3, .08, 0, 0][Math.min(HAND_SIZE, hand.length - count + ROUND_DRAW)] + count * .035;
-    const preference = cards => {
-      let value = prior[cards.length - 1] / Math.max(...prior) * .5;
+    const preference = plan => {
+      const { cards, count } = plan;
+      let value = prior[count - 1] / Math.max(...prior) * .5;
       cards.forEach((card, lane) => {
-        if (has("trophy-hunter") && ownCounts[card.element] < PROGRESS_PER_ELEMENT) value += .4 / cards.length;
-        if (card.element === loyalElement) value += .4 / cards.length;
-        if (has("counter-scholar") && ELEMENTS[card.element].beats === lastPlayer) value += .4 / cards.length;
-        if (has("momentum-rider") && card.element === lastOwn) value += .4 / cards.length;
+        if (!card) return;
+        if (has("trophy-hunter") && ownCounts[card.element] < PROGRESS_PER_ELEMENT) value += .4 / count;
+        if (card.element === loyalElement) value += .4 / count;
+        if (has("counter-scholar") && ELEMENTS[card.element].beats === lastPlayer) value += .4 / count;
+        if (has("momentum-rider") && card.element === lastOwn) value += .4 / count;
         if (has("trophy-denier") && playerCounts[ELEMENTS[card.element].beats] >= PROGRESS_PER_ELEMENT - 2
-          && playerCounts[ELEMENTS[card.element].beats] < PROGRESS_PER_ELEMENT) value += .4 / cards.length;
-        if (has("power-seeker")) value += (card.power - 3) / (6 * cards.length);
-        if (has("tactic-planner")) value += (getTacticBonus(cards, lane) + getRallyBonus(cards, lane)) / (2 * cards.length);
+          && playerCounts[ELEMENTS[card.element].beats] < PROGRESS_PER_ELEMENT) value += .4 / count;
+        if (has("power-seeker")) value += (card.power - 3) / (6 * count);
+        if (has("tactic-planner")) value += plan.bonuses[lane] / (2 * count);
         if (roleFocus) value += .5 * (roleFocus === "rally" ? getRallyBonus(cards, lane)
-          : card.tactic === roleFocus ? getTacticBonus(cards, lane) : 0) / cards.length;
+          : card.tactic === roleFocus ? getTacticBonus(cards, lane) : 0) / count;
       });
       return value;
     };
-    // Factorized lane expectations shortlist four candidates per commitment.
-    // The finalists then use exact goal clipping, denial and simultaneous finish.
-    const estimates = hand.map(card => Array.from({ length: 4 }, (_, lane) => Array.from({ length: 3 }, (_, bonus) => {
-      let value = 0;
-      for (const scenario of scenarios) {
-        const other = scenario.cards[lane];
-        if (!other) {
-          if (getExtraCardLanePoints(lane, scenario.cards.length) && ownCounts[card.element] < PROGRESS_PER_ELEMENT) value += scenario.weight;
-          continue;
-        }
-        const margin = card.power + bonus - scenario.totals[lane]
-          + (ELEMENTS[card.element].beats === other.element ? 2 : 0)
-          - (ELEMENTS[other.element].beats === card.element ? 2 : 0);
-        if (margin > 0) value += scenario.weight * Math.min(2, PROGRESS_PER_ELEMENT - ownCounts[card.element]);
-        if (margin < 0) value -= scenario.weight * Math.min(2, PROGRESS_PER_ELEMENT - playerCounts[other.element]) * .8;
+    // Exact scoring for every legal position/card assignment. A lane-only
+    // shortlist cannot safely approximate victory-gated escort rewards.
+    // Numeric forecasts avoid allocating presentation objects in this hot loop.
+    const evaluateForecast = (plan, belief) => {
+      const after = own.slice(), opposingAfter = other.slice();
+      let wins = 0, opposingWins = 0;
+      for (let lane = 0; lane < MAX_COMMITMENT; lane++) {
+        const element = plan.elements[lane], opposingElement = belief.elements[lane];
+        if (element < 0 || opposingElement < 0) continue;
+        const margin = plan.totals[lane] - belief.totals[lane] + edgeMargins[element][opposingElement];
+        if (margin > 0) { wins++; after[element] = Math.min(PROGRESS_PER_ELEMENT, after[element] + 2); }
+        else if (margin < 0) { opposingWins++; opposingAfter[opposingElement] = Math.min(PROGRESS_PER_ELEMENT, opposingAfter[opposingElement] + 2); }
       }
-      return value;
-    })));
-    const shortlist = Array.from({ length: 4 }, () => []);
+      for (let lane = 0; lane < MAX_COMMITMENT; lane++) {
+        const element = plan.elements[lane], opposingElement = belief.elements[lane];
+        if (wins && element >= 0 && opposingElement < 0 && after[element] < PROGRESS_PER_ELEMENT) { after[element]++; wins--; }
+        if (opposingWins && opposingElement >= 0 && element < 0 && opposingAfter[opposingElement] < PROGRESS_PER_ELEMENT) { opposingAfter[opposingElement]++; opposingWins--; }
+      }
+      let value = 0, complete = true, opposingComplete = true;
+      for (let element = 0; element < keys.length; element++) {
+        value += (after[element] - own[element]) * ownWeights[element]
+          + Number(own[element] < PROGRESS_PER_ELEMENT && after[element] === PROGRESS_PER_ELEMENT);
+        value -= ((opposingAfter[element] - other[element]) * otherWeights[element]
+          + Number(other[element] < PROGRESS_PER_ELEMENT && opposingAfter[element] === PROGRESS_PER_ELEMENT)) * .8;
+        complete &&= after[element] === PROGRESS_PER_ELEMENT;
+        opposingComplete &&= opposingAfter[element] === PROGRESS_PER_ELEMENT;
+      }
+      return value + (complete && !opposingComplete ? 15 : opposingComplete && !complete ? -15 : 0);
+    };
     const closePlans = [];
-    const indices = [], used = new Set();
-    const evaluate = () => {
-      const cards = indices.map(index => hand[index]);
-      const count = cards.length;
-      const strongest = Math.max(...cards.map(card => card.power));
-      if (has("strong-opener") && cards[0].power !== strongest) return;
-      if (has("late-striker") && cards[count - 1].power !== strongest) return;
-      const score = indices.reduce((sum, index, lane) => sum + estimates[index][lane][getTacticBonus(cards, lane) + getRallyBonus(cards, lane)], 0)
-        - penalty(count) + preference(cards) * .1;
-      const list = shortlist[count - 1];
-      if (list.length < 4 || score > list.at(-1).score) {
-        list.push({ cards, score }); list.sort((a, b) => b.score - a.score);
-        if (list.length > 4) list.pop();
-      }
-    };
-    const visit = () => {
-      if (indices.length) evaluate();
-      if (indices.length === Math.min(MAX_COMMITMENT, hand.length)) return;
-      for (let index = 0; index < hand.length; index++) {
-        if (used.has(index)) continue;
-        used.add(index); indices.push(index); visit(); indices.pop(); used.delete(index);
-      }
-    };
-    visit();
     let bestScore = -Infinity;
-    for (const { cards } of shortlist.flat()) {
-      let score = -penalty(cards.length);
-      for (const scenario of scenarios) {
-        const result = resolveProgress(cards, scenario.cards, ownCounts, playerCounts);
-        score += scenario.weight * (utility(result.progressGains.player, ownCounts)
-          - utility(result.progressGains.ai, playerCounts) * .8
-          + (result.matchWinner === "player" ? 15 : result.matchWinner === "ai" ? -15 : 0));
-      }
+    for (const cards of enumerateFormations(hand)) {
+      const plan = prepare(planFormation(cards));
+      const strongest = Math.max(...cards.filter(Boolean).map(card => card.power));
+      if (has("strong-opener") && cards[0]?.power !== strongest) continue;
+      if (has("late-striker") && cards[plan.last].power !== strongest) continue;
+      let score = -penalty(plan.count);
+      for (const belief of beliefs) score += belief.weight * evaluateForecast(plan, belief);
       score += Math.min(.999999, Math.max(0, random())) * .025;
       bestScore = Math.max(bestScore, score);
-      closePlans.push({ cards, score, preference: preference(cards) });
+      closePlans.push({ cards, score, preference: preference(plan) });
     }
     return selectCloseHabitPlan(closePlans, bestScore) || [];
   }
 
   global.ClawFourLaneRules = Object.freeze({ ELEMENTS, ELEMENT_EDGE_BONUS, TROPHIES_PER_ELEMENT,
     TACTICS, MAX_COMMITMENT, HAND_SIZE, ROUND_DRAW, MAX_EXTRA_CARD_POINTS, LANE_WIN_POINTS: 2, EXTRA_CARD_POINTS: 1,
-    PROGRESS_PER_ELEMENT, createProgress, getElementProgress, getProgressTotal, getProgressMatchWinner, resolveProgress,
+    PROGRESS_PER_ELEMENT, DRY_ROUND_WARNING, MAX_MATCH_ROUNDS, MAX_ROUNDS: MAX_MATCH_ROUNDS,
+    countFormationCards, getFormationMask, normalizeFormation,
+    createProgress, getElementProgress, getProgressTotal, getProgressMatchWinner, resolveProgress,
     getTacticBonus, getRallyBonus, getExtraCardPoints, getExtraCardLanePoints, scoreClash, resolveClashes, getFormationRewardOptions,
     replenishHand, buildTellClues, createAiTraits, chooseAiCommitment, chooseAiCards, orderAiFormation,
-    readPlayerHistory, chooseAiFormation });
+    readPlayerHistory, buildPlayerScenarios, enumerateFormations, chooseAiFormation });
 })(globalThis);
