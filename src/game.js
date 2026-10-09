@@ -4455,11 +4455,12 @@ function renderFourLaneCards() {
 
 function renderFourLaneOpponents() {
   const choices = [{ id: "random", name: "Random Rival", theme: "Mystery matchup",
-    description: "Face one of the four rival decks. Recommended for Blind." }, ...fourLaneOpponentRoster];
+    description: "One of the four rival decks is chosen for you. Best for Blind, where you can study Previous Rounds History to uncover its habits." }, ...fourLaneOpponentRoster];
   document.querySelector("#fourLaneRivalOptions").innerHTML = choices.map(rival => `
     <label class="four-lane-rival-option${rival.id === "random" ? " is-random" : ""}">
       <input type="radio" name="fourLaneRival" value="${rival.id}" ${selectedFourLaneOpponent === rival.id ? "checked" : ""}>
-      <span><b>${rival.name}</b><small>${rival.theme}</small><span>${rival.description}</span></span>
+      <span class="lobby-choice-copy"><span class="lobby-choice-heading"><span class="lobby-playstyle-icon">${globalThis.ClawDeckEditor.lobbyIconMarkup(rival.id)}</span><b>${rival.name}</b></span>
+        <small class="lobby-rival-theme">${rival.theme}</small><span class="lobby-rival-description">${rival.description}</span></span>
     </label>
   `).join("");
 }
@@ -4474,8 +4475,7 @@ function showFourLaneLobbyStep(step = "deck") {
   if (choosingRival) {
     const summary = constructedDecks.validateDeck(fourLaneDeckCatalog, confirmedFourLaneDeck).summary;
     ui.fourLaneConfirmedDeckName.textContent = confirmedFourLaneDeck.name;
-    ui.fourLaneConfirmedDeckSummary.textContent = `${summary.count} cards · ${summary.totalCost}/${constructedDecks.MAX_DECK_COST} cost · `
-      + constructedDecks.ELEMENTS.map(element => `${ELEMENTS[element].label} ${summary.elementCounts[element]}`).join(" · ");
+    ui.fourLaneConfirmedDeckSummary.innerHTML = globalThis.ClawDeckEditor.lobbyDeckStatsMarkup(summary);
   } else {
     confirmedFourLaneDeck = null;
   }

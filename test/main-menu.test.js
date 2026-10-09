@@ -27,11 +27,11 @@ test("the main menu retains its playable navigation", () => {
 test("the four-lane entry leads to a separate, initially hidden playable prototype lobby", () => {
   assert.match(pageSource, /id="mainMenuFourLaneButton"[\s\S]*?aria-controls="fourLanePreviewScreen"/);
   assert.match(pageSource, /id="fourLanePreviewScreen"[\s\S]*?aria-labelledby="fourLanePreviewTitle"[\s\S]*?hidden/);
-  assert.match(pageSource, /Playable prototype — balance testing in progress/);
+  assert.match(pageSource, /WIP · Balance testing in progress/);
   assert.match(pageSource, /id="fourLaneStartButton"/);
   assert.match(pageSource, /id="fourLaneRulesDialog"/);
   assert.match(gameSource, /fourLaneStartButton\.addEventListener\("click", \(\) => showDifficultyChooser\("four-lane"\)\)/);
-  assert.match(pageSource, /Normal Play still uses the existing three-lane game/);
+  assert.match(pageSource, /Normal Play is unchanged/);
   assert.equal((pageSource.match(/class="four-lane-preview-slot(?: is-new-lane)?"/g) || []).length, 8);
   assert.match(gameSource, /mainMenuFourLaneButton\.addEventListener\("click", \(\) => showFourLanePreview\(\)\)/);
   assert.match(gameSource, /mainMenuPlayButton\.addEventListener\("click", \(\) => showDifficultyChooser\("main"\)\)/);

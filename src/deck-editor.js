@@ -3,6 +3,23 @@
   const api = global.ClawDeckbuilding;
   const escape = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 
+  // Lobby symbols reuse the card-role library; labels remain readable without icons.
+  function lobbyIconMarkup(icon) {
+    const symbols = { balanced: "lobby-icon-cards", random: "lobby-icon-shuffle", cost: "lobby-icon-coins",
+      rally: "tactic-icon-banner", link: "tactic-icon-chain", finisher: "tactic-icon-sword", vanguard: "tactic-icon-shield" };
+    return `<svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#${symbols[icon] || symbols.balanced}"></use></svg>`;
+  }
+
+  function lobbyDeckStatsMarkup(summary, includeElements = true) {
+    const elements = global.ClawRules.ELEMENTS;
+    return `<span class="lobby-deck-stats">
+      <span class="lobby-stat">${lobbyIconMarkup("balanced")}<b>${summary.count}</b><small>cards</small></span>
+      <span class="lobby-stat">${lobbyIconMarkup("cost")}<b>${summary.totalCost}/${api.MAX_DECK_COST}</b><small>cost</small></span>
+      ${includeElements ? `<span class="lobby-element-stats">${api.ELEMENTS.map(element =>
+        `<span class="lobby-element-stat" title="${elements[element].label}: ${summary.elementCounts[element]} cards"><span aria-hidden="true">${elements[element].icon}</span><b>${summary.elementCounts[element]}</b><span class="lobby-sr-only"> ${elements[element].label} cards</span></span>`).join("")}</span>` : ""}
+    </span>`;
+  }
+
   function createController({ catalog, store, cardMarkup, artworkSource, onOpen, onClose, root = document }) {
     const ids = ["fourLaneDeckSelect", "fourLaneDeckSummary", "fourLaneDeckStorageNotice", "fourLaneDeckEditorButton",
       "fourLaneStarterOptions", "fourLaneSelectedDeckName", "fourLaneSavedHelp", "fourLaneConfirmDeckButton",
@@ -45,8 +62,9 @@
           const summary = api.validateDeck(catalog, preset).summary;
           return `<label class="four-lane-starter-option">
             <input type="radio" name="fourLaneStarterDeck" value="starter:${preset.id}">
-            <span><b>${escape(preset.name)}</b><span class="four-lane-starter-description">${escape(preset.description)}</span>
-              <small>${summary.count} cards · ${summary.totalCost}/${api.MAX_DECK_COST} cost</small></span>
+            <span class="lobby-choice-copy"><span class="lobby-choice-heading"><span class="lobby-playstyle-icon">${lobbyIconMarkup(preset.id)}</span><b>${escape(preset.name)}</b></span>
+              <span class="four-lane-starter-description">${escape(preset.description)}</span>
+              ${lobbyDeckStatsMarkup(summary, false)}</span>
           </label>`;
         }).join("");
       }
@@ -59,12 +77,11 @@
       ui.fourLaneDeckSelect.value = snapshot.selectedId.startsWith("custom-") ? snapshot.selectedId : "";
       ui.fourLaneDeckSelect.disabled = !snapshot.decks.length;
       ui.fourLaneSavedHelp.textContent = snapshot.decks.length
-        ? "Select a saved deck here instead of a starter. Decks stay in this browser."
-        : "No saved decks yet. Build and save one to see it here.";
+        ? "Saved in this browser."
+        : "Build and save a deck to add it here.";
       ui.fourLaneSelectedDeckName.textContent = deck.name;
       ui.fourLaneConfirmDeckButton.disabled = !report.valid;
-      ui.fourLaneDeckSummary.textContent = `${report.summary.count} cards · ${report.summary.totalCost}/${api.MAX_DECK_COST} cost · `
-        + api.ELEMENTS.map(element => `${elements[element].label} ${report.summary.elementCounts[element]}`).join(" · ");
+      ui.fourLaneDeckSummary.innerHTML = lobbyDeckStatsMarkup(report.summary);
       ui.fourLaneDeckStorageNotice.textContent = snapshot.notice;
       ui.fourLaneDeckStorageNotice.hidden = !snapshot.notice;
     }
@@ -236,5 +253,5 @@
     renderLobby();
     return Object.freeze({ open, close, renderLobby, getSelectedDeck: () => store.getDeck() });
   }
-  global.ClawDeckEditor = Object.freeze({ createController });
+  global.ClawDeckEditor = Object.freeze({ createController, lobbyIconMarkup, lobbyDeckStatsMarkup });
 })(globalThis);

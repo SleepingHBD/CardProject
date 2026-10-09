@@ -8,27 +8,27 @@
   const definitions = [
     {
       id: "balanced", name: "Versatile Duelist", deckId: "balanced", role: null, theme: "Mixed roles",
-      description: "An adaptable mix of all four roles, pursuing the elements still needed.",
+      description: "An adaptable all-rounder that mixes openers, support and Finishers. Its playstyle varies with its habits, so it is less tied to one type of formation.",
       habits: { motive: allIds(normal.AI_MOTIVE_TRAITS), formation: allIds(normal.AI_FORMATION_TRAITS),
         commitment: allIds(normal.AI_COMMITMENT_TRAITS) },
     },
     {
       id: "rally", name: "Banner Captain", deckId: "rally", role: "rally", theme: "Vanguard + Rally",
-      description: "Rally-heavy support for strong lanes, with Link and Finisher alternatives.",
+      description: "A support-heavy rival built around Rally partnerships and Vanguard openers. Favours formations that reinforce earlier lanes rather than relying on one card alone.",
       habits: { motive: ["trophy-hunter", "power-seeker", "trophy-denier"],
         formation: ["strong-opener", "tactic-planner"],
         commitment: ["measured-planner", "full-formation", "score-reader"] },
     },
     {
       id: "link", name: "Cycle Weaver", deckId: "link", role: "link", theme: "Link combinations",
-      description: "Alternates elements for Link bonuses, backed by Rally and solid opening cards.",
+      description: "A combination-focused rival that builds around Link and mixed elements. Favours planned card sequences and pursuing trophies across all three elements.",
       habits: { motive: ["trophy-hunter", "counter-scholar", "trophy-denier"],
         formation: ["tactic-planner"],
         commitment: ["measured-planner", "echo-tactician", "restless-dealer"] },
     },
     {
       id: "finisher", name: "Twilight Duelist", deckId: "finisher", role: "finisher", theme: "Finisher endings",
-      description: "Finisher endings backed by Link and Rally support in earlier lanes.",
+      description: "A Finisher-heavy rival focused on strong formation endings. Favours a threatening final lane, with its habits shaping whether it commits a short or longer formation.",
       habits: { motive: ["trophy-hunter", "power-seeker", "momentum-rider"],
         formation: ["late-striker", "tactic-planner"],
         commitment: ["solo-gambler", "measured-planner", "score-reader"] },

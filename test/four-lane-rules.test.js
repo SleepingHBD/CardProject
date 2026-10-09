@@ -268,7 +268,7 @@ test("Rally explanations consistently say before, while Role Planner keeps its c
   assert.equal(planner.description, "Favors formations that activate role bonuses.");
   assert.doesNotMatch(planner.description, /Rally/i);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  assert.match(html, /Rally gives \+1 Power to the card committed directly before it/);
+  assert.match(html, /<b>Rally:<\/b> Gives \+1 Power to the card committed directly before it/);
   assert.match(html, /Rally in Lane 2 boosts Lane 1/);
   assert.doesNotMatch(html + gameSource + description, /Rally[^\n]{0,100}(?:directly after it|No following card|strengthen the next card)/);
 });
@@ -390,7 +390,8 @@ test("four-lane lobby and rules explain two-card draws and the reserve tradeoff"
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const lobby = html.slice(html.indexOf('<details class="four-lane-basics"'), html.indexOf('<section class="four-lane-card-showcase"'));
   const rules = html.slice(html.indexOf('<div class="four-lane-rules-content"'));
-  assert.match(lobby, /Start with 7.*draw up to 2 between rounds.*exceeding 7/);
+  assert.match(lobby, /<b>7<\/b> cards/);
+  assert.match(lobby, /Draw up to 2 each round\. Max\. 7/);
   assert.match(rules, /each draws up to 2.*exceeding 7/);
   assert.match(rules, /Commit 2 cards to maintain.*Commit 3 or 4 to spend 1 or 2.*Commit 1 to rebuild/);
   assert.doesNotMatch(lobby + rules, /draw up to 3/);

@@ -30,15 +30,15 @@ test("lobby and trophy counters explain lane-earned trophies and preserve work-i
   const css = readFileSync(new URL("../four-lane-preview.css", import.meta.url), "utf8");
   const deck = readFileSync(new URL("../src/deckbuilding.js", import.meta.url), "utf8");
   const lobby = html.slice(html.indexOf('<details class="four-lane-basics"'), html.indexOf('<section class="four-lane-card-showcase"'));
-  assert.match(lobby, /2 trophies of your card's element/);
-  assert.match(lobby, /each earn 1 trophy of their own element/);
-  assert.match(lobby, /6 Fire, 6 Gust and 6 Water trophies/);
-  assert.match(lobby, /Unlike Normal Play, trophies are awarded automatically for individual lanes/);
+  assert.match(lobby, /\+2<\/b> trophies of your card's element/);
+  assert.match(lobby, /\+1<\/b> trophy of that card's element · first two only/);
+  assert.match(lobby, /<b>6<\/b> trophies each/);
+  assert.match(lobby, /Unlike Normal Play, there is no trophy choice/);
   assert.match(lobby, /all committed cards stay in their owner's deck cycle/);
   assert.doesNotMatch(lobby, /\bprogress\b/i);
   assert.match(css, /content: "TROPHIES · 6 EACH"/);
   assert.doesNotMatch(css, /content: "PROGRESS/);
-  assert.match(deck, /Adapt your lane order to the trophies you still need/);
+  assert.match(deck, /changing plans with their hand and the trophies they still need/);
   assert.match(html, /Work in progress/);
 });
 

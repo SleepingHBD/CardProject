@@ -122,7 +122,7 @@ test("the preview reuses rarity frames with correct role labels, icons and safe 
   assert.doesNotMatch(markup, /data-card-id|draggable="true"/);
   assert.match(pageSource, /symbol id="tactic-icon-banner"/);
   assert.match(pageSource, /id="fourLaneCardGallery" role="list"/);
-  assert.match(pageSource, /These cards are now playable in Super Secret Stuff WIP/);
+  assert.match(pageSource, /All 12 cards are playable in this mode/);
 });
 
 test("all three additional Uncommon frames match the approved final artwork and intended roles", () => {
@@ -148,7 +148,7 @@ test("all three additional Uncommon frames match the approved final artwork and 
     assert.match(markup, new RegExp(`${role.label} role, preview only`));
     assert.doesNotMatch(markup, /Rally|data-card-id|draggable="true"/);
   }
-  assert.match(pageSource, /Nine Rally cards, plus three Uncommon cards/);
+  assert.match(pageSource, /9 Rally cards \+/);
 });
 
 test("each element has one Rare, one Uncommon and one Common Rally preview", () => {

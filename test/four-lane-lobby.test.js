@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { catalog } from "../scripts/audit-deckbuilding.js";
+import "../src/deck-editor.js";
 
 const api = globalThis.ClawDeckbuilding;
 const starters = api.createStarterPresets(catalog);
@@ -10,6 +11,8 @@ const elements = globalThis.ClawRules.ELEMENTS;
 const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const game = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const editor = readFileSync(new URL("../src/deck-editor.js", import.meta.url), "utf8");
+const lobbyUi = globalThis.ClawDeckEditor;
+const visibleCopy = markup => markup.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
 function gameFunction(name) {
   const start = game.indexOf(`function ${name}(`);
   assert.notEqual(start, -1);
@@ -26,7 +29,7 @@ function lobbyContext(deck = starters[0]) {
     "fourLaneDeckStep", "fourLaneRivalStep", "fourLaneConfirmedDeckName", "fourLaneConfirmedDeckSummary"].map(id => [id, element()]));
   ui.fourLanePreviewScreen = { scrollTop: 800 };
   const context = { ui, constructedDecks: api, fourLaneDeckCatalog: catalog, ELEMENTS: elements,
-    fourLaneDeckEditor: { getSelectedDeck: () => deck }, confirmedFourLaneDeck: null };
+    fourLaneDeckEditor: { getSelectedDeck: () => deck }, confirmedFourLaneDeck: null, ClawDeckEditor: lobbyUi };
   runInNewContext(["showFourLaneLobbyStep", "confirmFourLaneDeck"].map(gameFunction).join("\n"), context);
   return context;
 }
@@ -34,9 +37,10 @@ function lobbyContext(deck = starters[0]) {
 test("deck and rival pages are separate, with two clear deck paths and an explicit confirmation", () => {
   const deckPage = page.slice(page.indexOf('id="fourLaneDeckPage"'), page.indexOf('id="fourLaneRivalPage"'));
   const rivalPage = page.slice(page.indexOf('id="fourLaneRivalPage"'), page.indexOf('class="four-lane-preview-notice"'));
-  assert.match(deckPage, /Choose a starter deck/);
-  assert.match(deckPage, /Or make it your own/);
-  assert.match(deckPage, /Build your own deck/);
+  assert.match(deckPage, /Starter decks/);
+  assert.match(deckPage, /Ready to play/);
+  assert.match(deckPage, /Or customise/);
+  assert.match(deckPage, /Build your own/);
   assert.match(deckPage, /Your saved decks/);
   assert.match(deckPage, /id="fourLaneConfirmDeckButton"/);
   assert.doesNotMatch(deckPage, /id="fourLaneRivalOptions"|id="fourLaneStartButton"/);
@@ -57,7 +61,7 @@ test("confirmation moves to the rival page with a safe, immutable snapshot of th
   assert.equal(context.ui.fourLaneDeckPage.hidden, true);
   assert.equal(context.ui.fourLaneRivalPage.hidden, false);
   assert.equal(context.ui.fourLaneConfirmedDeckName.textContent, selected.name);
-  assert.match(context.ui.fourLaneConfirmedDeckSummary.textContent, /24 cards.*120 cost.*Fire 8.*Gust 8.*Water 8/);
+  assert.match(visibleCopy(context.ui.fourLaneConfirmedDeckSummary.innerHTML), /24 cards.*119\/120 cost.*8 Fire cards.*8 Gust cards.*8 Water cards/);
   assert.equal(context.ui.fourLaneConfirmedDeckName.innerHTML, undefined);
   assert.equal(context.ui.fourLaneRivalStep.attributes["aria-current"], "step");
   assert.equal(context.ui.fourLaneDeckStep.attributes["aria-current"], undefined);
@@ -116,15 +120,24 @@ test("difficulty Back returns to the rival step rather than restarting deck sele
   assert.match(game, /if \(!ui\.fourLaneRivalPage\.hidden\) showFourLaneLobbyStep\("deck"\);\s+else leaveFourLanePreview\(\)/);
 });
 
-test("all starter descriptions are concise and explain their actual role identity", () => {
+test("starter descriptions explain deck specialities and player preferences, not role activation instructions", () => {
   for (const deck of starters) {
-    assert.ok(deck.description.length <= 140);
+    assert.ok(deck.description.length >= 100 && deck.description.length <= 180);
     assert.ok(api.validateDeck(catalog, deck).valid);
+    assert.match(deck.description, /Suits players who/);
+    assert.doesNotMatch(deck.description, /\+1|Lane [1-4]|directly (before|after)/);
   }
-  assert.match(starters[0].description, /All four roles/);
-  assert.match(starters[1].description, /Rally support.*preceding lane/);
-  assert.match(starters[2].description, /Alternate elements.*Link/);
-  assert.match(starters[3].description, /Finisher.*Links and Rally/);
+  assert.match(starters[0].description, /adaptable all-rounder.*all four roles.*changing plans/);
+  assert.match(starters[1].description, /support-heavy.*Rally partnerships.*reinforce key lanes/);
+  assert.match(starters[2].description, /combination-focused.*Link and mixed elements.*planning card order/);
+  assert.match(starters[3].description, /Finisher-heavy.*formation endings.*closing threat/);
+  const balancedRoles = Object.values(api.validateDeck(catalog, starters[0]).summary.roleCounts);
+  assert.ok(Math.max(...balancedRoles) - Math.min(...balancedRoles) <= 2, "the all-rounder mixes its roles evenly");
+  for (const deck of starters.slice(1)) {
+    const roles = api.validateDeck(catalog, deck).summary.roleCounts;
+    assert.ok(Object.entries(roles).every(([role, count]) => role === deck.id || roles[deck.id] > count),
+      `${deck.name}'s advertised speciality is its most common role`);
+  }
 });
 
 test("starter cards and saved decks remain mutually exclusive, with safe names and useful empty states", () => {
@@ -141,7 +154,8 @@ test("starter cards and saved decks remain mutually exclusive, with safe names a
     fourLaneDeckSummary: {}, fourLaneDeckStorageNotice: {} };
   const escape = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const context = { api, catalog, starters, store, ui, elements, escape,
-    option: (value, textContent) => ({ value, textContent }) };
+    option: (value, textContent) => ({ value, textContent }),
+    lobbyIconMarkup: lobbyUi.lobbyIconMarkup, lobbyDeckStatsMarkup: lobbyUi.lobbyDeckStatsMarkup };
   const start = editor.indexOf("    function renderLobby()");
   runInNewContext(editor.slice(start, editor.indexOf("    function renderCollection()", start)), context);
   context.renderLobby();
@@ -150,6 +164,10 @@ test("starter cards and saved decks remain mutually exclusive, with safe names a
   assert.equal(select.disabled, true);
   assert.match(select.children[0].textContent, /No saved decks yet/);
   assert.match(ui.fourLaneSavedHelp.textContent, /Build and save/);
+  assert.match(ui.fourLaneDeckSummary.innerHTML, /lobby-element-stats/);
+  assert.match(options.markup, /#tactic-icon-banner/);
+  assert.match(options.markup, /#tactic-icon-chain/);
+  assert.match(options.markup, /#tactic-icon-sword/);
   assert.match(ui.fourLaneDeckStorageNotice.textContent, /session only/);
   const originalRadio = radios[0];
   const saved = store.save({ ...starters[2], name: '<img src=x onerror="bad()">' });
@@ -165,6 +183,66 @@ test("starter cards and saved decks remain mutually exclusive, with safe names a
   assert.equal(select.value, "");
   assert.equal(radios[0], originalRadio, "radio focus is preserved during a selection change");
   assert.deepEqual(radios.filter(input => input.checked).map(input => input.value), ["starter:finisher"]);
-  assert.match(options.markup, /earlier lanes competitive/);
+  assert.match(options.markup, /A Finisher-heavy deck built around strong formation endings/);
   assert.equal(ui.fourLaneConfirmDeckButton.disabled, false);
+});
+
+test("compact deck statistics show exact counts with labelled elements and shared role symbols", () => {
+  for (const deck of starters) {
+    const summary = api.validateDeck(catalog, deck).summary;
+    const markup = lobbyUi.lobbyDeckStatsMarkup(summary);
+    assert.match(markup, /#lobby-icon-cards/);
+    assert.match(markup, /#lobby-icon-coins/);
+    assert.match(visibleCopy(markup), new RegExp(`${summary.count} cards.*${summary.totalCost}/120 cost`));
+    for (const key of api.ELEMENTS) {
+      assert.ok(markup.includes(elements[key].icon));
+      assert.ok(markup.includes(`title="${elements[key].label}: ${summary.elementCounts[key]} cards"`));
+      assert.ok(markup.includes(` ${elements[key].label} cards</span>`));
+    }
+    assert.doesNotMatch(lobbyUi.lobbyDeckStatsMarkup(summary, false), /lobby-element-stats/);
+  }
+  for (const [role, symbol] of Object.entries({ vanguard: "shield", rally: "banner", link: "chain", finisher: "sword" })) {
+    assert.match(lobbyUi.lobbyIconMarkup(role), new RegExp(`#tactic-icon-${symbol}`));
+  }
+  assert.match(lobbyUi.lobbyIconMarkup('" onload="bad'), /#lobby-icon-cards/);
+  assert.doesNotMatch(lobbyUi.lobbyIconMarkup('" onload="bad'), /onload/);
+});
+
+test("rivals explain expected playstyles while preserving uncertainty, icons and selectable profiles", () => {
+  const profiles = globalThis.ClawFourLaneOpponents.createRoster(catalog);
+  assert.ok(profiles.every(rival => rival.description.length >= 100 && rival.description.length <= 180));
+  assert.match(profiles[0].description, /adaptable all-rounder.*playstyle varies with its habits/);
+  assert.match(profiles[1].description, /support-heavy.*Rally partnerships and Vanguard openers.*reinforce earlier lanes/);
+  assert.match(profiles[2].description, /combination-focused.*Link and mixed elements.*planned card sequences/);
+  assert.match(profiles[3].description, /Finisher-heavy.*formation endings.*short or longer formation/);
+  assert.ok(profiles.every(rival => !/\balways\b/i.test(rival.description)));
+  assert.ok(profiles.every(rival => !/\+1|Lane [1-4]|directly (before|after)/.test(rival.description)));
+  const container = {};
+  const context = { fourLaneOpponentRoster: profiles, selectedFourLaneOpponent: "link", ClawDeckEditor: lobbyUi,
+    document: { querySelector: () => container } };
+  runInNewContext(gameFunction("renderFourLaneOpponents"), context);
+  context.renderFourLaneOpponents();
+  assert.equal((container.innerHTML.match(/type="radio"/g) || []).length, 5);
+  assert.match(container.innerHTML, /value="link" checked/);
+  assert.match(container.innerHTML, /#lobby-icon-shuffle/);
+  for (const profile of profiles) assert.ok(container.innerHTML.includes(profile.name));
+  assert.match(container.innerHTML, /Best for Blind/);
+  assert.match(container.innerHTML, /Previous Rounds History to uncover its habits/);
+  assert.match(container.innerHTML, /lobby-rival-theme/);
+  assert.match(container.innerHTML, /lobby-rival-description/);
+});
+
+test("lobby help uses a compact numeric hierarchy while detailed rules retain every condition", () => {
+  assert.match(page, /class="lobby-basics-grid"/);
+  assert.match(page, /Draw up to 2 each round\. Max\. 7/);
+  assert.match(page, /trophies each/);
+  assert.match(page, /class="lobby-scoring-notes"/);
+  assert.match(page, /first two only/);
+  assert.match(page, /Unlike Normal Play, there is no trophy choice/);
+  assert.match(page, /Each element stops at 6 trophies/);
+  assert.match(page, /third extra card adds 0/);
+  for (const symbol of ["cards", "coins", "shuffle", "trophy"]) assert.ok(page.includes(`id="lobby-icon-${symbol}" viewBox="0 0 24 24"`));
+  const css = readFileSync(new URL("../deckbuilding.css", import.meta.url), "utf8");
+  assert.match(css, /\.lobby-element-stats[^}]*flex-wrap:\s*wrap/);
+  assert.match(css, /@media \(max-width: 600px\)[\s\S]*\.lobby-basics-grid \{ grid-template-columns: minmax\(0, 1fr\)/);
 });

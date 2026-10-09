@@ -146,7 +146,7 @@
   const PRESETS = Object.freeze([
     {
       id: "balanced", name: "Balanced Formation",
-      description: "All four roles and eight cards per element. Adapt your lane order to the trophies you still need.",
+      description: "An adaptable all-rounder with all four roles. Suits players who like changing plans with their hand and the trophies they still need, rather than relying on one combo.",
       cards: [
         "toastie-toe-beans", "teapot-tabby", "shazmir-ashveil", "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "toastie-toe-beans",
         "belfry-bobtail", "kitewhisker", "aakith-wayfinder", "aakith-wayfinder", "whisker-whirl", "leafy-loaf", "whisker-whirl", "jiawen-barleybreeze",
@@ -155,7 +155,7 @@
     },
     {
       id: "rally", name: "Rally Company",
-      description: "Rally support strengthens the preceding lane. A few Links and Finishers offer alternative formations.",
+      description: "A support-heavy deck built around Rally partnerships. Suits players who like committing cards together to reinforce key lanes, instead of relying on single-card strength.",
       cards: [
         "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "hareth-hearthbeat", "toastie-toe-beans", "flaskfoot-felix", "teapot-tabby",
         "hidayn-windbrace", "hidayn-windbrace", "kitewhisker", "jiawen-barleybreeze", "jiawen-barleybreeze", "megwyn-windwhistle", "aakith-wayfinder", "aakith-wayfinder",
@@ -164,7 +164,7 @@
     },
     {
       id: "link", name: "Element Weavers",
-      description: "Alternate elements for Link bonuses. Rally and defensive openings help secure the elements you need.",
+      description: "A combination-focused deck built around Link and mixed elements. Suits players who enjoy planning card order and spreading their trophy gains across Fire, Gust and Water.",
       cards: [
         "hareth-hearthbeat", "shazmir-ashveil", "shazmir-ashveil", "teapot-tabby", "flaskfoot-felix", "beacon-burmilla", "cinder-kit", "charmae-emberhem",
         "aakith-wayfinder", "windlass-whiskers", "windlass-whiskers", "belfry-bobtail", "belfry-bobtail", "kitewhisker", "jiawen-barleybreeze", "megwyn-windwhistle",
@@ -173,7 +173,7 @@
     },
     {
       id: "finisher", name: "Last Light",
-      description: "Finish a two-to-four-card formation with a Finisher. Links and Rally support keep the earlier lanes competitive.",
+      description: "A Finisher-heavy deck built around strong formation endings. Suits players who like choosing a closing threat and shaping the earlier lanes around it.",
       cards: [
         "lucan-cinderclay", "lucan-cinderclay", "toastie-toe-beans", "toastie-toe-beans", "flaskfoot-felix", "beacon-burmilla", "beacon-burmilla", "hareth-hearthbeat",
         "dandelion-dash", "belfry-bobtail", "belfry-bobtail", "aakith-wayfinder", "whisker-whirl", "whisker-whirl", "windlass-whiskers", "hidayn-windbrace",
