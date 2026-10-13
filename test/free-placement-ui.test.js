@@ -147,3 +147,36 @@ test("formation rendering marks the alternating battle lane without changing opt
     }
   }
 });
+
+test("filled battle lanes keep the short readable lane heading and an accessible required descriptor", () => {
+  const ctx = fixture();
+  ctx.ui = { playerPlayZone: { innerHTML: "", querySelectorAll: () => [] } };
+  ctx.bindCardInteractions = () => {};
+  ctx.getFormationBonusPreview = () => ({ text: "+0" });
+  ctx.cardMarkup = value => `<button>${value.name}</button>`;
+  runInNewContext(fn("renderFormationBuilder"), ctx);
+  for (let round = 1; round <= 8; round++) {
+    ctx.state.round = round;
+    ctx.state.selectedCardIds = ["a", "b", "c", "d"];
+    ctx.renderFormationBuilder();
+    const labels = [...ctx.ui.playerPlayZone.innerHTML.matchAll(/<span class="filled-lane-label"([^>]*)>([^<]+)<\/span>/g)];
+    assert.deepEqual(labels.map(label => label[2]), ["LANE 1", "LANE 2", "LANE 3", "LANE 4"]);
+    const battle = globalThis.ClawFourLaneRules.getBattleLane(round);
+    assert.match(labels[battle][1], /title="Required battle lane"/);
+    assert.match(labels[battle][1], new RegExp(`aria-label="Lane ${battle + 1}, required battle lane"`));
+    assert.doesNotMatch(ctx.ui.playerPlayZone.innerHTML, />BATTLE LANE [1-4]<\/span>/);
+  }
+});
+
+test("required-slot text styling cannot recolour the filled lane badge or widen the trophy rail", () => {
+  const css = readFileSync(new URL("../four-lane-preview.css", import.meta.url), "utf8");
+  assert.doesNotMatch(css, /body\[data-duel-mode="four-lane"\] \.required-battle-lane > (span|small)/);
+  assert.match(css, /\.formation-slot\.empty-slot\.required-battle-lane > span/);
+  const title = css.match(/body\[data-duel-mode="four-lane"\] \.duel-table \.duelist-nameplate \{([^}]+)\}/)?.[1];
+  assert.match(title, /font-size: 10px/);
+  assert.match(title, /letter-spacing: \.04em/);
+  assert.match(title, /white-space: nowrap/);
+  assert.doesNotMatch(title, /overflow: hidden|text-overflow|^\s*(?:width|height):/m);
+  assert.match(css, /@media \(orientation: landscape\) and \(max-width: 1024px\) and \(max-height: 600px\) \{\s*body\[data-duel-mode="four-lane"\] \.duel-table \.duelist-nameplate \{ font-size: 7px; \}/);
+  assert.match(css, /@media \(orientation: landscape\) and \(max-width: 700px\) and \(max-height: 600px\) \{\s*body\[data-duel-mode="four-lane"\] \.filled-lane-label \{[^}]*right: 2px;[^}]*padding-inline: 3px;[^}]*font-size: 7px;/);
+});

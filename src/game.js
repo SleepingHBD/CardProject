@@ -2665,7 +2665,7 @@ function renderFormationBuilder() {
           const bonusPreview = getFormationBonusPreview(selectedCards, index);
           return `
             <div class="formation-slot filled-slot${index === battleLane ? " required-battle-lane" : ""}" data-drop-lane="${index}" ${isFourLaneMode() && state.pendingLaneCardId ? 'role="button" tabindex="0"' : ""}>
-              <span class="filled-lane-label">${index === battleLane ? "BATTLE " : ""}LANE ${index + 1}</span>
+              <span class="filled-lane-label"${index === battleLane ? ' title="Required battle lane" aria-label="Lane ' + (index + 1) + ', required battle lane"' : ""}>LANE ${index + 1}</span>
               ${cardMarkup(card, true, index, "formation", bonusPreview)}
             </div>
           `;
