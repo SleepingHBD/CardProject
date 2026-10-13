@@ -99,7 +99,7 @@ test("Guided previews explain conditional unopposed rewards without leaking seal
   assert.equal((context.ui.matchupForecast.innerHTML.match(/UNOPPOSED · UP TO \+1/g) || []).length, 3);
   assert.match(context.ui.matchupForecast.innerHTML, /Needs one of your lane wins to unlock/);
   context.updateFormationMessage();
-  assert.match(context.message.detail, /each win unlocks one unopposed card for \+1 trophy/);
+  assert.match(context.message.detail, /Battle lane filled.*formation is still secret/);
   context.concealsOpponentFormation = () => true;
   context.renderMatchupForecast();
   const sealed = context.ui.matchupForecast.innerHTML;
@@ -123,29 +123,50 @@ test("played formations preserve gaps and label unopposed cards before resolutio
   assert.equal((context.playedCardsMarkup([card(), card(), card()], "player", 1).match(/>EXTRA \+1</g) || []).length, 2);
 });
 
-test("Guided headings count occupied cards and explain free placement; sealed headings reveal no count", () => {
+test("WIP shows the public hand and battle lane without exposing the private formation; Normal retains difficulty clues", () => {
   const context = {
-    state: { difficulty: "guided", aiPlan: [card()], aiTellClues: ["full"], selectedCardIds: ["1", "2", "3", "4"] },
+    state: { round: 1, locked: false, previousRoundsHistory: [], difficulty: "guided", aiPlan: [card()], aiTellClues: ["full"], selectedCardIds: ["1", "2", "3", "4"],
+      aiHand: [ { ...card("ember", 9, "finisher"), name: "Public Fire", art: "qa" }, { ...card("gust", 4, "rally"), name: "Public Gust", art: "qa" } ],
+      aiDeck: Array(17), aiDiscardPile: [] },
     DIFFICULTIES: { guided: { label: "Guided" }, instinct: { label: "Instinct" } },
     ELEMENTS: normal.ELEMENTS, EXTRA_CARD_POINTS: 1, getPowerTier: normal.getPowerTier,
     isFourLaneMode: () => true, duelRules: () => four, getMaxPlaySize: () => 4,
     formationCardCount: cards => cards.filter(Boolean).length,
     concealsOpponentFormation: () => false, renderOpponentHabits() {},
-    ui: { tacticsTitle: {}, commitmentHint: {}, opponentTells: {} },
+    cardRoleDefinition: value => four.TACTICS[value.tactic], cardDisplayName: value => value.name, cardArtworkSource: art => `assets/${art}.png`,
+    ui: { tacticsTitle: {}, commitmentHint: {}, opponentTells: {}, opponentPublicHand: {}, battleLaneNotice: {} },
   };
   runInNewContext(["roundPointLabel", "getExtraCardPoints", "renderOpponentTells"].map(sourceFunction).join("\n"), context);
   context.renderOpponentTells();
-  assert.equal(context.ui.commitmentHint.textContent, "Guided · 1 card · Choose any lanes · gaps allowed");
+  assert.equal(context.ui.tacticsTitle.textContent, "Opponent's Hand");
+  assert.match(context.ui.commitmentHint.textContent, /2 available · 17 in draw pile · 0 discarded.*Formation stays secret/);
+  assert.equal(context.ui.opponentTells.hidden, true);
+  assert.equal(context.ui.opponentTells.innerHTML, "");
+  assert.equal((context.ui.opponentPublicHand.innerHTML.match(/class="public-hand-card /g) || []).length, 2);
+  assert.match(context.ui.opponentPublicHand.innerHTML, /Public Fire, Fire, Power 9, Finisher/);
+  assert.match(context.ui.opponentPublicHand.innerHTML, /Public Gust, Gust, Power 4, Rally/);
+  assert.match(context.ui.battleLaneNotice.innerHTML, /BATTLE LANE 2/);
+  const publicHand = context.ui.opponentPublicHand.innerHTML;
   context.state.aiPlan = [null, card(), null, card()]; context.state.selectedCardIds = ["1"];
   context.renderOpponentTells();
-  assert.equal(context.ui.commitmentHint.textContent, "Guided · 2 cards · Choose any lanes · gaps allowed");
-  assert.equal((context.ui.opponentTells.innerHTML.match(/empty-tell/g) || []).length, 2);
+  assert.equal(context.ui.opponentPublicHand.innerHTML, publicHand, "secret plan changes cannot alter available-card information");
   context.state.difficulty = "instinct"; context.concealsOpponentFormation = () => true;
   context.renderOpponentTells();
+  assert.equal(context.ui.opponentPublicHand.innerHTML, publicHand, "WIP uses equal information regardless of legacy difficulty state");
+  context.state.round = 2; context.renderOpponentTells();
+  assert.match(context.ui.battleLaneNotice.innerHTML, /BATTLE LANE 3/);
+  context.state.aiHand = []; context.renderOpponentTells();
+  assert.match(context.ui.opponentPublicHand.innerHTML, /Committed cards are on the board/);
+  context.state.locked = true; context.state.previousRoundsHistory = [{}, {}]; context.state.aiDiscardPile = [card(), card()];
+  context.renderOpponentTells();
+  assert.match(context.ui.commitmentHint.textContent, /0 available · 17 in draw pile · 2 discarded.*Committed cards are revealed on the board/);
+  context.isFourLaneMode = () => false; context.renderOpponentTells();
   assert.equal(context.ui.commitmentHint.textContent, "Instinct · Formation size and cards concealed");
-  assert.equal(context.ui.opponentTells.innerHTML, "");
-  context.state.aiPlan = [card()]; context.renderOpponentTells();
-  assert.equal(context.ui.commitmentHint.textContent, "Instinct · Formation size and cards concealed");
+  assert.equal(context.ui.opponentPublicHand.hidden, true);
+  assert.equal(context.ui.battleLaneNotice.hidden, true);
+  context.state.difficulty = "guided"; context.concealsOpponentFormation = () => false; context.renderOpponentTells();
+  assert.match(context.ui.commitmentHint.textContent, /Guided · 2 cards/);
+  assert.equal((context.ui.opponentTells.innerHTML.match(/empty-tell/g) || []).length, 2);
 });
 
 test("the rules strip and dedicated WIP rules explain earned rewards without changing Normal Play copy", () => {
@@ -153,27 +174,40 @@ test("the rules strip and dedicated WIP rules explain earned rewards without cha
     "#roundScore small": {}, "#resultCardsLabel": {}, "#previousRoundsHistoryIntro": {}, ".rules-strip .rule-chip.ember": {},
     ".rules-strip .rule-chip.gust": {}, ".rules-strip .rule-chip.tide": {} };
   const context = { state: { gameMode: "four-lane" }, document: { body: { dataset: {} }, querySelector: selector => nodes[selector] },
-    isFourLaneMode: () => true, renderGallery() {}, renderFourLaneRivalInfo() {} };
+    isFourLaneMode: () => true, renderGallery() {}, renderFourLaneRivalInfo() {}, duelRules: () => four,
+    ui: { opponentPublicHand: {}, publicDeckButton: {}, battleLaneNotice: {}, matchScoreDetails: {} } };
   runInNewContext(sourceFunction("renderDuelMode"), context);
   context.renderDuelMode();
   assert.match(nodes[".rules-strip .rule-chip.gust"].innerHTML, /Each lane win unlocks 1 unopposed card for \+1 trophy/);
-  assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /Both sides keep the trophies.*earlier trophy counts/);
+  assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /trophies earned.*match score after that round/);
   assert.doesNotMatch(nodes["#previousRoundsHistoryIntro"].textContent, /progress/i);
-  assert.equal(nodes["#roundScore small"].textContent, "TOTAL TROPHIES");
-  assert.equal(nodes["#resultCardsLabel"].textContent, "Your trophies / 18");
+  assert.equal(nodes["#roundScore small"].textContent, "MATCH SCORE");
+  assert.equal(nodes["#resultCardsLabel"].textContent, "Your match score");
+  assert.equal(context.ui.opponentPublicHand.hidden, false);
+  assert.equal(context.ui.publicDeckButton.hidden, false);
+  assert.equal(context.ui.battleLaneNotice.hidden, false);
+  assert.equal(context.ui.matchScoreDetails.hidden, false);
   context.isFourLaneMode = () => false; context.renderDuelMode();
   assert.equal(nodes[".rules-strip .rule-chip.gust"].innerHTML, "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point");
   assert.match(nodes["#previousRoundsHistoryIntro"].textContent, /earlier trophy counts/);
+  assert.equal(context.ui.opponentPublicHand.hidden, true);
+  assert.equal(context.ui.publicDeckButton.hidden, true);
+  assert.equal(context.ui.battleLaneNotice.hidden, true);
+  assert.equal(context.ui.matchScoreDetails.hidden, true);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const fourRules = html.slice(html.indexOf('id="fourLaneRulesDialog"'));
   assert.match(fourRules, /Each lane you win unlocks one of your unopposed cards/);
   assert.match(fourRules, /up to <b>two unopposed trophies per round<\/b>/);
   assert.match(fourRules, /No lane wins means no unopposed trophies/);
-  assert.match(fourRules, /6 Fire, 6 Gust and 6 Water trophies/);
+  assert.match(fourRules, /8 rounds/);
+  assert.match(fourRules, /(?:set|Fire[\s\S]*Gust[\s\S]*Water)[\s\S]*(?:2|two)[\s\S]*(?:bonus|score)/i);
+  assert.match(fourRules, /(?:both hands|opponent's hand|hands are visible|Both players can see each other's available hand)/i);
+  assert.match(fourRules, /(?:Battle Lane|battle lane)/);
   assert.match(fourRules, /Both sides keep the trophies/);
   assert.match(fourRules, /Unlike Normal Play, trophies are counters, not claimed cards/);
-  assert.match(fourRules, /all committed cards go to their owner's discard pile/);
+  assert.match(fourRules, /all committed cards go to their owner's discard pile/i);
   assert.doesNotMatch(fourRules, /\bprogress\b/i);
+  assert.doesNotMatch(fourRules, /150 rounds|Each element stops at 6|Every rival has three persistent habits/);
 });
 
 test("all 228 prefix outcomes use symmetric 2-per-win scoring with earned escort unlocks", () => {
@@ -522,19 +556,19 @@ test("100 seeded complete duels conserve all 24 personal cards without exiling t
       normal.reshuffleDiscardPile(deck, deckApi.buildDeckInstances(catalog, starters[match % 4], side === "player" ? "player" : "opponent"), random);
       return { deck, discard: [], hand: [], progress: four.createProgress() };
     });
-    const traits = four.createAiTraits(random);
-    const history = [];
     sides.forEach(side => four.replenishHand(side.deck, side.discard, side.hand, four.HAND_SIZE, random));
     let completed = false;
-    for (let round = 0; round < 300; round++) {
+    for (let round = 1; round <= four.MATCH_ROUNDS; round++) {
       const [player, opponent] = sides;
       const playerCount = Math.min(player.hand.length, match % 5 === 4 ? 1 + Math.floor(random() * 4) : 1 + match % 5);
-      const formations = [
-        four.chooseAiCards(player.hand, playerCount, opponent.progress, player.progress, random),
-        four.chooseAiFormation(opponent.hand, player.progress, opponent.progress, random, traits,
-          { history, cardLibrary: library }),
-      ];
-      const resolution = four.resolveProgress(...formations, sides[0].progress, sides[1].progress);
+      const formations = sides.map((side, index) => {
+        const count = index === 0 ? playerCount : Math.min(side.hand.length, 1 + Math.floor(random() * 4));
+        const candidates = four.enumerateFormations(side.hand).filter(cards => four.countFormationCards(cards) === count
+          && four.isValidBattleFormation(cards, round));
+        return candidates[Math.floor(random() * candidates.length)];
+      });
+      const resolution = four.resolveProgress(...formations, sides[0].progress, sides[1].progress,
+        four.resolveClashes(...formations), round);
 
       sides.forEach((side, index) => {
         side.hand = side.hand.filter(value => !formations[index].includes(value));
@@ -546,14 +580,14 @@ test("100 seeded complete duels conserve all 24 personal cards without exiling t
         assert.equal(new Set(all.map(value => value.instanceId)).size, 24);
         assert.ok(all.every(value => value.instanceId.startsWith(index === 0 ? "player-" : "opponent-")));
       });
-      history.push({ playerCards: formations[0], aiCards: formations[1], laneProgress: resolution.laneProgress });
-      if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { completed = true; break; }
+      if (round < four.MATCH_ROUNDS) assert.equal(resolution.matchWinner, null);
+      else { assert.ok(["player", "ai", "draw"].includes(resolution.matchWinner)); completed = true; break; }
       sides.forEach(side => {
         reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, random).reshuffled);
         assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
       });
     }
-    assert.equal(completed, true, `seeded match ${match} should reach the elemental progress goal`);
+    assert.equal(completed, true, `seeded match ${match} must finish after eight resolved rounds`);
   }
   assert.ok(reshuffles > 0, "long duels must exercise owner-specific recycling");
 });
@@ -598,14 +632,42 @@ test("four-lane deck status uses Normal Play's compact row and clears mode-speci
 
 test("committed four-lane controls do not advertise a new three-card formation during clashes", () => {
   const context = {
-    state: { selectedCardIds: [], locked: true, dealing: false }, tutorial: { active: false },
+    state: { round: 1, selectedCardIds: [], locked: true, dealing: false }, tutorial: { active: false },
     ui: { selectionCount: {}, playSelectedButton: {} },
     isFourLaneMode: () => true, getPlayerFormationLimit: () => 3, renderMatchupForecast: () => {},
     formationCardCount: cards => cards.filter(Boolean).length,
+    duelRules: () => four, selectedFormationCards: () => [],
   };
   runInNewContext(sourceFunction("updateSelectionControls"), context);
   context.updateSelectionControls();
   assert.equal(context.ui.selectionCount.textContent, "Formation committed");
   assert.equal(context.ui.playSelectedButton.textContent, "Resolving lanes…");
+  assert.equal(context.ui.playSelectedButton.disabled, true);
+});
+
+test("commit controls enforce the real shared-lane rule as the round changes", () => {
+  const first = card("ember", 5, "vanguard", "first"), second = card("gust", 4, "rally", "second");
+  let formation = [first, null, null, null];
+  const context = {
+    state: { round: 1, selectedCardIds: ["first", null, null, null], locked: false, dealing: false },
+    tutorial: { active: false }, ui: { selectionCount: {}, playSelectedButton: {} },
+    isFourLaneMode: () => true, getPlayerFormationLimit: () => 4, renderMatchupForecast() {},
+    formationCardCount: four.countFormationCards, duelRules: () => four, selectedFormationCards: () => formation,
+  };
+  runInNewContext(sourceFunction("updateSelectionControls"), context);
+  context.updateSelectionControls();
+  assert.equal(context.ui.playSelectedButton.disabled, true);
+  assert.match(context.ui.selectionCount.textContent, /fill Battle Lane 2/);
+  formation = [first, second, null, null]; context.state.selectedCardIds[1] = "second";
+  context.updateSelectionControls();
+  assert.equal(context.ui.playSelectedButton.disabled, false);
+  assert.match(context.ui.selectionCount.textContent, /2 placed · battle lane ready/);
+  context.state.round = 2; context.updateSelectionControls();
+  assert.equal(context.ui.playSelectedButton.disabled, true);
+  assert.match(context.ui.selectionCount.textContent, /fill Battle Lane 3/);
+  formation = [first, null, second, null]; context.state.selectedCardIds = ["first", null, "second", null];
+  context.updateSelectionControls();
+  assert.equal(context.ui.playSelectedButton.disabled, false);
+  context.state.locked = true; context.updateSelectionControls();
   assert.equal(context.ui.playSelectedButton.disabled, true);
 });

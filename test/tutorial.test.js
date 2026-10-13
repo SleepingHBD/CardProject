@@ -145,14 +145,16 @@ test("the shared deck repeats Common and Uncommon cards while premium cards are 
   );
 });
 
-test("Blind conceals live information while using persistent hidden habits", () => {
+test("Normal Play Blind retains hidden habits while WIP generates none", () => {
   assert.match(
     gameSource,
     /const concealsOpponentFormation[\s\S]*difficulty === "instinct" \|\| difficulty === "blind"/,
   );
   assert.match(
     gameSource,
-    /state\.aiTraits = isFourLaneMode\(\) \? \[\.\.\.matchFourLaneOpponent\.traits\][\s\S]*?: usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
+    /state\.aiTraits = isFourLaneMode\(\) \? \[\]\s*: usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
   );
+  assert.match(gameSource, /const usesPersistentAiHabits[\s\S]*?difficulty === "instinct" \|\| difficulty === "blind"/);
+  assert.doesNotMatch(gameSource, /state\.aiTraits = isFourLaneMode\(\) \? \[\.\.\.matchFourLaneOpponent\.traits\]/);
   assert.match(pageSource, /Blind[\s\S]*Identify the opponent's patterns through <b>Previous Rounds History<\/b>/);
 });

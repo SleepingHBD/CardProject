@@ -138,15 +138,15 @@
     const remaining = MAX_DECK_COST - summary.totalCost;
     if (remaining >= 8) tips.push(`${remaining} cost unused. You can afford upgrades, if they fit your strategy.`);
     const scarce = ELEMENTS.filter(element => summary.elementCounts[element] === MIN_CARDS_PER_ELEMENT);
-    if (scarce.length) tips.push(`Only ${scarce.map(element => `${MIN_CARDS_PER_ELEMENT} ${ELEMENT_NAMES[element]} cards`).join(" and ")}. Finishing those elements may take longer.`);
-    if (summary.roleCounts.finisher > 8) tips.push("Only a Finisher committed last in a formation of at least two cards earns its role bonus. Earlier Finishers still use their normal Power and elemental edge.");
+    if (scarce.length) tips.push(`Only ${scarce.map(element => `${MIN_CARDS_PER_ELEMENT} ${ELEMENT_NAMES[element]} cards`).join(" and ")}. Fewer cards of an element can limit your complete-set bonuses.`);
+    if (summary.roleCounts.finisher > 8) tips.push("Only the rightmost Finisher in a formation of at least two cards earns its role bonus. Other Finishers still use their normal Power and elemental edge.");
     return Object.freeze(tips);
   }
 
   const PRESETS = Object.freeze([
     {
       id: "balanced", name: "Balanced Formation",
-      description: "An adaptable all-rounder with all four roles. Suits players who like changing plans with their hand and the trophies they still need, rather than relying on one combo.",
+      description: "An adaptable all-rounder with all four roles. Suits players who like changing plans with the visible hands and choosing between battles, support and elemental sets.",
       cards: [
         "toastie-toe-beans", "teapot-tabby", "shazmir-ashveil", "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "toastie-toe-beans",
         "belfry-bobtail", "kitewhisker", "aakith-wayfinder", "aakith-wayfinder", "whisker-whirl", "leafy-loaf", "whisker-whirl", "jiawen-barleybreeze",
@@ -155,7 +155,7 @@
     },
     {
       id: "rally", name: "Rally Company",
-      description: "A support-heavy deck built around adjacent Rally partnerships. Suits players who like reinforcing key lanes and choosing which battles to take, rather than relying on one card.",
+      description: "A support-heavy deck built around adjacent Rally partnerships. Suits players who like reinforcing key fighters and building their other lanes around the shared battle.",
       cards: [
         "beacon-burmilla", "cinder-kit", "candle-pounce", "charmae-emberhem", "hareth-hearthbeat", "toastie-toe-beans", "flaskfoot-felix", "teapot-tabby",
         "hidayn-windbrace", "hidayn-windbrace", "kitewhisker", "jiawen-barleybreeze", "jiawen-barleybreeze", "megwyn-windwhistle", "aakith-wayfinder", "aakith-wayfinder",
@@ -164,7 +164,7 @@
     },
     {
       id: "link", name: "Element Weavers",
-      description: "A combination-focused deck built around Link and mixed elements. Suits players who enjoy planning card positions and spreading their trophy gains across Fire, Gust and Water.",
+      description: "A combination-focused deck built around Link and mixed elements. Suits players who enjoy planning card positions and collecting complete Fire, Gust and Water sets.",
       cards: [
         "hareth-hearthbeat", "shazmir-ashveil", "shazmir-ashveil", "teapot-tabby", "flaskfoot-felix", "beacon-burmilla", "cinder-kit", "charmae-emberhem",
         "aakith-wayfinder", "windlass-whiskers", "windlass-whiskers", "belfry-bobtail", "belfry-bobtail", "kitewhisker", "jiawen-barleybreeze", "megwyn-windwhistle",

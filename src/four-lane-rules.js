@@ -6,9 +6,12 @@
   const HAND_SIZE = 7;
   const ROUND_DRAW = 3;
   const MAX_EXTRA_CARD_POINTS = 2;
+  // Legacy habit-planner compatibility only. Live WIP trophies have no ceiling.
   const PROGRESS_PER_ELEMENT = 6;
   const DRY_ROUND_WARNING = 4;
-  const MAX_MATCH_ROUNDS = 150;
+  const MATCH_ROUNDS = 8;
+  const MAX_MATCH_ROUNDS = MATCH_ROUNDS;
+  const SET_BONUS = 2;
   // Personality breaks close strategic decisions, not clearly worse outcomes.
   const HABIT_SCORE_WINDOW = .75;
   // Placement is a readable tendency, not a promise to stay in losing lanes.
@@ -58,6 +61,22 @@
     return slots;
   }
 
+  function getBattleLane(round = 1) {
+    if (!Number.isInteger(round) || round < 1) throw new RangeError("A round must be a positive integer.");
+    return 1 + (round - 1) % 2;
+  }
+
+  function isValidBattleFormation(cards, round = 1) {
+    try {
+      const formation = normalizeFormation(cards), occupied = formation.filter(Boolean);
+      if (!formation[getBattleLane(round)] || new Set(occupied).size !== occupied.length) return false;
+      const ids = occupied.flatMap(card => card.instanceId == null ? [] : [card.instanceId]);
+      return new Set(ids).size === ids.length;
+    } catch {
+      return false;
+    }
+  }
+
   function getTacticBonus(cards, index) {
     const card = cards[index];
     if (!card) return 0;
@@ -100,18 +119,28 @@
   function getElementProgress(progress = {}) {
     // Arrays are accepted for older caller fixtures, never used as live trophies.
     const counts = Array.isArray(progress) ? normal.getElementTrophyCounts(progress) : progress;
-    return Object.fromEntries(Object.keys(ELEMENTS).map(element => [element,
-      Math.min(PROGRESS_PER_ELEMENT, Math.max(0, Math.floor(Number(counts?.[element]) || 0)))]));
+    return Object.fromEntries(Object.keys(ELEMENTS).map(element => {
+      const value = Number(counts?.[element]);
+      return [element, Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0];
+    }));
   }
 
   function getProgressTotal(progress) {
     return Object.values(getElementProgress(progress)).reduce((sum, value) => sum + value, 0);
   }
 
-  function getProgressMatchWinner(player, ai) {
-    const complete = progress => Object.values(getElementProgress(progress)).every(value => value === PROGRESS_PER_ELEMENT);
-    const p = complete(player), a = complete(ai);
-    return p && a ? "draw" : p ? "player" : a ? "ai" : null;
+  function getCompletedSets(progress) {
+    return Math.min(...Object.values(getElementProgress(progress)));
+  }
+
+  function getSetBonus(progress) { return getCompletedSets(progress) * SET_BONUS; }
+
+  function getMatchScore(progress) { return getProgressTotal(progress) + getSetBonus(progress); }
+
+  function getProgressMatchWinner(player, ai, completedRounds = 0) {
+    if (!Number.isInteger(completedRounds) || completedRounds < MATCH_ROUNDS) return null;
+    const p = getMatchScore(player), a = getMatchScore(ai);
+    return p === a ? "draw" : p > a ? "player" : "ai";
   }
 
   function resolveClashes(playerCards, aiCards) {
@@ -151,7 +180,7 @@
       commitments: { player: countFormationCards(player), ai: countFormationCards(ai) } };
   }
 
-  function resolveProgress(playerCards, aiCards, playerProgress = {}, aiProgress = {}, resolution = resolveClashes(playerCards, aiCards)) {
+  function resolveProgress(playerCards, aiCards, playerProgress = {}, aiProgress = {}, resolution = resolveClashes(playerCards, aiCards), completedRounds = 0) {
     const progressBefore = { player: getElementProgress(playerProgress), ai: getElementProgress(aiProgress) };
     const progressAfter = { player: { ...progressBefore.player }, ai: { ...progressBefore.ai } };
     const progressGains = { player: createProgress(), ai: createProgress() };
@@ -161,7 +190,7 @@
     const extraCardLanePoints = { player: Array(MAX_COMMITMENT).fill(0), ai: Array(MAX_COMMITMENT).fill(0) };
     for (const [side, cards, other] of [["player", player, ai], ["ai", ai, player]]) {
       const award = (card, lane, raw) => {
-        const gain = Math.min(raw, PROGRESS_PER_ELEMENT - progressAfter[side][card.element]);
+        const gain = raw;
         laneProgress[side][lane] = gain;
         progressAfter[side][card.element] += gain;
         progressGains[side][card.element] += gain;
@@ -173,7 +202,7 @@
       });
       let remaining = Math.min(MAX_EXTRA_CARD_POINTS, resolution.laneWins[side]);
       cards.forEach((card, lane) => {
-        if (!remaining || !card || other[lane] || progressAfter[side][card.element] === PROGRESS_PER_ELEMENT) return;
+        if (!remaining || !card || other[lane]) return;
         extraCardLanePoints[side][lane] = award(card, lane, 1);
         extraCardPoints[side] += extraCardLanePoints[side][lane];
         remaining--;
@@ -182,7 +211,7 @@
     const score = { player: getProgressTotal(progressGains.player), ai: getProgressTotal(progressGains.ai), draw: resolution.laneWins.draw };
     return { ...resolution, score, winner: score.player === score.ai ? "draw" : score.player > score.ai ? "player" : "ai",
       progressBefore, progressAfter, progressGains, laneProgress, extraCardPoints, extraCardLanePoints,
-      matchWinner: getProgressMatchWinner(progressAfter.player, progressAfter.ai) };
+      matchWinner: getProgressMatchWinner(progressAfter.player, progressAfter.ai, completedRounds) };
   }
 
   // Four-Lane trophies are automatic counters; no card is removed as a trophy.
@@ -617,10 +646,10 @@
 
   global.ClawFourLaneRules = Object.freeze({ ELEMENTS, ELEMENT_EDGE_BONUS, TROPHIES_PER_ELEMENT,
     TACTICS, MAX_COMMITMENT, HAND_SIZE, ROUND_DRAW, MAX_EXTRA_CARD_POINTS, LANE_WIN_POINTS: 2, EXTRA_CARD_POINTS: 1,
-    PROGRESS_PER_ELEMENT, DRY_ROUND_WARNING, MAX_MATCH_ROUNDS, MAX_ROUNDS: MAX_MATCH_ROUNDS,
-    countFormationCards, getFormationMask, normalizeFormation, isPreferredPlacement,
+    PROGRESS_PER_ELEMENT, DRY_ROUND_WARNING, MATCH_ROUNDS, SET_BONUS, MAX_MATCH_ROUNDS, MAX_ROUNDS: MAX_MATCH_ROUNDS,
+    countFormationCards, getFormationMask, normalizeFormation, isValidBattleFormation, getBattleLane, isPreferredPlacement,
     AI_PLACEMENT_TRAITS, PLACEMENT_HABIT_RATE, PLACEMENT_ESCAPE_MARGIN,
-    createProgress, getElementProgress, getProgressTotal, getProgressMatchWinner, resolveProgress,
+    createProgress, getElementProgress, getProgressTotal, getCompletedSets, getSetBonus, getMatchScore, getProgressMatchWinner, resolveProgress,
     getTacticBonus, getRallyBonus, getExtraCardPoints, getExtraCardLanePoints, scoreClash, resolveClashes, getFormationRewardOptions,
     replenishHand, buildTellClues, createAiTraits, chooseAiCommitment, chooseAiCards, orderAiFormation,
     readPlayerHistory, buildPlayerScenarios, enumerateFormations, chooseAiFormation });

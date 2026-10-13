@@ -14,11 +14,12 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const card = (id, tactic = "link") => ({ instanceId: id, name: id, art: id, element: "gust", power: 5, tactic });
 function fixture(mode = "four-lane") {
   const context = {
-    state: { gameMode: mode, selectedCardIds: [], pendingLaneCardId: null, playerHand: [card("a"), card("b"), card("c"), card("d")], locked: false },
+    state: { gameMode: mode, round: 1, selectedCardIds: [], pendingLaneCardId: null, playerHand: [card("a"), card("b"), card("c"), card("d")], locked: false },
     audio: { cardFlip() {}, denied() {} }, draggedCardId: null,
     updateFormationMessage() {}, renderHand() {}, setMessage() {},
     isFourLaneMode: () => mode === "four-lane", getMaxPlaySize: () => mode === "four-lane" ? 4 : 3,
     getPlayerFormationLimit: () => mode === "four-lane" ? 4 : 3,
+    duelRules: () => mode === "four-lane" ? globalThis.ClawFourLaneRules : globalThis.ClawRules,
   };
   runInNewContext(["formationCardCount", "selectedFormationCards", "placeCardInLane", "toggleCardSelection"].map(fn).join("\n"), context);
   return context;
@@ -123,4 +124,26 @@ test("every empty WIP lane supports keyboard placement without a previous-lane r
   assert.match(builder, /event\.key === "Enter" \|\| event\.key === " "/);
   assert.match(builder, /!isFourLaneMode\(\) && \(laneIndex >= getPlayerFormationLimit/);
   assert.match(builder, /placeCardInLane\(state\.pendingLaneCardId, laneIndex\)/);
+});
+
+test("formation rendering marks the alternating battle lane without changing optional-lane geometry", () => {
+  for (const mode of ["four-lane", "normal"]) {
+    const ctx = fixture(mode);
+    ctx.ui = { playerPlayZone: { innerHTML: "", querySelectorAll: () => [] } };
+    ctx.bindCardInteractions = () => {};
+    ctx.getFormationBonusPreview = () => ({ text: "+0" });
+    ctx.cardMarkup = value => `<button>${value.name}</button>`;
+    runInNewContext(fn("renderFormationBuilder"), ctx);
+    for (let round = 1; round <= 8; round++) {
+      ctx.state.round = round; ctx.renderFormationBuilder();
+      const html = ctx.ui.playerPlayZone.innerHTML;
+      assert.equal((html.match(/data-drop-lane=/g) || []).length, mode === "four-lane" ? 4 : 3);
+      if (mode === "four-lane") {
+        assert.equal((html.match(/required-battle-lane/g) || []).length, 1);
+        assert.match(html, new RegExp(`BATTLE LANE ${round % 2 ? 2 : 3}`));
+        assert.match(html, /REQUIRED TO COMMIT/);
+        assert.equal((html.match(/optional lane/g) || []).length, 3);
+      } else assert.doesNotMatch(html, /required-battle-lane|BATTLE LANE|REQUIRED TO COMMIT/);
+    }
+  }
 });

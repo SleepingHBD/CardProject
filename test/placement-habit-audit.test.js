@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rng } from "../scripts/audit-deckbuilding.js";
-import { allowsPlacementPolicy, prepareFormation, placementUtility, publicPlacementForecasts,
+import { allowsPlacementPolicy, allowsBattlePlacementPolicy, prepareFormation, placementUtility, publicPlacementForecasts,
   choosePlacementProbe, simulatePlacementMatch, placementPolicies } from "../scripts/audit-placement-habits.js";
 
 const four = globalThis.ClawFourLaneRules, keys = Object.keys(four.ELEMENTS);
@@ -19,14 +19,8 @@ test("the dedicated placement audit's independent utility matches the resolver a
     const cards = formation(random), forecast = formation(random);
     const toObject = values => Object.fromEntries(keys.map((key, index) => [key, values[index]]));
     const result = four.resolveProgress(cards, forecast, toObject(own), toObject(other));
-    let expected = 0;
-    for (const [index, key] of keys.entries()) {
-      expected += result.progressGains.player[key] * (1 + (Math.max(...own) - own[index]) * .07)
-        + Number(own[index] < 6 && result.progressAfter.player[key] === 6);
-      expected -= (result.progressGains.ai[key] * (1 + (Math.max(...other) - other[index]) * .07)
-        + Number(other[index] < 6 && result.progressAfter.ai[key] === 6)) * .8;
-    }
-    expected += result.matchWinner === "player" ? 15 : result.matchWinner === "ai" ? -15 : 0;
+    const expected = four.getMatchScore(result.progressAfter.player) - four.getMatchScore(result.progressBefore.player)
+      - four.getMatchScore(result.progressAfter.ai) + four.getMatchScore(result.progressBefore.ai);
     assert.ok(Math.abs(placementUtility(prepareFormation(cards), prepareFormation(forecast), own, other) - expected) < 1e-10,
       `independent utility mismatch on case ${sample}`);
   }
@@ -75,14 +69,25 @@ test("public placement forecasts have mass one, use canonical visible lanes and 
   assert.equal(four.getFormationMask(chosen) & ~12, 0);
 });
 
-test("bounded paired camping controls conserve every card and terminate under the same 150-round safeguard", () => {
+test("current paired camping controls conserve cards, obey the required lane and end at eight rounds", () => {
   for (const policy of ["lane-1", "rotating-pair", "adaptive"]) {
     const report = simulatePlacementMatch(0, 0, policy, 397463);
     assert.ok(["player", "opponent", "draw"].includes(report.winner));
-    assert.ok(report.rounds >= 1 && report.rounds <= 150);
-    assert.equal(report.roundLimitDraw, report.rounds === 150 && report.winner === "draw");
+    assert.equal(report.rounds, 8);
+    assert.equal(report.roundLimitDraw, false, "a normal score tie is not a safety-limit failure");
     assert.equal(report.opponentCounts.reduce((sum, count) => sum + count, 0), report.rounds);
     assert.equal(report.totalByCount.reduce((sum, count) => sum + count, 0) + report.opponentCounts[3], report.rounds,
       "full formations are excluded from meaningful placement consistency");
+  }
+});
+
+test("all current audit policies obey the mandatory lane, including nominal camping regions", () => {
+  for (let round = 0; round < 8; round++) for (const policy of placementPolicies) {
+    for (let mask = 1; mask < 16; mask++) {
+      const cards = Array.from({ length: 4 }, (_, lane) => mask & 1 << lane ? { element: "gust", power: 5 } : null);
+      if (!(mask & 1 << four.getBattleLane(round + 1))) assert.equal(allowsBattlePlacementPolicy(cards, policy, round), false);
+    }
+    const single = Array(4).fill(null); single[four.getBattleLane(round + 1)] = { element: "gust", power: 5 };
+    assert.equal(allowsBattlePlacementPolicy(single, policy, round), true);
   }
 });

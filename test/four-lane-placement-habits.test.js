@@ -6,6 +6,8 @@ import "../src/rules.js";
 import "../src/four-lane-rules.js";
 
 const normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
+// Retained catalogue/forecast tests are compatibility diagnostics, not live
+// WIP habits. The UI regression below requires WIP habit displays to stay hidden.
 const source = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const rng = seed => () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 const card = (power = 5, element = "gust") => Object.freeze({ power, element, tactic: "none" });
@@ -97,7 +99,7 @@ test("placement tendencies do not restrict the player's 1,960 free plans or modi
   for (let mask = 1; mask < 16; mask++) {
     const cards = shape(mask), opposing = [card(3), card(3), card(3), card(3)];
     const before = JSON.stringify(cards), result = four.resolveProgress(cards, opposing, {}, {});
-    assert.equal(result.progressAfter.player.gust, Math.min(6, cards.filter(Boolean).length * 2));
+    assert.equal(result.progressAfter.player.gust, cards.filter(Boolean).length * 2);
     assert.equal(result.score.ai, 0);
     assert.equal(result.extraCardPoints.player, 0);
     assert.equal(JSON.stringify(cards), before, "free placement scoring never relocates or mutates player cards");
@@ -105,17 +107,15 @@ test("placement tendencies do not restrict the player's 1,960 free plans or modi
   for (const trait of four.AI_PLACEMENT_TRAITS) assert.ok(four.isPreferredPlacement(shape(15), trait));
 });
 
-test("Instinct's lane map is a public tendency, not a leak of the current plan; Normal stays unchanged", () => {
+test("WIP never displays legacy placement habits, while Normal Instinct keeps its original habits", () => {
   const context = { state: { gameMode: "four-lane", difficulty: "instinct", aiTraits: four.createAiTraits(() => .1),
     aiPlan: shape(12) }, ui: { opponentHabits: {} } };
+  context.isFourLaneMode = () => context.state.gameMode === "four-lane";
   runInNewContext(gameFunction("renderOpponentHabits"), context);
   context.renderOpponentHabits();
   const markup = context.ui.opponentHabits.innerHTML;
-  assert.match(markup, /CARD CHOICE/);
-  assert.match(markup, /LANE PLACEMENT/);
-  assert.match(markup, /CARD COUNT/);
-  assert.match(markup, /Favoured lanes 1 and 2; a habit, not this round's formation/);
-  assert.equal((markup.match(/class="is-favoured"/g) || []).length, 2);
+  assert.equal(markup, "");
+  assert.equal(context.ui.opponentHabits.hidden, true);
   context.state.aiPlan = shape(3);
   context.renderOpponentHabits();
   assert.equal(context.ui.opponentHabits.innerHTML, markup);
@@ -126,6 +126,8 @@ test("Instinct's lane map is a public tendency, not a leak of the current plan; 
   context.state.gameMode = "normal"; context.state.difficulty = "instinct";
   context.state.aiTraits = normal.createAiTraits(() => .1);
   context.renderOpponentHabits();
+  assert.equal(context.ui.opponentHabits.hidden, false);
+  for (const trait of context.state.aiTraits) assert.ok(context.ui.opponentHabits.innerHTML.includes(trait.description));
   assert.doesNotMatch(context.ui.opponentHabits.innerHTML, /habit-lane-map|opponent-habit-category|LANE PLACEMENT/);
 });
 

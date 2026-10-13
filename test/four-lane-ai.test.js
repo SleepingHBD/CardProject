@@ -4,8 +4,11 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
 import "../src/four-lane-rules.js";
+import "../src/four-lane-ai.js";
 
 const n = globalThis.ClawRules, r = globalThis.ClawFourLaneRules;
+// History/habit planners remain diagnostic compatibility helpers. Live WIP
+// routing is tested separately below and uses ClawFourLaneAi's public hands.
 const occupied = formation => formation.filter(Boolean);
 const rng = seed => () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 const card = (power, element = "gust", tactic = "rally") => Object.freeze({ power, element, tactic });
@@ -121,7 +124,7 @@ test("forecast scenarios respect physical masks, public copy limits and unavaila
   assert.equal(JSON.stringify({ publicCards, history, read }), before);
 });
 
-test("joint planning keeps commitment preferences and puts Rally after the Vanguard it supports", () => {
+test("legacy diagnostic planning keeps commitment preferences and puts Rally after its supported Vanguard", () => {
   const balanced = Array.from({ length: 7 }, (_, i) => card(5,
     ["ember", "gust", "tide"][i % 3], ["vanguard", "link", "finisher", "rally"][i % 4]));
   const info = { history: [{ playerCards: balanced.slice(0, 4), aiCards: balanced.slice(0, 2) }] };
@@ -137,7 +140,8 @@ test("joint planning keeps commitment preferences and puts Rally after the Vangu
   assert.equal(formation[leadingLane + 1], pair[1], "Rally is adjacent on the right of the leading Vanguard");
   assert.equal(r.getRallyBonus(formation, leadingLane) + r.getTacticBonus(formation, leadingLane), 2);
   const resolved = r.resolveProgress(history.at(-1).playerCards, formation, {}, { ember: 6, gust: 4, tide: 6 });
-  assert.equal(resolved.matchWinner, "ai", "a correctly supported pair completes the missing goal without a Lane 1 restriction");
+  assert.equal(resolved.matchWinner, null, "legacy planning does not restore the old early-completion rule");
+  assert.equal(r.getProgressMatchWinner(resolved.progressAfter.player, resolved.progressAfter.ai, 8), "ai");
 });
 
 test("the joint planner returns unique own-hand references, is deterministic and does not mutate input", () => {
@@ -177,30 +181,34 @@ test("private player fields are never inspected by the pure planner", () => {
   assert.ok(r.chooseAiFormation(hand, [], [], rng(3), [], info).length);
 });
 
-test("Four-Lane plans before the reveal using public inputs; Normal Play retains its original AI", () => {
+test("WIP locks its public-hand plan without reading current selection or future draws; Normal retains its AI", () => {
   const source = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
   const start = source.indexOf("function prepareAiPlan(");
   const prepare = source.slice(start, source.indexOf("\n}", start) + 2);
-  assert.doesNotMatch(prepare, /state\.(playerHand|selectedCardIds|deck|playerPlayZone)/);
-  const publicHistory = rounds([4, 1]), ownHand = [...hand], playerTrophies = [], aiTrophies = [];
+  assert.doesNotMatch(prepare.split("const commitment")[0], /state\.(selectedCardIds|deck|playerPlayZone|aiDeck|aiTraits)/);
+  assert.match(prepare, /state\.playerHand/);
+  const publicHistory = rounds([4, 1]), ownHand = [...hand], visibleHand = [...hand].reverse(), playerTrophies = [], aiTrophies = [];
   let plannerCalls = 0, oldCalls = 0;
-  const context = { state: { aiHand: ownHand, playerWins: playerTrophies, aiWins: aiTrophies,
+  const context = { state: { round: 3, aiHand: ownHand, playerHand: visibleHand, playerWins: playerTrophies, aiWins: aiTrophies,
     playerProgress: playerTrophies, aiProgress: aiTrophies,
     aiTraits: [], previousRoundsHistory: publicHistory, difficulty: "instinct", previousPlayerCommitment: 1, previousAiCommitment: 2 },
     Math, CARD_LIBRARY: hand.slice(0, 4), FOUR_LANE_CARDS: hand.slice(4),
     matchFourLaneOpponent: { profile: { role: "rally" } },
     isFourLaneMode: () => true,
-    duelRules: () => ({ chooseAiFormation(h, p, a, random, traits, info, role) {
-      plannerCalls++; assert.equal(h, ownHand); assert.equal(p, playerTrophies); assert.equal(a, aiTrophies);
-      assert.equal(info.history, publicHistory); assert.deepEqual(Object.keys(info).sort(), ["cardLibrary", "history"]);
-      assert.equal(role, "rally");
-      return h.slice(0, 2);
-    } }),
+    ClawFourLaneAi: { chooseFormation(h, visible, ownProgress, opposingProgress, round, random) {
+      plannerCalls++; assert.equal(h, ownHand); assert.equal(visible, visibleHand);
+      assert.equal(ownProgress, aiTrophies); assert.equal(opposingProgress, playerTrophies);
+      assert.equal(round, 3); assert.equal(typeof random, "function");
+      return [h[0], h[1], null, null];
+    } },
     chooseAiCommitment: () => { oldCalls++; return 1; },
     chooseAiCards: () => { oldCalls++; return ownHand.slice(0, 1); }, buildTellClues: r.buildTellClues };
+  for (const key of ["selectedCardIds", "deck", "aiDeck", "playerFormation"]) {
+    Object.defineProperty(context.state, key, { get() { throw Error("secret access: " + key); } });
+  }
   runInNewContext(prepare, context); context.prepareAiPlan();
   assert.equal(plannerCalls, 1); assert.equal(oldCalls, 0);
-  assert.deepEqual(context.state.aiTellClues, ["sealed", "sealed", "sealed", "sealed"]);
+  assert.deepEqual(Array.from(context.state.aiTellClues), ["sealed", "sealed", "sealed", "sealed"]);
   context.isFourLaneMode = () => false; context.prepareAiPlan();
   assert.equal(plannerCalls, 1); assert.equal(oldCalls, 2); assert.equal(context.state.aiPlan.length, 1);
 });

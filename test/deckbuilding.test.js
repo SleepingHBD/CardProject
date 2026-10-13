@@ -4,9 +4,11 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
 import "../src/four-lane-rules.js";
+import "../src/four-lane-ai.js";
 import "../src/deckbuilding.js";
 
 const decks = globalThis.ClawDeckbuilding, normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
+const publicAi = globalThis.ClawFourLaneAi;
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const library = runInNewContext([
   gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE =")),
@@ -270,7 +272,7 @@ test("runtime deck cost has no effect on lane Power, role bonuses or Rally", () 
   assert.equal(result.winner, "player");
 });
 
-function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
+function simulateMatch(playerPreset, opponentPreset, seed, forceWide = false) {
   const owners = ["player", "opponent"];
   const sides = [playerPreset, opponentPreset].map((preset, index) => {
     const random = rng(seed + index * 8191), deck = [];
@@ -280,23 +282,16 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
     four.replenishHand(deck, discard, side.hand, 7, random);
     return side;
   });
-  const decisions = [rng(seed + 31001), rng(seed + 41001)], history = [];
-  const traitsBefore = JSON.stringify(traits);
+  const decisions = [rng(seed + 31001), rng(seed + 41001)];
   let reshuffles = 0;
-  for (let round = 0; round < 150; round++) {
-    const reversedHistory = history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards, laneProgress: { player: value.laneProgress?.ai, ai: value.laneProgress?.player } }));
-    // Public card collection only. Never pass the opposing preset, deck or hand.
-    const plays = [
-      four.chooseAiFormation(sides[0].hand, sides[1].progress, sides[0].progress, decisions[0], [],
-        { history: reversedHistory, cardLibrary: library }),
-      four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
-        { history, cardLibrary: library }),
-    ];
-    const opposingCommitted = plays[1].filter(Boolean);
-    const strongest = Math.max(...opposingCommitted.map(card => card.power));
-    if (traits.some(trait => trait.id === "strong-opener")) assert.equal(plays[1][0].power, strongest);
-    if (traits.some(trait => trait.id === "late-striker")) assert.equal(opposingCommitted.at(-1).power, strongest);
-    const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
+  for (let round = 1; round <= four.MATCH_ROUNDS; round++) {
+    // Both hands are public, but neither planner receives the other's chosen formation.
+    const plays = sides.map((side, index) => forceWide
+      ? Array.from({ length: 4 }, (_, lane) => side.hand[lane] ?? null)
+      : publicAi.chooseFormation(side.hand, sides[1 - index].hand,
+        side.progress, sides[1 - index].progress, round, decisions[index]));
+    const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress,
+      four.resolveClashes(...plays), round);
     assert.ok(result.extraCardPoints.player <= Math.min(2, result.laneWins.player));
     assert.ok(result.extraCardPoints.ai <= Math.min(2, result.laneWins.ai));
 
@@ -304,6 +299,8 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
       const committed = plays[index].filter(Boolean);
       assert.equal(plays[index].length, 4);
       assert.ok(committed.length >= 1 && committed.length <= 4);
+      assert.ok(four.isValidBattleFormation(plays[index], round));
+      assert.ok(plays[index][four.getBattleLane(round)], "every play contests the shared battle lane");
       assert.equal(new Set(committed).size, committed.length);
       assert.ok(committed.every(card => side.hand.includes(card)));
       side.hand = side.hand.filter(card => !committed.includes(card));
@@ -316,11 +313,15 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
       assert.ok(all.every(card => card.instanceId.startsWith(`${owners[index]}-`)));
 
     });
-    const snapshot = cards => cards.map(card => card
-      ? { element: card.element, power: card.power, tactic: card.tactic, art: card.art } : null);
-    history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
-    assert.equal(JSON.stringify(traits), traitsBefore);
-    if (sides.some(side => four.getProgressTotal(side.progress) === 18)) return { rounds: round + 1, reshuffles };
+    const winner = four.getProgressMatchWinner(sides[0].progress, sides[1].progress, round);
+    assert.equal(result.matchWinner, winner);
+    if (round === four.MATCH_ROUNDS) {
+      assert.ok(["player", "ai", "draw"].includes(winner));
+      const scores = sides.map(side => four.getMatchScore(side.progress));
+      assert.equal(winner, scores[0] === scores[1] ? "draw" : scores[0] > scores[1] ? "player" : "ai");
+      return { rounds: round, reshuffles };
+    }
+    assert.equal(winner, null, "no amount of trophies ends the match before round eight");
     sides.forEach(side => {
       reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random).reshuffled);
       assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
@@ -329,27 +330,24 @@ function simulateMatch(playerPreset, opponentPreset, seed, traits = []) {
   assert.fail(`Match did not finish: ${playerPreset.id}/${opponentPreset.id}, seed ${seed}`);
 }
 
-test("all starter matchups complete with 24-card recycling and no card removed as a trophy", () => {
-  let matches = 0, reshuffles = 0;
+test("all starter matchups finish after eight rounds and conserve every physical card", () => {
+  let matches = 0;
   for (const player of presets) for (const opponent of presets) for (let trial = 0; trial < 4; trial++) {
     const result = simulateMatch(player, opponent, 1100 + matches * 131);
-    matches++; reshuffles += result.reshuffles;
+    matches++;
+    assert.equal(result.rounds, 8);
   }
   assert.equal(matches, 64);
-  assert.ok(reshuffles > 0);
 });
 
-test("all 144 WIP habit profiles function across the four starter decks without private opposing deck access", () => {
-  let matches = 0;
-  for (const motive of normal.AI_MOTIVE_TRAITS) for (const placement of four.AI_PLACEMENT_TRAITS) {
-    for (const commitment of normal.AI_COMMITMENT_TRAITS) for (let deck = 0; deck < presets.length; deck++) {
-      const traits = [motive.id === "element-loyalist"
-        ? { ...motive, element: decks.ELEMENTS[deck % 3] } : motive, placement, commitment];
-      simulateMatch(presets[(deck + 1) % 4], presets[deck], 2100 + matches * 131, traits);
-      matches++;
-    }
+test("wide commitments recycle cards without removing trophies from either constructed deck", () => {
+  let reshuffles = 0;
+  for (let deck = 0; deck < presets.length; deck++) {
+    const result = simulateMatch(presets[deck], presets[(deck + 1) % presets.length], 2100 + deck * 131, true);
+    assert.equal(result.rounds, 8);
+    reshuffles += result.reshuffles;
   }
-  assert.equal(matches, 576);
+  assert.ok(reshuffles > 0);
 });
 
 test("deckbuilding is packaged before the game and only constructs personal Four-Lane decks", () => {

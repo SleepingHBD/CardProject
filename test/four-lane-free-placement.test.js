@@ -23,7 +23,7 @@ function oracle(a, b, pa = progress(), pb = progress()) {
       + Number(formation[lane + 1]?.tactic === "rally"));
   });
   const award = (side, lane, amount) => {
-    const element = formations[side][lane].element, gain = Math.min(amount, 6 - after[side][element]);
+    const element = formations[side][lane].element, gain = amount;
     after[side][element] += gain; gains[side][element] += gain; laneGains[side][lane] = gain; return gain;
   };
   for (let lane = 0; lane < 4; lane++) {
@@ -34,14 +34,13 @@ function oracle(a, b, pa = progress(), pb = progress()) {
   }
   for (let side = 0; side < 2; side++) {
     let used = 0;
-    for (let lane = 0; lane < 4 && used < wins[side]; lane++) {
+    for (let lane = 0; lane < 4 && used < Math.min(2, wins[side]); lane++) {
       const value = formations[side][lane];
-      if (!value || formations[1 - side][lane] || after[side][value.element] === 6) continue;
+      if (!value || formations[1 - side][lane]) continue;
       used++; extra[side][lane] = award(side, lane, 1);
     }
   }
-  const complete = after.map(value => elements.every(element => value[element] === 6));
-  return { after, gains, laneGains, extra, wins, winner: complete[0] && complete[1] ? "draw" : complete[0] ? "player" : complete[1] ? "ai" : null };
+  return { after, gains, laneGains, extra, wins, winner: null };
 }
 
 test("WIP accepts all 15 physical occupancy patterns and rejects empty or oversized formations", () => {
@@ -107,14 +106,14 @@ test("split victories can fund each side independently, even when formation size
   assert.deepEqual(result.extraCardLanePoints, { player: [0, 0, 1, 0], ai: [0, 0, 0, 1] });
 });
 
-test("completed-element fighters still fund useful escorts and completed escorts do not consume unlocks", () => {
+test("all elements stay valuable and the first extra card consumes the available unlock", () => {
   const a = slots(card("ember", 9), card("gust", 3), card("tide", 3)), b = slots(card("ember", 3));
   const result = rules.resolveProgress(a, b, progress(6, 6, 5));
-  assert.deepEqual(result.laneProgress.player, [0, 0, 1, 0]);
-  assert.equal(result.matchWinner, "player");
+  assert.deepEqual(result.laneProgress.player, [2, 1, 0, 0]);
+  assert.equal(result.matchWinner, null);
   const dynamic = rules.resolveProgress(slots(card("ember", 9), card("gust", 9), card("tide", 3), card("tide", 4)),
     slots(card("ember", 3), card("gust", 3)), progress(0, 0, 5));
-  assert.deepEqual(dynamic.laneProgress.player, [2, 2, 1, 0]);
+  assert.deepEqual(dynamic.laneProgress.player, [2, 2, 1, 1]);
 });
 
 test("roles use physical geometry: gaps break Link and Rally; Finisher is rightmost occupied, not array end", () => {
@@ -129,14 +128,14 @@ test("roles use physical geometry: gaps break Link and Rally; Finisher is rightm
   assert.deepEqual([0, 1, 2, 3].map(lane => rules.getRallyBonus(slots(rally, rally, rally), lane)), [1, 1, 0, 0]);
 });
 
-test("both sides resolve every lane before deciding simultaneous match completion", () => {
+test("both sides resolve every lane and do not end the match merely by reaching six", () => {
   const result = rules.resolveProgress(slots(card("ember", 9), null, null, card("tide", 3)),
     slots(card("ember", 3), null, null, card("tide", 9)), progress(4, 6, 6), progress(6, 6, 4));
-  assert.equal(result.matchWinner, "draw");
+  assert.equal(result.matchWinner, null);
   assert.deepEqual(result.progressAfter, { player: progress(6, 6, 6), ai: progress(6, 6, 6) });
 });
 
-test("all 1,265 legal abstract lane-result patterns match the oracle at empty and nearly complete goals", () => {
+test("all 1,265 legal abstract lane-result patterns match the uncapped oracle", () => {
   const goalStates = [progress(), progress(6, 6, 5), progress(5, 5, 5), progress(6, 0, 6)];
   let patterns = 0, comparisons = 0;
   // Each physical lane is both empty, only player, only opponent, draw,
@@ -164,7 +163,7 @@ test("all 1,265 legal abstract lane-result patterns match the oracle at empty an
   assert.equal(comparisons, 5060);
 });
 
-test("25,000 sparse formations match an independent oracle with symmetry, clipping and no input mutations", () => {
+test("25,000 sparse formations match an independent oracle with symmetry, uncapped awards and no input mutations", () => {
   let seed = 719384, checks = 0;
   const roll = n => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) % n;
   const make = () => {

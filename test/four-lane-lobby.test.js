@@ -46,7 +46,8 @@ test("deck and rival pages are separate, with two clear deck paths and an explic
   assert.doesNotMatch(deckPage, /id="fourLaneRivalOptions"|id="fourLaneStartButton"/);
   assert.match(rivalPage, /^id="fourLaneRivalPage" hidden>/);
   assert.match(rivalPage, /Back to Your Deck/);
-  assert.match(rivalPage, /Choose Difficulty/);
+  assert.match(rivalPage, /Start Duel/);
+  assert.doesNotMatch(rivalPage, /Choose Difficulty|Guided.*Instinct.*Blind/);
   assert.match(page, /<ol class="four-lane-lobby-steps" aria-label="Duel setup">/);
   assert.match(page, /<details class="four-lane-basics">/);
 });
@@ -95,28 +96,46 @@ test("invalid decks cannot be confirmed and an unconfirmed deck cannot launch a 
   assert.equal(context.ui.fourLaneRivalPage.hidden, true);
   let rolls = 0;
   context.fourLaneOpponents = { createEncounter() { rolls++; } };
-  context.isFourLaneMode = () => false;
-  runInNewContext(gameFunction("showDifficultyChooser"), context);
-  context.showDifficultyChooser("four-lane");
+  runInNewContext(gameFunction("startFourLaneDuel"), context);
+  context.startFourLaneDuel();
   assert.equal(rolls, 0);
   assert.equal(context.matchFourLaneDeck, undefined);
 });
 
-test("difficulty Back returns to the rival step rather than restarting deck selection", () => {
+test("confirmed WIP decks launch directly with a single encounter and no difficulty dialog", () => {
   const context = lobbyContext();
   context.confirmFourLaneDeck();
   const confirmed = context.confirmedFourLaneDeck;
-  context.difficultyReturnTarget = "four-lane";
-  context.ui.difficultyDialog = {};
-  context.closeDialog = () => {};
-  context.showFourLanePreview = step => context.showFourLaneLobbyStep(step);
-  runInNewContext(gameFunction("leaveDifficultyChooser"), context);
-  context.leaveDifficultyChooser();
+  let launches = 0, encounters = 0;
+  const rival = globalThis.ClawFourLaneOpponents.createRoster(catalog)[2];
+  context.fourLaneOpponents = { createEncounter(roster, selection) {
+    encounters++;
+    assert.equal(selection, "link");
+    return { profile: rival, deck: rival.deck, traits: [] };
+  } };
+  context.fourLaneOpponentRoster = [rival];
+  context.selectedFourLaneOpponent = "link";
+  context.state = {};
+  context.startGame = () => { launches++; };
+  context.ui.difficultyDialog = { showModal() { assert.fail("WIP must not open a difficulty selection"); } };
+  runInNewContext(gameFunction("startFourLaneDuel"), context);
+  context.startFourLaneDuel();
+  assert.equal(launches, 1);
+  assert.equal(encounters, 1);
+  assert.equal(context.state.gameMode, "four-lane");
+  assert.equal(context.state.difficulty, "open");
+  assert.equal(context.matchFourLaneDeck, confirmed);
+  assert.equal(context.matchFourLaneOpponent.profile, rival);
   assert.equal(context.confirmedFourLaneDeck, confirmed);
   assert.equal(context.ui.fourLaneRivalPage.hidden, false);
   assert.equal(context.ui.fourLaneDeckPage.hidden, true);
   assert.match(game, /fourLaneConfirmDeckButton\.addEventListener\("click", confirmFourLaneDeck\)/);
   assert.match(game, /fourLaneChangeDeckButton\.addEventListener\("click", \(\) => showFourLaneLobbyStep\("deck"\)\)/);
+  assert.match(game, /fourLaneStartButton\.addEventListener\("click", startFourLaneDuel\)/);
+  assert.doesNotMatch(gameFunction("startFourLaneDuel"), /showDifficultyChooser|createAiTraits/);
+  const startIndex = game.indexOf("async function startGame()");
+  const startGameSource = game.slice(startIndex, game.indexOf('\ndocument.querySelector("#howButton")', startIndex));
+  assert.doesNotMatch(startGameSource, /createEncounter/);
   assert.match(game, /if \(!ui\.fourLaneRivalPage\.hidden\) showFourLaneLobbyStep\("deck"\);\s+else leaveFourLanePreview\(\)/);
 });
 
@@ -128,7 +147,7 @@ test("starter descriptions explain deck specialities and player preferences, not
     assert.doesNotMatch(deck.description, /\+1|Lane [1-4]|directly (before|after)/);
   }
   assert.match(starters[0].description, /adaptable all-rounder.*all four roles.*changing plans/);
-  assert.match(starters[1].description, /support-heavy.*adjacent Rally partnerships.*reinforcing key lanes/);
+  assert.match(starters[1].description, /support-heavy.*adjacent Rally partnerships.*reinforcing key fighters/);
   assert.match(starters[2].description, /combination-focused.*Link and mixed elements.*planning card (order|positions)/);
   assert.match(starters[3].description, /Finisher-heavy.*(formation endings|rightmost threat)/);
   const balancedRoles = Object.values(api.validateDeck(catalog, starters[0]).summary.roleCounts);
@@ -208,13 +227,13 @@ test("compact deck statistics show exact counts with labelled elements and share
   assert.doesNotMatch(lobbyUi.lobbyIconMarkup('" onload="bad'), /onload/);
 });
 
-test("rivals explain expected playstyles while preserving uncertainty, icons and selectable profiles", () => {
+test("rivals explain deck strategies without generated habits, while preserving icons and selectable profiles", () => {
   const profiles = globalThis.ClawFourLaneOpponents.createRoster(catalog);
   assert.ok(profiles.every(rival => rival.description.length >= 100 && rival.description.length <= 180));
-  assert.match(profiles[0].description, /adaptable all-rounder.*playstyle varies with its habits/);
-  assert.match(profiles[1].description, /support-heavy.*adjacent Rally partnerships and Vanguard openers.*reinforcing key fighters/);
-  assert.match(profiles[2].description, /combination-focused.*Link and mixed elements.*adjacent card combinations/);
-  assert.match(profiles[3].description, /Finisher-heavy.*rightmost threat.*short formation or a wider push/);
+  assert.match(profiles[0].description, /adaptable all-rounder.*all four roles.*shared lane/);
+  assert.match(profiles[1].description, /support-heavy.*adjacent Rally partnerships and Vanguard openers.*key fighter/);
+  assert.match(profiles[2].description, /combination-focused.*Link and mixed elements.*adjacent card combinations/i);
+  assert.match(profiles[3].description, /Finisher-heavy.*rightmost threat.*compact formation or a wider attack/);
   assert.ok(profiles.every(rival => !/\balways\b/i.test(rival.description)));
   assert.ok(profiles.every(rival => !/\+1|Lane [1-4]|directly (before|after)/.test(rival.description)));
   const container = {};
@@ -226,8 +245,7 @@ test("rivals explain expected playstyles while preserving uncertainty, icons and
   assert.match(container.innerHTML, /value="link" checked/);
   assert.match(container.innerHTML, /#lobby-icon-shuffle/);
   for (const profile of profiles) assert.ok(container.innerHTML.includes(profile.name));
-  assert.match(container.innerHTML, /Best for Blind/);
-  assert.match(container.innerHTML, /Previous Rounds History to uncover its habits/);
+  assert.doesNotMatch(container.innerHTML, /Blind|Instinct|habits/);
   assert.match(container.innerHTML, /lobby-rival-theme/);
   assert.match(container.innerHTML, /lobby-rival-description/);
 });
@@ -235,11 +253,11 @@ test("rivals explain expected playstyles while preserving uncertainty, icons and
 test("lobby help uses a compact numeric hierarchy while detailed rules retain every condition", () => {
   assert.match(page, /class="lobby-basics-grid"/);
   assert.match(page, /Draw up to 3 each round\. Max\. 7/);
-  assert.match(page, /trophies each/);
+  assert.match(page, /8<\/b> rounds/);
   assert.match(page, /class="lobby-scoring-notes"/);
   assert.match(page, /one unlock per lane win · max\. 2/);
   assert.match(page, /Unlike Normal Play, there is no trophy choice/);
-  assert.match(page, /Each element stops at 6 trophies/);
+  assert.match(page, /complete.*set/i);
   assert.match(page, /One lane win unlocks one card, not every unopposed card/);
   for (const symbol of ["cards", "coins", "shuffle", "trophy"]) assert.ok(page.includes(`id="lobby-icon-${symbol}" viewBox="0 0 24 24"`));
   const css = readFileSync(new URL("../deckbuilding.css", import.meta.url), "utf8");
@@ -247,24 +265,27 @@ test("lobby help uses a compact numeric hierarchy while detailed rules retain ev
   assert.match(css, /@media \(max-width: 600px\)[\s\S]*\.lobby-basics-grid \{ grid-template-columns: minmax\(0, 1fr\)/);
 });
 
-test("WIP guidance explains free positions, earned unopposed rewards and three-card replenishment", () => {
+test("WIP guidance explains public hands, required battle lanes, earned rewards and fixed-round scoring", () => {
   const rules = visibleCopy(page.slice(page.indexOf('id="fourLaneRulesDialog"'), page.indexOf('id="resultDialog"')));
-  assert.match(rules, /Commit 1–4 cards in any of the four lanes, one card per lane/);
-  assert.match(rules, /Gaps are allowed/);
-  assert.match(rules, /lane positions—not the order you click cards—determine/);
+  assert.match(rules, /Commit 1–4 cards.*one(?: card)? per lane/);
+  assert.match(rules, /Gaps are allowed/i);
+  assert.match(rules, /positions—not the order you click cards—determine/i);
   assert.match(rules, /2 trophies of the winning card's element/);
   assert.match(rules, /Each lane you win unlocks one of your unopposed cards.*1 trophy of its own element.*two unopposed trophies per round/);
-  assert.match(rules, /Lane 1 to Lane 4, skipping unopposed cards whose element already has 6 trophies/);
-  assert.match(rules, /lane win still unlocks a reward even when the winning card's element is complete/);
+  assert.match(rules, /Lane 1 to Lane 4/);
   assert.match(rules, /No lane wins means no unopposed trophies.*Drawn lanes do not unlock rewards/);
   assert.match(rules, /rightmost card.*at least two cards.*does not have to occupy Lane 4/);
   assert.match(rules, /neighbouring lane to its left.*empty lane to its left gives no bonus/);
   assert.match(rules, /cannot reach Lane 1 if Lane 2 is empty/);
   assert.match(rules, /draws up to 3 without exceeding 7/);
   assert.match(rules, /Commit 3 cards to maintain your hand size, or 4 to spend 1/);
-  assert.match(rules, /four consecutive rounds in which neither side earns trophies/);
-  assert.match(rules, /150 rounds.*duel ends in a draw/);
-  assert.doesNotMatch(rules, /Commit 1–4 cards in order|draws up to 2|first two cards with no opposing card/);
+  assert.match(rules, /Both players can see each other's available hand/);
+  assert.match(rules, /Lane 2.*Lane 3/);
+  assert.match(rules, /Neither player can see the other's chosen cards or positions until both commit/);
+  assert.match(rules, /8 rounds|eight rounds/i);
+  assert.match(rules, /2 bonus points for each complete set of one Fire, one Gust and one Water trophy/);
+  assert.match(rules, /set/i);
+  assert.doesNotMatch(rules, /Commit 1–4 cards in order|draws up to 2|first two cards with no opposing card|stops at 6|150 rounds|Every rival has three persistent habits|Guided|Instinct|Blind/);
 });
 
 test("Normal Play guidance keeps its three-lane formation, trophy choice and six-card refill", () => {

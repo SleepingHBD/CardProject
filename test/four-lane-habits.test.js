@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
 import "../src/four-lane-rules.js";
+import "../src/four-lane-ai.js";
 import "../src/deckbuilding.js";
 
 const normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
@@ -30,7 +31,7 @@ const deckApi = globalThis.ClawDeckbuilding;
 const deckCatalog = deckApi.createCardCatalog(library);
 const starterDecks = deckApi.createStarterPresets(deckCatalog);
 
-test("WIP always generates motive, placement and commitment habits with concise accurate descriptions", () => {
+test("legacy diagnostic habit factories stay accurate without altering Normal Play traits", () => {
   const expected = {
     "power-seeker": "Prefers to commit high-Power cards rather than save them.",
     "trophy-denier": "Favors counters to elements you are close to finishing.",
@@ -72,19 +73,25 @@ test("WIP always generates motive, placement and commitment habits with concise 
   assert.doesNotMatch(gameSource, /Strong Opener places the opponent's highest-Power card in Lane 1/);
 });
 
-test("Instinct renders the refined explanations; Blind does not display hidden habits", () => {
+test("only Normal Instinct renders habits; WIP and Normal Blind display none", () => {
   const traitIds = ["power-seeker", "left-flank", "solo-gambler"];
   const rolls = [2 / 6, 0, 0];
   const traits = four.createAiTraits(() => rolls.shift());
   assert.deepEqual(traits.map(value => value.id), traitIds);
   const start = gameSource.indexOf("function renderOpponentHabits()");
   const source = gameSource.slice(start, gameSource.indexOf("\n}", start) + 2);
-  const context = { state: { difficulty: "instinct", aiTraits: traits }, ui: { opponentHabits: {} } };
+  const context = { state: { gameMode: "normal", difficulty: "instinct", aiTraits: normal.createAiTraits(() => .1) },
+    ui: { opponentHabits: {} } };
+  context.isFourLaneMode = () => context.state.gameMode === "four-lane";
   runInNewContext(source, context);
   context.renderOpponentHabits();
   assert.equal(context.ui.opponentHabits.hidden, false);
-  for (const trait of traits) assert.ok(context.ui.opponentHabits.innerHTML.includes(trait.description));
+  for (const trait of context.state.aiTraits) assert.ok(context.ui.opponentHabits.innerHTML.includes(trait.description));
   context.state.difficulty = "blind";
+  context.renderOpponentHabits();
+  assert.equal(context.ui.opponentHabits.hidden, true);
+  assert.equal(context.ui.opponentHabits.innerHTML, "");
+  context.state.gameMode = "four-lane"; context.state.difficulty = "instinct"; context.state.aiTraits = traits;
   context.renderOpponentHabits();
   assert.equal(context.ui.opponentHabits.hidden, true);
   assert.equal(context.ui.opponentHabits.innerHTML, "");
@@ -158,33 +165,28 @@ test("Solo Gambler recovers with one card but can still oppose larger pushes", (
   assert.equal(normal.chooseAiCommitment(6, [], [], () => .5, trait), 1, "Normal Play's original AI is unchanged");
 });
 
-test("all 144 WIP habit combinations complete matches, conserve personal cards and preserve stable identities", () => {
+const trialsPerMatchup = process.env.PROWL_EXTENDED_QA === "1" ? 27 : 4;
+test(`${16 * trialsPerMatchup} public-hand duels across every starter matchup finish after eight rounds and conserve all cards`, () => {
   let matches = 0, reshuffles = 0;
-  for (const motive of normal.AI_MOTIVE_TRAITS) for (const placement of four.AI_PLACEMENT_TRAITS) {
-    for (const commitment of normal.AI_COMMITMENT_TRAITS) for (let trial = 0; trial < 3; trial++) {
+  for (let ownStarter = 0; ownStarter < 4; ownStarter++) for (let otherStarter = 0; otherStarter < 4; otherStarter++) {
+    for (let trial = 0; trial < trialsPerMatchup; trial++) {
       const seed = 1000 + matches * 131;
-      const traits = [motive.id === "element-loyalist"
-        ? { ...motive, element: ["ember", "gust", "tide"][trial] } : motive, placement, commitment];
-      const traitsBefore = JSON.stringify(traits);
       const sides = [0, 1].map(owner => {
         const random = rng(seed + owner * 8191), deck = [];
-        const discard = deckApi.buildDeckInstances(deckCatalog, starterDecks[trial], owner === 0 ? "player" : "opponent");
+        const discard = deckApi.buildDeckInstances(deckCatalog, starterDecks[owner ? otherStarter : ownStarter], owner === 0 ? "player" : "opponent");
         normal.reshuffleDiscardPile(deck, discard, random);
         const side = { deck, discard, hand: [], progress: four.createProgress(), random };
         four.replenishHand(deck, discard, side.hand, 7, random);
         return side;
       });
-      const decisions = [rng(seed + 31001), rng(seed + 41001)], completed = [];
+      const decisions = [rng(seed + 31001), rng(seed + 41001)];
       let finished = false;
-      for (let round = 0; round < 150; round++) {
-        const opponentHistory = completed.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards, laneProgress: { player: value.laneProgress?.ai, ai: value.laneProgress?.player } }));
+      for (let round = 1; round <= four.MATCH_ROUNDS; round++) {
         const plays = [
-          four.chooseAiFormation(sides[0].hand, sides[1].progress, sides[0].progress, decisions[0], [],
-            { history: opponentHistory, cardLibrary: library }),
-          four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
-            { history: completed, cardLibrary: library }),
+          globalThis.ClawFourLaneAi.chooseFormation(sides[0].hand, sides[1].hand, sides[0].progress, sides[1].progress, round, decisions[0]),
+          globalThis.ClawFourLaneAi.chooseFormation(sides[1].hand, sides[0].hand, sides[1].progress, sides[0].progress, round, decisions[1]),
         ];
-        const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
+        const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress, four.resolveClashes(...plays), round);
         assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
 
         sides.forEach((side, owner) => {
@@ -192,6 +194,7 @@ test("all 144 WIP habit combinations complete matches, conserve personal cards a
           assert.ok(cards.length >= 1 && cards.length <= 4);
           assert.equal(new Set(cards).size, cards.length);
           assert.ok(cards.every(value => side.hand.includes(value)));
+          assert.ok(four.isValidBattleFormation(plays[owner], round));
           side.hand = side.hand.filter(value => !plays[owner].includes(value));
           side.discard.push(...cards);
           side.progress = { ...result.progressAfter[(owner === 0 ? "player" : "ai")] };
@@ -201,19 +204,22 @@ test("all 144 WIP habit combinations complete matches, conserve personal cards a
           assert.equal(new Set(all.map(value => value.instanceId)).size, 24);
           assert.ok(all.every(value => value.instanceId.startsWith(owner === 0 ? "player-" : "opponent-")));
         });
-        const snapshot = cards => cards.map(card => card ? ({ art: card.art, element: card.element, power: card.power, tactic: card.tactic }) : null);
-        completed.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
-        if (sides.some(side => four.getProgressTotal(side.progress) === 18)) { finished = true; break; }
+        if (round < four.MATCH_ROUNDS) assert.equal(result.matchWinner, null);
+        else {
+          const independent = progress => progress.ember + progress.gust + progress.tide + 2 * Math.min(progress.ember, progress.gust, progress.tide);
+          const p = independent(sides[0].progress), a = independent(sides[1].progress);
+          assert.equal(result.matchWinner, p === a ? "draw" : p > a ? "player" : "ai");
+          finished = true; break;
+        }
         sides.forEach(side => {
           reshuffles += Number(four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random).reshuffled);
           assert.ok(side.hand.length >= 1 && side.hand.length <= 7);
         });
       }
-      assert.ok(finished, `habit combination ${traits.map(value => value.id).join("/")} must finish`);
-      assert.equal(JSON.stringify(traits), traitsBefore, "habit identities remain stable throughout the match");
+      assert.ok(finished, `starter matchup ${ownStarter}/${otherStarter}, trial ${trial} must finish after eight rounds`);
       matches++;
     }
   }
-  assert.equal(matches, 432);
+  assert.equal(matches, 16 * trialsPerMatchup);
   assert.ok(reshuffles > 0, "complete matches exercise personal deck recycling");
 });

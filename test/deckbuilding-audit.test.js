@@ -20,14 +20,20 @@ test("balance probes are reproducible legal decks, including 16/4/4 and each omi
   assert.ok(api.validateDeck(catalog, probes.find(deck => deck.id === "low-cost")).summary.totalCost <= 100);
 });
 
-test("612 varied-deck strategy probes complete legally, with two-card play beating repeated singles in this fixed cohort", () => {
+test("612 varied-deck public-hand probes finish at round eight with legal shared-lane play", t => {
   let matches = 0, reshuffles = 0;
   const wins = Object.fromEntries(policies.map(policy => [policy, 0]));
   const activations = { vanguard: 0, link: 0, finisher: 0, rally: 0 };
   for (const [deckIndex, deck] of probes.entries()) for (const [rivalIndex, rival] of roster.entries()) for (const policy of policies) {
     const result = simulateDuel(deck, rival.id, policy, 24519 + deckIndex * 1000003 + rivalIndex * 100003);
     assert.notEqual(result.winner, "stalled", `${deck.id}/${rival.id}/${policy}`);
-    assert.ok(result.rounds > 0 && result.rounds <= 150);
+    assert.equal(result.rounds, 8);
+    assert.equal(result.roundLimitDraw, false, "a final-score tie is not a timeout draw");
+    assert.equal(result.winner, result.scores[0] === result.scores[1] ? "draw"
+      : result.scores[0] > result.scores[1] ? "player" : "opponent");
+    for (let side = 0; side < 2; side++) {
+      assert.equal(result.scores[side], result.trophies[side] + 2 * result.sets[side]);
+    }
     assert.equal(result.counts[0].reduce((a, b) => a + b), result.rounds);
     assert.equal(result.counts[1].reduce((a, b) => a + b), result.rounds);
     if (policy === "one") assert.equal(result.counts[0][0], result.rounds);
@@ -39,9 +45,9 @@ test("612 varied-deck strategy probes complete legally, with two-card play beati
   }
   assert.equal(matches, 612);
   assert.ok(reshuffles > 0 && Object.values(activations).every(count => count > 0));
-  // This is a reproducible regression cohort, not a promise about human win rates.
-  assert.ok(wins.two > wins.one && wins.adaptive > wins.one);
-  assert.ok(wins.one < probes.length * roster.length / 2, "always playing one card must not dominate this cohort");
+  // Report strategy observations, without asserting an obsolete metagame or
+  // treating this fixed heuristic cohort as a universal balance proof.
+  t.diagnostic(`Player wins in 68 paired matches per policy: ${JSON.stringify(wins)}`);
 });
 
 test("the same duel seed reproduces choices and outcomes without mutating a custom definition", () => {
@@ -77,7 +83,7 @@ test("deck tips are non-blocking, use one consistent budget and do not imply omi
   }) };
   assert.ok(api.validateDeck(catalog, finisherHeavy).valid);
   assert.ok(api.validateDeck(catalog, finisherHeavy).summary.roleCounts.finisher > 8);
-  assert.match(api.getDeckTips(catalog, finisherHeavy).join(" "), /Only a Finisher committed last.*at least two cards/);
+  assert.match(api.getDeckTips(catalog, finisherHeavy).join(" "), /Only the rightmost Finisher.*at least two cards/);
   for (const role of api.ROLES) {
     const deck = probes.find(value => value.id === `no-${role}`);
     const before = JSON.stringify(deck);

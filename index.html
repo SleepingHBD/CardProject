@@ -241,6 +241,10 @@
                 </div>
               </div>
               <div class="opponent-tells" id="opponentTells" aria-label="Opponent's planned lanes"></div>
+              <div class="public-hand-toolbar"><button id="publicDeckButton" type="button" hidden>View Both Decks</button></div>
+              <div class="opponent-public-hand" id="opponentPublicHand" aria-label="Opponent's available cards; not their committed formation" hidden></div>
+              <div class="battle-lane-notice" id="battleLaneNotice" hidden></div>
+              <span class="match-score-details" id="matchScoreDetails" hidden></span>
               <div class="matchup-forecast" id="matchupForecast" aria-live="polite">
                 Place a card to preview its bonuses and total.
               </div>
@@ -388,7 +392,6 @@
         <ol class="four-lane-lobby-steps" aria-label="Duel setup">
           <li id="fourLaneDeckStep" aria-current="step"><span aria-hidden="true">1</span> Your deck</li>
           <li id="fourLaneRivalStep"><span aria-hidden="true">2</span> Your rival</li>
-          <li><span aria-hidden="true">3</span> Difficulty</li>
         </ol>
 
         <div class="four-lane-lobby-page" id="fourLaneDeckPage">
@@ -429,9 +432,9 @@
           <details class="four-lane-basics">
             <summary><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-trophy"></use></svg> Mode basics</summary>
             <div class="lobby-basics-grid">
-              <section><h3>Formation</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg><b>1–4</b> cards</p><p>Choose any lanes. Gaps are allowed; same-numbered lanes fight.</p></section>
+              <section><h3>Formation</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg><b>1–4</b> cards</p><p>Fill the marked battle lane. Other lanes are optional; same-numbered lanes fight.</p></section>
               <section><h3>Hand</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg><b>7</b> cards</p><p>Draw up to 3 each round. Max. 7.</p></section>
-              <section><h3>Win the duel</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-trophy"></use></svg><b>6</b> trophies each</p><p class="lobby-goal-elements"><span><span aria-hidden="true">🔥</span> Fire</span><span><span aria-hidden="true">🍃</span> Gust</span><span><span aria-hidden="true">💧</span> Water</span></p></section>
+              <section><h3>Win the duel</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-trophy"></use></svg><b>8</b> rounds</p><p>Highest match score wins: trophies + 2 for every complete Fire, Gust and Water set.</p></section>
             </div>
             <dl class="lobby-scoring-notes">
               <div><dt>Won lane</dt><dd><b>+2</b> trophies of your card's element</dd></div>
@@ -439,6 +442,7 @@
             </dl>
             <p>Win one lane to unlock one unopposed card, or two lanes to unlock two. With no lane wins, unopposed cards earn nothing.</p>
             <p>Both sides keep earned trophies. Unlike Normal Play, there is no trophy choice; all committed cards stay in their owner's deck cycle.</p>
+            <p><b>Both hands are visible.</b> Card choices and lane placements stay secret until both formations are committed. The required battle lane alternates between Lane 2 and Lane 3.</p>
             <div class="four-lane-preview-layout">
               <figure class="four-lane-preview-board" aria-labelledby="fourLaneBoardCaption">
                 <div class="four-lane-preview-side">Opponent</div>
@@ -458,7 +462,7 @@
                   <span class="four-lane-preview-slot is-new-lane" aria-label="Your Lane 4"><span aria-hidden="true">◆</span></span>
                 </div>
                 <div class="four-lane-preview-side">You</div>
-                <figcaption id="fourLaneBoardCaption">Choose your lanes. Leave gaps or build adjacent combinations.</figcaption>
+                <figcaption id="fourLaneBoardCaption">One shared battle lane. Three optional lanes for support and flanking.</figcaption>
               </figure>
               <aside class="four-lane-preview-roadmap" aria-labelledby="fourLaneRoadmapTitle">
                 <h2 id="fourLaneRoadmapTitle">Role bonuses</h2>
@@ -493,12 +497,12 @@
           </div>
           <fieldset class="four-lane-rival-choice" id="fourLaneRivalChoice" aria-describedby="fourLaneRivalHelp">
             <legend>Rivals</legend>
-            <p id="fourLaneRivalHelp">A unique deck · Card choice, lane placement and card count habits. Want a mystery? Choose Random Rival + Blind.</p>
+            <p id="fourLaneRivalHelp">Different decks, the same information: both hands visible, formations secret. Choose a rival or let Random Rival pick one.</p>
             <div class="four-lane-rival-options" id="fourLaneRivalOptions"></div>
           </fieldset>
           <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
-            <div><h2 id="fourLaneLaunchTitle">Ready to duel?</h2><p>Next: Guided · Instinct · Blind</p></div>
-            <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Choose Difficulty <span aria-hidden="true">→</span></button>
+            <div><h2 id="fourLaneLaunchTitle">Ready to duel?</h2><p>Open hands · Shared battle lane · 8 rounds</p></div>
+            <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Start Duel <span aria-hidden="true">→</span></button>
           </section>
         </div>
 
@@ -1307,24 +1311,31 @@
       <p class="eyebrow">SUPER SECRET STUFF WIP</p>
       <h2 id="fourLaneRulesTitle">Mode Rules</h2>
       <div class="four-lane-rules-content">
-        <section><h3>Choose your lanes</h3><p>Commit 1–4 cards in any of the four lanes, one card per lane. <b>Gaps are allowed.</b> Lane 1 faces Lane 1, Lane 2 faces Lane 2, and so on. Your lane positions—not the order you click cards—determine who fights and which role bonuses activate. Every role can be placed in any lane.</p></section>
+        <section><h3>Open hands, secret formations</h3><p><b>Both players can see each other's available hand</b>, including every card's element, printed Power and role. Both deck lists are public too. Neither player can see the other's chosen cards or positions until both commit. The opponent locks a plan before you start placing cards; it never reacts to your current selection. There are no opponent habits or difficulty choices in this mode.</p></section>
+        <section><h3>Fill the shared battle lane</h3><p>Commit 1–4 cards, one per lane. <b>Both players must place a card in the marked battle lane.</b> This is Lane 2 in odd-numbered rounds and Lane 3 in even-numbered rounds. The other three lanes are optional, and gaps are allowed.</p><p>Lane 1 faces Lane 1, Lane 2 faces Lane 2, and so on. Positions—not the order you click cards—determine who fights and which role bonuses activate. Every role can be placed in any lane. You may move or return your cards before committing.</p></section>
         <section><h3>Win lanes to earn trophies</h3><p>Clash Total = printed Power + Element Edge + your card's role bonus + received Rally bonus. The higher total wins the lane; equal totals draw.</p><p>Fire beats Gust, Gust beats Water, and Water beats Fire. The element with the advantage gains +2 Power.</p><p>A lane win earns <b>2 trophies of the winning card's element</b>. A drawn or lost lane earns 0.</p><p><b>Both sides keep the trophies they earn.</b> There is no overall round winner or trophy choice. For example, if your Fire card wins Lane 1 and the opponent's Water card wins Lane 2, you earn 2 Fire trophies and the opponent earns 2 Water trophies.</p></section>
-        <section><h3>Unlock unopposed trophies</h3><p>An unopposed card has no opposing card in its lane. <b>Each lane you win unlocks one of your unopposed cards</b> to earn 1 trophy of its own element, up to <b>two unopposed trophies per round</b>. One lane win unlocks one card, not every unopposed card.</p><p>Rewards go from Lane 1 to Lane 4, skipping unopposed cards whose element already has 6 trophies. A lane win still unlocks a reward even when the winning card's element is complete.</p><p><b>No lane wins means no unopposed trophies.</b> Drawn lanes do not unlock rewards. Avoiding every battle earns nothing. Power and role bonuses never increase an unopposed card's 1 trophy.</p></section>
+        <section><h3>Unlock unopposed trophies</h3><p>An unopposed card has no opposing card in its lane. <b>Each lane you win unlocks one of your unopposed cards</b> to earn 1 trophy of its own element, up to <b>two unopposed trophies per round</b>. One lane win unlocks one card, not every unopposed card. Rewards go from Lane 1 to Lane 4.</p><p><b>No lane wins means no unopposed trophies.</b> Drawn lanes do not unlock rewards. Power and role bonuses never increase an unopposed card's 1 trophy.</p></section>
         <section><h3>Four formation roles</h3><ul>
           <li><b>Vanguard:</b> Commit at least two cards. If your leftmost committed card is a Vanguard, it gains +1 Power. Empty lanes do not matter; the other card can be anywhere to its right. A lone Vanguard gets no bonus, and a card of any role to its left prevents activation. Placement order does not matter.</li>
           <li><b>Link:</b> +1 when the card in the neighbouring lane to its left has a different element. An empty lane to its left gives no bonus.</li>
           <li><b>Finisher:</b> +1 when it is your rightmost card and you commit at least two cards. It does not have to occupy Lane 4. A lone Finisher gets no bonus.</li>
           <li><b>Rally:</b> Gives +1 Power to the card in the neighbouring lane to its left—not itself. For example, Rally in Lane 3 boosts Lane 2, but cannot reach Lane 1 if Lane 2 is empty. Rally in Lane 1 gives no bonus. The receiving card can also earn its own role bonus. Each Rally gives only +1, even if it receives a boost.</li>
         </ul></section>
-        <section><h3>Collect trophies of all three elements</h3><p>Collect <b>6 Fire, 6 Gust and 6 Water trophies</b> before the opponent. Each element stops at 6 trophies: extra Fire trophies cannot replace missing Water or Gust trophies. Cards from completed elements can still win lanes, deny opposing trophies and unlock unopposed cards.</p><p>Finish resolving every lane before checking the winner. If both players collect all required trophies in the same round, <b>the duel is a draw</b>.</p><p><b>Unlike Normal Play, trophies are counters, not claimed cards.</b> They are awarded automatically for individual lanes. You do not choose a card as a trophy; all committed cards go to their owner's discard pile and stay in that owner's deck cycle.</p></section>
+        <section><h3>Highest score after eight rounds wins</h3><p><b>Every duel lasts 8 rounds.</b> Trophies have no per-element limit. Your match score is your total trophies, plus <b>2 bonus points for each complete set of one Fire, one Gust and one Water trophy</b>.</p><p>For example, 5 Fire + 3 Gust + 2 Water means 10 trophies and 2 complete sets. Your match score is <b>10 + 4 = 14</b>. Only your least-collected element limits the number of complete sets. Collecting all three elements is rewarded, but not required.</p><p>Finish every lane in Round 8, then compare match scores. The higher score wins; equal scores draw. Reaching 6 of every element does not end the duel early.</p><p><b>Unlike Normal Play, trophies are counters, not claimed cards.</b> They are awarded automatically. All committed cards go to their owner's discard pile and stay in that owner's deck cycle.</p></section>
         <section><h3>Manage your own hand</h3><p>Both players start with 7 cards. Between rounds, each draws up to 3 without exceeding 7 cards in hand.</p><p>Commit 3 cards to maintain your hand size, or 4 to spend 1 card from your reserves. Commit 1 or 2 to rebuild your hand by up to 2 or 1 cards, subject to the 7-card limit.</p><p>You and your opponent have separate decks and discard piles. <b>All committed cards</b> go into their owner's discard pile, including winning cards. Only that owner's empty draw pile can trigger a reshuffle. All 24 cards stay in circulation.</p></section>
         <section><h3>Build your deck</h3><p>Each deck contains 24 cards and costs no more than 120. Include at least 4 cards of each element. You may use up to 2 copies of each Common or Uncommon card, and 1 of each Rare, Epic or Legendary. No role is required.</p><p>Deck cost is Power plus a rarity surcharge: Common/Uncommon +0, Rare +1, Epic +4, Legendary +6. It never changes combat Power. Choose a starter deck or build and save your own before the duel. Every rival follows these same deck limits.</p></section>
-        <section><h3>Choose a rival</h3><p>Confirm your deck to open the rival page. Versatile Duelist uses Balanced Formation. Banner Captain uses Rally Company. Cycle Weaver uses Element Weavers. Twilight Duelist uses Last Light. Choose one or let Random Rival choose for you. Use Back to Your Deck to change your deck before starting.</p><p>Every rival has three persistent habits: <b>card choice, lane placement and card count</b>. Its deck still shapes its role combinations. Restarting or changing difficulty retains the rival, deck and habits; start again from the lobby to roll new habits or a new random rival. Rivals adapt to completed rounds, not your hidden hand or deck.</p></section>
-        <section><h3>Read the favoured lanes</h3><p>The placement habit names two favoured lanes. With one committed card, the rival usually chooses one of those lanes. With two cards, it usually occupies both. With three cards, it usually includes both and one other lane. Four cards occupy every lane.</p><ul><li><b>Left Flank:</b> Lanes 1 and 2.</li><li><b>Right Flank:</b> Lanes 3 and 4.</li><li><b>Centre Guard:</b> Lanes 2 and 3.</li><li><b>Outer Guard:</b> Lanes 1 and 4.</li></ul><p>These are <b>tendencies, not the current formation</b>. The rival may vary its placement or shift away from a risky position as it learns from completed rounds. The habit does not reveal this round's cards, elements, Power or commitment count.</p></section>
-        <section><h3>Read your opponent</h3><p>Guided shows the opponent's elements and Power ranges in their actual lanes. Instinct conceals the formation but reveals its three habits; highlighted lane numbers show its placement preference, not occupied lanes. Blind conceals formation, habits and the in-game rival identity. Select Random Rival if you also want to deduce the deck style yourself.</p><p>Previous Rounds History records all four lanes after a round is complete. Its lane-use summary counts the opponent's last eight completed 1–3-card plays. Four-card plays are excluded because they occupy every lane. Compare several rounds to find a tendency; a small sample is not a guarantee.</p></section>
-        <section><h3>Keep the duel moving</h3><p>After four consecutive rounds in which neither side earns trophies, a reminder encourages you to seek battles. If neither side finishes its trophies within <b>150 rounds</b>, the duel ends in a draw.</p></section>
+        <section><h3>Choose a rival</h3><p>Confirm your deck to choose a rival. Versatile Duelist uses Balanced Formation. Banner Captain uses Rally Company. Cycle Weaver uses Element Weavers. Twilight Duelist uses Last Light. Their available cards—not persistent habits—shape their options. Choose one or let Random Rival pick for you.</p><p>Restarting keeps the same rival and deck, but deals fresh hands. Return to the lobby to choose another matchup. Normal Play and its difficulties are unchanged.</p></section>
+        <section><h3>Review previous rounds</h3><p>Previous Rounds History records all four revealed lanes, Power bonuses, trophies earned and the match score after each round. Use it to review earlier decisions and spent cards. It does not reveal the current secret formation or future draws.</p></section>
       </div>
       <button class="primary-button" data-close-four-lane-rules type="button">Return</button>
+    </dialog>
+
+    <dialog class="game-dialog public-deck-dialog" id="publicDeckDialog" aria-labelledby="publicDeckTitle">
+      <button class="dialog-close" data-close-public-decks type="button" aria-label="Close deck lists">×</button>
+      <p class="eyebrow">SUPER SECRET STUFF WIP</p><h2 id="publicDeckTitle">Both Decks</h2>
+      <p>Full deck lists are public. These are not the remaining draw order or this round's formations.</p>
+      <div class="public-deck-lists" id="publicDeckLists"></div>
+      <button class="primary-button" data-close-public-decks type="button">Return</button>
     </dialog>
 
     <dialog class="game-dialog result-dialog" id="resultDialog">
@@ -1342,6 +1353,7 @@
     <script defer src="./src/viewport.js"></script>
     <script defer src="./src/rules.js"></script>
     <script defer src="./src/four-lane-rules.js"></script>
+    <script defer src="./src/four-lane-ai.js"></script>
     <script defer src="./src/deckbuilding.js"></script>
     <script defer src="./src/opponents.js"></script>
     <script defer src="./src/deck-editor.js"></script>

@@ -30,11 +30,28 @@ test("the four-lane entry leads to a separate, initially hidden playable prototy
   assert.match(pageSource, /WIP · Balance testing in progress/);
   assert.match(pageSource, /id="fourLaneStartButton"/);
   assert.match(pageSource, /id="fourLaneRulesDialog"/);
-  assert.match(gameSource, /fourLaneStartButton\.addEventListener\("click", \(\) => showDifficultyChooser\("four-lane"\)\)/);
+  assert.match(gameSource, /fourLaneStartButton\.addEventListener\("click", startFourLaneDuel\)/);
+  const start = sourceFunction("startFourLaneDuel");
+  assert.match(start, /state\.gameMode = "four-lane"/);
+  assert.match(start, /state\.difficulty = "open"/);
+  assert.match(start, /startGame\(\)/);
+  assert.doesNotMatch(start, /showDifficultyChooser|showModal|createAiTraits/);
   assert.match(pageSource, /Normal Play is unchanged/);
   assert.equal((pageSource.match(/class="four-lane-preview-slot(?: is-new-lane)?"/g) || []).length, 8);
   assert.match(gameSource, /mainMenuFourLaneButton\.addEventListener\("click", \(\) => showFourLanePreview\(\)\)/);
   assert.match(gameSource, /mainMenuPlayButton\.addEventListener\("click", \(\) => showDifficultyChooser\("main"\)\)/);
+});
+
+test("the WIP lobby has exactly two setup steps and launches without difficulty selection", () => {
+  const steps = pageSource.match(/<ol class="four-lane-lobby-steps"[^>]*>([\s\S]*?)<\/ol>/)?.[1];
+  assert.ok(steps);
+  assert.equal((steps.match(/<li\b/g) || []).length, 2);
+  assert.match(steps, /fourLaneDeckStep[\s\S]*Your deck/);
+  assert.match(steps, /fourLaneRivalStep[\s\S]*Your rival/);
+  assert.doesNotMatch(steps, /difficulty/i);
+  const lobby = pageSource.slice(pageSource.indexOf('id="fourLanePreviewScreen"'), pageSource.indexOf('id="deckEditorScreen"'));
+  assert.doesNotMatch(lobby, /Choose Difficulty|Guided.*Instinct.*Blind/);
+  assert.match(lobby, /id="fourLaneStartButton"[^>]*>Start Duel/);
 });
 
 test("the experimental mode uses Super Secret Stuff WIP without changing its internal identity", () => {

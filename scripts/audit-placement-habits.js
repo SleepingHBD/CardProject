@@ -1,9 +1,11 @@
-// Paired public-information strategy probes, not proof of universal balance.
+// Current public-hand placement probes, not proof of universal balance.
+// Legacy habit forecasts below remain diagnostics, never live opponent inputs.
 // Usage: node scripts/audit-placement-habits.js [paired-trials=1] [seed=746381]
 import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
 import { pathToFileURL } from "node:url";
 import { catalog, library, rng } from "./audit-deckbuilding.js";
+import "../src/four-lane-ai.js";
 
 const normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
 const decks = globalThis.ClawDeckbuilding, keys = Object.keys(four.ELEMENTS);
@@ -18,7 +20,7 @@ export const prepareFormation = cards => ({ cards, count: cards.filter(Boolean).
   totals: cards.map((card, lane) => card ? card.power + four.getTacticBonus(cards, lane) + four.getRallyBonus(cards, lane) : 0) });
 
 // Independent numeric scoring for the audit's hot loop. Automated tests compare
-// this against the public resolver, including clipping and escort allocation.
+// this against the public resolver, including uncapped trophies and escorts.
 export function placementUtility(plan, forecast, own, other) {
   const after = [...own], opposingAfter = [...other];
   let wins = 0, opposingWins = 0;
@@ -28,23 +30,17 @@ export function placementUtility(plan, forecast, own, other) {
     const edge = (four.ELEMENTS[keys[element]].beats === keys[opposing] ? 2 : 0)
       - (four.ELEMENTS[keys[opposing]].beats === keys[element] ? 2 : 0);
     const margin = plan.totals[lane] - forecast.totals[lane] + edge;
-    if (margin > 0) { wins++; after[element] = Math.min(6, after[element] + 2); }
-    else if (margin < 0) { opposingWins++; opposingAfter[opposing] = Math.min(6, opposingAfter[opposing] + 2); }
+    if (margin > 0) { wins++; after[element] += 2; }
+    else if (margin < 0) { opposingWins++; opposingAfter[opposing] += 2; }
   }
+  wins = Math.min(2, wins); opposingWins = Math.min(2, opposingWins);
   for (let lane = 0; lane < 4; lane++) {
     const element = plan.elements[lane], opposing = forecast.elements[lane];
-    if (wins && element >= 0 && opposing < 0 && after[element] < 6) { after[element]++; wins--; }
-    if (opposingWins && opposing >= 0 && element < 0 && opposingAfter[opposing] < 6) { opposingAfter[opposing]++; opposingWins--; }
+    if (wins && element >= 0 && opposing < 0) { after[element]++; wins--; }
+    if (opposingWins && opposing >= 0 && element < 0) { opposingAfter[opposing]++; opposingWins--; }
   }
-  let value = 0;
-  for (let element = 0; element < 3; element++) {
-    value += (after[element] - own[element]) * (1 + (Math.max(...own) - own[element]) * .07)
-      + Number(own[element] < 6 && after[element] === 6);
-    value -= ((opposingAfter[element] - other[element]) * (1 + (Math.max(...other) - other[element]) * .07)
-      + Number(other[element] < 6 && opposingAfter[element] === 6)) * .8;
-  }
-  const complete = after.every(value => value === 6), opposingComplete = opposingAfter.every(value => value === 6);
-  return value + (complete && !opposingComplete ? 15 : opposingComplete && !complete ? -15 : 0);
+  const score = values => values.reduce((sum, value) => sum + value, 0) + 2 * Math.min(...values);
+  return score(after) - score(own) - score(opposingAfter) + score(other);
 }
 
 export function allowsPlacementPolicy(cards, policy, round) {
@@ -59,6 +55,23 @@ export function allowsPlacementPolicy(cards, policy, round) {
   if (triple !== null) return (mask & ~triple) === 0;
   if (policy === "full-push") return true;
   assert.equal(policy, "adaptive", "Unknown placement audit policy");
+  return true;
+}
+
+export function allowsBattlePlacementPolicy(cards, policy, round) {
+  const battle = 1 << four.getBattleLane(round + 1), mask = four.getFormationMask(cards);
+  if (!(mask & battle)) return false;
+  // Camping policies must still obey the common battle lane. Their nominal
+  // lanes are optional regions, not permission to avoid the required fight.
+  const single = /^lane-([1-4])$/.exec(policy);
+  if (single) return (mask & ~(battle | 1 << (Number(single[1]) - 1))) === 0;
+  const pair = { "left-pair": 3, "right-pair": 12, "centre-pair": 6, "outer-pair": 9 }[policy]
+    ?? (policy === "rotating-pair" ? preferredMasks[round % 4] : null);
+  if (pair !== null) return (mask & ~(pair | battle)) === 0;
+  const triple = { "left-three": 7, "right-three": 14, "outer-left-three": 11, "outer-right-three": 13 }[policy]
+    ?? (policy === "rotating-three" ? [7, 14, 11, 13][round % 4] : null);
+  if (triple !== null) return (mask & ~(triple | battle)) === 0;
+  assert.ok(["full-push", "adaptive"].includes(policy), "Unknown placement audit policy");
   return true;
 }
 
@@ -81,7 +94,19 @@ export function publicPlacementForecasts(history, placement, random) {
       : scenario.weight }));
 }
 
-export function choosePlacementProbe(hand, ownProgress, otherProgress, policy, round, history, placement, random) {
+export function choosePlacementProbe(hand, ownProgress, otherProgress, policy, round, history, placement, random, opponentPublicHand = null) {
+  if (opponentPublicHand) {
+    const strategy = globalThis.ClawFourLaneAi.analyse(hand, opponentPublicHand, ownProgress, otherProgress, round + 1, random);
+    const eligible = strategy.plans.map((cards, index) => ({ cards, weight: strategy.probabilities[index] }))
+      .filter(entry => allowsBattlePlacementPolicy(entry.cards, policy, round)
+        && (policy !== "full-push" || entry.cards.filter(Boolean).length === Math.min(hand.length, 4)));
+    assert.ok(eligible.length, "Every restricted probe must include a legal shared-lane formation");
+    const mass = eligible.reduce((sum, entry) => sum + entry.weight, 0);
+    if (!mass) return eligible[Math.floor(random() * eligible.length)].cards;
+    let threshold = random() * mass;
+    for (const entry of eligible) { threshold -= entry.weight; if (threshold <= 0) return entry.cards; }
+    return eligible.at(-1).cards;
+  }
   const forecasts = publicPlacementForecasts(history, placement, random);
   const own = keys.map(key => ownProgress[key] || 0), other = keys.map(key => otherProgress[key] || 0);
   let best, bestValue = -Infinity;
@@ -99,9 +124,6 @@ export function choosePlacementProbe(hand, ownProgress, otherProgress, policy, r
 
 export function simulatePlacementMatch(starterIndex, placementIndex, policy, seed) {
   const placement = four.AI_PLACEMENT_TRAITS[placementIndex];
-  const pools = { motive: ["power-seeker"], placement: [placement.id],
-    commitment: [["measured-planner", "full-formation", "restless-dealer", "score-reader"][placementIndex]] };
-  const traits = four.createAiTraits(() => .4, pools), stable = JSON.stringify(traits);
   const sides = [starters[starterIndex], starters[(starterIndex + placementIndex) % starters.length]].map((definition, owner) => {
     const random = rng(seed + owner * 8191), deck = [], discard = decks.buildDeckInstances(catalog, definition, owner ? "opponent" : "player");
     normal.reshuffleDiscardPile(deck, discard, random);
@@ -115,13 +137,14 @@ export function simulatePlacementMatch(starterIndex, placementIndex, policy, see
     stackedVanguardRallyRounds: [0, 0],
     opponentCounts: [0, 0, 0, 0], preferredByCount: [0, 0, 0], totalByCount: [0, 0, 0], maxPlanningMs: 0 };
   for (let round = 0; round < four.MAX_MATCH_ROUNDS; round++) {
-    const ai = four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], traits,
-      { history, cardLibrary: library }, [null, "rally", "link", "finisher"][(starterIndex + placementIndex) % 4]);
+    const ai = globalThis.ClawFourLaneAi.chooseFormation(sides[1].hand, sides[0].hand,
+      sides[1].progress, sides[0].progress, round + 1, decisions[1]);
     const start = performance.now();
     const player = choosePlacementProbe(sides[0].hand, sides[0].progress, sides[1].progress,
-      policy, round, history, placement, decisions[0]);
+      policy, round, history, placement, decisions[0], sides[1].hand);
     result.maxPlanningMs = Math.max(result.maxPlanningMs, performance.now() - start);
-    const plays = [player, ai], resolved = four.resolveProgress(player, ai, sides[0].progress, sides[1].progress);
+    const plays = [player, ai], resolved = four.resolveProgress(player, ai, sides[0].progress, sides[1].progress,
+      four.resolveClashes(player, ai), round + 1);
     plays.forEach((formation, owner) => {
       result.stackedVanguardRallyRounds[owner] += Number(formation.some((value, lane) => value?.tactic === "vanguard"
         && four.getTacticBonus(formation, lane) === 1 && four.getRallyBonus(formation, lane) === 1));
@@ -139,6 +162,7 @@ export function simulatePlacementMatch(starterIndex, placementIndex, policy, see
       const cards = plays[owner].filter(Boolean);
       assert.ok(cards.length >= 1 && cards.length <= 4 && new Set(cards).size === cards.length);
       assert.ok(cards.every(card => side.hand.includes(card)));
+      assert.ok(four.isValidBattleFormation(plays[owner], round + 1));
       side.hand = side.hand.filter(card => !plays[owner].includes(card));
       side.discard.push(...cards);
       side.progress = { ...resolved.progressAfter[owner ? "ai" : "player"] };
@@ -157,7 +181,6 @@ export function simulatePlacementMatch(starterIndex, placementIndex, policy, see
       assert.ok(refill.drawn <= 3 && side.hand.length >= 1 && side.hand.length <= 7);
     });
   }
-  assert.equal(JSON.stringify(traits), stable);
   return result;
 }
 
@@ -213,7 +236,7 @@ export function runPlacementAudit(trials = 1, seed = 746381) {
   return { matches: trials * 16 * placementPolicies.length, pairedMatchups: paired.length, elapsedSeconds: +((performance.now() - start) / 1000).toFixed(2),
     maxProbePlanningMs: +Math.max(...planningMs).toFixed(1), metrics, matchedWidthComparisons, preferred,
     bestFixedPolicy: bestCamp, pairedBestFixedMinusAdaptivePct: +(100 * pairedBestCampAdvantage).toFixed(1),
-    note: "Public habits and completed history only; paired shuffles. Fixed pairs/triples and rotating equivalents have matched lane limits; adaptive 1–4, full-push largest legal commitment. Not a proof of human balance." };
+    note: "Both hands public, eight rounds and uncapped match score; paired shuffles. Every policy fills the alternating shared battle lane. Nominal camping regions allow that extra required lane, so region widths are not identical commitment limits. Restricted probes condition the public planner's candidate mixture and can fall back to a legal candidate when its mass is zero; they are not optimal restricted equilibria. Preferred-lane observations are descriptive only: no opponent habits are supplied to either current planner. Not a proof of human balance." };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

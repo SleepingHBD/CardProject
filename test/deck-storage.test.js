@@ -145,36 +145,69 @@ test("blocked reads, blocked writes and full storage do not block session decks 
   }
 });
 
-test("confirmation snapshots the selected deck; later saved edits cannot alter launch, restart or difficulty-change decks", () => {
+test("confirmation snapshots the selected deck; saved edits cannot alter direct launch or restarted matchups", async () => {
   const store = api.createDeckStore(catalog, memory());
   const saved = store.save(custom("Rally run", starters[1]));
-  const start = gameSource.indexOf("function showDifficultyChooser(");
-  const confirmStart = gameSource.indexOf("function confirmFourLaneDeck(");
-  const source = gameSource.slice(start, gameSource.indexOf("\n}", start) + 2)
-    + "\n" + gameSource.slice(confirmStart, gameSource.indexOf("\n}", confirmStart) + 2);
+  const gameFunction = (name, async = false) => {
+    const start = gameSource.indexOf(`${async ? "async " : ""}function ${name}(`);
+    assert.notEqual(start, -1);
+    return gameSource.slice(start, gameSource.indexOf("\n}", start) + 2);
+  };
+  const source = [gameFunction("confirmFourLaneDeck"), gameFunction("startFourLaneDuel"),
+    gameFunction("freshPersonalDeck"), gameFunction("startGame", true)].join("\n");
+  let encounters = 0;
+  const encounter = Object.freeze({ profile: Object.freeze({ id: "balanced" }), deck: starters[0], traits: Object.freeze([]) });
+  const element = () => ({ classList: { add() {}, remove() {} } });
   const context = {
     constructedDecks: api, fourLaneDeckCatalog: catalog,
-    fourLaneOpponents: { createEncounter: () => ({ deck: starters[0], traits: [] }) },
+    fourLaneOpponents: { createEncounter: () => { encounters++; return encounter; } },
     fourLaneOpponentRoster: [], selectedFourLaneOpponent: "random",
     fourLaneDeckEditor: { getSelectedDeck: () => store.getDeck() },
     showFourLaneLobbyStep() {}, confirmedFourLaneDeck: null,
     isFourLaneMode: () => true, hideFourLanePreview: () => {}, stopTutorialMode: () => {},
+    audio: { startDuelMusic() {} }, shuffle: cards => cards,
     closeGameMenu: () => {}, setGameMenuVisibility: () => {}, state: { locked: false },
     document: { querySelector: () => ({}), body: { classList: { remove: () => {} } } },
-    ui: { mainMenuScreen: {}, difficultyDialog: { open: true } },
+    ui: Object.fromEntries(["mainMenuScreen", "menuButton", "clashEffects", "battlefield", "playerPlayZone",
+      "aiPlayZone", "versusBadge", "playerCollection", "aiCollection", "playerHand"].map(key => [key, element()])),
+    placeholder: text => text,
+    createAiTraits() { assert.fail("restarting WIP must not generate habits"); },
   };
+  for (const name of ["clearCinematicRemains", "renderDuelMode", "renderOpponentHabits", "renderPreviousRoundsHistory",
+    "setRoundAdvanceControls", "refillHands", "prepareAiPlan", "renderOpponentTells", "renderFormationControls",
+    "setMessage", "renderCollection", "renderHand", "renderRound", "renderRoundScore", "playDeckTransition",
+    "animateHandDraw", "beginFormationBuilding"]) context[name] = () => {};
   runInNewContext(source, context);
+  let launched;
+  const startGame = context.startGame;
+  context.startGame = () => (launched = startGame());
   context.confirmFourLaneDeck();
   store.save(custom("Finisher replacement", starters[3]), saved.id);
-  context.showDifficultyChooser("four-lane");
+  context.startFourLaneDuel();
+  await launched;
   const snapshot = context.matchFourLaneDeck;
   assert.equal(snapshot.name, "Rally run");
   assert.ok(Object.isFrozen(snapshot) && Object.isFrozen(snapshot.cards));
   assert.deepEqual([...snapshot.cards], [...starters[1].cards]);
-  context.showDifficultyChooser("game");
+  assert.equal(context.state.gameMode, "four-lane");
+  assert.equal(context.state.difficulty, "open");
+  assert.equal(context.matchFourLaneOpponent, encounter);
+  assert.deepEqual(Array.from(context.state.deck, card => card.art), [...starters[1].cards]);
+  assert.deepEqual(Array.from(context.state.aiDeck, card => card.art), [...starters[0].cards]);
+  assert.equal(encounters, 1);
+  const firstIds = [...context.state.deck, ...context.state.aiDeck].map(card => card.instanceId);
+  store.select("starter:link");
+  context.selectedFourLaneOpponent = "finisher";
+  await context.startGame();
   assert.equal(context.matchFourLaneDeck, snapshot);
-  context.showDifficultyChooser("main");
-  assert.equal(context.pendingDuelMode, "normal");
+  assert.equal(context.matchFourLaneOpponent, encounter);
+  assert.equal(encounters, 1, "restart must not select another rival");
+  assert.deepEqual(Array.from(context.state.deck, card => card.art), [...starters[1].cards]);
+  assert.deepEqual(Array.from(context.state.aiDeck, card => card.art), [...starters[0].cards]);
+  assert.ok([...context.state.deck, ...context.state.aiDeck].every(card => !firstIds.includes(card.instanceId)),
+    "restart creates fresh runtime copies from the same locked definitions");
+  assert.equal(context.state.aiTraits.length, 0);
+  assert.equal(context.state.round, 1);
 });
 
 test("the editor preserves safe text boundaries, accessible controls and dedicated packaging", () => {

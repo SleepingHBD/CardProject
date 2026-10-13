@@ -7,10 +7,12 @@ import { pathToFileURL } from "node:url";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
 import "../src/four-lane-rules.js";
+import "../src/four-lane-ai.js";
 import "../src/deckbuilding.js";
 import "../src/opponents.js";
 
 const normal = globalThis.ClawRules, four = globalThis.ClawFourLaneRules;
+const publicAi = globalThis.ClawFourLaneAi;
 const decks = globalThis.ClawDeckbuilding, opponents = globalThis.ClawFourLaneOpponents;
 const source = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 export const library = runInNewContext([
@@ -63,49 +65,61 @@ function permutations(cards) {
     permutations(cards.filter((_, j) => i !== j)).map(rest => [card, ...rest]));
 }
 
-function roleOrder(cards) {
-  let best = cards, score = -Infinity;
-  for (const formation of permutations(cards)) {
-    const value = formation.reduce((sum, _, lane) => sum + four.getTacticBonus(formation, lane) + four.getRallyBonus(formation, lane), 0)
-      + formation[0].power * .001;
-    if (value > score) { score = value; best = formation; }
+function roleOrder(cards, round) {
+  let best, score = -Infinity;
+  const battleLane = four.getBattleLane(round);
+  // Fixed-count controls still obey free placement and the required battle.
+  // This cheap role-order heuristic is a probe, not the production opponent.
+  for (let mask = 1; mask < 16; mask++) {
+    const lanes = [0, 1, 2, 3].filter(lane => mask & 1 << lane);
+    if (lanes.length !== cards.length || !lanes.includes(battleLane)) continue;
+    for (const ordering of permutations(cards)) {
+      const formation = Array(4).fill(null);
+      lanes.forEach((lane, index) => { formation[lane] = ordering[index]; });
+      const value = formation.reduce((sum, card, lane) => sum + (!card ? 0
+        : four.getTacticBonus(formation, lane) + four.getRallyBonus(formation, lane)), 0)
+        + (formation[battleLane].power + four.getTacticBonus(formation, battleLane)
+          + four.getRallyBonus(formation, battleLane)) * .005;
+      if (value > score) { score = value; best = formation; }
+    }
   }
   return best;
 }
 
 export function selectProbe(side, policy, round, history, random) {
-  if (policy === "adaptive") return four.chooseAiFormation(side.hand, side.other.progress, side.progress, random, [],
-    { history: history.map(value => ({ playerCards: value.aiCards, aiCards: value.playerCards, laneProgress: { player: value.laneProgress?.ai, ai: value.laneProgress?.player } })), cardLibrary: library });
+  if (policy === "adaptive") return publicAi.chooseFormation(side.hand, side.other.hand,
+    side.progress, side.other.progress, round, random);
   const counts = four.getElementProgress(side.progress);
-  const ordered = [...side.hand].sort((a, b) => (b.power + Number(counts[b.element] < four.PROGRESS_PER_ELEMENT) * .5 + Number(b.tactic === "vanguard") * .25)
-    - (a.power + Number(counts[a.element] < four.PROGRESS_PER_ELEMENT) * .5 + Number(a.tactic === "vanguard") * .25));
+  const least = Math.min(...Object.values(counts));
+  const ordered = [...side.hand].sort((a, b) => (b.power + Number(counts[b.element] === least) * .5 + Number(b.tactic === "vanguard") * .25)
+    - (a.power + Number(counts[a.element] === least) * .5 + Number(a.tactic === "vanguard") * .25));
   let count = { one: 1, two: 2, three: 3, four: 4, "cheap-second": 2 }[policy];
-  if (policy === "cycle-3-1") count = [3, 1][round % 2];
-  if (policy === "cycle-4-1-1") count = [4, 1, 1][round % 3];
+  if (policy === "cycle-3-1") count = [3, 1][(round - 1) % 2];
+  if (policy === "cycle-4-1-1") count = [4, 1, 1][(round - 1) % 3];
   if (policy === "solo-farm") count = side.hand.length >= 6 ? 4 : 1;
   assert.ok(Number.isInteger(count), "Unknown audit policy");
   count = Math.min(count, side.hand.length);
   if (policy === "solo-farm" && count === 4) {
     const cheap = [...side.hand].sort((a, b) => a.power - b.power), first = cheap[0];
-    const trophy = cheap.find(card => card !== first && counts[card.element] < four.PROGRESS_PER_ELEMENT) || cheap[1];
-    return [first, trophy, ...cheap.filter(card => card !== first && card !== trophy).slice(0, 2)];
+    const trophy = cheap.find(card => card !== first && counts[card.element] === least) || cheap[1];
+    return roleOrder([first, trophy, ...cheap.filter(card => card !== first && card !== trophy).slice(0, 2)], round);
   }
   if (policy === "cheap-second" && count === 2) {
     let best, score = -Infinity;
     for (const first of side.hand) for (const second of side.hand) if (first !== second) {
-      const pair = [first, second];
-      const value = first.power + four.getTacticBonus(pair, 0) + four.getRallyBonus(pair, 0)
-        - second.power * .15 + Number(counts[first.element] < four.PROGRESS_PER_ELEMENT) * .25;
+      const pair = roleOrder([first, second], round), lane = four.getBattleLane(round);
+      const value = pair[lane].power + four.getTacticBonus(pair, lane) + four.getRallyBonus(pair, lane)
+        - second.power * .15 + Number(counts[first.element] === least) * .25;
       if (value > score) { score = value; best = pair; }
     }
     return best;
   }
-  return roleOrder(ordered.slice(0, count));
+  return roleOrder(ordered.slice(0, count), round);
 }
 
 export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four.MAX_MATCH_ROUNDS) {
   const encounter = opponents.createEncounter(roster, rivalId, rng(seed + 60013));
-  const habitsBefore = JSON.stringify(encounter.traits);
+  assert.deepEqual(encounter.traits, []);
   const sides = [definition, encounter.deck].map((deckDefinition, index) => {
     const random = rng(seed + index * 8191), deck = [], discard = decks.buildDeckInstances(catalog, deckDefinition, index ? "opponent" : "player");
     normal.reshuffleDiscardPile(deck, discard, random);
@@ -116,18 +130,20 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four
   sides[0].other = sides[1]; sides[1].other = sides[0];
   const decisions = [rng(seed + 31001), rng(seed + 41001)], history = [];
   const report = { winner: "stalled", roundLimitDraw: false, rounds: 0, draws: 0, reshuffles: 0, counts: [[0, 0, 0, 0], [0, 0, 0, 0]],
+    scores: [0, 0], trophies: [0, 0], sets: [0, 0],
     activations: { vanguard: 0, link: 0, finisher: 0, rally: 0 }, maxPlanningMs: 0 };
-  for (let round = 0; round < Math.min(maxRounds, four.MAX_MATCH_ROUNDS); round++) {
+  for (let round = 1; round <= Math.min(maxRounds, four.MAX_MATCH_ROUNDS); round++) {
     const start = performance.now();
     // Rival planning happens independently, before the probe chooses its cards.
-    const ai = four.chooseAiFormation(sides[1].hand, sides[0].progress, sides[1].progress, decisions[1], encounter.traits,
-      { history, cardLibrary: library }, encounter.profile.role);
+    const ai = publicAi.chooseFormation(sides[1].hand, sides[0].hand,
+      sides[1].progress, sides[0].progress, round, decisions[1]);
     report.maxPlanningMs = Math.max(report.maxPlanningMs, performance.now() - start);
     const plays = [selectProbe(sides[0], policy, round, history, decisions[0]), ai];
     plays.forEach((formation, side) => {
       const cards = formation.filter(Boolean);
       assert.ok(cards.length >= 1 && cards.length <= 4 && new Set(cards).size === cards.length);
       assert.ok(cards.every(card => sides[side].hand.includes(card)));
+      assert.ok(four.isValidBattleFormation(formation, round));
       report.counts[side][cards.length - 1]++;
       formation.forEach((card, lane) => {
         if (!card) return;
@@ -135,7 +151,8 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four
         if (four.getRallyBonus(formation, lane)) report.activations.rally++;
       });
     });
-    const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress);
+    const result = four.resolveProgress(...plays, sides[0].progress, sides[1].progress,
+      four.resolveClashes(...plays), round);
     assert.ok(result.extraCardPoints.player <= 2 && result.extraCardPoints.ai <= 2);
     report.rounds++; report.draws += Number(result.winner === "draw");
 
@@ -143,6 +160,9 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four
       side.hand = side.hand.filter(card => !plays[index].includes(card));
       side.discard.push(...plays[index].filter(Boolean));
       side.progress = { ...result.progressAfter[(index === 0 ? "player" : "ai")] };
+      report.scores[index] = four.getMatchScore(side.progress);
+      report.trophies[index] = four.getProgressTotal(side.progress);
+      report.sets[index] = four.getCompletedSets(side.progress);
 
       const all = [...side.deck, ...side.discard, ...side.hand];
       assert.equal(all.length, 24);
@@ -153,7 +173,7 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four
     const snapshot = cards => cards.map(card => card ? ({ art: card.art, element: card.element, power: card.power, tactic: card.tactic }) : null);
     history.push({ playerCards: snapshot(plays[0]), aiCards: snapshot(plays[1]), laneProgress: result.laneProgress });
     if (result.matchWinner) { report.winner = result.matchWinner === "ai" ? "opponent" : result.matchWinner; break; }
-    if (report.rounds >= four.MAX_MATCH_ROUNDS) { report.winner = "draw"; report.roundLimitDraw = true; break; }
+    assert.ok(round < four.MAX_MATCH_ROUNDS, "round eight must compare the final scores");
     sides.forEach(side => {
       const before = side.hand.length;
       const refill = four.replenishHand(side.deck, side.discard, side.hand, four.ROUND_DRAW, side.random);
@@ -161,7 +181,7 @@ export function simulateDuel(definition, rivalId, policy, seed, maxRounds = four
       assert.ok(refill.drawn <= four.ROUND_DRAW && side.hand.length >= 1 && side.hand.length <= 7 && side.hand.length - before === refill.drawn);
     });
   }
-  assert.equal(JSON.stringify(encounter.traits), habitsBefore);
+  assert.deepEqual(encounter.traits, []);
   return report;
 }
 
@@ -188,7 +208,7 @@ export async function audit({ trials = 4, seed = 24519, progress = () => {} } = 
     for (const policy of policies) {
       const cell = { deck: definition.id, rival: rival.id, policy, ...group() };
       for (let trial = 0; trial < trials; trial++) {
-        // Same shuffle/habit/AI streams across policies for a paired comparison.
+        // Same shuffle and AI streams across policies for a paired comparison.
         const matchSeed = (seed + deckIndex * 1000003 + rivalIndex * 100003 + trial * 101) >>> 0;
         const result = simulateDuel(definition, rival.id, policy, matchSeed);
         add(total, result); add(cell, result);
