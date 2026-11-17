@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "generator": "Built-in ImageGen",
+  "purpose": "First playable Willowgate Courtyard; artwork-only assets, with the existing card illustrations retained unchanged.",
+  "worldSize": { "width": 1024, "height": 640 },
+  "assets": [
+    {
+      "file": "willowgate-courtyard.png",
+      "type": "environment",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: production 2D top-down adventure-game environment, ARTWORK ONLY. Create an original cozy medieval feline village courtyard for Project: Prowl. Wide 1024x640 composition, orthographic overhead/three-quarter RPG map with straight horizontal and vertical world axes, NOT isometric, NOT a perspective landscape. Clean hand-inked cartoon illustration: bold warm-dark outlines, broad smooth matte colour shapes, one restrained cel shadow, simple charming forms, no realistic rendering, grain, hatching, tiny clutter or painterly blur. Warm parchment sandstone paving, red-brown terracotta roofs, cream timber walls, restrained leaf green ivy and brass accents. The ENTIRE courtyard is visible, with spacious WALKABLE open ground. This must match an exact gameplay blockout; coordinates below refer to a1024x640 canvas. A low enclosing northwall occupies y0..96 with a visibly OPEN central archway/path at x448..576; no closed doors inside this opening, the game draws its own movable gate. A compact pottery workshop footprint occupies ONLY x64..344,y128..208; another low gatekeeper building footprint occupies ONLY x688..960,y112..192. Keep their drawn footprints close to those rectangles; don't project walls into the walking ground below. A low rectangular fountain/plinth occupies ONLY x448..576,y284..364, with a simple small water basin; no tall centre statue. Everything else between the outer walls is clear walkable stone paving, with broad paths around the fountain. Keep open standing areas for characters at x250,y275 and x760,y240 and a player at x512,y520. Decorative planters/ivy can sit ON the topwall or buildingroofs only, not elsewhere on the open paths. Paving is broad, quiet flat shapes with a few irregular cracks, not dozens of gritty stones. The lower half should feel open, not empty black, with a subtle path from bottomcentre toward the northgate around the fountain. No characters, no text, no labels, no UI, no floating symbols, no grid, no card frames, no logos or watermark. Polished production illustration with clear traversable spaces and crisp edges."
+    },
+    {
+      "file": "player-walk.png",
+      "type": "sprite-sheet",
+      "transparent": true,
+      "reference": "assets/characters/rookie.webp",
+      "columns": ["idle", "step-a", "idle", "step-b"],
+      "rows": ["down", "left", "right", "up"],
+      "prompt": "Transform the supplied orange tabby adventurer portrait into a clean production OVERWORLD WALKING SPRITE SHEET for the same character. Preserve orange striped fur, bluegreeneyes, short ears, purple neckerchief, teal medieval tunic, brown belt and small satchel; no large medal needed at this small sprite scale. Cute very STUBBY proportions: oversized feline head, small rounded torso, exactly two short forearms and two short hindlegs, simple mitten paws and one clear striped tail. Clean warm-black ink outlines and simple matte cel-shaded colour, matching referenceartist, not pixelart or realistic3D. The required output is ONE TRANSPARENT PNG sprite atlas, exactly FOUR EQUAL COLUMNS by FOUR EQUAL ROWS,16 separate complete character sprites, with perfectly regular cell centres. Transparent empty gutters; NO visible grid, NO labels, NO text, NO background or groundshadow. Each character occupies the same visualheight andscale, feet aligned at the same cell-relativebaseline with at least15%transparentmargin. Row1 faces DOWN towardviewer, row2 faces LEFT, row3 faces RIGHT, row4 faces UP awayfromviewer. Columns in every row: idle standing, walking stepA, idle standing, walking stepB. Left/right rows show side profile; uprows show the back of the head and tunic, not a front face. Walking steps visibly alternate the two hindlegs with a modest opposite forearm swing, no newlimbs. Small top-down RPG camera angle as if viewedfromabove, allspritefigures remainuprightintheircell. No props, no raised fist, no jewellery that turns into limbs, no cropping, no merged neighbours. This is a production sprite sheet to be sampled in16 equal rectangular cells, NOT a poster or character turnaround illustration."
+    },
+    {
+      "file": "hareth.png",
+      "type": "npc-sprite",
+      "transparent": true,
+      "reference": "assets/cards/hareth-hearthbeat.png",
+      "prompt": "Transform this exact Hareth cat character into ONE small full-body overworld NPC sprite on a genuinely TRANSPARENT BACKGROUND. Preserve his orange BritishShorthaircat fur, cream muzzle and paws, amber eyes, red-and-gold medieval drummer livery with cream sleevepanels, brown drum straps and round red waistdrum. Front/down-facing, slightly overhead RPG viewpoint, a calm friendly standingpose, BOTH drumsticks held LOW across the waistdrum, no raised stick. Two coherent forearms to two paws, two short hindlegs to two grounded paws, one stripedtail. Extremely stubby cute body, oversizedhead, compact round silhouette readable at60pxhigh. Match the reference's clean hand-inked matte cartoon rendering, warmdarkoutlines, broad flatfills, one celshadow. Center the COMPLETE figure with generoustransparentbreathingroom on allsides, no clipping, no castgroundshadow, no scenebackground, no redcircle, no flags, no stones, no text, no UI, no border. This is an isolated ingame sprite, not a card illustration. Keep the referenceidentity andcostume, but simplify tinydecorative details."
+    },
+    {
+      "file": "lucan.png",
+      "type": "npc-sprite",
+      "transparent": true,
+      "reference": "assets/cards/lucan-cinderclay.png",
+      "prompt": "Transform this exact Lucan potter cat character into ONE small full-body overworld NPC sprite on a genuinely TRANSPARENT BACKGROUND. Preserve warmsepia Singapura fur, darkbrown ears andtailtip, cream muzzle, greeneyes, small creamlinen cap with both ears clear, cream shirt with MATCHING cream shoulderstraps, terracotta-red apron. Front/down-facing, slightly overhead RPG viewpoint, relaxed STANDINGpose, holding ONE small brown claycup with both forepaws at waistheight; no potterywheel or table in this sprite. Exactly two coherent forearms to two mittenpaws, two short connected hindlegs to two groundedpaws, one tail separate from legs. Extremely stubby cute body, oversizedhead, compact silhouette readableat60pxhigh. Match reference cleanhand-inked mattecartoon rendering, warmdark outlines, broad flatfills, one celshadow. Center COMPLETE figure with generous transparentbreathingroom, no cropping, no castgroundshadow, no scenebackground, no redcircle, no extra cups, no steam, no furniture, no text, no UI, no border. Keepreferenceidentity/clothes, simplifytinydetails, no humanoidfingers."
+    }
+  ],
+  "framing": "The renderer preserves source aspect ratios. Sprite-sheet cells divide the actual image into four equal rows and columns; no source illustration was cropped or overwritten.",
+  "collisionAlignment": "After inspection, the world model was fitted to the generated building/fountain footprints: north wall128high; workshop64,104,280x128; watchhouse688,104,292x120; fountain438,290,148x92."
+}

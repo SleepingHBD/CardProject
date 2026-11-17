@@ -4,7 +4,9 @@ await mkdir("dist/src", { recursive: true });
 await cp("src/viewport.js", "dist/src/viewport.js");
 await cp("src/rules.js", "dist/src/rules.js");
 await cp("src/audio.js", "dist/src/audio.js");
+await cp("src/story-model.js", "dist/src/story-model.js");
 await cp("src/game.js", "dist/src/game.js");
+await cp("src/story.js", "dist/src/story.js");
 await cp("assets", "dist/assets", {
   recursive: true,
   filter: (source) => !source.endsWith(".new-art.webp"),

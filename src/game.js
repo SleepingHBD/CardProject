@@ -640,12 +640,20 @@ const state = {
   round: 1,
   locked: false,
   dealing: false,
+  duelRunId: 0,
   soundOn: true,
   clashStyle: readSavedClashStyle(),
   artworkStyle: readSavedArtworkStyle(),
   boardTheme: readSavedBoardTheme(),
   audioVolumes: readSavedAudioVolumes(),
 };
+// The adventure owns map progress; this context only connects one encounter
+// to the existing duel UI and returns its outcome when the player leaves.
+let storyEncounter = null;
+const STORY_PUZZLE_CARDS = Object.freeze({
+  player: Object.freeze(["candle-pounce", "lucan-cinderclay", "bubble-bengal", "kitewhisker", "leafy-loaf", "teapot-tabby"]),
+  ai: Object.freeze(["sizzle-mittens", "teapot-tabby"]),
+});
 const tutorial = {
   active: false,
   mode: "complete",
@@ -1429,9 +1437,91 @@ function renderTutorialCoach() {
   });
 }
 
+function validateStoryEncounter(options) {
+  const kinds = { "gate-duel": "duel", "rally-puzzle": "puzzle" };
+  if (!options || typeof options !== "object" || !Object.hasOwn(kinds, options.id)
+    || kinds[options.id] !== options.kind) throw new TypeError("Choose an available story encounter.");
+  const difficulty = options.kind === "puzzle" ? "guided" : options.difficulty || "instinct";
+  if (!Object.hasOwn(DIFFICULTIES, difficulty)) throw new TypeError("Choose a valid duel difficulty.");
+  return { id: options.id, kind: options.kind, difficulty, outcome: null };
+}
+
+function takeStoryPuzzleCards(deck, arts) {
+  return arts.map(art => {
+    const index = deck.findIndex(card => card.art === art);
+    if (index < 0) throw new Error(`The puzzle is missing ${art}.`);
+    return deck.splice(index, 1)[0];
+  });
+}
+
+function configureStoryPuzzleDeal() {
+  state.playerHand = takeStoryPuzzleCards(state.deck, STORY_PUZZLE_CARDS.player);
+  state.aiHand = takeStoryPuzzleCards(state.deck, STORY_PUZZLE_CARDS.ai);
+  state.aiPlan = [...state.aiHand];
+  state.aiTellClues = state.aiPlan.map(() => "full");
+  state.aiTraits = [];
+}
+
+function storyPuzzleOutcome(playerCards, resolution) {
+  if (resolution.winner === "player" && playerCards.length <= 2) return "won";
+  return resolution.winner === "draw" ? "draw" : "lost";
+}
+
+async function startStoryEncounter(options) {
+  if (storyEncounter) throw new Error("Finish or leave the current encounter first.");
+  const encounter = validateStoryEncounter(options);
+  const screen = document.querySelector("#storyScreen");
+  if (screen) screen.hidden = true;
+  document.body.classList.remove("story-active");
+  let openingRunId;
+  try {
+    const opening = startGame({ storyEncounter: encounter });
+    openingRunId = state.duelRunId;
+    return await opening;
+  } catch (error) {
+    // A failed deal must not leave an invisible encounter blocking the map.
+    // Only clean up this attempt: an earlier rejected animation may settle
+    // after the player has already returned and started another encounter.
+    if (storyEncounter && state.duelRunId === openingRunId) returnToStory("retreated");
+    throw error;
+  }
+}
+
+function returnToStory(outcome = "retreated") {
+  if (!storyEncounter) return false;
+  const encounter = storyEncounter;
+  const resolvedOutcome = ["won", "lost", "draw", "retreated"].includes(outcome) ? outcome : "retreated";
+  // Clear before dispatch: duplicate clicks and re-entrant listeners cannot
+  // award the same encounter twice or report a retreat after a result.
+  storyEncounter = null;
+  state.duelRunId = (state.duelRunId || 0) + 1;
+  state.locked = true;
+  state.dealing = false;
+  state.selectedCardIds = [];
+  state.pendingMatchWinner = null;
+  clearTrophyClaim();
+  clearCinematicRemains();
+  closeGameMenu({ restoreFocus: false });
+  closeDialog(ui.resultDialog);
+  closeDialog(ui.previousRoundsHistoryDialog);
+  closeDialog(ui.difficultyDialog);
+  ui.deckTransition.hidden = true;
+  ui.gameShell.classList.remove("cards-gathering");
+  ui.battlefield.classList.remove("cinematic-focus", "is-clashing");
+  ui.mainMenuScreen.hidden = true;
+  setGameMenuVisibility(false);
+  document.dispatchEvent(new CustomEvent("prowl:story-return", {
+    detail: { id: encounter.id, kind: encounter.kind, outcome: resolvedOutcome },
+  }));
+  return true;
+}
+
 function configureGameMenu() {
+  const inStory = Boolean(globalThis.ClawStoryCombat?.isActive());
   ui.gameMenuTitle.textContent = tutorial.active ? "Training is paused" : "The duel is paused";
-  ui.gameMenuNote.textContent = tutorial.active
+  ui.gameMenuNote.textContent = inStory
+    ? "You can restart this encounter or return to the courtyard. Leaving an unfinished encounter does not complete it."
+    : tutorial.active
     ? tutorial.mode === "complete"
       ? "Resume this scenario, restart the complete training path, adjust settings, or return to the main menu."
       : "Resume this section, restart it from the beginning, adjust settings, or return to the main menu."
@@ -1440,7 +1530,8 @@ function configureGameMenu() {
   ui.restartGameButton.textContent = tutorial.active
     ? tutorial.mode === "complete" ? "Restart Tutorial" : "Restart Section"
     : "Restart Duel";
-  ui.changeDifficultyButton.hidden = tutorial.active;
+  ui.changeDifficultyButton.hidden = tutorial.active || inStory;
+  ui.returnMainMenuButton.textContent = inStory ? "Return to Courtyard" : "Return to Main Menu";
 }
 
 function stopTutorialMode() {
@@ -1913,6 +2004,11 @@ function refillHands(openingHand = false) {
 }
 
 function prepareAiPlan() {
+  if (globalThis.ClawStoryCombat?.isPuzzle()) {
+    state.aiPlan = [...state.aiHand];
+    state.aiTellClues = state.aiPlan.map(() => "full");
+    return;
+  }
 
   const commitment = chooseAiCommitment(
     state.aiHand.length,
@@ -1953,6 +2049,22 @@ function renderOpponentHabits() {
 }
 
 function renderOpponentTells() {
+  if (globalThis.ClawStoryCombat?.isPuzzle()) {
+    ui.tacticsTitle.textContent = "Lucan's Fixed Formation";
+    ui.opponentHabits.hidden = true;
+    ui.opponentHabits.innerHTML = "";
+    ui.commitmentHint.textContent = "Tactical puzzle · Win this round using at most two cards";
+    ui.opponentTells.hidden = false;
+    ui.opponentTells.innerHTML = state.aiPlan.map((card, index) => `
+      <div class="opponent-tell clue-full element-${card.element}" aria-label="Lane ${index + 1}: ${cardDisplayName(card)}, ${ELEMENTS[card.element].label}, Power ${card.power}, ${cardRoleDefinition(card).label}">
+        <span class="tell-lane">LANE ${index + 1}</span>
+        <span class="tell-element" aria-hidden="true">${ELEMENTS[card.element].icon}</span>
+        <b>${cardDisplayName(card)}</b>
+        <small>Power ${card.power} · ${cardRoleDefinition(card).label}</small>
+      </div>
+    `).join("");
+    return;
+  }
 
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Guided";
   const concealsCommitment = concealsOpponentFormation();
@@ -2058,6 +2170,14 @@ function beginFormationBuilding() {
         : "Place one to three cards. The opponent's formation stays hidden until the clash."
       : "Place one to three cards in order, review the forecast, then commit when ready.",
   );
+  if (globalThis.ClawStoryCombat?.isPuzzle()) {
+    ui.aiPlayZone.innerHTML = `<div class="played-cards ai-formation">${state.aiPlan.map((card, index) => `
+      <div class="clash-card" data-clash-index="${index}">
+        <span class="filled-lane-label">LANE ${index + 1}</span>
+        ${cardMarkup(card, false, index)}
+      </div>`).join("")}</div>`;
+    setMessage("Lucan's tactical puzzle", "Win this round using at most two cards. The opponent's exact formation is visible; find any solution that meets the goal.");
+  }
 }
 
 function getKnownPlayerTacticBonus(cards, index) {
@@ -2065,6 +2185,11 @@ function getKnownPlayerTacticBonus(cards, index) {
 }
 
 function renderMatchupForecast() {
+  if (globalThis.ClawStoryCombat?.isPuzzle()) {
+    ui.matchupForecast.style.gridTemplateColumns = "";
+    ui.matchupForecast.innerHTML = '<span class="forecast-instruction">Goal: win this round with at most two cards. No predicted outcome is shown.</span>';
+    return;
+  }
   if (state.locked) {
     ui.matchupForecast.style.gridTemplateColumns = "";
     const lockedMessage = tutorial.active && tutorial.phase === "intro"
@@ -2576,6 +2701,11 @@ function placeCardInLane(instanceId, laneIndex) {
 }
 
 function updateFormationMessage() {
+  if (globalThis.ClawStoryCombat?.isPuzzle()) {
+    setMessage("Lucan's tactical puzzle", "Win this round using at most two cards. You may change your formation before committing; any winning solution within the limit counts.");
+    renderOpponentTells();
+    return;
+  }
   const count = formationCardCount(state.selectedCardIds);
   const title = count === 0
     ? "Build your formation."
@@ -3744,6 +3874,7 @@ function playRound() {
   }
 
   const tutorialRunId = tutorial.active ? tutorial.runId : null;
+  const roundRunId = state.duelRunId;
   setRoundAdvanceControls(false);
   ui.menuButton.disabled = true;
   const selectedCards = selectedFormationCards();
@@ -3773,6 +3904,7 @@ function playRound() {
   }
 
   window.setTimeout(async () => {
+    if (roundRunId !== state.duelRunId) return;
     if (tutorialRunId !== null && (!tutorial.active || tutorial.runId !== tutorialRunId)) return;
     const removedOpponent = state.aiPlan.map(card => card ? removeCard(state.aiHand, card.instanceId) : null);
     const aiCards = removedOpponent.filter(Boolean);
@@ -3786,6 +3918,7 @@ function playRound() {
     );
     audio.reveal(formationCardCount(aiCards));
     const resolution = await animateClashes(playerCards, aiCards);
+    if (roundRunId !== state.duelRunId) return;
     if (tutorialRunId !== null) {
       if (!tutorial.active || tutorial.runId !== tutorialRunId) return;
       resolveTutorialRound(playerCards, aiCards, resolution);
@@ -3843,6 +3976,12 @@ function completeRoundReward(
   renderCollection(ui.aiCollection, state.aiWins);
   renderRound();
   renderRoundScore();
+  if (globalThis.ClawStoryCombat?.isPuzzle()) {
+    storyEncounter.outcome = storyPuzzleOutcome(playerCards, resolution);
+    storyEncounter.puzzleCardCount = playerCards.length;
+    storyEncounter.roundWinner = resolution.winner;
+    return endGame(resolution.winner);
+  }
   state.pendingMatchWinner = getCompletedMatchWinner(resolution.winner);
   setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
   ui.menuButton.disabled = false;
@@ -3925,6 +4064,7 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
 }
 
 async function nextRound() {
+  const roundRunId = state.duelRunId;
 
   clearCinematicRemains();
   clearTrophyClaim();
@@ -3968,12 +4108,14 @@ async function nextRound() {
   renderRound();
   renderRoundScore();
   await animateHandDraw(drawnCardCount);
+  if (roundRunId !== state.duelRunId) return;
   state.dealing = false;
   ui.menuButton.disabled = false;
   beginFormationBuilding();
 }
 
 async function endGame(winner) {
+  const resultRunId = state.duelRunId;
   state.locked = true;
   ui.menuButton.disabled = true;
   const won = winner === "player";
@@ -3982,15 +4124,40 @@ async function endGame(winner) {
   document.querySelector("#resultTitle").textContent = drawn ? "An evenly matched duel!" : won
     ? "A purr-fect victory!"
     : "The opponent prevails!";
-  const resultSummary = won
+  const resultSummary = drawn ? "Neither side completed the match with a winning result." : won
     ? "You claimed two trophies from every element."
     : "The opponent completed all six elemental trophy slots first.";
   document.querySelector("#resultText").textContent =
     `${resultSummary} Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
   document.querySelector("#resultCards").textContent = getTrophyProgress(state.playerWins);
+  document.querySelector("#resultCardsLabel").textContent = "Trophy slots";
+  document.querySelector("#playAgainButton").textContent = storyEncounter ? "Return to Courtyard" : "Play again";
+  if (storyEncounter) {
+    if (storyEncounter.kind === "puzzle") {
+      const passed = storyEncounter.outcome === "won";
+      document.querySelector("#resultEyebrow").textContent = "LUCAN'S TACTICAL PUZZLE";
+      document.querySelector("#resultTitle").textContent = passed ? "Puzzle cleared!" : "Puzzle not cleared";
+      document.querySelector("#resultText").textContent = passed
+        ? "You won the round using at most two cards. Your solution earns Lucan's workshop stamp."
+        : storyEncounter.puzzleCardCount > 2
+          ? "The goal requires at most two cards. Return to Lucan and try another formation."
+          : "The round must end in a victory, not a draw or loss. Return to Lucan when you want to try again.";
+      document.querySelector("#resultCards").textContent = passed ? "Yes" : "No";
+      document.querySelector("#resultCardsLabel").textContent = "Goal met";
+    } else {
+      storyEncounter.outcome = drawn ? "draw" : won ? "won" : "lost";
+      document.querySelector("#resultEyebrow").textContent = "HARETH'S GATE TRIAL";
+      document.querySelector("#resultTitle").textContent = won ? "The way is open!" : drawn ? "An unfinished contest" : "Hareth holds the gate";
+      document.querySelector("#resultText").textContent = won
+        ? `You completed the normal six-trophy duel. Hareth will open the courtyard gate. Rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`
+        : "Your courtyard progress is safe. Return to Hareth whenever you want another attempt.";
+    }
+  }
   await playDeckTransition("ending");
-  if (drawn) audio.roundResult("draw"); else audio.matchResult(won);
+  if (resultRunId !== state.duelRunId) return;
+  if (drawn) audio.roundResult("draw");
+  else audio.matchResult(storyEncounter?.kind === "puzzle" ? storyEncounter.outcome === "won" : won);
   if (!ui.resultDialog.open) ui.resultDialog.showModal();
 }
 
@@ -4241,6 +4408,10 @@ function openSettings(returnTarget) {
 }
 
 function showMainMenu() {
+  if (globalThis.ClawStoryCombat?.isActive()) {
+    returnToStory("retreated");
+    return;
+  }
   state.locked = true;
   stopTutorialMode();
   audio.startMainMenuMusic();
@@ -4286,12 +4457,21 @@ function leaveDifficultyChooser() {
   showMainMenu();
 }
 
-async function startGame() {
+async function startGame(options = {}) {
+  state.duelRunId = (state.duelRunId || 0) + 1;
+  const openingRunId = state.duelRunId;
+  storyEncounter = options.storyEncounter ? { ...options.storyEncounter, outcome: null } : null;
+  if (storyEncounter) state.difficulty = storyEncounter.difficulty;
   stopTutorialMode();
   audio.startDuelMusic();
   clearCinematicRemains();
   ui.mainMenuScreen.hidden = true;
   document.body.classList.remove("main-menu-active");
+  document.body.classList.remove("story-active");
+  const storyScreen = document.querySelector("#storyScreen");
+  if (storyScreen) storyScreen.hidden = true;
+  closeDialog(ui.resultDialog);
+  document.querySelector("#playAgainButton").textContent = storyEncounter ? "Return to Courtyard" : "Play again";
   renderGallery();
   state.deck = freshDeck();
   state.discardPile = [];
@@ -4320,7 +4500,8 @@ async function startGame() {
   setRoundAdvanceControls(false);
   ui.clashEffects.innerHTML = "";
   ui.battlefield.classList.remove("is-clashing");
-  refillHands(true);
+  if (globalThis.ClawStoryCombat?.isPuzzle()) configureStoryPuzzleDeal();
+  else refillHands(true);
   prepareAiPlan();
   renderOpponentTells();
   renderFormationControls();
@@ -4336,8 +4517,10 @@ async function startGame() {
   renderRound();
   renderRoundScore();
   await playDeckTransition("opening");
+  if (openingRunId !== state.duelRunId) return;
   setMessage("Drawing your opening hand...", "Six cards are being dealt for the first round.");
   await animateHandDraw(state.playerHand.length, true);
+  if (openingRunId !== state.duelRunId) return;
   state.dealing = false;
   ui.menuButton.disabled = false;
   beginFormationBuilding();
@@ -4511,7 +4694,16 @@ ui.nextRoundButton.addEventListener("click", () => {
 });
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
+  if (storyEncounter) {
+    returnToStory(storyEncounter.outcome || "retreated");
+    return;
+  }
   showDifficultyChooser("main");
+});
+ui.resultDialog.addEventListener("cancel", (event) => {
+  if (!storyEncounter) return;
+  event.preventDefault();
+  returnToStory(storyEncounter.outcome || "retreated");
 });
 ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("main"));
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
@@ -4539,7 +4731,7 @@ ui.restartGameButton.addEventListener("click", () => {
   if (tutorial.active) {
     startTutorial(tutorial.mode, tutorial.entryLessonIndex);
   } else {
-    startGame();
+    startGame(storyEncounter ? { storyEncounter } : {});
   }
 });
 ui.changeDifficultyButton.addEventListener("click", () => showDifficultyChooser("game"));
@@ -4665,6 +4857,12 @@ document.addEventListener("click", (event) => {
   if (!button || button.disabled || button.classList.contains("game-card")) return;
   audio.buttonPress();
 }, { capture: true });
+
+globalThis.ClawStoryCombat = Object.freeze({
+  startEncounter: startStoryEncounter,
+  isActive: () => Boolean(storyEncounter),
+  isPuzzle: () => storyEncounter?.kind === "puzzle",
+});
 
 renderGallery();
 renderPreviousRoundsHistory();

@@ -1,0 +1,159 @@
+/* The courtyard is a separate screen. The existing duel interface is reused
+   between encounters and keeps its own responsive layout. */
+body.story-active { overflow: hidden; }
+body.story-active > .topbar,
+body.story-active > main,
+body.story-active > .main-menu-screen,
+body.story-active > .sky-confetti { display: none !important; }
+.story-screen[hidden], .story-dialogue[hidden], .story-loading[hidden], .story-touch-controls[hidden] { display: none !important; }
+.main-menu-story-button { border-color: #d3ae64; }
+.story-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0;
+  padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  color: #f6e7c2;
+  background: #241a18;
+  font-family: "Nunito", sans-serif;
+  height: var(--app-viewport-height, 100dvh);
+  box-sizing: border-box;
+}
+.story-screen > .story-header { grid-column: 1; grid-row: 1; }
+.story-screen > .story-quest-strip { grid-column: 1; grid-row: 2; }
+.story-screen > .story-stage { grid-column: 1; grid-row: 3; }
+.story-screen > .story-footer { grid-column: 1; grid-row: 4; }
+.story-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 0 2px 10px; }
+.story-heading p { margin: 0 0 2px; color: #d2b777; font: 800 10px/1.3 "Nunito", sans-serif; letter-spacing: .15em; }
+.story-heading h1 { margin: 0; font: 800 clamp(18px, 2.1vw, 27px)/1.2 "Cinzel", serif; color: #f5dfaa; }
+.story-header-actions { display: flex; gap: 10px; align-items: center; }
+.story-header-actions label { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; }
+.story-screen button, .story-screen select { color: #f6e7c2; background: #4c3626; border: 1px solid #b98d46; border-radius: 4px; font: 800 13px/1.2 "Nunito", sans-serif; cursor: pointer; }
+.story-screen button { min-height: 38px; padding: 8px 14px; box-shadow: inset 0 0 0 1px #241711; }
+.story-screen select { min-height: 36px; padding: 6px 9px; }
+.story-screen button:hover:not(:disabled) { background: #69492d; border-color: #f3d18d; }
+.story-screen button:focus-visible, .story-screen select:focus-visible, #storyCanvas:focus-visible { outline: 3px solid #f5dc8f; outline-offset: 3px; }
+.story-screen button:disabled { cursor: default; opacity: .5; }
+.story-quest-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #a37d42; border-bottom: 0; background: #3d2c21; padding: 8px 13px; font-size: 13px; }
+.story-quest-strip p { margin: 0; font-weight: 800; }
+.story-puzzle-seal { flex-shrink: 0; color: #c9b995; font-size: 11px; }
+.story-puzzle-seal.is-complete { color: #b8dea3; }
+.story-stage { position: relative; min-height: 0; display: grid; place-items: center; overflow: hidden; border: 2px solid #af8744; background: #171c1b; box-shadow: inset 0 0 0 2px #36261c; isolation: isolate; }
+#storyCanvas { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; aspect-ratio: 8 / 5; touch-action: none; }
+.story-loading { position: absolute; inset: 0; display: grid; place-items: center; background: #26352c; color: #f4dfaa; font: 800 20px "Cinzel", serif; }
+.story-nearby { position: absolute; bottom: 13px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 28px); padding: 7px 14px; border: 1px solid #bd985b; border-radius: 4px; background: #2c211bdc; color: #fae8be; font-size: 12px; font-weight: 900; text-align: center; pointer-events: none; }
+.story-footer { position: static; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0; padding: 8px 0 0; min-height: 0; height: auto; width: auto; border: 0; background: transparent; text-align: left; white-space: normal; font: 700 12px/1.3 "Nunito", sans-serif; color: #d4c39d; box-sizing: border-box; }
+.story-controls-copy { font-size: 12px; color: #d4c39d; }
+.story-controls-copy b { color: #efdbab; }
+.story-controls-copy span { margin: 0 5px; }
+.story-controls-copy p { margin: 4px 0 0; font-size: 10px; color: #ab9a7d; }
+.story-controls-copy p.is-warning { color: #ffcfa0; }
+.story-save-tools { display: flex; align-items: center; gap: 12px; }
+#storyPosition { color: #a99471; font: 700 10px/1.2 "Nunito", sans-serif; font-variant-numeric: tabular-nums; }
+.story-save-tools button { min-height: 32px; font-size: 11px; padding: 6px 9px; background: transparent; color: #c6b48c; }
+.story-touch-controls { display: flex; align-items: center; gap: 14px; }
+/* Keep the desktop footer's footprint when dialogue hides its controls.
+   Touch overlays live outside the footer and can still be removed normally. */
+.story-footer .story-touch-controls[hidden] { display: flex !important; visibility: hidden; pointer-events: none; }
+.story-dpad { display: grid; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 26px); gap: 2px; }
+.story-dpad button { min-height: 0; padding: 0; font-size: 13px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.story-direction-up { grid-column: 2; grid-row: 1; }
+.story-direction-left { grid-column: 1; grid-row: 2; }
+.story-direction-right { grid-column: 3; grid-row: 2; }
+.story-direction-down { grid-column: 2; grid-row: 3; }
+.story-dpad-centre { grid-column: 2; grid-row: 2; display: grid; place-items: center; color: #ab8647; font-size: 14px; }
+.story-dpad button.is-held { background: #906834; border-color: #f7d795; }
+.story-interact-button { min-width: 104px; touch-action: manipulation; }
+.story-dialogue { position: absolute; z-index: 2; left: 50%; bottom: 15px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 30px); display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; padding: 19px; border: 3px solid #bd954e; box-shadow: 0 0 0 2px #2e2119, 0 8px 36px #0009; background: #f1dfb2; color: #38281c; overflow-y: auto; box-sizing: border-box; }
+.story-dialogue-portrait { width: 112px; height: 132px; object-fit: cover; object-position: center 20%; border: 2px solid #71502b; background: #e1cda0; border-radius: 3px; box-sizing: border-box; }
+.story-dialogue-eyebrow { margin: 0 0 3px; color: #856036; font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.story-dialogue h2 { margin: 0 0 7px; color: #4b2f20; font: 800 20px/1.2 "Cinzel", serif; }
+.story-dialogue #storyDialogueText { margin: 0; font-size: 14px; line-height: 1.55; font-weight: 700; }
+.story-dialogue-note { margin: 10px 0 0; padding-left: 10px; border-left: 3px solid #a67c40; font-size: 12px; font-weight: 800; line-height: 1.4; color: #735338; }
+.story-dialogue-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.story-dialogue-actions button { background: #513727; color: #f9e5b5; }
+.story-dialogue-actions button.story-secondary { background: transparent; color: #684629; box-shadow: none; }
+.story-dialogue-actions button.story-secondary:hover { background: #e3cda0; }
+.story-dialogue-actions button:focus { background: #76542e; color: #fff1c8; outline: 3px solid #946724; outline-offset: 3px; box-shadow: 0 0 0 2px #fff2c7; }
+.story-dialogue-controls { margin: 12px 0 0; color: #735338; font: 800 10px/1.5 "Nunito", sans-serif; }
+.story-dialogue-controls span { margin: 0 5px; }
+.story-dialogue-controls kbd { font: inherit; color: #4b2f20; }
+@media (pointer: fine) and (min-height: 650px) {
+  .story-dpad { grid-template-columns: repeat(3, 28px); grid-template-rows: repeat(3, 21px); }
+}
+@media (max-width: 700px) {
+  .story-screen { padding: max(7px, env(safe-area-inset-top)) max(7px, env(safe-area-inset-right)) max(7px, env(safe-area-inset-bottom)) max(7px, env(safe-area-inset-left)); }
+  .story-header { gap: 7px; padding-bottom: 7px; }
+  .story-heading p { font-size: 8px; letter-spacing: .06em; }
+  .story-heading h1 { font-size: 17px; }
+  .story-header-actions { gap: 5px; }
+  .story-header-actions label { font-size: 0; gap: 0; }
+  .story-header-actions select { font-size: 11px; min-height: 32px; padding: 5px; }
+  .story-header-actions button { font-size: 11px; min-height: 32px; padding: 6px 8px; }
+  .story-quest-strip { padding: 6px 8px; font-size: 11px; }
+  .story-puzzle-seal { font-size: 9px; }
+  .story-footer { gap: 6px; flex-wrap: wrap; }
+  .story-controls-copy { font-size: 10px; }
+  .story-controls-copy p { font-size: 9px; max-width: 220px; }
+  .story-save-tools { gap: 6px; }
+  .story-dialogue { grid-template-columns: 68px minmax(0, 1fr); gap: 10px; padding: 12px; width: calc(100% - 18px); bottom: 9px; max-height: calc(100% - 18px); }
+  .story-dialogue-portrait { width: 68px; height: 86px; }
+  .story-dialogue h2 { font-size: 17px; }
+  .story-dialogue #storyDialogueText { font-size: 12px; line-height: 1.45; }
+  .story-dialogue-actions { gap: 6px; margin-top: 10px; }
+  .story-dialogue-actions button { font-size: 11px; min-height: 34px; padding: 7px 9px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .story-screen { padding-top: max(5px, env(safe-area-inset-top)); padding-bottom: max(5px, env(safe-area-inset-bottom)); }
+  .story-header { padding-bottom: 5px; }
+  .story-heading p { display: none; }
+  .story-heading h1 { font-size: 17px; }
+  .story-header-actions button, .story-header-actions select { min-height: 28px; font-size: 11px; padding-block: 4px; }
+  .story-quest-strip { padding: 5px 9px; font-size: 11px; }
+  .story-footer { padding-top: 5px; }
+  .story-controls-copy { font-size: 10px; }
+  .story-controls-copy p { margin-top: 2px; font-size: 9px; }
+  .story-dpad { grid-template-columns: repeat(3, 30px); grid-template-rows: repeat(3, 22px); }
+  .story-dialogue { grid-template-columns: 70px minmax(0, 1fr); padding: 12px; gap: 12px; bottom: 8px; max-height: calc(100% - 16px); }
+  .story-dialogue-portrait { width: 70px; height: 82px; }
+  .story-dialogue h2 { font-size: 17px; margin-bottom: 4px; }
+  .story-dialogue #storyDialogueText { font-size: 12px; line-height: 1.4; }
+  .story-dialogue-note { font-size: 10px; margin-top: 7px; }
+  .story-dialogue-actions { margin-top: 9px; }
+  .story-dialogue-actions button { min-height: 32px; font-size: 11px; padding: 6px 9px; }
+}
+@media (orientation: portrait) and (max-width: 600px) {
+  .story-screen { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  .story-header { flex-wrap: wrap; }
+  .story-header-actions { margin-left: auto; }
+  .story-quest-strip { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .story-stage { background: #26362c; }
+  .story-footer { display: grid; grid-template-columns: 1fr auto; }
+  .story-controls-copy { grid-column: 1 / -1; }
+  .story-touch-controls { gap: 14px; }
+  .story-dpad { grid-template-columns: repeat(3, 41px); grid-template-rows: repeat(3, 34px); gap: 3px; }
+  .story-interact-button { min-height: 48px !important; min-width: 104px; }
+  .story-save-tools { align-self: end; flex-direction: column; gap: 7px; }
+  .story-dialogue { grid-template-columns: 1fr; }
+  .story-dialogue-portrait { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .story-screen *, .story-screen *::before, .story-screen *::after { scroll-behavior: auto; transition: none !important; } }
+
+/* The same controls move into the stage on touch-sized layouts. Their real
+   targets stay 44px square; the map keeps the space the footer used to occupy. */
+.story-stage.has-touch-controls .story-touch-controls { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.story-stage.has-touch-controls .story-dpad { position: absolute; left: 10px; bottom: 10px; display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); gap: 2px; padding: 5px; border: 1px solid #c4a165b3; border-radius: 8px; background: #2c211bb8; pointer-events: auto; }
+.story-stage.has-touch-controls .story-dpad button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; font-size: 17px; background: #493325e6; }
+.story-stage.has-touch-controls .story-dpad button.is-held { background: #906834; }
+.story-stage.has-touch-controls .story-interact-button { position: absolute; right: 12px; bottom: 18px; min-width: 112px; min-height: 48px; padding: 12px; border: 2px solid #cead6b; background: #453023e8; box-shadow: 0 2px 8px #0006; pointer-events: auto; }
+.story-stage.has-touch-controls .story-nearby { top: 10px; bottom: auto; z-index: 1; }
+.story-screen.has-touch-controls > .story-footer { display: flex; flex-wrap: wrap; gap: 6px 14px; padding-top: 6px; }
+.story-screen.has-touch-controls .story-controls-copy { flex: 1 1 190px; }
+.story-screen.has-touch-controls .story-save-tools { flex-direction: row; align-self: center; gap: 8px; }
+.story-screen.has-touch-controls .story-header-actions button,
+.story-screen.has-touch-controls .story-header-actions select,
+.story-screen.has-touch-controls .story-dialogue-actions button,
+.story-screen.has-touch-controls .story-save-tools button { min-height: 44px; min-width: 44px; }

@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./story.css" />
   </head>
   <body>
     <svg class="tactic-symbol-library" aria-hidden="true">
@@ -287,6 +288,9 @@
         <button class="primary-button main-menu-play-button" id="mainMenuPlayButton" type="button" autofocus>
           Play
         </button>
+        <button class="main-menu-option-button main-menu-story-button" id="mainMenuStoryButton" type="button" aria-controls="storyScreen">
+          Story Preview
+        </button>
         <button
           class="main-menu-option-button main-menu-tutorial-button"
           id="mainMenuTutorialButton"
@@ -333,6 +337,50 @@
         </a>
         (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)
       </p>
+    </section>
+
+    <section class="story-screen" id="storyScreen" aria-labelledby="storyTitle" hidden>
+      <header class="story-header">
+        <div class="story-heading"><p>STORY PREVIEW · FIRST PLAYABLE AREA</p><h1 id="storyTitle">Willowgate Courtyard</h1></div>
+        <div class="story-header-actions">
+          <label for="storyDifficulty">Duels <select id="storyDifficulty"><option value="guided">Guided</option><option value="instinct" selected>Instinct</option><option value="blind">Blind</option></select></label>
+          <button id="storyBackButton" type="button">Main Menu</button>
+        </div>
+      </header>
+      <div class="story-quest-strip">
+        <p id="storyObjective">Meet Hareth and earn passage through the north gate.</p>
+        <span class="story-puzzle-seal" id="storyPuzzleSeal">Lucan’s challenge · optional</span>
+      </div>
+      <div class="story-stage" id="storyStage">
+        <canvas id="storyCanvas" width="1024" height="640" tabindex="0" aria-label="Walkable Willowgate courtyard. Move with arrow keys or W A S D. Press E, Enter or Space near someone to interact."></canvas>
+        <div class="story-loading" id="storyLoading">Preparing the courtyard…</div>
+        <div class="story-nearby" id="storyNearby" role="status" aria-live="polite">Walk toward someone to talk.</div>
+        <section class="story-dialogue" id="storyDialogue" role="dialog" aria-modal="true" aria-labelledby="storyDialogueTitle" aria-describedby="storyDialogueText storyDialogueControls" hidden>
+          <img id="storyDialoguePortrait" class="story-dialogue-portrait" alt="" />
+          <div class="story-dialogue-copy">
+            <p class="story-dialogue-eyebrow" id="storyDialogueEyebrow">WILLOWGATE</p>
+            <h2 id="storyDialogueTitle" tabindex="-1"></h2>
+            <p id="storyDialogueText"></p>
+            <p class="story-dialogue-note" id="storyDialogueNote" hidden></p>
+            <div class="story-dialogue-actions" id="storyDialogueActions"></div>
+            <p class="story-dialogue-controls" id="storyDialogueControls">Arrow keys to choose <span>·</span> <kbd>E</kbd> to select <span>·</span> <kbd>Esc</kbd> to close</p>
+          </div>
+        </section>
+      </div>
+      <footer class="story-footer">
+        <div class="story-controls-copy"><span id="storyControlsHint"><b>WASD / arrows</b> walk <span>·</span> <b>E / Space</b> interact</span><p id="storySaveStatus">Progress is saved in this browser.</p></div>
+        <div class="story-touch-controls" aria-label="Walking controls">
+          <div class="story-dpad" role="group" aria-label="Move around the courtyard">
+            <button data-story-direction="up" class="story-direction-up" type="button" aria-label="Walk north">▲</button>
+            <button data-story-direction="left" class="story-direction-left" type="button" aria-label="Walk west">◀</button>
+            <span aria-hidden="true" class="story-dpad-centre">✦</span>
+            <button data-story-direction="right" class="story-direction-right" type="button" aria-label="Walk east">▶</button>
+            <button data-story-direction="down" class="story-direction-down" type="button" aria-label="Walk south">▼</button>
+          </div>
+          <button class="story-interact-button" id="storyInteractButton" type="button">Interact</button>
+        </div>
+        <div class="story-save-tools"><output id="storyPosition" aria-label="Courtyard position">512, 520</output><button id="storyResetButton" type="button">Reset area</button></div>
+      </footer>
     </section>
 
     <div class="game-menu-overlay" id="gameMenuOverlay" hidden>
@@ -1118,6 +1166,8 @@
     <script defer src="./src/viewport.js"></script>
     <script defer src="./src/rules.js"></script>
     <script defer src="./src/audio.js"></script>
+    <script defer src="./src/story-model.js"></script>
     <script defer src="./src/game.js"></script>
+    <script defer src="./src/story.js"></script>
   </body>
 </html>

@@ -48,6 +48,20 @@ Both players draw from the same pile. There is no deck editor, custom-deck mode,
 
 Difficulty changes available information, not card strength or scoring. Previous Rounds History is available in every difficulty. Illustrated artwork is the active card style.
 
+## Story Preview
+
+The separate **Story Preview** main-menu button opens Willowgate Courtyard, a first playable exploration area. Walk with WASD or the arrow keys and interact with E, Space or Enter. On touch screens, use the on-screen directional controls and Interact button.
+
+In dialogue, use any arrow key to move between choices and **E** to select the highlighted choice. Choices wrap at either end. Enter/Space and Tab/Shift+Tab also work, and Escape closes the dialogue.
+
+- Meet Hareth for a normal duel. Winning opens the north gate; losing or retreating does not award completion.
+- Meet Lucan for an optional one-round tactical puzzle. Any winning formation of at most two cards is accepted.
+- Encounters use the existing card combat and return to the same courtyard position afterwards. Walk through the opened north gate to finish the area.
+- Position, selected duel difficulty and completed encounters save in this browser. Story progress does not sync between devices. Clearing site data removes it; unavailable storage is reported in the interface.
+- Returning from an unfinished battle keeps the map checkpoint but does not save or award that battle. Normal Play and Tutorial Mode remain separate.
+
+The preview is one area, not a full campaign. Its artwork briefs and sprite-sheet layout are recorded in `assets/story/artwork.json`.
+
 ## Verification
 
 ```bash
