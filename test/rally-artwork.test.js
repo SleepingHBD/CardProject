@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const artworkFolder = new URL("../assets/cards/four-lane/", import.meta.url);
+const artworkFolder = new URL("../assets/cards/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", artworkFolder), "utf8"));
 
 test("the new Rare Rally artwork has the approved names and one character per element", () => {
@@ -48,10 +48,13 @@ test("Hareth and Deshone retain their approved costume revisions and Deshone's n
   }
 });
 
-test("new artwork is documented as isolated from the live three-lane card pool", () => {
-  assert.match(manifest.status, /Framed card previews/);
+test("Rare Rally artwork is registered in the live Normal Play collection", () => {
+  assert.match(manifest.status, /Live in Normal Play's 36-character, 60-card collection/);
   const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
   const liveLibrary = gameSource.match(/const CARD_LIBRARY = \[([\s\S]*?)\]\.map/)[1];
-  for (const card of manifest.cards) assert.ok(!liveLibrary.includes(card.name));
+  for (const card of manifest.cards) {
+    assert.ok(liveLibrary.includes(`"${card.name}"`));
+    assert.ok(liveLibrary.includes(`"${card.asset.replace(/\.png$/, "")}"`));
+  }
   assert.match(gameSource, /const MAX_PLAY_SIZE = 3;/);
 });

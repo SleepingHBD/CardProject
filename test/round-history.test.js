@@ -3,12 +3,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import "../src/rules.js";
-import "../src/four-lane-rules.js";
 
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const { ELEMENTS, TACTICS, resolveClashes, getFormationRewardOptions, getElementTrophyCounts } = globalThis.ClawRules;
-const functions = ["cardRoleDefinition", "progressGainMarkup", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "historyPlacementSummaryMarkup", "renderPreviousRoundsHistory"]
+const functions = ["cardRoleDefinition", "snapshotHistoryCard", "recordCompletedRound", "historyProgressMarkup", "historyExtraCardLanePoints", "historyLaneCellMarkup", "historyFormationGridMarkup", "historyLaneCalculationMarkup", "historyRoundDetailsMarkup", "renderPreviousRoundsHistory"]
   .map((name) => gameSource.match(new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`))?.[0]);
 assert.ok(functions.every(Boolean), "all history helpers must be loaded from the implementation");
 
@@ -17,10 +16,7 @@ function fixture() {
   const state = { round: 1, difficulty: "blind", previousRoundsHistory: [], playerWins: [], aiWins: [] };
   const context = {
     ELEMENTS, TACTICS, state, getElementTrophyCounts, structuredClone,
-    isFourLaneMode: () => state.gameMode === "four-lane",
-    duelRules: () => state.gameMode === "four-lane" ? globalThis.ClawFourLaneRules : globalThis.ClawRules,
-    ClawFourLaneRules: globalThis.ClawFourLaneRules,
-    FOUR_LANE_ROLES: globalThis.ClawFourLaneRules.TACTICS,
+    duelRules: () => globalThis.ClawRules,
     DIFFICULTIES: { blind: { label: "Blind" }, instinct: { label: "Instinct" }, guided: { label: "Guided" } },
     cardDisplayName: (value) => value.name,
     ui: {
@@ -164,122 +160,29 @@ test("history icons have definite dimensions and reopening starts at the newest 
   assert.match(gameSource, /ui\.previousRoundsHistoryDialog\.showModal\(\);\s*ui\.previousRoundsHistoryList\.scrollTop = 0;/);
 });
 
-test("four-lane history retains Lane 4, Rally symbols and received bonuses", () => {
+test("normal history includes support bonuses even when the Rally card is unopposed", () => {
   const context = fixture();
-  context.state.gameMode = "four-lane";
-  const player = [card("gust", 5), card("tide", 5), card("ember", 5, "link"), card("gust", 4, "rally")];
-  const opponent = Array.from({ length: 4 }, () => card("gust", 5, "vanguard"));
-  const resolution = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
-  const reward = globalThis.ClawFourLaneRules.getFormationRewardOptions(player, opponent, resolution)[0];
-  context.recordCompletedRound(reward, player, opponent, resolution);
-  const markup = context.ui.previousRoundsHistoryList.innerHTML;
-  assert.match(markup, /history-four-lanes/);
-  assert.match(markup, /LANE 4/);
-  assert.match(markup, /#tactic-icon-banner/);
-  assert.match(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 2), /history-cell-bonus">\+4/);
-  assert.doesNotMatch(context.historyLaneCellMarkup(context.state.previousRoundsHistory[0], "player", 3), /history-cell-bonus/);
-  assert.equal((markup.match(/class="history-grid-lane(?: history-battle-lane)?"/g) || []).length, 4);
-  assert.match(markup, /history-battle-lane">BATTLE LANE 2/);
+  const entry = record(context, [card("ember", 4, "vanguard"), card("tide", 4, "rally")], [card("ember", 6, "finisher")]);
+  assert.equal(entry.score.player, 1);
+  assert.equal(entry.score.ai, 0);
+  const fighter = context.historyLaneCellMarkup(entry, "player", 0);
+  assert.match(fighter, /history-cell-bonus">\+2/);
+  assert.match(fighter, /history-cell-outcome">Draw/);
+  const support = context.historyLaneCellMarkup(entry, "player", 1);
+  assert.match(support, /#tactic-icon-banner/);
+  assert.match(support, /Extra \+1 Round Point/);
+  assert.doesNotMatch(support, /history-cell-bonus/);
+  assert.match(context.ui.previousRoundsHistoryList.innerHTML, /You won/);
+  assert.equal(entry.laneResults[0].playerTotal, 6);
 });
 
-test("four-lane history awards no unopposed trophies after losing the only battle", () => {
-  for (const larger of ["player", "ai"]) {
-    const context = fixture(); context.state.gameMode = "four-lane";
-    const weak = Array.from({ length: 4 }, () => card("gust", 3)), strong = [null, card("gust", 9), null, null];
-    const player = larger === "player" ? weak : strong, opponent = larger === "player" ? strong : weak;
-    const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
-    assert.equal(result.winner, larger === "player" ? "ai" : "player");
-    context.recordCompletedRound(null, player, opponent, result);
-    const entry = context.state.previousRoundsHistory[0];
-    assert.equal(entry.extraCardPoints[larger], 0);
-    assert.equal(entry.trophy, null);
-    assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Trophies earned/);
-    assert.doesNotMatch(context.ui.previousRoundsHistoryList.innerHTML, /No trophy claimed|Round Points/);
-    assert.match(context.historyLaneCellMarkup(entry, larger, 3), /Unopposed \+0 Gust/);
-    assert.match(context.historyLaneCalculationMarkup(entry, larger, 3), /\+0 Gust trophies/);
-    assert.equal((context.historyFormationGridMarkup(entry).match(/>Unopposed \+1 Gust</g) || []).length, 0);
-    result.extraCardPoints[larger] = 1;
-    assert.equal(entry.extraCardPoints[larger], 0, "history snapshots, rather than aliases, earned points");
-    result.laneProgress[larger][1] = 1;
-    assert.equal(entry.laneProgress[larger][1], 0, "credited lane progress is snapshotted, not reinterpreted");
-  }
-});
-
-test("sparse WIP history preserves physical lanes and explains unlocked or unrewarded cards", () => {
-  const context = fixture(); context.state.gameMode = "four-lane";
-  context.state.round = 2;
-  const player = [card("ember", 3), null, card("tide", 9), card("gust", 4)];
-  const opponent = [null, card("gust", 5), card("tide", 3), null];
-  const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent);
-  context.recordCompletedRound(null, player, opponent, result);
-  const entry = context.state.previousRoundsHistory[0];
-  assert.equal(entry.playerCards[1], null);
-  assert.equal(entry.aiCards[0], null);
-  assert.equal(entry.laneResults[0], null);
-  assert.match(context.historyLaneCellMarkup(entry, "player", 2), /history-cell-outcome">Win/);
-  assert.match(context.historyLaneCellMarkup(entry, "player", 0), /Unopposed \+1 Fire/);
-  assert.match(context.historyLaneCellMarkup(entry, "player", 3), /Unopposed \+0 Gust/);
-  assert.match(context.historyLaneCalculationMarkup(entry, "player", 0), /Unlocked by a lane win/);
-  assert.match(context.historyLaneCalculationMarkup(entry, "player", 3), /unlocks were used/);
-  assert.match(context.historyLaneCalculationMarkup(entry, "ai", 1), /No lane victory/);
-  assert.equal((context.historyFormationGridMarkup(entry).match(/class="history-lane-empty"/g) || []).length, 3);
-  assert.equal(JSON.stringify(entry).includes("undefined"), false);
-});
-
-test("four-lane history calls automatic gains trophies, including singular and zero gains", () => {
-  const context = fixture(); context.state.gameMode = "four-lane";
-  const player = [card("tide", 3), card("ember", 9), null, null], opponent = [null, card("ember", 3), null, null];
-  const before = { ember: 8, gust: 7, tide: 6 };
-  const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent, before);
-  context.recordCompletedRound(null, player, opponent, result);
-  const entry = context.state.previousRoundsHistory[0];
-  assert.match(context.historyLaneCalculationMarkup(entry, "player", 1), /\+2 Fire trophies/);
-  assert.match(context.historyLaneCalculationMarkup(entry, "player", 0), /\+1 Water trophy<\/b>/);
-  assert.match(context.historyLaneCalculationMarkup(entry, "ai", 1), /\+0 Fire trophies/);
-  assert.match(context.historyRoundDetailsMarkup(entry), /Trophies before this round/);
-  assert.doesNotMatch(context.historyRoundDetailsMarkup(entry), /6 per element|of 6|complete all/i);
-  assert.deepEqual(JSON.parse(JSON.stringify(entry.progressAfter.player)), { ember: 10, gust: 7, tide: 7 });
-  assert.equal(entry.matchScores.player, 38);
-  assert.equal(entry.battleLane, 1);
-  const markup = context.ui.previousRoundsHistoryList.innerHTML;
-  assert.match(markup, /aria-label="Trophies earned: You 3, Opponent 0"/);
-  assert.match(markup, /Match score after Round 1: <b>You 38 · Opponent 0/);
-  assert.match(markup, /No trophies earned/);
-  assert.doesNotMatch(markup.replace(/<[^>]*>/g, " "), /\bprogress\b|Round Points/i);
-  context.state.gameMode = "normal";
-  context.renderPreviousRoundsHistory();
-  assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Trophies earned/);
-});
-
-test("WIP history marks completed eight-round matches rather than declaring an overall round winner", () => {
-  for (const [power, otherPower, expected] of [[9, 3, "You won the duel"], [3, 9, "You lost the duel"], [5, 5, "Duel drawn"]]) {
-    const context = fixture(); context.state.gameMode = "four-lane"; context.state.round = 8;
-    const player = [null, null, card("tide", power), null];
-    const opponent = [null, null, card("tide", otherPower), null];
-    const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent, {}, {}, undefined, 8);
-    context.recordCompletedRound(null, player, opponent, result);
-    const markup = context.ui.previousRoundsHistoryList.innerHTML;
-    assert.match(markup, new RegExp(`>${expected}<`));
-    assert.match(markup, /ROUND <strong>8/);
-    assert.match(markup, /history-battle-lane">BATTLE LANE 3/);
-    assert.match(markup, /Match score after Round 8/);
-    assert.doesNotMatch(markup, /Round Points|No trophy claimed/);
-  }
-});
-
-test("WIP history does not display a live habit or lane-preference summary", () => {
-  const context = fixture(); context.state.gameMode = "four-lane";
-  for (let round = 1; round <= 3; round++) {
-    context.state.round = round;
-    const battleLane = globalThis.ClawFourLaneRules.getBattleLane(round);
-    const player = Array(4).fill(null), opponent = Array(4).fill(null);
-    player[battleLane] = card("ember", 7);
-    opponent[battleLane] = card("gust", 5);
-    const result = globalThis.ClawFourLaneRules.resolveProgress(player, opponent, {}, {}, undefined, round);
-    context.recordCompletedRound(null, player, opponent, result);
-  }
-  assert.doesNotMatch(context.ui.previousRoundsHistoryList.innerHTML,
-    /history-placement-summary|Observed opponent lane use|OPPONENT LANE USE|habit-lane-map|favoured lanes/i);
-  assert.equal(context.ui.previousRoundsHistoryCount.textContent, 3);
-  assert.match(context.ui.previousRoundsHistoryList.innerHTML, /Open hands/);
+test("normal three-lane history shows Link, elemental edge and Rally as one accurate bonus", () => {
+  const context = fixture();
+  const entry = record(context,
+    [card("tide", 4, "vanguard"), card("ember", 4, "link"), card("gust", 4, "rally")],
+    [card("tide", 5, "link"), card("gust", 7, "finisher"), card("ember", 3, "link")]);
+  assert.match(context.historyLaneCellMarkup(entry, "player", 1), /history-cell-bonus">\+4/);
+  assert.equal(entry.laneResults[1].playerTotal, 8);
+  assert.equal((context.historyFormationGridMarkup(entry).match(/class="history-grid-lane"/g) || []).length, 3);
+  assert.doesNotMatch(context.ui.previousRoundsHistoryList.innerHTML, /LANE 4|Battle Lane|complete set|Match score/i);
 });

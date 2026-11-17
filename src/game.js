@@ -42,7 +42,19 @@ const CARD_LIBRARY = [
   ["tide", 3, "Mizzle Motley", "Ripple Rattle", "Three bells. No dry seats.", "common", "finisher", "mizzle-motley"],
   ["tide", 4, "Rivertow Ragdoll", "Crosscurrent Tow", "No paw gets left on the wrong bank.", "common", "link", "rivertow-ragdoll"],
   ["tide", 5, "Moatgate Mau", "Floodgate First", "First paw on the lever. Last one to flinch.", "uncommon", "vanguard", "moatgate-mau"],
-].map(([element, power, name, move, lore, rarity, tactic, art], index) => ({
+  ["ember", 6, "Hareth", "Kindling Cadence", "A steady beat. A braver formation.", "rare", "rally", "hareth-hearthbeat", "png"],
+  ["gust", 6, "Megwyn", "Second Wind Serenade", "One melody lifts every paw.", "rare", "rally", "megwyn-windwhistle", "png"],
+  ["tide", 6, "Deshone", "Springwater Resolve", "Keeps weary paws in the fight.", "rare", "rally", "deshone-dewguard", "png"],
+  ["ember", 5, "Charmae", "Golden Mend", "Every stitch steadies the banner.", "uncommon", "rally", "charmae-emberhem", "png"],
+  ["gust", 5, "Aakith", "Windward Route", "No paw left wandering.", "uncommon", "rally", "aakith-wayfinder", "png"],
+  ["tide", 5, "Sajrin", "Shellward Shelter", "Built to weather the worst.", "uncommon", "rally", "sajrin-shellwright", "png"],
+  ["ember", 4, "Lucan", "Kilnkindle", "Small cups. Warm company.", "common", "rally", "lucan-cinderclay", "png"],
+  ["gust", 4, "Jyawaye", "Harvest Breeze", "The wind lends a working paw.", "common", "rally", "jiawen-barleybreeze", "png"],
+  ["tide", 4, "Siewen", "Rainshare", "Every drop is worth sharing.", "common", "rally", "siewen-rainkeeper", "png"],
+  ["ember", 5, "Shazmir", "Ashen Flourish", "A little flourish. A lot of fire.", "uncommon", "link", "shazmir-ashveil", "png"],
+  ["gust", 5, "Hidayn", "Firstwind Descent", "First to land. Ready to stand.", "uncommon", "vanguard", "hidayn-windbrace", "png"],
+  ["tide", 5, "Isai", "Closing Current", "One last wave. No way back.", "uncommon", "finisher", "isai-tidebind", "png"],
+].map(([element, power, name, move, lore, rarity, tactic, art, artworkFormat], index) => ({
   id: `card-${index}`,
   element,
   power,
@@ -52,59 +64,10 @@ const CARD_LIBRARY = [
   rarity,
   tactic,
   art,
+  ...(artworkFormat ? { artworkSource: `./assets/cards/${art}.${artworkFormat}` } : {}),
 }));
 
 const HAND_SIZE = 6;
-// Exclusive to Four-Lane Mode; never included in Normal Play's freshDeck().
-const FOUR_LANE_RALLY_CARDS = Object.freeze([
-  ["ember", 6, "Hareth", "Kindling Cadence", "A steady beat. A braver formation.", "rare", "hareth-hearthbeat"],
-  ["gust", 6, "Megwyn", "Second Wind Serenade", "One melody lifts every paw.", "rare", "megwyn-windwhistle"],
-  ["tide", 6, "Deshone", "Springwater Resolve", "Keeps weary paws in the fight.", "rare", "deshone-dewguard"],
-  ["ember", 5, "Charmae", "Golden Mend", "Every stitch steadies the banner.", "uncommon", "charmae-emberhem"],
-  ["gust", 5, "Aakith", "Windward Route", "No paw left wandering.", "uncommon", "aakith-wayfinder"],
-  ["tide", 5, "Sajrin", "Shellward Shelter", "Built to weather the worst.", "uncommon", "sajrin-shellwright"],
-  ["ember", 4, "Lucan", "Kilnkindle", "Small cups. Warm company.", "common", "lucan-cinderclay"],
-  ["gust", 4, "Jyawaye", "Harvest Breeze", "The wind lends a working paw.", "common", "jiawen-barleybreeze"],
-  ["tide", 4, "Siewen", "Rainshare", "Every drop is worth sharing.", "common", "siewen-rainkeeper"],
-].map(([element, power, name, move, lore, rarity, art]) => Object.freeze({
-  id: `four-lane-${art}`,
-  element,
-  power,
-  name,
-  move,
-  lore,
-  rarity,
-  tactic: "rally",
-  art,
-  artworkSource: `./assets/cards/four-lane/${art}.png`,
-})));
-const FOUR_LANE_UNCOMMON_CARDS = Object.freeze([
-  ["ember", 5, "Shazmir", "Ashen Flourish", "A little flourish. A lot of fire.", "link", "shazmir-ashveil"],
-  ["gust", 5, "Hidayn", "Firstwind Descent", "First to land. Ready to stand.", "vanguard", "hidayn-windbrace"],
-  ["tide", 5, "Isai", "Closing Current", "One last wave. No way back.", "finisher", "isai-tidebind"],
-].map(([element, power, name, move, lore, tactic, art]) => Object.freeze({
-  id: `four-lane-${art}`,
-  element,
-  power,
-  name,
-  move,
-  lore,
-  rarity: "uncommon",
-  tactic,
-  art,
-  artworkSource: `./assets/cards/four-lane/${art}.png`,
-})));
-const FOUR_LANE_CARDS = Object.freeze([
-  ...FOUR_LANE_RALLY_CARDS,
-  ...FOUR_LANE_UNCOMMON_CARDS,
-]);
-const FOUR_LANE_ROLES = Object.freeze({
-  rally: Object.freeze({
-    icon: "banner",
-    label: "Rally",
-    description: "Rally: Gives +1 Power to the card in the lane immediately to its left. An empty lane breaks the support.",
-  }),
-});
 const MAX_PLAY_SIZE = 3;
 const DECK_COPIES_BY_RARITY = Object.freeze({
   common: 2,
@@ -119,7 +82,7 @@ const DIFFICULTIES = {
   blind: { label: "Blind" },
 };
 const concealsOpponentFormation = (difficulty = state.difficulty) =>
-  state.gameMode === "four-lane" || difficulty === "instinct" || difficulty === "blind";
+  difficulty === "instinct" || difficulty === "blind";
 const usesPersistentAiHabits = (difficulty = state.difficulty) =>
   difficulty === "instinct" || difficulty === "blind";
 const ELEMENT_SORT_ORDER = { ember: 0, gust: 1, tide: 2 };
@@ -159,6 +122,7 @@ const TUTORIAL_MODES = Object.freeze(["complete", "tour", "lesson"]);
 const TUTORIAL_SECTION_NAMES = Object.freeze([
   "Element Edge",
   "Formation Roles",
+  "Rally Support",
   "Round Points",
   "Round Points",
   "Round Points",
@@ -233,7 +197,7 @@ const TUTORIAL_TOUR_STEPS = Object.freeze([
     text:
       "Your chosen cards enter Lane 1, Lane 2, and Lane 3 in the order you place them. In every mode, you may stop after one, two, or three cards.",
     objective:
-      "Order matters because Vanguard, Link, and Finisher Role bonuses activate under different conditions.",
+      "Order matters: Vanguard, Link and Finisher strengthen themselves under different conditions, while Rally supports the card directly before it.",
     targets: Object.freeze(["#playerPlayZone"]),
     anchor: "#playerPlayZone",
     preferredSide: "right",
@@ -386,7 +350,7 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
       Object.freeze({
         title: "Placement decides whether Role +1 activates",
         text:
-          "A Formation Role never prevents you from committing a card. It only decides whether that card earns Role +1. If its exact condition is not met, the card keeps its printed Power and other bonuses but receives no Role bonus.",
+          "A Formation Role never prevents you from committing a card. Vanguard, Link and Finisher can earn +1 for themselves when their condition is met. Rally instead gives +1 to the card directly before it. A card still uses its printed Power when its role cannot activate.",
         objective:
           "During this scenario, the formation preview will show exactly which cards receive Role +1 before you commit.",
         targets: Object.freeze(["#playerPlayZone", "#matchupForecast"]),
@@ -538,10 +502,65 @@ const TUTORIAL_LESSON_LIBRARY = Object.freeze([
     aftermath:
       "Full Formation correctly warned you to expect three cards. Power Seeker and Strong Opener suggested a high-Power card in Lane 1, but they did not reveal any elements. That uncertainty is the heart of Instinct: habits guide a prediction without guaranteeing the result.",
   }),
+  Object.freeze({
+    id: "rally-support",
+    concept: "Rally Support",
+    title: "Support the card before Rally",
+    intro:
+      "A Rally card gives +1 Power to your card directly before it. The support goes to that other card, not to the Rally card itself.",
+    objective:
+      "Place Candle Pounce in Lane 1, then Lucan in Lane 2. Lucan's Rally support will raise Candle Pounce's Clash Total from 7 to 8.",
+    introPages: Object.freeze([
+      Object.freeze({
+        title: "Rally strengthens the card directly before it",
+        text:
+          "Rally in Lane 2 gives +1 Power to your card in Lane 1. Rally in Lane 3 gives +1 Power to your card in Lane 2. Rally in Lane 1 has no card before it and gives no bonus. Their elements do not have to match.",
+        objective:
+          "Look for the banner symbol. The card before Rally receives the support; the Rally card does not give itself +1.",
+        targets: Object.freeze(["#playerHand", "#playerPlayZone"]),
+        anchor: "#playerPlayZone",
+        preferredSide: "right",
+      }),
+      Object.freeze({
+        title: "Support can stack with an active role",
+        text:
+          "Candle Pounce has Power 6 and earns Vanguard +1 in Lane 1. Placing Lucan directly after him adds Rally +1 as well: 6 + 1 + 1 = 8. Rally gives only +1, even if another Rally supports it.",
+        objective:
+          "Place Candle Pounce first and Lucan second, then check Candle Pounce's bonus badge and forecast.",
+        targets: Object.freeze(["#playerPlayZone", "#matchupForecast"]),
+        anchor: "#playerPlayZone",
+        preferredSide: "right",
+      }),
+    ]),
+    placementGuidance: Object.freeze([
+      Object.freeze({
+        title: "Place the fighter first",
+        text:
+          "Candle Pounce earns Vanguard +1 in Lane 1: Power 6 + Vanguard 1 = 7. The opposing Sizzle Mittens has a Clash Total of 8.",
+        objective: "Place Candle Pounce in Lane 1. Lucan will support him next.",
+      }),
+      Object.freeze({
+        title: "Place Rally directly after the fighter",
+        text:
+          "Lucan in Lane 2 gives Rally +1 to Candle Pounce in Lane 1. Candle Pounce now reaches 8 and draws against Sizzle Mittens. Lucan keeps his own Power 4.",
+        objective: "Place Lucan in Lane 2 and check Candle Pounce's +2 bonus.",
+      }),
+    ]),
+    readyText:
+      "Candle Pounce has Power 6 + Vanguard 1 + Rally received 1 = 8. Lucan does not boost himself: his Power 4 is enough to beat Teapot Tabby's 3 in Lane 2.",
+    readyObjective:
+      "Commit the two cards. The Lane 1 draw awards no points; Lucan's Lane 2 victory will earn 2 Round Points.",
+    playerCards: Object.freeze(["candle-pounce", "lucan-cinderclay", "bubble-bengal"]),
+    aiCards: Object.freeze(["sizzle-mittens", "teapot-tabby"]),
+    expected: Object.freeze(["candle-pounce", "lucan-cinderclay"]),
+    aftermath:
+      "Lucan's Rally +1 let Candle Pounce draw Lane 1 at 8–8 rather than lose it. Lucan then won Lane 2 at 4–3, earning the round's only 2 Round Points and becoming your Fire trophy. Rally's Power boost did not add a Round Point by itself.",
+  }),
 ]);
 const TUTORIAL_LESSONS = Object.freeze([
   TUTORIAL_LESSON_LIBRARY[0],
   TUTORIAL_LESSON_LIBRARY[3],
+  TUTORIAL_LESSON_LIBRARY[7],
   TUTORIAL_LESSON_LIBRARY[1],
   TUTORIAL_LESSON_LIBRARY[2],
   TUTORIAL_LESSON_LIBRARY[4],
@@ -597,17 +616,12 @@ function readSavedAudioVolumes() {
 }
 
 const state = {
-  gameMode: "normal",
-  aiDeck: [],
-  aiDiscardPile: [],
   deck: [],
   discardPile: [],
   playerHand: [],
   aiHand: [],
   playerWins: [],
   aiWins: [],
-  playerProgress: { ember: 0, gust: 0, tide: 0 },
-  aiProgress: { ember: 0, gust: 0, tide: 0 },
   aiPlan: [],
   aiTellClues: [],
   aiTraits: [],
@@ -615,9 +629,6 @@ const state = {
   previousPlayerCommitment: null,
   previousAiCommitment: null,
   selectedCardIds: [],
-  pendingLaneCardId: null,
-  dryProgressRounds: 0,
-  matchDrawReason: null,
   difficulty: null,
   archiveSort: "element",
   archiveElements: Object.keys(ELEMENT_SORT_ORDER),
@@ -660,12 +671,6 @@ const ui = {
   tacticsTitle: document.querySelector("#tacticsTitle"),
   opponentHabits: document.querySelector("#opponentHabits"),
   opponentTells: document.querySelector("#opponentTells"),
-  opponentPublicHand: document.querySelector("#opponentPublicHand"),
-  publicDeckButton: document.querySelector("#publicDeckButton"),
-  publicDeckDialog: document.querySelector("#publicDeckDialog"),
-  publicDeckLists: document.querySelector("#publicDeckLists"),
-  battleLaneNotice: document.querySelector("#battleLaneNotice"),
-  matchScoreDetails: document.querySelector("#matchScoreDetails"),
   matchupForecast: document.querySelector("#matchupForecast"),
   selectionCount: document.querySelector("#selectionCount"),
   playSelectedButton: document.querySelector("#playSelectedButton"),
@@ -702,23 +707,6 @@ const ui = {
   mainMenuScreen: document.querySelector("#mainMenuScreen"),
   mainMenuPlayButton: document.querySelector("#mainMenuPlayButton"),
   mainMenuTutorialButton: document.querySelector("#mainMenuTutorialButton"),
-  mainMenuFourLaneButton: document.querySelector("#mainMenuFourLaneButton"),
-  fourLanePreviewScreen: document.querySelector("#fourLanePreviewScreen"),
-  fourLanePreviewTitle: document.querySelector("#fourLanePreviewTitle"),
-  fourLaneDeckPage: document.querySelector("#fourLaneDeckPage"),
-  fourLaneRivalPage: document.querySelector("#fourLaneRivalPage"),
-  fourLaneDeckChoiceTitle: document.querySelector("#fourLaneDeckChoiceTitle"),
-  fourLaneRivalTitle: document.querySelector("#fourLaneRivalTitle"),
-  fourLaneDeckStep: document.querySelector("#fourLaneDeckStep"),
-  fourLaneRivalStep: document.querySelector("#fourLaneRivalStep"),
-  fourLaneConfirmDeckButton: document.querySelector("#fourLaneConfirmDeckButton"),
-  fourLaneChangeDeckButton: document.querySelector("#fourLaneChangeDeckButton"),
-  fourLaneConfirmedDeckName: document.querySelector("#fourLaneConfirmedDeckName"),
-  fourLaneConfirmedDeckSummary: document.querySelector("#fourLaneConfirmedDeckSummary"),
-  fourLaneReturnButton: document.querySelector("#fourLaneReturnButton"),
-  fourLaneCardGallery: document.querySelector("#fourLaneCardGallery"),
-  fourLaneStartButton: document.querySelector("#fourLaneStartButton"),
-  fourLaneRulesDialog: document.querySelector("#fourLaneRulesDialog"),
   mainMenuRulebookButton: document.querySelector("#mainMenuRulebookButton"),
   mainMenuSettingsButton: document.querySelector("#mainMenuSettingsButton"),
   mainMenuFullscreenButton: document.querySelector("#mainMenuFullscreenButton"),
@@ -764,29 +752,8 @@ let draggedCardId = null;
 const touchFirstInput = window.matchMedia?.("(hover: none) and (pointer: coarse)");
 let settingsReturnTarget = "main";
 let difficultyReturnTarget = "main";
-let pendingDuelMode = "normal";
 let difficultyPreviousLockedState = true;
-let fourLanePreviewBackground = [];
 let gameMenuPreviousFocus = null;
-const constructedDecks = globalThis.ClawDeckbuilding;
-const fourLaneDeckCatalog = constructedDecks.createCardCatalog([...CARD_LIBRARY, ...FOUR_LANE_CARDS]);
-const fourLaneStarterDecks = constructedDecks.createStarterPresets(fourLaneDeckCatalog);
-let browserDeckStorage;
-try { browserDeckStorage = window.localStorage; } catch { /* Session-only decks remain usable. */ }
-const fourLaneDeckStore = constructedDecks.createDeckStore(fourLaneDeckCatalog, browserDeckStorage);
-let matchFourLaneDeck = fourLaneStarterDecks[0];
-let confirmedFourLaneDeck = null;
-const fourLaneOpponents = globalThis.ClawFourLaneOpponents;
-const fourLaneOpponentRoster = fourLaneOpponents.createRoster(fourLaneDeckCatalog);
-let selectedFourLaneOpponent = "random";
-let matchFourLaneOpponent = fourLaneOpponents.createEncounter(fourLaneOpponentRoster, "balanced");
-const fourLaneDeckEditor = globalThis.ClawDeckEditor.createController({
-  catalog: fourLaneDeckCatalog, store: fourLaneDeckStore,
-  cardMarkup: card => cardMarkup(card, false, -1, "four-lane-preview"),
-  artworkSource: cardArtworkSource,
-  onOpen() { ui.fourLanePreviewScreen.hidden = true; },
-  onClose() { ui.fourLanePreviewScreen.hidden = false; document.querySelector("#fourLaneDeckEditorButton").focus({ preventScroll: true }); },
-});
 const tutorialCoachDrag = {
   pointerId: null,
   offsetX: 0,
@@ -803,16 +770,12 @@ function focusTutorialHeading() {
   });
 }
 
-function isFourLaneMode() {
-  return state.gameMode === "four-lane";
-}
-
 function duelRules() {
-  return isFourLaneMode() ? globalThis.ClawFourLaneRules : globalThis.ClawRules;
+  return globalThis.ClawRules;
 }
 
 function getMaxPlaySize() {
-  return isFourLaneMode() ? 4 : MAX_PLAY_SIZE;
+  return MAX_PLAY_SIZE;
 }
 
 function formationCardCount(cards) {
@@ -821,7 +784,7 @@ function formationCardCount(cards) {
 
 function selectedFormationCards() {
   const cards = state.selectedCardIds.map(id => state.playerHand.find(card => card.instanceId === id) || null);
-  return isFourLaneMode() ? Array.from({ length: 4 }, (_, lane) => cards[lane] || null) : cards.filter(Boolean);
+  return cards.filter(Boolean);
 }
 
 function physicalLaneElements(zone) {
@@ -830,18 +793,15 @@ function physicalLaneElements(zone) {
   return lanes;
 }
 
-function cardRoleDefinition(card, mode = state.gameMode) {
-  const roles = mode === "four-lane" ? globalThis.ClawFourLaneRules.TACTICS : TACTICS;
-  return roles[card.tactic] || FOUR_LANE_ROLES[card.tactic] || TACTICS.link;
+function cardRoleDefinition(card) {
+  return TACTICS[card.tactic] || TACTICS.link;
 }
 
 function getTacticBonus(...args) { return duelRules().getTacticBonus(...args); }
-function getRallyBonus(cards, index) { return isFourLaneMode() ? duelRules().getRallyBonus(cards, index) : 0; }
+function getRallyBonus(cards, index) { return duelRules().getRallyBonus(cards, index); }
 function scoreClash(...args) { return duelRules().scoreClash(...args); }
 function resolveClashes(playerCards, aiCards) {
-  return isFourLaneMode()
-    ? duelRules().resolveProgress(playerCards, aiCards, state.playerProgress, state.aiProgress, undefined, state.round)
-    : duelRules().resolveClashes(playerCards, aiCards);
+  return duelRules().resolveClashes(playerCards, aiCards);
 }
 function getFormationRewardOptions(...args) { return duelRules().getFormationRewardOptions(...args); }
 function buildTellClues(...args) { return duelRules().buildTellClues(...args); }
@@ -850,50 +810,15 @@ function chooseAiCards(...args) { return duelRules().chooseAiCards(...args); }
 function createAiTraits(...args) { return duelRules().createAiTraits(...args); }
 
 function getExtraCardPoints(cardCount, opposingCount) {
-  return isFourLaneMode() ? duelRules().getExtraCardPoints(cardCount, opposingCount)
-    : Math.max(0, cardCount - opposingCount) * EXTRA_CARD_POINTS;
+  return Math.max(0, cardCount - opposingCount) * EXTRA_CARD_POINTS;
 }
 
 function getExtraCardLanePoints(index, opposingCount) {
-  return isFourLaneMode() ? duelRules().getExtraCardLanePoints(index, opposingCount)
-    : index >= opposingCount ? EXTRA_CARD_POINTS : 0;
+  return index >= opposingCount ? EXTRA_CARD_POINTS : 0;
 }
 
 function roundPointLabel(points = 1) {
-  return isFourLaneMode() ? points === 1 ? "trophy" : "trophies" : `Round ${points === 1 ? "Point" : "Points"}`;
-}
-
-function renderDuelMode() {
-  document.body.dataset.duelMode = state.gameMode;
-  document.querySelector(".arena").setAttribute("aria-label", `${isFourLaneMode() ? "Four" : "Three"}-lane dueling table`);
-  document.querySelector("#gameTitle").textContent = isFourLaneMode() ? "Super Secret Stuff WIP" : "Trial of the Elements";
-  document.querySelector("#roundScore small").textContent = isFourLaneMode() ? "MATCH SCORE" : "ROUNDS WON";
-  document.querySelector("#resultCardsLabel").textContent = isFourLaneMode() ? "Your match score" : "Trophy slots";
-  document.querySelector("#previousRoundsHistoryIntro").textContent = isFourLaneMode()
-    ? "Each entry shows trophies earned and the match score after that round. Lane results are from your perspective. Open Details for calculations."
-    : "Results are from your perspective. Cards show element, base Power + bonus, and role. Open Details for calculations and earlier trophy counts.";
-  document.querySelector(".rules-strip .rule-chip.ember").innerHTML = isFourLaneMode()
-    ? "<b>LANE</b> A lane win earns 2 trophies of the winning card's element"
-    : "<b>LANE</b> Every lane win scores 2";
-  document.querySelector(".rules-strip .rule-chip.gust").innerHTML = isFourLaneMode()
-    ? "<b>EXTRA</b> Each lane win unlocks 1 unopposed card for +1 trophy"
-    : "<b>EXTRA</b> Every extra card with no opposing card adds 1 Round Point";
-  document.querySelector(".rules-strip .rule-chip.tide").innerHTML = isFourLaneMode()
-    ? "<b>8 ROUNDS</b> Highest match score wins · each Fire + Gust + Water set adds 2"
-    : "<b>TROPHY</b> A round win awards one played card";
-  renderGallery();
-  renderFourLaneRivalInfo();
-  ui.opponentPublicHand.hidden = !isFourLaneMode();
-  ui.publicDeckButton.hidden = !isFourLaneMode();
-  ui.battleLaneNotice.hidden = !isFourLaneMode();
-  ui.matchScoreDetails.hidden = !isFourLaneMode();
-}
-
-function renderFourLaneRivalInfo() {
-  const info = document.querySelector("#fourLaneRivalInfo");
-  const visible = isFourLaneMode();
-  info.hidden = !visible;
-  info.textContent = visible ? `${matchFourLaneOpponent.profile.name} · ${matchFourLaneOpponent.deck.name}` : "";
+  return `Round ${points === 1 ? "Point" : "Points"}`;
 }
 
 function getPlayerFormationLimit() {
@@ -1510,13 +1435,12 @@ function configureGameMenu() {
     ? tutorial.mode === "complete"
       ? "Resume this scenario, restart the complete training path, adjust settings, or return to the main menu."
       : "Resume this section, restart it from the beginning, adjust settings, or return to the main menu."
-    : isFourLaneMode() ? "Restarting or returning to the main menu will end this eight-round duel."
-      : "Restarting, changing difficulty, or returning to the main menu will end this duel.";
+    : "Restarting, changing difficulty, or returning to the main menu will end this duel.";
   ui.resumeGameButton.textContent = tutorial.active ? "Resume Training" : "Resume Duel";
   ui.restartGameButton.textContent = tutorial.active
     ? tutorial.mode === "complete" ? "Restart Tutorial" : "Restart Section"
     : "Restart Duel";
-  ui.changeDifficultyButton.hidden = tutorial.active || isFourLaneMode();
+  ui.changeDifficultyButton.hidden = tutorial.active;
 }
 
 function stopTutorialMode() {
@@ -1829,8 +1753,7 @@ function resolveTutorialRound(playerCards, aiCards, resolution) {
 }
 
 async function startTutorial(mode = "complete", lessonIndex = 0) {
-  state.gameMode = "normal";
-  renderDuelMode();
+  renderGallery();
   const selectedMode = TUTORIAL_MODES.includes(mode) ? mode : "complete";
   const selectedLessonIndex = Math.min(
     Math.max(0, Number(lessonIndex) || 0),
@@ -1958,11 +1881,6 @@ function freshDeck() {
     )));
 }
 
-function freshPersonalDeck(side) {
-  const definition = side === "player" ? matchFourLaneDeck : matchFourLaneOpponent.deck;
-  return shuffle(constructedDecks.buildDeckInstances(fourLaneDeckCatalog, definition, side));
-}
-
 function drawCard() {
   const reshuffled = reshuffleDiscardPile(state.deck, state.discardPile);
   return {
@@ -1972,13 +1890,7 @@ function drawCard() {
 }
 
 function refillHands(openingHand = false) {
-  if (isFourLaneMode()) {
-    const rules = duelRules();
-    const amount = openingHand ? rules.HAND_SIZE : rules.ROUND_DRAW;
-    const player = rules.replenishHand(state.deck, state.discardPile, state.playerHand, amount);
-    const opponent = rules.replenishHand(state.aiDeck, state.aiDiscardPile, state.aiHand, amount);
-    return player.reshuffled || opponent.reshuffled;
-  }
+
   let reshuffled = false;
   let drewCard = true;
 
@@ -2001,14 +1913,7 @@ function refillHands(openingHand = false) {
 }
 
 function prepareAiPlan() {
-  if (isFourLaneMode()) {
-    // Both hands are public. The opponent locks before any player placement;
-    // selectedCardIds and future draw order are never supplied to this planner.
-    state.aiPlan = globalThis.ClawFourLaneAi.chooseFormation(state.aiHand, state.playerHand,
-      state.aiProgress, state.playerProgress, state.round, Math.random);
-    state.aiTellClues = Array(4).fill("sealed");
-    return;
-  }
+
   const commitment = chooseAiCommitment(
     state.aiHand.length,
     state.playerWins,
@@ -2035,19 +1940,12 @@ function prepareAiPlan() {
 }
 
 function renderOpponentHabits() {
-  const showsHabits = !isFourLaneMode() && state.difficulty === "instinct" && state.aiTraits.length;
-  const placementMode = state.gameMode === "four-lane";
-  const categories = { motive: "CARD CHOICE", placement: "LANE PLACEMENT", commitment: "CARD COUNT" };
+  const showsHabits = state.difficulty === "instinct" && state.aiTraits.length;
   ui.opponentHabits.hidden = !showsHabits;
   ui.opponentHabits.innerHTML = showsHabits
     ? state.aiTraits.map((trait) => `
         <div class="opponent-habit">
-          ${placementMode && categories[trait.category] ? `<small class="opponent-habit-category">${categories[trait.category]}</small>` : ""}
           <b>${trait.label}</b>
-          ${placementMode && trait.category === "placement" && Array.isArray(trait.preferredLanes) ? `
-            <div class="habit-lane-map" role="img" aria-label="Favoured lanes ${trait.preferredLanes.map(lane => lane + 1).join(" and ")}; a habit, not this round's formation" title="Favoured lanes—not the current formation">
-              ${[0, 1, 2, 3].map(lane => `<i class="${trait.preferredLanes.includes(lane) ? "is-favoured" : ""}" aria-hidden="true">${lane + 1}</i>`).join("")}
-            </div>` : ""}
           <span>${trait.description}</span>
         </div>
       `).join("")
@@ -2055,28 +1953,7 @@ function renderOpponentHabits() {
 }
 
 function renderOpponentTells() {
-  if (isFourLaneMode()) {
-    ui.tacticsTitle.textContent = "Opponent's Hand";
-    const revealed = state.locked && state.previousRoundsHistory.length === state.round;
-    ui.commitmentHint.textContent = `${state.aiHand.length} available · ${state.aiDeck.length} in draw pile · ${state.aiDiscardPile.length} discarded. ${revealed ? "Committed cards are revealed on the board." : "Formation stays secret until the clash."}`;
-    renderOpponentHabits();
-    ui.opponentTells.hidden = true;
-    ui.opponentTells.innerHTML = "";
-    ui.opponentPublicHand.hidden = false;
-    ui.opponentPublicHand.innerHTML = state.aiHand.map(card => {
-      const element = ELEMENTS[card.element], role = cardRoleDefinition(card);
-      return `<article class="public-hand-card element-${card.element}" aria-label="${cardDisplayName(card)}, ${element.label}, Power ${card.power}, ${role.label}" title="${cardDisplayName(card)} · ${role.description}">
-        <img src="${card.artworkSource || cardArtworkSource(card.art)}" alt="" draggable="false" decoding="async" />
-        <strong class="public-card-name">${cardDisplayName(card)}</strong>
-        <span class="public-card-stats"><i aria-label="${element.label}">${element.icon}</i><b title="Printed Power">${card.power}</b><svg class="tactic-icon" aria-label="${role.label}"><use href="#tactic-icon-${role.icon}"></use></svg><small>${role.label}</small></span>
-      </article>`;
-    }).join("") || '<p class="public-hand-empty">Committed cards are on the board.</p>';
-    ui.battleLaneNotice.hidden = false;
-    ui.battleLaneNotice.innerHTML = `<b>BATTLE LANE ${duelRules().getBattleLane(state.round) + 1}</b><span>Both players must commit a card here. Other lanes are optional.</span>`;
-    return;
-  }
-  ui.opponentPublicHand.hidden = true;
-  ui.battleLaneNotice.hidden = true;
+
   const difficultyLabel = DIFFICULTIES[state.difficulty]?.label || "Guided";
   const concealsCommitment = concealsOpponentFormation();
   ui.tacticsTitle.textContent = state.difficulty === "instinct"
@@ -2086,7 +1963,7 @@ function renderOpponentTells() {
 
   if (concealsCommitment) {
     ui.commitmentHint.textContent = state.difficulty === "instinct"
-      ? state.gameMode === "four-lane" ? "Instinct · Habits are clues, not the current plan" : "Instinct · Formation size and cards concealed"
+      ? "Instinct · Formation size and cards concealed"
       : "Blind · Current formation and habits concealed";
     ui.opponentTells.innerHTML = "";
     ui.opponentTells.hidden = true;
@@ -2098,12 +1975,12 @@ function renderOpponentTells() {
   const playerExtraCards = Math.max(0, playerCardCount - state.aiPlan.length);
   const aiExtraPoints = getExtraCardPoints(state.aiPlan.length, playerCardCount);
   const playerExtraPoints = getExtraCardPoints(playerCardCount, state.aiPlan.length);
-  const formationStatus = isFourLaneMode() ? "Choose any lanes · gaps allowed" : playerCardCount === 0
+  const formationStatus = playerCardCount === 0
     ? `Build 1–${getMaxPlaySize()} cards`
     : aiExtraCards
-      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}`
+      ? `${aiExtraCards} opposing extra ${aiExtraCards === 1 ? "card adds" : "cards add"} ${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}`
       : playerExtraCards
-        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}`
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}`
         : "Equal formation size";
   ui.commitmentHint.textContent =
     `${difficultyLabel} · ${formationCardCount(state.aiPlan)} ${formationCardCount(state.aiPlan) === 1 ? "card" : "cards"} · ${formationStatus}`;
@@ -2144,17 +2021,6 @@ function renderOpponentTells() {
   }).join("");
 }
 
-function renderPublicDeckLists() {
-  const escape = globalThis.ClawDeckEditor.escape;
-  const safe = text => escape ? escape(text) : String(text).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
-  ui.publicDeckLists.innerHTML = [["You", matchFourLaneDeck], ["Opponent", matchFourLaneOpponent.deck]].map(([label, deck]) => {
-    const summary = constructedDecks.validateDeck(fourLaneDeckCatalog, deck).summary;
-    const cards = Object.entries(summary.copies).map(([key, copies]) => ({ card: fourLaneDeckCatalog.byKey[key], copies }))
-      .sort((a, b) => ELEMENT_SORT_ORDER[a.card.element] - ELEMENT_SORT_ORDER[b.card.element] || a.card.power - b.card.power);
-    return `<section><h3>${label} · ${safe(deck.name)}</h3><p>24 cards · Cost ${summary.totalCost}/120</p><ul>${cards.map(({card, copies}) => `<li><b>×${copies}</b><span>${ELEMENTS[card.element].icon} ${safe(cardDisplayName(card))}</span><strong>${card.power}</strong><small>${cardRoleDefinition(card).label}</small></li>`).join("")}</ul></section>`;
-  }).join("");
-}
-
 function renderFormationControls() {
   if (state.dealing) {
     ui.opponentTells.hidden = true;
@@ -2173,26 +2039,24 @@ function renderFormationControls() {
 
 function beginFormationBuilding() {
   state.selectedCardIds = [];
-  state.pendingLaneCardId = null;
   state.locked = false;
   renderOpponentTells();
   renderFormationControls();
   renderHand();
   renderFormationBuilder();
-  if (isFourLaneMode()) renderSealedBattleLanes();
+
   const hidesFormation = concealsOpponentFormation();
   setMessage(
-    isFourLaneMode() ? `Battle Lane ${duelRules().getBattleLane(state.round) + 1}. Read the open hands.` : state.difficulty === "instinct"
+    state.difficulty === "instinct"
       ? "Read the habits. Build your formation."
       : state.difficulty === "blind"
         ? "Study Previous Rounds History. Build your formation."
         : "Study the plan. Build your formation.",
-    isFourLaneMode() ? "Fill the marked battle lane. Choose up to three other lanes, then commit. The opponent's card choices and positions stay hidden."
-    : hidesFormation
+    hidesFormation
       ? state.difficulty === "blind"
-        ? `Place one to ${isFourLaneMode() ? "four" : "three"} cards. Study completed rounds to infer the opponent's hidden habits.`
-        : `Place one to ${isFourLaneMode() ? "four" : "three"} cards. The opponent's formation stays hidden until the clash.`
-      : `Place one to ${isFourLaneMode() ? "four" : "three"} cards in order, review the forecast, then commit when ready.`,
+        ? "Place one to three cards. Study completed rounds to infer the opponent's hidden habits."
+        : "Place one to three cards. The opponent's formation stays hidden until the clash."
+      : "Place one to three cards in order, review the forecast, then commit when ready.",
   );
 }
 
@@ -2222,7 +2086,7 @@ function renderMatchupForecast() {
     ui.matchupForecast.style.gridTemplateColumns = "";
     ui.matchupForecast.innerHTML = `
       <span class="forecast-instruction">
-        ${isFourLaneMode() ? `Choose a card, then choose its lane. Battle Lane ${duelRules().getBattleLane(state.round) + 1} is required; the other lanes are optional.` : "Drag a card into Lane 1, or click a card below. Its bonus math will appear here."}
+        Drag a card into Lane 1, or click a card below. Its bonus math will appear here.
       </span>
     `;
     return;
@@ -2268,18 +2132,14 @@ function renderMatchupForecast() {
     }
 
     if (!opponentCard) {
-      if (isFourLaneMode()) return `
-        <span class="forecast-chip forecast-extra-card">
-          <i>${index + 1}</i><b>UNOPPOSED · UP TO +1</b>
-          <small>Needs one of your lane wins to unlock. Rewarded left to right, up to two.</small>
-        </span>`;
+
       const points = getExtraCardLanePoints(index, state.aiPlan.length);
       return `
         <span class="forecast-chip forecast-extra-card">
           <i>${index + 1}</i>
           <b>◆ EXTRA CARD +${points}</b>
-          <span class="forecast-equation"><strong>+${points} ${isFourLaneMode() ? ELEMENTS[playerCard.element].label.toUpperCase() + (points === 1 ? " TROPHY" : " TROPHIES") : roundPointLabel(points).toUpperCase()}</strong></span>
-          <small>${isFourLaneMode() ? points ? "No opposing card; +1 trophy if you have fewer than 6 of this element" : "Only the first two unopposed cards earn trophies" : points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
+          <span class="forecast-equation"><strong>+${points} ${roundPointLabel(points).toUpperCase()}</strong></span>
+          <small>${points ? "No opposing card; adds 1 Round Point instead of clashing" : "No opposing card; the 2-point extra-card cap is already reached"}</small>
         </span>
       `;
     }
@@ -2338,14 +2198,7 @@ function renderMatchupForecast() {
 
 function renderAftermathBreakdown(playerCards, resolution) {
   ui.matchupForecast.style.gridTemplateColumns = `repeat(${Math.max(1, resolution.lanes.length)}, minmax(0, 1fr))`;
-  const summary = isFourLaneMode() ? `
-    <span class="forecast-chip round-points-summary">
-      <b>TROPHIES EARNED</b>
-      ${progressGainMarkup(resolution.progressGains.player, "You")}
-      ${progressGainMarkup(resolution.progressGains.ai, "Opponent")}
-      <small>Both sides keep earned trophies. Each complete Fire + Gust + Water set adds 2 to your match score.</small>
-    </span>
-  ` : `
+  const summary = `
     <span class="forecast-chip round-points-summary">
       <b>ROUND POINTS · ${resolution.score.player}–${resolution.score.ai}</b>
       <span class="forecast-equation">
@@ -2368,7 +2221,7 @@ function renderAftermathBreakdown(playerCards, resolution) {
     return `
       <span class="forecast-chip forecast-${className} aftermath-chip">
         <i>${index + 1}</i>
-        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}${isFourLaneMode() && resolution.laneProgress.player[index] ? ` · +${resolution.laneProgress.player[index]} ${ELEMENTS[playerCards[index].element].label} ${resolution.laneProgress.player[index] === 1 ? "trophy" : "trophies"}` : ""}</b>
+        <b>${outcome} · ${lane.player.total} vs ${lane.ai.total}</b>
         <span class="forecast-equation">
           <em>${playerCards[index].power} BASE</em><span>+</span><strong>${bonus.total} BONUS</strong><span>=</span><strong>${lane.player.total} TOTAL</strong>
         </span>
@@ -2400,17 +2253,17 @@ function artworkAdjustedCopy(copy = "") {
 }
 
 function cardArtworkSource(cardArt) {
+  const card = CARD_LIBRARY.find(candidate => candidate.art === cardArt);
   return cardUsesPhotographicArtwork(cardArt)
     ? PHOTOGRAPHIC_CARD_ART[cardArt]
-    : `./assets/cards/${cardArt}.webp`;
+    : card?.artworkSource || `./assets/cards/${cardArt}.webp`;
 }
 
 function updateDisplayedCardArtwork() {
   document.documentElement.dataset.cardArtwork = state.artworkStyle;
   document.querySelectorAll(".game-card[data-card-template]").forEach((cardElement) => {
-    if (cardElement.dataset.cardPreview === "four-lane") return;
     const cardArt = cardElement.dataset.cardTemplate;
-    const card = [...CARD_LIBRARY, ...FOUR_LANE_CARDS].find((candidate) => candidate.art === cardArt);
+    const card = CARD_LIBRARY.find((candidate) => candidate.art === cardArt);
     const usesPhotograph = cardUsesPhotographicArtwork(cardArt);
     const image = cardElement.querySelector(".card-art img");
     if (image) image.src = card?.artworkSource || cardArtworkSource(cardArt);
@@ -2440,9 +2293,8 @@ function cardMarkup(
   extraCardPoints = null,
 ) {
   const element = ELEMENTS[card.element];
-  const isFourLanePreview = displayMode === "four-lane-preview";
   const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
-  const tactic = cardRoleDefinition(card, isFourLanePreview ? "four-lane" : state.gameMode);
+  const tactic = cardRoleDefinition(card);
   const isSelected = selectedIndex >= 0;
   const isFormationCard = displayMode === "formation";
   const isPlayedCard = displayMode === "played";
@@ -2451,8 +2303,7 @@ function cardMarkup(
   const displayName = cardDisplayName(card);
   const interactionLabel = isFormationCard
     ? `Remove ${displayName} from lane ${selectedIndex + 1}`
-    : state.gameMode === "four-lane" ? `Choose ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} role, then choose any lane`
-      : `Add ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
+    : `Add ${displayName}, ${element.label}, power ${card.power}, ${tactic.label} Formation Role to the next lane`;
   const formationBonusBadge = isFormationCard && formationBonus
     ? `
       <span class="card-bonus-badge preview-badge${formationBonus.extraCard ? " extra-card-badge" : ""}" aria-label="${formationBonus.label}" title="${formationBonus.label}">
@@ -2463,7 +2314,7 @@ function cardMarkup(
     : "";
   const resolvedBonusBadge = isPlayedCard || isExtraCard
     ? `
-      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? extraPoints ? `Extra card with no opposing card; adds ${isFourLaneMode() ? "up to " : ""}${extraPoints} ${roundPointLabel(extraPoints)}` : `Extra card; adds 0 ${roundPointLabel(0)} because only the first two extra cards score` : "Bonus not yet resolved"}">
+      <span class="card-bonus-badge${isExtraCard ? " extra-card-badge" : ""}" aria-label="${isExtraCard ? extraPoints ? `Extra card with no opposing card; adds ${extraPoints} ${roundPointLabel(extraPoints)}` : `Extra card; adds 0 ${roundPointLabel(0)} because only the first two extra cards score` : "Bonus not yet resolved"}">
         <small>${isExtraCard ? extraPoints ? "EXTRA" : "CAP" : "BONUS"}</small>
         <b>${isExtraCard ? `+${extraPoints}` : "+?"}</b>
       </span>
@@ -2473,14 +2324,14 @@ function cardMarkup(
     <button
       class="game-card element-${card.element} rarity-${card.rarity} art-${card.art}${cardUsesPhotographicArtwork(card.art) ? " uses-photographic-art" : ""}${isFormationCard ? " selected formation-card" : ""}"
       data-card-template="${card.art}"
-      ${isFourLanePreview ? `data-card-preview="four-lane" aria-label="${displayName}, ${element.label}, ${rarityLabel}, Power ${card.power}, ${tactic.label} role, preview only"` : ""}
+
       ${interactive ? `data-card-id="${card.instanceId}" draggable="true" aria-label="${interactionLabel}" aria-pressed="${isSelected}"` : "disabled"}
       type="button"
     >
       ${formationBonusBadge}
       ${resolvedBonusBadge}
       <span class="card-art">
-        <img src="${card.artworkSource || cardArtworkSource(card.art)}" alt="" draggable="false" ${isFourLanePreview ? 'loading="lazy" decoding="async" width="1254" height="1254"' : ""} />
+        <img src="${card.artworkSource || cardArtworkSource(card.art)}" alt="" draggable="false"  />
         <span class="art-vignette" aria-hidden="true"></span>
         <span class="card-element" aria-hidden="true">${element.icon}</span>
         <span class="card-power"><small>POWER</small><b>${card.power}</b></span>
@@ -2529,12 +2380,7 @@ function renderHand() {
     .join("");
 
   bindCardInteractions(ui.playerHand);
-  if (isFourLaneMode()) ui.playerHand.querySelectorAll("[data-card-id]").forEach(button => {
-    const pending = button.dataset.cardId === state.pendingLaneCardId;
-    button.classList.toggle("is-lane-choice", pending);
-    button.setAttribute("aria-pressed", String(pending));
-    button.title = pending ? "Selected: choose any lane. Click again to cancel." : "Choose this card, then choose its lane.";
-  });
+
   ui.playerHand.ondragover = (event) => {
     if (state.locked || !state.selectedCardIds.includes(draggedCardId)) return;
     event.preventDefault();
@@ -2608,15 +2454,11 @@ function getFormationBonusPreview(selectedCards, index) {
 
   const opponentCard = state.aiPlan[index];
   if (!opponentCard) {
-    if (isFourLaneMode()) return {
-      text: `+${knownBonus}`,
-      label: `Known role bonus +${knownBonus}. Unopposed: earns 1 trophy only when unlocked by a lane win, up to two per round.`,
-      extraCard: false,
-    };
+
     const points = getExtraCardLanePoints(index, state.aiPlan.length);
     return {
       text: `+${points}`,
-      label: points ? `Extra card with no opposing card; adds ${isFourLaneMode() ? "up to " : ""}${points} ${roundPointLabel(points)} instead of clashing`
+      label: points ? `Extra card with no opposing card; adds ${points} ${roundPointLabel(points)} instead of clashing`
         : `Extra card; adds 0 ${roundPointLabel(0)} because only the first two extra cards score`,
       extraCard: true,
     };
@@ -2652,34 +2494,32 @@ function getFormationBonusPreview(selectedCards, index) {
 function renderFormationBuilder() {
   const selectedCards = selectedFormationCards();
   const commitmentLimit = getPlayerFormationLimit();
-  const battleLane = isFourLaneMode() ? duelRules().getBattleLane(state.round) : -1;
 
   ui.playerPlayZone.innerHTML = `
     <div class="formation-builder" aria-label="Your formation lanes">
       ${Array.from({ length: getMaxPlaySize() }, (_, index) => {
         const card = selectedCards[index];
         const isLockedSlot = (state.locked || commitmentLimit === 0) && !card;
-        const isNextSlot = !state.locked && (isFourLaneMode()
-          ? commitmentLimit > 0 : index < commitmentLimit && index === selectedCards.length);
+        const isNextSlot = !state.locked && (index < commitmentLimit && index === selectedCards.length);
         if (card) {
           const bonusPreview = getFormationBonusPreview(selectedCards, index);
           return `
-            <div class="formation-slot filled-slot${index === battleLane ? " required-battle-lane" : ""}" data-drop-lane="${index}" ${isFourLaneMode() && state.pendingLaneCardId ? 'role="button" tabindex="0"' : ""}>
-              <span class="filled-lane-label"${index === battleLane ? ' title="Required battle lane" aria-label="Lane ' + (index + 1) + ', required battle lane"' : ""}>LANE ${index + 1}</span>
+            <div class="formation-slot filled-slot" data-drop-lane="${index}">
+              <span class="filled-lane-label">LANE ${index + 1}</span>
               ${cardMarkup(card, true, index, "formation", bonusPreview)}
             </div>
           `;
         }
         return `
           <div
-            class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}${isLockedSlot ? " locked-slot" : ""}${index === battleLane ? " required-battle-lane" : ""}"
+            class="formation-slot empty-slot${isNextSlot ? " next-slot" : " waiting-slot"}${isLockedSlot ? " locked-slot" : ""}"
             data-drop-lane="${index}"
-            ${isFourLaneMode() && !state.locked ? 'role="button" tabindex="0"' : ""}
-            aria-label="Lane ${index + 1}${index === battleLane ? ", required battle lane" : ""}${isLockedSlot ? ", unavailable" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
+
+            aria-label="Lane ${index + 1}${isLockedSlot ? ", unavailable" : isNextSlot ? ", available for your next card" : ", waiting for the previous lane"}"
           >
-            <span>${index === battleLane ? "BATTLE " : ""}LANE ${index + 1}</span>
-            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? isFourLaneMode() && state.pendingLaneCardId ? "PLACE HERE" : "DROP CARD" : "WAITING"}</b>
-            <small>${isLockedSlot ? "FORMATION UNAVAILABLE" : index === battleLane ? "REQUIRED TO COMMIT" : isNextSlot ? isFourLaneMode() ? "optional lane" : "or click one below" : `Fill lane ${index}`}</small>
+            <span>LANE ${index + 1}</span>
+            <b>${isLockedSlot ? "LOCKED" : isNextSlot ? "DROP CARD" : "WAITING"}</b>
+            <small>${isLockedSlot ? "FORMATION UNAVAILABLE" : isNextSlot ? "or click one below" : `Fill lane ${index}`}</small>
           </div>
         `;
       }).join("")}
@@ -2689,22 +2529,11 @@ function renderFormationBuilder() {
   bindCardInteractions(ui.playerPlayZone);
   ui.playerPlayZone.querySelectorAll("[data-drop-lane]").forEach((slot) => {
     const laneIndex = Number(slot.dataset.dropLane);
-    if (isFourLaneMode()) {
-      const chooseLane = event => {
-        if (state.locked || !state.pendingLaneCardId) return;
-        event.preventDefault();
-        event.stopPropagation();
-        placeCardInLane(state.pendingLaneCardId, laneIndex);
-      };
-      slot.addEventListener("click", chooseLane, true);
-      slot.addEventListener("keydown", event => {
-        if ((event.key === "Enter" || event.key === " ") && event.target === slot) chooseLane(event);
-      });
-    }
+
     slot.addEventListener("dragover", (event) => {
       if (
         state.locked
-        || (!isFourLaneMode() && (laneIndex >= getPlayerFormationLimit() || laneIndex > state.selectedCardIds.length))
+        || (laneIndex >= getPlayerFormationLimit() || laneIndex > state.selectedCardIds.length)
       ) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
@@ -2722,21 +2551,13 @@ function renderFormationBuilder() {
   });
 }
 
-function renderSealedBattleLanes() {
-  const battleLane = duelRules().getBattleLane(state.round);
-  ui.aiPlayZone.innerHTML = `<div class="formation-builder opponent-sealed-formation" aria-label="Opponent's formation is secret; Battle Lane ${battleLane + 1} must be occupied">
-    ${Array.from({ length: 4 }, (_, lane) => `<div class="formation-slot empty-slot opponent-sealed-slot${lane === battleLane ? " required-battle-lane" : ""}">
-      <span>LANE ${lane + 1}</span><b>${lane === battleLane ? "SEALED" : "HIDDEN"}</b><small>${lane === battleLane ? "BATTLE LANE" : "CARD OR EMPTY"}</small>
-    </div>`).join("")}</div>`;
-}
-
 function placeCardInLane(instanceId, laneIndex) {
   if (state.locked || !state.playerHand.some((card) => card.instanceId === instanceId)) return;
   if (!Number.isInteger(laneIndex) || laneIndex < 0 || laneIndex >= getMaxPlaySize()) return;
   const commitmentLimit = getPlayerFormationLimit();
   const currentIndex = state.selectedCardIds.indexOf(instanceId);
   if (currentIndex < 0 && formationCardCount(state.selectedCardIds) >= commitmentLimit
-    && !(isFourLaneMode() && state.selectedCardIds[laneIndex])) {
+    && true) {
     setMessage(
       `${commitmentLimit}-card formation limit reached.`,
       "Return a card to your hand before adding another.",
@@ -2745,18 +2566,6 @@ function placeCardInLane(instanceId, laneIndex) {
     return;
   }
 
-  if (isFourLaneMode()) {
-    const slots = Array.from({ length: 4 }, (_, lane) => state.selectedCardIds[lane] || null);
-    if (currentIndex >= 0) slots[currentIndex] = slots[laneIndex];
-    slots[laneIndex] = instanceId;
-    state.selectedCardIds = slots;
-    state.pendingLaneCardId = null;
-    draggedCardId = null;
-    audio.cardFlip(true, laneIndex + 1);
-    updateFormationMessage();
-    renderHand();
-    return;
-  }
   if (currentIndex >= 0) state.selectedCardIds.splice(currentIndex, 1);
   const targetIndex = Math.min(Math.max(0, laneIndex), state.selectedCardIds.length);
   state.selectedCardIds.splice(targetIndex, 0, instanceId);
@@ -2775,17 +2584,13 @@ function updateFormationMessage() {
   const aiExtraCards = Math.max(0, state.aiPlan.length - count);
   const playerExtraPoints = getExtraCardPoints(count, state.aiPlan.length);
   const aiExtraPoints = getExtraCardPoints(state.aiPlan.length, count);
-  const detail = isFourLaneMode()
-    ? state.pendingLaneCardId ? `Choose a lane for the selected card. Battle Lane ${duelRules().getBattleLane(state.round) + 1} must be filled before committing.`
-      : !selectedFormationCards()[duelRules().getBattleLane(state.round)] ? `Place a card in Battle Lane ${duelRules().getBattleLane(state.round) + 1} to commit. Other lanes are optional.`
-        : "Battle lane filled. Add optional cards or commit. The opponent's formation is still secret."
-    : concealsOpponentFormation()
+  const detail = concealsOpponentFormation()
     ? count === 0
       ? state.difficulty === "instinct" && tutorial.active && currentTutorialLesson()?.freeChoice
         ? `Choose ${currentTutorialLesson().minCards || 1}–${currentTutorialLesson().maxCards || MAX_PLAY_SIZE} cards. The opponent's commitment habit is your only clue to their hidden formation size.`
         : state.difficulty === "instinct"
-          ? `Choose one to ${isFourLaneMode() ? "four" : "three"} cards. The opponent's commitment habit is your clue to their hidden formation size.`
-          : `Choose one to ${isFourLaneMode() ? "four" : "three"} cards. Use Previous Rounds History to infer the opponent's hidden formation habits.`
+          ? "Choose one to three cards. The opponent's commitment habit is your clue to their hidden formation size."
+          : "Choose one to three cards. Use Previous Rounds History to infer the opponent's hidden formation habits."
       : tutorial.active
         && currentTutorialLesson()?.freeChoice
         && count < (currentTutorialLesson().minCards || 1)
@@ -2794,11 +2599,11 @@ function updateFormationMessage() {
         ? "Your formation is ready. The opponent's current cards, formation size, and habits remain concealed."
         : "Your current formation is ready to commit. The opponent's cards and formation size remain concealed."
     : count === 0
-      ? `Choose one to ${isFourLaneMode() ? "four" : "three"} cards using the opponent's visible plan.`
+      ? "Choose one to three cards using the opponent's visible plan."
       : playerExtraCards
-        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${isFourLaneMode() ? "up to " : ""}${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}.`
+        ? `Your ${playerExtraCards} extra ${playerExtraCards === 1 ? "card adds" : "cards add"} ${playerExtraPoints} ${roundPointLabel(playerExtraPoints)}${playerExtraCards > playerExtraPoints ? " (first two only)" : ""}.`
         : aiExtraCards
-          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${isFourLaneMode() ? "up to " : ""}${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}.`
+          ? `The opponent has ${aiExtraCards} extra ${aiExtraCards === 1 ? "card" : "cards"} worth ${aiExtraPoints} ${roundPointLabel(aiExtraPoints)}${aiExtraCards > aiExtraPoints ? " (first two only)" : ""}.`
           : "Equal formation sizes mean there are no extra cards. Round Points come only from winning a lane where your card faces one of the opponent's cards.";
   setMessage(title, detail);
   renderOpponentTells();
@@ -2812,13 +2617,12 @@ function updateSelectionControls() {
     ? lesson.minCards || 1
     : lesson?.expected.length || 1;
   const formationLimit = getPlayerFormationLimit();
-  const battleReady = !isFourLaneMode() || duelRules().isValidBattleFormation(selectedFormationCards(), state.round);
   const readiness = tutorialFormationReady
     ? "ready"
     : count >= minimumCards
       ? "adjust the order"
       : `${minimumCards - count} more needed`;
-  ui.selectionCount.textContent = isFourLaneMode() ? `${count} placed · ${battleReady ? "battle lane ready" : `fill Battle Lane ${duelRules().getBattleLane(state.round) + 1}`}` : count
+  ui.selectionCount.textContent = count
     ? `${count} ${count === 1 ? "card" : "cards"} placed · ${readiness} · up to ${formationLimit}`
     : minimumCards === formationLimit
       ? `0 placed · choose ${minimumCards} ${minimumCards === 1 ? "card" : "cards"}`
@@ -2826,15 +2630,11 @@ function updateSelectionControls() {
   ui.playSelectedButton.disabled = state.locked
     || count < 1
     || count > getPlayerFormationLimit()
-    || !battleReady
     || !tutorialFormationReady;
   ui.playSelectedButton.textContent = count === 1
     ? "Commit 1 Card"
     : `Commit ${count || 0} Cards`;
-  if (isFourLaneMode() && state.locked && !state.dealing) {
-    ui.selectionCount.textContent = "Formation committed";
-    ui.playSelectedButton.textContent = "Resolving lanes…";
-  }
+
   renderMatchupForecast();
   if (tutorial.active) renderTutorialCoach();
 }
@@ -2843,19 +2643,7 @@ function toggleCardSelection(instanceId) {
   if (state.locked) return;
   if (!state.playerHand.some(card => card.instanceId === instanceId)) return;
   const selectedIndex = state.selectedCardIds.indexOf(instanceId);
-  if (isFourLaneMode()) {
-    if (selectedIndex >= 0) {
-      state.selectedCardIds[selectedIndex] = null;
-      state.pendingLaneCardId = null;
-      audio.cardFlip(false, selectedIndex + 1);
-    } else {
-      state.pendingLaneCardId = state.pendingLaneCardId === instanceId ? null : instanceId;
-      audio.cardFlip(Boolean(state.pendingLaneCardId), 1);
-    }
-    updateFormationMessage();
-    renderHand();
-    return;
-  }
+
   let changed = false;
 
   if (selectedIndex >= 0) {
@@ -2880,18 +2668,7 @@ function toggleCardSelection(instanceId) {
 }
 
 function playedCardsMarkup(cards, side, clashCount = cards.length, opposingCards = []) {
-  if (isFourLaneMode()) return `
-    <div class="played-cards ${side}-formation">
-      ${Array.from({ length: 4 }, (_, index) => {
-        const card = cards[index];
-        if (!card) return `<div class="played-lane-empty" data-empty-lane="${index}" aria-label="Lane ${index + 1}, no card"><span>LANE ${index + 1}</span><small>EMPTY</small></div>`;
-        const unopposed = !opposingCards[index];
-        return `<div class="clash-card${unopposed ? " result-extra-card" : ""}" data-clash-index="${index}">
-          ${cardMarkup(card, false, index, "played")}
-          <span class="lane-result">${unopposed ? "UNOPPOSED" : ""}</span>
-        </div>`;
-      }).join("")}
-    </div>`;
+
   return `
     <div class="played-cards ${side}-formation">
       ${cards.map((card, index) => {
@@ -2906,21 +2683,13 @@ function playedCardsMarkup(cards, side, clashCount = cards.length, opposingCards
   `;
 }
 
-function galleryRoleLegendMarkup(mode = state.gameMode) {
-  const roles = mode === "four-lane"
-    ? Object.values(globalThis.ClawFourLaneRules.TACTICS).map(role => ({ icon: role.icon,
-        text: role.description.replace(`${role.label}: `, `${role.label} · `) }))
-    : [
-        { icon: TACTICS.vanguard.icon, text: "Vanguard · +1 in Lane 1" },
-        { icon: TACTICS.link.icon, text: "Link · +1 when the card before the Link has a different element from the Link card" },
-        { icon: TACTICS.finisher.icon, text: "Finisher · +1 when last in a 2–3 card formation" },
-      ];
-  return roles.map(role => `<span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-${role.icon}"></use></svg></b> ${role.text}</span>`).join("");
+function galleryRoleLegendMarkup() {
+  return Object.values(TACTICS).map(role => `<span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-${role.icon}"></use></svg></b> ${role.description.replace(role.label + ": ", role.label + " · ")}</span>`).join("");
 }
 
 function renderGallery() {
   ui.galleryRoleLegend.innerHTML = galleryRoleLegendMarkup();
-  const library = isFourLaneMode() ? [...CARD_LIBRARY, ...FOUR_LANE_CARDS] : CARD_LIBRARY;
+  const library = CARD_LIBRARY;
   const sortedCards = library.filter((card) =>
     state.archiveElements.includes(card.element)
     && state.archiveRarities.includes(card.rarity));
@@ -2944,7 +2713,7 @@ function renderGallery() {
   }
 
   ui.galleryIntro.textContent = sortedCards.length === library.length
-    ? `All ${library.length} cards available in ${isFourLaneMode() ? "Super Secret Stuff WIP" : "Normal Play"}.`
+    ? `All ${library.length} cards available in Normal Play.`
     : `Showing ${sortedCards.length} of ${library.length} cards.`;
   ui.archiveSort.value = state.archiveSort;
   ui.archiveSortSummary.textContent = ARCHIVE_SORT_SUMMARIES[state.archiveSort];
@@ -2972,10 +2741,7 @@ function renderGallery() {
 }
 
 function renderCollection(target, cards) {
-  if (isFourLaneMode()) {
-    renderElementProgress(target, target === ui.playerCollection ? state.playerProgress : state.aiProgress);
-    return;
-  }
+
   const counts = getElementTrophyCounts(cards);
   const progress = getTrophyProgress(cards);
   target.setAttribute(
@@ -3000,22 +2766,6 @@ function renderCollection(target, cards) {
   }).join("");
 }
 
-function renderElementProgress(target, progress) {
-  const rules = duelRules(), counts = rules.getElementProgress(progress);
-  target.setAttribute("aria-label", Object.entries(ELEMENTS).map(([key, element]) => `${element.label} ${counts[key]} trophies`).join(", ") + `. ${rules.getCompletedSets(counts)} complete sets, set bonus ${rules.getSetBonus(counts)}.`);
-  target.innerHTML = Object.entries(ELEMENTS).map(([key, element]) => `
-    <span class="trophy-goal elemental-progress-goal element-${key}" title="${element.label} trophies: ${counts[key]}">
-      <b aria-hidden="true">${element.icon}</b>
-      <strong>${counts[key]}</strong>
-    </span>`).join("");
-}
-
-function progressGainMarkup(gains, label) {
-  const entries = Object.entries(ELEMENTS).filter(([key]) => gains[key] > 0);
-  return `<span class="progress-gain-row"><b>${label}</b>${entries.length ? entries.map(([key, element]) =>
-    `<strong class="element-${key}"><span aria-hidden="true">${element.icon}</span> +${gains[key]} <small>${element.label}</small></strong>`).join("") : "<small>No trophies earned</small>"}</span>`;
-}
-
 function renderRound() {
   ui.deckStatusText.removeAttribute("title");
   if (tutorial.active && tutorial.phase === "tour") {
@@ -3032,7 +2782,7 @@ function renderRound() {
     ui.roundLabel.textContent =
       `LESSON ${tutorial.lessonIndex + 1} / ${TUTORIAL_LESSONS.length}`;
   } else {
-    ui.roundLabel.textContent = isFourLaneMode() ? `ROUND ${state.round} / ${duelRules().MATCH_ROUNDS}` : `ROUND ${state.round}`;
+    ui.roundLabel.textContent = `ROUND ${state.round}`;
   }
   if (tutorial.active) {
     ui.deckStatusText.innerHTML = tutorial.phase === "tour"
@@ -3040,14 +2790,7 @@ function renderRound() {
       : `<strong>Training deck</strong> &middot; ${state.discardPile.length} ${state.discardPile.length === 1 ? "card" : "cards"} in the training discard pile`;
     return;
   }
-  if (isFourLaneMode()) {
-    const rules = duelRules();
-    const discardCopy = state.discardPile.length ? ` · ${state.discardPile.length} discarded` : "";
-    ui.deckStatusText.innerHTML = `<strong id="deckCount">${state.deck.length}</strong> cards in draw pile${discardCopy}`;
-    ui.deckStatusText.title = `${state.playerHand.length}/${rules.HAND_SIZE} cards in hand; ${state.discardPile.length} discarded. Draw up to ${rules.ROUND_DRAW} next round without exceeding ${rules.HAND_SIZE}. Only your own empty deck reshuffles.`;
-    ui.deckCount = document.querySelector("#deckCount");
-    return;
-  }
+
   if (state.deck.length === 0 && state.discardPile.length > 0) {
     ui.deckStatusText.innerHTML = `<strong>${state.discardPile.length}</strong> discarded cards ready to reshuffle`;
   } else if (state.deck.length === 0 && state.discardPile.length === 0) {
@@ -3062,17 +2805,7 @@ function renderRound() {
 }
 
 function renderRoundScore() {
-  if (isFourLaneMode()) {
-    const rules = duelRules();
-    ui.playerRoundScore.textContent = rules.getMatchScore(state.playerProgress);
-    ui.aiRoundScore.textContent = rules.getMatchScore(state.aiProgress);
-    const breakdown = progress => `${rules.getProgressTotal(progress)} trophies + ${rules.getSetBonus(progress)} set bonus = ${rules.getMatchScore(progress)}`;
-    const description = `Match score: You ${breakdown(state.playerProgress)}; Opponent ${breakdown(state.aiProgress)}. Highest score after ${rules.MATCH_ROUNDS} rounds wins.`;
-    ui.roundScore.setAttribute("aria-label", description);
-    ui.roundScore.title = description;
-    ui.matchScoreDetails.textContent = `You: ${rules.getProgressTotal(state.playerProgress)} trophies + ${rules.getSetBonus(state.playerProgress)} set bonus · Opponent: ${rules.getProgressTotal(state.aiProgress)} + ${rules.getSetBonus(state.aiProgress)}`;
-    return;
-  }
+
   ui.playerRoundScore.textContent = state.playerRoundWins;
   ui.roundScore.removeAttribute("title");
   ui.aiRoundScore.textContent = state.aiRoundWins;
@@ -3097,26 +2830,18 @@ function recordCompletedRound(reward, playerCards, aiCards, resolution) {
   if (!resolution) return;
   state.previousRoundsHistory.push({
     round: state.round,
-    mode: state.gameMode || "normal",
     difficulty: state.difficulty,
     playerCards: playerCards.map(snapshotHistoryCard),
     aiCards: aiCards.map(snapshotHistoryCard),
     winner: resolution.winner,
     score: { ...resolution.score },
     extraCardPoints: { ...resolution.extraCardPoints },
-    ...(resolution.progressGains ? {
-      progressGains: structuredClone(resolution.progressGains),
-      progressBefore: structuredClone(resolution.progressBefore),
-      progressAfter: structuredClone(resolution.progressAfter),
-      laneProgress: structuredClone(resolution.laneProgress),
-      matchWinner: resolution.matchWinner,
-      battleLane: duelRules().getBattleLane(state.round),
-      matchScores: { player: duelRules().getMatchScore(resolution.progressAfter.player), ai: duelRules().getMatchScore(resolution.progressAfter.ai) },
-    } : {}),
     laneResults: resolution.lanes.map((lane) => lane ? ({
       winner: lane.winner,
       playerTotal: lane.player.total,
       aiTotal: lane.ai.total,
+      playerRally: lane.player.rally || 0,
+      aiRally: lane.ai.rally || 0,
     }) : null),
     trophy: reward?.card
       ? {
@@ -3144,7 +2869,7 @@ function historyProgressMarkup(counts, label) {
 }
 
 function historyExtraCardLanePoints(entry, side, index) {
-  if (entry.mode === "four-lane") return entry.laneProgress?.[side]?.[index] || 0;
+
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   // Store earned points, rather than reinterpreting an old round with today's
   // rules. Older in-memory entries can recover that number from their score.
@@ -3164,10 +2889,9 @@ function historyLaneCellMarkup(entry, side, index) {
   const lane = entry.laneResults[index];
   const isExtra = !opposingCards[index];
   const element = ELEMENTS[card.element];
-  const tactic = cardRoleDefinition(card, entry.mode);
+  const tactic = cardRoleDefinition(card);
   const outcome = isExtra
-    ? entry.mode === "four-lane" ? `Unopposed +${historyExtraCardLanePoints(entry, side, index)} ${element.label}`
-      : historyExtraCardLanePoints(entry, side, index) ? "Extra +1 Round Point" : "Extra +0 · Cap reached"
+    ? historyExtraCardLanePoints(entry, side, index) ? "Extra +1 Round Point" : "Extra +0 · Cap reached"
     : side === "player"
       ? lane?.winner === "draw" ? "Draw" : lane?.winner === "player" ? "Win" : "Loss"
       : "";
@@ -3198,9 +2922,9 @@ function historyLaneCellMarkup(entry, side, index) {
 }
 
 function historyFormationGridMarkup(entry) {
-  const indexes = Array.from({ length: entry.mode === "four-lane" ? 4 : 3 }, (_, index) => index);
+  const indexes = Array.from({ length: 3 }, (_, index) => index);
   const laneHeaders = indexes
-    .map((index) => `<div class="history-grid-lane${entry.battleLane === index ? " history-battle-lane" : ""}">${entry.battleLane === index ? "BATTLE " : ""}LANE ${index + 1}</div>`)
+    .map((index) => `<div class="history-grid-lane">LANE ${index + 1}</div>`)
     .join("");
   const rowMarkup = (side, label) => {
     return `
@@ -3211,7 +2935,7 @@ function historyFormationGridMarkup(entry) {
     `;
   };
   return `
-    <div class="history-lane-grid${entry.mode === "four-lane" ? " history-four-lanes" : ""}">
+    <div class="history-lane-grid">
       <div class="history-grid-corner" aria-hidden="true"></div>
       ${laneHeaders}
       ${rowMarkup("ai", "OPPONENT")}
@@ -3225,35 +2949,28 @@ function historyLaneCalculationMarkup(entry, side, index) {
   const opposingCards = side === "player" ? entry.aiCards : entry.playerCards;
   const card = cards[index];
   if (!card) return `<span aria-label="No card">—</span>`;
-  if (!opposingCards[index] && entry.mode === "four-lane") {
-    const gain = historyExtraCardLanePoints(entry, side, index);
-    const wins = entry.laneResults.filter(lane => lane?.winner === side).length;
-    const reason = gain ? "Unlocked by a lane win."
-      : !wins ? "No lane victory to unlock this card."
-        : "All your lane-win unlocks were used by earlier eligible unopposed cards.";
-    return `Unopposed card: <b>+${gain} ${ELEMENTS[card.element].label} ${gain === 1 ? "trophy" : "trophies"}</b> ${reason}`;
-  }
   if (!opposingCards[index]) return historyExtraCardLanePoints(entry, side, index)
     ? "Extra card: <b>+1 Round Point</b>" : "Extra card: <b>+0 Round Points</b> · 2-point cap reached";
   const lane = entry.laneResults[index];
   const total = side === "player" ? lane.playerTotal : lane.aiTotal;
   const bonus = total - card.power;
-  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>${entry.mode === "four-lane" ? `<br />+${entry.laneProgress[side][index]} ${ELEMENTS[card.element].label} ${entry.laneProgress[side][index] === 1 ? "trophy" : "trophies"}` : ""}`;
+  const rally = side === "player" ? lane.playerRally : lane.aiRally;
+  return `Power ${card.power} + bonus ${bonus} = <b>${total}</b>${rally ? ` <small>Includes Rally received +${rally}.</small>` : ""}`;
 }
 
 function historyRoundDetailsMarkup(entry) {
   const lanes = Array.from({ length: Math.max(entry.playerCards.length, entry.aiCards.length) }, (_, index) => index);
   const trophyCard = entry.trophy?.card;
-  const trophyTactic = trophyCard ? cardRoleDefinition(trophyCard, entry.mode) : null;
+  const trophyTactic = trophyCard ? cardRoleDefinition(trophyCard) : null;
   return `
     <details class="history-details">
       <summary>Details</summary>
       <div class="history-details-content">
-        <p class="history-detail-context">${entry.mode === "four-lane" ? `Super Secret Stuff WIP · Open hands · Battle Lane ${(entry.battleLane ?? 1) + 1}` : DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
+        <p class="history-detail-context">${DIFFICULTIES[entry.difficulty]?.label || "Training"}</p>
         <div class="history-progress-before">
           <span class="history-progress-label">Trophies before this round</span>
-          ${historyProgressMarkup(entry.progressBefore?.player || entry.trophyProgressBefore.player, "You")}
-          ${historyProgressMarkup(entry.progressBefore?.ai || entry.trophyProgressBefore.ai, "Opponent")}
+          ${historyProgressMarkup(entry.trophyProgressBefore.player, "You")}
+          ${historyProgressMarkup(entry.trophyProgressBefore.ai, "Opponent")}
         </div>
         <table class="history-calculation-table">
           <caption>Lane calculations</caption>
@@ -3272,23 +2989,6 @@ function historyRoundDetailsMarkup(entry) {
   `;
 }
 
-function historyPlacementSummaryMarkup(entries) {
-  // Observations only: never inspect the hidden habit or this round's plan.
-  // Full four-card plays occupy every lane and cannot identify a lane preference.
-  const recent = [...entries].reverse().filter(entry => {
-    const count = entry.aiCards?.filter(Boolean).length || 0;
-    return entry.mode === "four-lane" && count >= 1 && count <= 3;
-  }).slice(0, 8);
-  if (recent.length < 2) return "";
-  const counts = [0, 1, 2, 3].map(lane => recent.filter(entry => entry.aiCards[lane]).length);
-  return `<section class="history-placement-summary" aria-label="Observed opponent lane use">
-    <div><b>OPPONENT LANE USE</b><small>Last ${recent.length} completed 1–3-card plays</small></div>
-    <div class="history-placement-counts">${counts.map((count, lane) => `
-      <span aria-label="Lane ${lane + 1}: occupied in ${count} of ${recent.length} plays"><b>${lane + 1}</b> ${count}/${recent.length}</span>
-    `).join("")}</div>
-  </section>`;
-}
-
 function renderPreviousRoundsHistory() {
   const count = state.previousRoundsHistory.length;
   ui.previousRoundsHistoryCount.textContent = count;
@@ -3300,7 +3000,7 @@ function renderPreviousRoundsHistory() {
     ui.previousRoundsHistoryList.innerHTML = `
       <div class="previous-rounds-history-empty">
         <strong>No completed rounds yet.</strong>
-        <span>${isFourLaneMode() ? "The first entry will appear after the lanes resolve." : "The first entry will appear after the clash and trophy decision."}</span>
+        <span>The first entry will appear after the clash and trophy decision.</span>
       </div>
     `;
     return;
@@ -3309,9 +3009,7 @@ function renderPreviousRoundsHistory() {
   ui.previousRoundsHistoryList.innerHTML = [...state.previousRoundsHistory]
     .reverse()
     .map((entry) => {
-      const winnerLabel = entry.mode === "four-lane" ? entry.matchWinner === "draw" ? "Duel drawn"
-        : entry.matchWinner === "player" ? "You won the duel" : entry.matchWinner === "ai" ? "You lost the duel" : "Trophies earned"
-        : entry.winner === "player"
+      const winnerLabel = entry.winner === "player"
         ? "You won"
         : entry.winner === "ai"
           ? "You lost"
@@ -3323,21 +3021,21 @@ function renderPreviousRoundsHistory() {
           <header>
             <h3 class="history-entry-heading">
               <span class="history-round-number">ROUND <strong>${entry.round}</strong></span>
-              <span class="history-round-result history-round-result-${entry.mode === "four-lane" ? entry.matchWinner || "draw" : entry.winner}">${winnerLabel}</span>
+              <span class="history-round-result history-round-result-${entry.winner}">${winnerLabel}</span>
             </h3>
-            <span class="history-scoreline" aria-label="${entry.mode === "four-lane" ? "Trophies earned" : "Round Points"}: You ${entry.score.player}, Opponent ${entry.score.ai}">
-              <b>${entry.mode === "four-lane" ? "+" : ""}${entry.score.player}</b>
+            <span class="history-scoreline" aria-label="Round Points: You ${entry.score.player}, Opponent ${entry.score.ai}">
+              <b>${entry.score.player}</b>
               <i aria-hidden="true">–</i>
-              <b>${entry.mode === "four-lane" ? "+" : ""}${entry.score.ai}</b>
-              <small>${entry.mode === "four-lane" ? "Trophies" : "Round Points"}</small>
+              <b>${entry.score.ai}</b>
+              <small>Round Points</small>
             </span>
           </header>
           ${historyFormationGridMarkup(entry)}
           <footer class="history-trophy">
-            ${entry.mode === "four-lane" ? progressGainMarkup(entry.progressGains.player, "You") + progressGainMarkup(entry.progressGains.ai, "Opponent") : entry.trophy
+            ${entry.trophy
               ? `<span>${trophyOwner}</span><strong class="history-trophy-element"><span aria-hidden="true">${trophyElement.icon}</span> ${trophyElement.label}</strong>`
               : `<span>No trophy claimed</span>`}
-            ${entry.mode === "four-lane" && entry.matchScores ? `<small class="history-match-score">Match score after Round ${entry.round}: <b>You ${entry.matchScores.player} · Opponent ${entry.matchScores.ai}</b> (includes set bonuses)</small>` : ""}
+
           </footer>
           ${historyRoundDetailsMarkup(entry)}
         </article>
@@ -3924,7 +3622,7 @@ async function animateClashes(playerCards, aiCards) {
       if (!laneScore || !playerLane || !aiLane) continue;
 
       setMessage(
-        isFourLaneMode() ? `Lane ${index + 1} clashes!` : `Clash ${index + 1} of ${resolution.results.length}!`,
+        `Clash ${index + 1} of ${resolution.results.length}!`,
         `${cardDisplayName(playerCards[index])} scores ${laneScore.player.total} against ${laneScore.ai.total}.`,
       );
 
@@ -4031,11 +3729,7 @@ function playRound() {
     || selectedCount < 1
     || selectedCount > getPlayerFormationLimit()
   ) return;
-  if (isFourLaneMode() && !duelRules().isValidBattleFormation(selectedFormationCards(), state.round)) {
-    setMessage(`Fill Battle Lane ${duelRules().getBattleLane(state.round) + 1} first.`, "Both players must commit a card to the marked lane. The other lanes are optional.");
-    audio.denied();
-    return;
-  }
+
   if (tutorial.active && !isTutorialSelectionValid()) {
     const lesson = currentTutorialLesson();
     setMessage(
@@ -4054,7 +3748,7 @@ function playRound() {
   ui.menuButton.disabled = true;
   const selectedCards = selectedFormationCards();
   const removed = selectedCards.map(card => card ? removeCard(state.playerHand, card.instanceId) : null);
-  const playerCards = isFourLaneMode() ? removed : removed.filter(Boolean);
+  const playerCards = removed.filter(Boolean);
   if (!formationCardCount(playerCards)) {
     ui.menuButton.disabled = false;
     return;
@@ -4062,10 +3756,8 @@ function playRound() {
 
   state.locked = true;
   state.selectedCardIds = [];
-  state.pendingLaneCardId = null;
   renderHand();
-  const clashCount = isFourLaneMode() ? playerCards.filter((card, lane) => card && state.aiPlan[lane]).length
-    : Math.min(playerCards.length, state.aiPlan.length);
+  const clashCount = Math.min(playerCards.length, state.aiPlan.length);
   ui.playerPlayZone.innerHTML = playedCardsMarkup(
     playerCards,
     "player",
@@ -4083,15 +3775,14 @@ function playRound() {
   window.setTimeout(async () => {
     if (tutorialRunId !== null && (!tutorial.active || tutorial.runId !== tutorialRunId)) return;
     const removedOpponent = state.aiPlan.map(card => card ? removeCard(state.aiHand, card.instanceId) : null);
-    const aiCards = isFourLaneMode() ? removedOpponent : removedOpponent.filter(Boolean);
+    const aiCards = removedOpponent.filter(Boolean);
     state.previousPlayerCommitment = formationCardCount(playerCards);
     state.previousAiCommitment = formationCardCount(aiCards);
-    if (isFourLaneMode()) renderOpponentTells();
+
     ui.aiPlayZone.innerHTML = playedCardsMarkup(aiCards, "ai", clashCount, playerCards);
     setMessage(
       `${formationCardCount(playerCards)} cards against ${formationCardCount(aiCards)}!`,
-      isFourLaneMode() ? `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}. Each lane win earns 2 trophies and unlocks one unopposed card for +1 trophy.`
-        : `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point.`,
+      `${clashCount} ${clashCount === 1 ? "lane will clash" : "lanes will clash"}; every extra card adds 1 Round Point.`,
     );
     audio.reveal(formationCardCount(aiCards));
     const resolution = await animateClashes(playerCards, aiCards);
@@ -4105,7 +3796,7 @@ function playRound() {
 }
 
 function getCompletedMatchWinner(roundWinner) {
-  if (isFourLaneMode()) return duelRules().getProgressMatchWinner(state.playerProgress, state.aiProgress, state.round);
+
   const playerCompletedSet = hasCompletedElementSet(state.playerWins);
   const aiCompletedSet = hasCompletedElementSet(state.aiWins);
 
@@ -4139,7 +3830,7 @@ function completeRoundReward(
     state.aiWins.push(reward.card);
   }
   state.discardPile.push(...playerCards.filter((card) => card !== reward?.card));
-  (isFourLaneMode() ? state.aiDiscardPile : state.discardPile)
+  (state.discardPile)
     .push(...aiCards.filter((card) => card !== reward?.card));
 
   if (claimMessage && reward?.card) {
@@ -4158,10 +3849,7 @@ function completeRoundReward(
 }
 
 function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCards, aiCards)) {
-  if (isFourLaneMode()) {
-    completeProgressRound(playerCards, aiCards, resolution);
-    return;
-  }
+
   const { results, score, winner, decidedBy } = resolution;
   const rewardOptions = getFormationRewardOptions(
     playerCards,
@@ -4236,81 +3924,8 @@ function resolveRound(playerCards, aiCards, resolution = resolveClashes(playerCa
   completeRoundReward(reward, playerCards, aiCards, resolution);
 }
 
-function renderProgressLaneResults(playerCards, aiCards, resolution) {
-  for (const [side, cards, zone] of [["player", playerCards, ui.playerPlayZone], ["ai", aiCards, ui.aiPlayZone]]) {
-    const lanes = physicalLaneElements(zone);
-    cards.forEach((card, index) => {
-      if (!card) return;
-      const lane = lanes[index], gain = resolution.laneProgress[side][index];
-      if (!lane) return;
-      const result = lane.querySelector(".lane-result");
-      const element = ELEMENTS[card.element].label;
-      if (resolution.lanes[index]) {
-        if (resolution.results[index] === side && result) {
-          result.innerHTML += `<small>+${gain} ${element.toUpperCase()} ${gain === 1 ? "TROPHY" : "TROPHIES"}</small>`;
-          result.title += ` Earned ${gain} ${element} ${gain === 1 ? "trophy" : "trophies"}.`;
-        }
-        return;
-      }
-      const label = gain ? "UNOPPOSED" : "NO REWARD";
-      const explanation = gain ? `Unlocked by a lane win: earned ${gain} ${element} trophy.`
-        : !resolution.laneWins[side] ? "No lane victory to unlock an unopposed-card reward."
-          : "Each lane victory unlocks one unopposed card, up to two. Earlier cards used your unlocks.";
-      const badge = lane.querySelector(".card-bonus-badge");
-      if (badge) {
-        badge.innerHTML = `<small>${label}</small><b>+${gain}</b>`;
-        badge.setAttribute("aria-label", explanation);
-        badge.title = explanation;
-      }
-      if (result) {
-        result.textContent = `${label} +${gain}${gain ? ` ${element.toUpperCase()}` : ""}`;
-        result.title = explanation;
-      }
-    });
-  }
-}
-
-function completeProgressRound(playerCards, aiCards, resolution) {
-  clearTrophyClaim();
-  state.dryProgressRounds = resolution.score.player + resolution.score.ai === 0 ? state.dryProgressRounds + 1 : 0;
-  resolution = { ...resolution, matchWinner: duelRules().getProgressMatchWinner(resolution.progressAfter.player, resolution.progressAfter.ai, state.round) };
-  recordCompletedRound(null, playerCards, aiCards, resolution);
-  state.playerProgress = { ...resolution.progressAfter.player };
-  state.aiProgress = { ...resolution.progressAfter.ai };
-  state.discardPile.push(...playerCards.filter(Boolean));
-  state.aiDiscardPile.push(...aiCards.filter(Boolean));
-  state.pendingMatchWinner = resolution.matchWinner;
-  renderProgressLaneResults(playerCards, aiCards, resolution);
-  ui.versusBadge.className = "versus-badge has-score progress-round-summary";
-  ui.versusBadge.innerHTML = `
-    <small class="progress-round-heading">Trophies earned this round</small>
-    <span class="progress-round-values">
-      <span><small>You</small><b>+${resolution.score.player}</b></span>
-      <span><small>Opponent</small><b>+${resolution.score.ai}</b></span>
-    </span>`;
-  const gained = (counts) => Object.entries(ELEMENTS).filter(([key]) => counts[key] > 0)
-    .map(([key, element]) => `+${counts[key]} ${element.label} ${counts[key] === 1 ? "trophy" : "trophies"}`).join(", ") || "no trophies";
-  setMessage(resolution.matchWinner === "draw" ? "Eight rounds complete — match scores tied!"
-    : resolution.matchWinner === "player" ? "Eight rounds complete — you have the higher match score!"
-      : resolution.matchWinner === "ai" ? "Eight rounds complete — the opponent has the higher match score."
-        : "Both sides keep the trophies they earn.",
-    `You: ${gained(resolution.progressGains.player)}. Opponent: ${gained(resolution.progressGains.ai)}. Match score: ${duelRules().getMatchScore(state.playerProgress)}–${duelRules().getMatchScore(state.aiProgress)} (trophies + set bonuses).`);
-  audio.roundResult(resolution.matchWinner === "draw" ? "draw" : resolution.matchWinner === "player" ? "win"
-    : resolution.matchWinner === "ai" ? "loss" : resolution.score.player > resolution.score.ai ? "win" : resolution.score.player < resolution.score.ai ? "loss" : "draw");
-  renderCollection(ui.playerCollection, []);
-  renderCollection(ui.aiCollection, []);
-  renderRound(); renderRoundScore(); renderOpponentTells();
-  renderAftermathBreakdown(playerCards, resolution);
-  restoreCinematicAftermathRemains(playerCards, aiCards, resolution);
-  setRoundAdvanceControls(true, Boolean(state.pendingMatchWinner));
-  ui.menuButton.disabled = false;
-}
-
 async function nextRound() {
-  if (isFourLaneMode() && state.round >= duelRules().MATCH_ROUNDS) {
-    endGame(duelRules().getProgressMatchWinner(state.playerProgress, state.aiProgress, state.round));
-    return;
-  }
+
   clearCinematicRemains();
   clearTrophyClaim();
   state.pendingMatchWinner = null;
@@ -4320,7 +3935,7 @@ async function nextRound() {
   const drawnCardCount = Math.max(0, state.playerHand.length - previousHandSize);
 
   if (!state.playerHand.length || !state.aiHand.length) {
-    if (isFourLaneMode()) { endGame(duelRules().getProgressMatchWinner(state.playerProgress, state.aiProgress, duelRules().MATCH_ROUNDS)); return; }
+
     const playerProgress = getTrophyProgress(state.playerWins);
     const aiProgress = getTrophyProgress(state.aiWins);
     const winner = playerProgress === aiProgress
@@ -4367,15 +3982,13 @@ async function endGame(winner) {
   document.querySelector("#resultTitle").textContent = drawn ? "An evenly matched duel!" : won
     ? "A purr-fect victory!"
     : "The opponent prevails!";
-  const resultSummary = isFourLaneMode()
-    ? `After ${state.round} rounds: You ${duelRules().getMatchScore(state.playerProgress)} · Opponent ${duelRules().getMatchScore(state.aiProgress)}. ${drawn ? "The match scores are equal." : won ? "Your match score is higher." : "The opponent's match score is higher."} Your score: ${duelRules().getProgressTotal(state.playerProgress)} trophies + ${duelRules().getSetBonus(state.playerProgress)} set bonus. Opponent: ${duelRules().getProgressTotal(state.aiProgress)} trophies + ${duelRules().getSetBonus(state.aiProgress)} set bonus.`
-    : won
+  const resultSummary = won
     ? "You claimed two trophies from every element."
     : "The opponent completed all six elemental trophy slots first.";
   document.querySelector("#resultText").textContent =
-    `${resultSummary}${isFourLaneMode() ? " Every committed card stays in its owner's deck cycle." : ` Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`}`;
+    `${resultSummary} Final rounds won: ${state.playerRoundWins}–${state.aiRoundWins}.`;
   document.querySelector("#resultRounds").textContent = state.round;
-  document.querySelector("#resultCards").textContent = isFourLaneMode() ? duelRules().getMatchScore(state.playerProgress) : getTrophyProgress(state.playerWins);
+  document.querySelector("#resultCards").textContent = getTrophyProgress(state.playerWins);
   await playDeckTransition("ending");
   if (drawn) audio.roundResult("draw"); else audio.matchResult(won);
   if (!ui.resultDialog.open) ui.resultDialog.showModal();
@@ -4628,7 +4241,6 @@ function openSettings(returnTarget) {
 }
 
 function showMainMenu() {
-  hideFourLanePreview();
   state.locked = true;
   stopTutorialMode();
   audio.startMainMenuMusic();
@@ -4637,90 +4249,9 @@ function showMainMenu() {
   closeDialog(ui.tutorialMenuDialog);
   closeDialog(ui.resultDialog);
   closeDialog(ui.previousRoundsHistoryDialog);
-  closeDialog(ui.fourLaneRulesDialog);
   setGameMenuVisibility(false);
   ui.mainMenuScreen.hidden = false;
   document.body.classList.add("main-menu-active");
-}
-
-function hideFourLanePreview() {
-  fourLaneDeckEditor.close(true);
-  ui.fourLanePreviewScreen.hidden = true;
-  fourLanePreviewBackground.forEach(({ element, inert }) => { element.inert = inert; });
-  fourLanePreviewBackground = [];
-}
-
-function renderFourLaneCards() {
-  ui.fourLaneCardGallery.innerHTML = FOUR_LANE_CARDS.map((card) => `
-    <div class="four-lane-card-item" role="listitem">
-      ${cardMarkup(card, false, -1, "four-lane-preview")}
-    </div>
-  `).join("");
-}
-
-function renderFourLaneOpponents() {
-  const choices = [{ id: "random", name: "Random Rival", theme: "Mystery matchup",
-    description: "Face one of the four rival decks. Its identity and available hand are shown when the duel begins." }, ...fourLaneOpponentRoster];
-  document.querySelector("#fourLaneRivalOptions").innerHTML = choices.map(rival => `
-    <label class="four-lane-rival-option${rival.id === "random" ? " is-random" : ""}">
-      <input type="radio" name="fourLaneRival" value="${rival.id}" ${selectedFourLaneOpponent === rival.id ? "checked" : ""}>
-      <span class="lobby-choice-copy"><span class="lobby-choice-heading"><span class="lobby-playstyle-icon">${globalThis.ClawDeckEditor.lobbyIconMarkup(rival.id)}</span><b>${rival.name}</b></span>
-        <small class="lobby-rival-theme">${rival.theme}</small><span class="lobby-rival-description">${rival.description}</span></span>
-    </label>
-  `).join("");
-}
-
-function showFourLaneLobbyStep(step = "deck") {
-  const choosingRival = step === "rival" && Boolean(confirmedFourLaneDeck);
-  ui.fourLaneDeckPage.hidden = choosingRival;
-  ui.fourLaneRivalPage.hidden = !choosingRival;
-  ui.fourLaneDeckStep.removeAttribute("aria-current");
-  ui.fourLaneRivalStep.removeAttribute("aria-current");
-  (choosingRival ? ui.fourLaneRivalStep : ui.fourLaneDeckStep).setAttribute("aria-current", "step");
-  if (choosingRival) {
-    const summary = constructedDecks.validateDeck(fourLaneDeckCatalog, confirmedFourLaneDeck).summary;
-    ui.fourLaneConfirmedDeckName.textContent = confirmedFourLaneDeck.name;
-    ui.fourLaneConfirmedDeckSummary.innerHTML = globalThis.ClawDeckEditor.lobbyDeckStatsMarkup(summary);
-  } else {
-    confirmedFourLaneDeck = null;
-  }
-  ui.fourLanePreviewScreen.scrollTop = 0;
-  (choosingRival ? ui.fourLaneRivalTitle : ui.fourLaneDeckChoiceTitle).focus({ preventScroll: true });
-}
-
-function confirmFourLaneDeck() {
-  const selected = fourLaneDeckEditor.getSelectedDeck();
-  if (!constructedDecks.validateDeck(fourLaneDeckCatalog, selected).valid) return;
-  // Confirmation locks the deck for rival selection and launch, not the save file.
-  confirmedFourLaneDeck = Object.freeze({ version: selected.version, name: selected.name, cards: Object.freeze([...selected.cards]) });
-  showFourLaneLobbyStep("rival");
-}
-
-function startFourLaneDuel() {
-  if (!confirmedFourLaneDeck || !constructedDecks.validateDeck(fourLaneDeckCatalog, confirmedFourLaneDeck).valid) return;
-  matchFourLaneDeck = confirmedFourLaneDeck;
-  matchFourLaneOpponent = fourLaneOpponents.createEncounter(fourLaneOpponentRoster, selectedFourLaneOpponent);
-  state.gameMode = "four-lane";
-  state.difficulty = "open";
-  startGame();
-}
-
-function showFourLanePreview(step = "deck") {
-  showMainMenu();
-  ui.mainMenuScreen.hidden = true;
-  fourLanePreviewBackground = [...document.querySelectorAll(".topbar, body > main")]
-    .map((element) => ({ element, inert: element.inert }));
-  fourLanePreviewBackground.forEach(({ element }) => { element.inert = true; });
-  ui.fourLanePreviewScreen.hidden = false;
-  fourLaneDeckEditor.renderLobby();
-  renderFourLaneOpponents();
-  renderFourLaneCards();
-  showFourLaneLobbyStep(step);
-}
-
-function leaveFourLanePreview() {
-  showMainMenu();
-  ui.mainMenuFourLaneButton.focus({ preventScroll: true });
 }
 
 function showTutorialMenu() {
@@ -4729,9 +4260,6 @@ function showTutorialMenu() {
 }
 
 function showDifficultyChooser(returnTarget = "main") {
-  if (returnTarget === "four-lane") { startFourLaneDuel(); return; }
-  if (returnTarget === "game" && isFourLaneMode()) return;
-  pendingDuelMode = "normal";
   document.querySelector("#difficultyIntro").textContent =
     "Build one to three cards and review completed rounds in Previous Rounds History. Guided reveals live clues, Instinct reveals habits, and Blind conceals both.";
   document.querySelector(".instinct-option em").textContent =
@@ -4755,10 +4283,6 @@ function leaveDifficultyChooser() {
     openGameMenu();
     return;
   }
-  if (difficultyReturnTarget === "four-lane") {
-    showFourLanePreview("rival");
-    return;
-  }
   showMainMenu();
 }
 
@@ -4766,27 +4290,18 @@ async function startGame() {
   stopTutorialMode();
   audio.startDuelMusic();
   clearCinematicRemains();
-  hideFourLanePreview();
   ui.mainMenuScreen.hidden = true;
   document.body.classList.remove("main-menu-active");
-  renderDuelMode();
-  state.deck = isFourLaneMode() ? freshPersonalDeck("player") : freshDeck();
-  state.aiDeck = isFourLaneMode() ? freshPersonalDeck("opponent") : [];
-  state.aiDiscardPile = [];
+  renderGallery();
+  state.deck = freshDeck();
   state.discardPile = [];
   state.playerHand = [];
   state.aiHand = [];
   state.playerWins = [];
   state.aiWins = [];
-  state.pendingLaneCardId = null;
-  state.dryProgressRounds = 0;
-  state.matchDrawReason = null;
   state.aiPlan = [];
   state.aiTellClues = [];
-  state.aiTraits = isFourLaneMode() ? []
-    : usesPersistentAiHabits() ? createAiTraits() : [];
-  state.playerProgress = { ember: 0, gust: 0, tide: 0 };
-  state.aiProgress = { ember: 0, gust: 0, tide: 0 };
+  state.aiTraits = usesPersistentAiHabits() ? createAiTraits() : [];
   state.previousRoundsHistory = [];
   renderOpponentHabits();
   renderPreviousRoundsHistory();
@@ -4821,21 +4336,18 @@ async function startGame() {
   renderRound();
   renderRoundScore();
   await playDeckTransition("opening");
-  setMessage("Drawing your opening hand...", `${isFourLaneMode() ? "Seven" : "Six"} cards are being dealt for the first round.`);
+  setMessage("Drawing your opening hand...", "Six cards are being dealt for the first round.");
   await animateHandDraw(state.playerHand.length, true);
   state.dealing = false;
   ui.menuButton.disabled = false;
   beginFormationBuilding();
 }
 
-document.querySelector("#howButton").addEventListener("click", () => (isFourLaneMode() ? ui.fourLaneRulesDialog : ui.howDialog).showModal());
+document.querySelector("#howButton").addEventListener("click", () => ui.howDialog.showModal());
 document.querySelectorAll("[data-close-dialog]").forEach((button) => {
   button.addEventListener("click", () => ui.howDialog.close());
 });
-document.querySelector("#rulebookButton").addEventListener("click", () => (isFourLaneMode() ? ui.fourLaneRulesDialog : ui.rulebookDialog).showModal());
-document.querySelectorAll("[data-close-four-lane-rules]").forEach(button => {
-  button.addEventListener("click", () => ui.fourLaneRulesDialog.close());
-});
+document.querySelector("#rulebookButton").addEventListener("click", () => ui.rulebookDialog.showModal());
 document.querySelectorAll("[data-close-rulebook]").forEach((button) => {
   button.addEventListener("click", () => ui.rulebookDialog.close());
 });
@@ -4846,12 +4358,6 @@ ui.previousRoundsHistoryButton.addEventListener("click", () => {
     ui.previousRoundsHistoryList.scrollTop = 0;
   }
 });
-ui.publicDeckButton.addEventListener("click", () => {
-  if (!isFourLaneMode()) return;
-  renderPublicDeckLists();
-  if (!ui.publicDeckDialog.open) ui.publicDeckDialog.showModal();
-});
-document.querySelectorAll("[data-close-public-decks]").forEach(button => button.addEventListener("click", () => ui.publicDeckDialog.close()));
 document.querySelectorAll("[data-close-previous-rounds-history]").forEach((button) => {
   button.addEventListener("click", () => ui.previousRoundsHistoryDialog.close());
 });
@@ -5005,29 +4511,10 @@ ui.nextRoundButton.addEventListener("click", () => {
 });
 document.querySelector("#playAgainButton").addEventListener("click", () => {
   ui.resultDialog.close();
-  if (isFourLaneMode()) showFourLanePreview();
-  else showDifficultyChooser("main");
+  showDifficultyChooser("main");
 });
 ui.mainMenuPlayButton.addEventListener("click", () => showDifficultyChooser("main"));
 ui.mainMenuTutorialButton.addEventListener("click", showTutorialMenu);
-ui.mainMenuFourLaneButton.addEventListener("click", () => showFourLanePreview());
-ui.fourLaneReturnButton.addEventListener("click", leaveFourLanePreview);
-ui.fourLaneConfirmDeckButton.addEventListener("click", confirmFourLaneDeck);
-ui.fourLaneChangeDeckButton.addEventListener("click", () => showFourLaneLobbyStep("deck"));
-ui.fourLaneStartButton.addEventListener("click", startFourLaneDuel);
-document.querySelector("#fourLaneRivalOptions").addEventListener("change", (event) => {
-  const input = event.target;
-  if (!input.matches('input[name="fourLaneRival"]') || !input.checked) return;
-  if (input.value === "random" || fourLaneOpponentRoster.some(rival => rival.id === input.value)) {
-    selectedFourLaneOpponent = input.value;
-  }
-});
-ui.fourLanePreviewScreen.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
-  event.preventDefault();
-  if (!ui.fourLaneRivalPage.hidden) showFourLaneLobbyStep("deck");
-  else leaveFourLanePreview();
-});
 ui.mainMenuRulebookButton.addEventListener("click", () => ui.rulebookDialog.showModal());
 ui.mainMenuSettingsButton.addEventListener("click", () => openSettings("main"));
 ui.mainMenuFullscreenButton.addEventListener("click", toggleFullscreen);
@@ -5151,7 +4638,6 @@ document.querySelectorAll("[data-difficulty]").forEach((button) => {
     const difficulty = button.dataset.difficulty;
     if (!DIFFICULTIES[difficulty]) return;
     state.difficulty = difficulty;
-    state.gameMode = pendingDuelMode;
     ui.difficultyDialog.close();
     startGame();
   });

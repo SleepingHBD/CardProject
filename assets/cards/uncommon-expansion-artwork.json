@@ -1,20 +1,20 @@
 {
   "version": 7,
   "namingNote": "Current card names use first names only. Historical artwork prompts and revision names retain their original wording as provenance; asset filenames and stats are unchanged.",
-  "status": "Framed in the Four-Lane Mode card preview; not registered in the live three-lane game. Four-Lane gameplay is not active yet.",
+  "status": "Live in Normal Play's 36-character, 60-card collection. Shazmir, Hidayn and Isai use the existing Link, Vanguard and Finisher roles in the three-lane game.",
   "generator": "Built-in ImageGen using the image-generation skill; no CLI/API fallback used.",
   "imageDimensions": {
     "width": 1254,
     "height": 1254
   },
   "recommendedArtObjectPosition": "center 25%",
-  "cropNote": "Full square masters preserved. The three artworks now use actual Uncommon frames in the Four-Lane Mode gallery: 230-by-322 cards, 230-by-184 artwork windows and centre 25% image positioning. Shazmir's fan, Hidayn's glider and Isai's wave-board remain readable; names, move names, flavour text and the Link, Vanguard and Finisher icons fit their frames. The original net-fighter and crossbow-sentry masters remain local backups. Normal three-lane gameplay is unchanged.",
-  "frameReview": "Actual production preview checked in a bounded headless Edge browser at 1440x900, 1024x768, 844x390, 568x320, 390x844 and 320x740, including touch contexts. All twelve gallery cards load, retain correct rarity, Power and role labels, remain non-interactive, and avoid horizontal card/text clipping. Artwork preference updates preserve their PNG sources; preview return and Escape restore navigation. Normal Play keeps its original 24-card library and three-lane rules, with no preview cards in its deck. Each browser action has a timeout and the full check has a 55-second deadline.",
+  "cropNote": "Full square masters are preserved. Normal Play uses the existing Uncommon card frames and image-only framing, including Isai's approved leftward offset. Shazmir's fan, Hidayn's glider and Isai's wave-board retain their approved designs. The original net-fighter and crossbow-sentry masters remain artwork-history backups.",
+  "frameReview": "These three characters are registered in the live Normal Play library alongside the nine Rally characters. The full library has 36 characters and 60 shuffled cards; three-lane placement, existing card dimensions and trophy goals remain unchanged. Per-card image framing is defined in styles.css.",
   "styleReferences": [
     "assets/cards/sizzle-mittens.webp",
     "assets/cards/whisker-whirl.webp",
     "assets/cards/moatgate-mau.webp",
-    "assets/cards/four-lane/charmae-emberhem.png"
+    "assets/cards/charmae-emberhem.png"
   ],
   "styleReview": "Uses the existing collection's compact feline proportions, warm-black contours, restrained matte cel shading, elemental palettes and sparse graphic backgrounds. The three designs use different professions, breeds, poses and primary props rather than increasing rendering complexity.",
   "cards": [

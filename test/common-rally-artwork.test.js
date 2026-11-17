@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const artworkFolder = new URL("../assets/cards/four-lane/", import.meta.url);
+const artworkFolder = new URL("../assets/cards/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("common-rally-artwork.json", artworkFolder), "utf8"));
 const rareManifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", artworkFolder), "utf8"));
 
@@ -54,7 +54,7 @@ test("Siewen's seated rain-watching pose preserves his identity and original art
   assert.match(siewen.latestRevisionPrompt, /exactly TWO short connected forelegs and TWO short connected hind legs/);
   assert.match(siewen.latestRevisionPrompt, /The SAME blue ceramic basin with cream rim/);
   assert.match(siewen.latestRevisionPrompt, /The SAME short navy medieval tunic/);
-  assert.deepEqual(siewen.poseReferenceImages, ["assets/cards/four-lane/siewen-rainkeeper-original-pose.png"]);
+  assert.deepEqual(siewen.poseReferenceImages, ["assets/cards/siewen-rainkeeper-original-pose.png"]);
   assert.match(siewen.poseGenerationSource, /Built-in ImageGen/);
   const backup = siewen.revisionHistory.at(-1);
   assert.equal(backup.asset, "siewen-rainkeeper-original-pose.png");
@@ -120,15 +120,14 @@ test("Common Rally PNG masters match the square dimensions of the existing Rally
   }
 });
 
-test("Common Rally frames are preview-only and do not change the live three-lane card pool", () => {
-  assert.match(manifest.status, /Framed card previews/);
-  assert.match(manifest.status, /Rally gameplay is not active yet/);
+test("Common Rally characters use the live Normal Play frames and collection", () => {
+  assert.match(manifest.status, /Live in Normal Play's 36-character, 60-card collection/);
+  assert.match(manifest.status, /Rally gives \+1 Power to the card directly before it/);
   const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
   const liveLibrary = gameSource.match(/const CARD_LIBRARY = \[([\s\S]*?)\]\.map/)[1];
   for (const card of manifest.cards) {
-    assert.ok(!liveLibrary.includes(card.name));
-    assert.ok(!liveLibrary.includes(card.asset.replace(/\.png$/, "")));
-    assert.ok(gameSource.includes(card.name));
+    assert.ok(liveLibrary.includes(`"${card.name}"`));
+    assert.ok(liveLibrary.includes(`"${card.asset.replace(/\.png$/, "")}"`));
   }
   assert.ok(!gameSource.includes('"siewen-reedbinder"'));
   assert.match(gameSource, /const MAX_PLAY_SIZE = 3;/);

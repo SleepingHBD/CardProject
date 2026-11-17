@@ -1,125 +1,68 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { runInNewContext } from "node:vm";
+import { existsSync, readFileSync } from "node:fs";
 
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
-
-function sourceFunction(name) {
-  const start = gameSource.indexOf(`function ${name}(`);
-  assert.notEqual(start, -1, `${name} exists`);
-  return gameSource.slice(start, gameSource.indexOf("\n}", start) + 2);
-}
 
 test("the main menu excludes the retired World Chronicle", () => {
   assert.doesNotMatch(pageSource, /id="mainMenuChronicleButton"/);
   assert.doesNotMatch(pageSource, /<script defer src="\.\/src\/chronicle\.js"><\/script>/);
 });
 
-test("the main menu retains its playable navigation", () => {
-  assert.match(pageSource, /id="mainMenuPlayButton"/);
-  assert.match(pageSource, /id="mainMenuTutorialButton"/);
-  assert.match(pageSource, /id="mainMenuRulebookButton"/);
-  assert.match(pageSource, /id="mainMenuSettingsButton"/);
-});
-
-test("the four-lane entry leads to a separate, initially hidden playable prototype lobby", () => {
-  assert.match(pageSource, /id="mainMenuFourLaneButton"[\s\S]*?aria-controls="fourLanePreviewScreen"/);
-  assert.match(pageSource, /id="fourLanePreviewScreen"[\s\S]*?aria-labelledby="fourLanePreviewTitle"[\s\S]*?hidden/);
-  assert.match(pageSource, /WIP · Balance testing in progress/);
-  assert.match(pageSource, /id="fourLaneStartButton"/);
-  assert.match(pageSource, /id="fourLaneRulesDialog"/);
-  assert.match(gameSource, /fourLaneStartButton\.addEventListener\("click", startFourLaneDuel\)/);
-  const start = sourceFunction("startFourLaneDuel");
-  assert.match(start, /state\.gameMode = "four-lane"/);
-  assert.match(start, /state\.difficulty = "open"/);
-  assert.match(start, /startGame\(\)/);
-  assert.doesNotMatch(start, /showDifficultyChooser|showModal|createAiTraits/);
-  assert.match(pageSource, /Normal Play is unchanged/);
-  assert.equal((pageSource.match(/class="four-lane-preview-slot(?: is-new-lane)?"/g) || []).length, 8);
-  assert.match(gameSource, /mainMenuFourLaneButton\.addEventListener\("click", \(\) => showFourLanePreview\(\)\)/);
+test("the main menu retains Play, Tutorial, Rulebook and Settings navigation", () => {
+  for (const id of ["mainMenuPlayButton", "mainMenuTutorialButton", "mainMenuRulebookButton", "mainMenuSettingsButton"]) {
+    assert.match(pageSource, new RegExp(`id="${id}"`));
+  }
   assert.match(gameSource, /mainMenuPlayButton\.addEventListener\("click", \(\) => showDifficultyChooser\("main"\)\)/);
+  assert.match(gameSource, /mainMenuTutorialButton\.addEventListener\("click", showTutorialMenu\)/);
+  assert.match(gameSource, /mainMenuRulebookButton\.addEventListener\("click", \(\) => ui\.rulebookDialog\.showModal\(\)\)/);
+  assert.match(gameSource, /mainMenuSettingsButton\.addEventListener\("click", \(\) => openSettings\("main"\)\)/);
 });
 
-test("the WIP lobby has exactly two setup steps and launches without difficulty selection", () => {
-  const steps = pageSource.match(/<ol class="four-lane-lobby-steps"[^>]*>([\s\S]*?)<\/ol>/)?.[1];
-  assert.ok(steps);
-  assert.equal((steps.match(/<li\b/g) || []).length, 2);
-  assert.match(steps, /fourLaneDeckStep[\s\S]*Your deck/);
-  assert.match(steps, /fourLaneRivalStep[\s\S]*Your rival/);
-  assert.doesNotMatch(steps, /difficulty/i);
-  const lobby = pageSource.slice(pageSource.indexOf('id="fourLanePreviewScreen"'), pageSource.indexOf('id="deckEditorScreen"'));
-  assert.doesNotMatch(lobby, /Choose Difficulty|Guided.*Instinct.*Blind/);
-  assert.match(lobby, /id="fourLaneStartButton"[^>]*>Start Duel/);
+test("the removed WIP entry, lobby, editor and public-hand controls are absent", () => {
+  assert.doesNotMatch(pageSource, /Super Secret Stuff|mainMenuFourLaneButton|fourLanePreview|fourLaneRules|deckEditor|publicDeck|opponentPublicHand|battleLaneNotice|matchScoreDetails/i);
+  assert.doesNotMatch(gameSource, /ClawFourLane|ClawDeckbuilding|isFourLaneMode|startFourLaneDuel|fourLanePreview|deckEditor|publicDeck/i);
+  assert.doesNotMatch(pageSource, /lobby-icon-/);
 });
 
-test("the experimental mode uses Super Secret Stuff WIP without changing its internal identity", () => {
-  assert.match(pageSource, /aria-label="Super Secret Stuff WIP"/);
-  assert.match(pageSource, /<span>Super Secret Stuff<\/span><span class="four-lane-menu-badge" aria-hidden="true">WIP<\/span>/);
-  assert.match(pageSource, /id="fourLanePreviewTitle" tabindex="-1">Super Secret Stuff WIP<\/h1>/);
-  assert.match(pageSource, /Super Secret Stuff WIP · Deckbuilding/);
-  assert.match(pageSource, /Close Super Secret Stuff WIP rules/);
-  assert.doesNotMatch(pageSource, /Four-Lane Mode|Four-Lane Rules/);
-  assert.match(sourceFunction("renderDuelMode"), /isFourLaneMode\(\) \? "Super Secret Stuff WIP" : "Trial of the Elements"/);
-  assert.match(sourceFunction("isFourLaneMode"), /state\.gameMode === "four-lane"/);
+test("the removed mode has no shipped scripts, styles or dedicated runtime files", () => {
+  const retired = ["four-lane-preview.css", "deckbuilding.css", "src/four-lane-rules.js",
+    "src/four-lane-ai.js", "src/deckbuilding.js", "src/deck-editor.js", "src/opponents.js"];
+  for (const path of retired) {
+    assert.equal(existsSync(new URL("../" + path, import.meta.url)), false, `${path} must be removed, not merely hidden`);
+    assert.ok(!pageSource.includes("./" + path), `${path} must not be loaded`);
+  }
+  assert.match(pageSource, /<script defer src="\.\/src\/rules\.js"><\/script>/);
+  assert.match(pageSource, /<script defer src="\.\/src\/game\.js"><\/script>/);
 });
 
-test("opening and leaving the preview preserves duel data and restores background focusability", () => {
-  const background = [{ inert: false }, { inert: true }];
-  const state = { selectedCardIds: ["kept-card"], playerHand: ["kept-hand"], round: 4, locked: true };
-  const snapshot = JSON.stringify(state);
-  let menuCalls = 0;
-  let headingFocus = 0;
-  let buttonFocus = 0;
-  const ui = {
-    mainMenuScreen: { hidden: false },
-    fourLanePreviewScreen: { hidden: true, scrollTop: 84 },
-    fourLanePreviewTitle: { focus: () => { headingFocus++; } },
-    fourLaneDeckChoiceTitle: { focus: () => { headingFocus++; } },
-    fourLaneDeckPage: {}, fourLaneRivalPage: {},
-    fourLaneDeckStep: { removeAttribute() {}, setAttribute() {} },
-    fourLaneRivalStep: { removeAttribute() {}, setAttribute() {} },
-    mainMenuFourLaneButton: { focus: () => { buttonFocus++; } },
-  };
-  const context = {
-    ui, state, fourLanePreviewBackground: [],
-    renderFourLaneCards: () => {},
-    renderFourLaneOpponents: () => {},
-    fourLaneDeckEditor: { close: () => {}, renderLobby: () => {} },
-    document: { querySelectorAll: () => background },
-    showMainMenu: () => {
-      menuCalls++;
-      runInNewContext("hideFourLanePreview()", context);
-      ui.mainMenuScreen.hidden = false;
-    },
-  };
-  runInNewContext([
-    sourceFunction("hideFourLanePreview"),
-    sourceFunction("showFourLaneLobbyStep"),
-    sourceFunction("showFourLanePreview"),
-    sourceFunction("leaveFourLanePreview"),
-    "showFourLanePreview()",
-  ].join("\n"), context);
-  assert.equal(ui.mainMenuScreen.hidden, true);
-  assert.equal(ui.fourLanePreviewScreen.hidden, false);
-  assert.equal(ui.fourLaneDeckPage.hidden, false);
-  assert.equal(ui.fourLaneRivalPage.hidden, true);
-  assert.equal(ui.fourLanePreviewScreen.scrollTop, 0);
-  assert.equal(headingFocus, 1);
-  assert.deepEqual(background.map(element => element.inert), [true, true]);
-  runInNewContext("leaveFourLanePreview()", context);
-  assert.equal(ui.mainMenuScreen.hidden, false);
-  assert.equal(ui.fourLanePreviewScreen.hidden, true);
-  assert.deepEqual(background.map(element => element.inert), [false, true]);
-  assert.equal(buttonFocus, 1);
-  assert.equal(menuCalls, 2);
-  assert.equal(JSON.stringify(state), snapshot);
-  assert.match(sourceFunction("showMainMenu"), /hideFourLanePreview\(\)/);
+test("the remaining game offers all three Normal Play difficulties and three lanes", () => {
+  for (const difficulty of ["guided", "instinct", "blind"]) {
+    assert.match(pageSource, new RegExp(`data-difficulty="${difficulty}"`));
+  }
+  assert.match(pageSource, /Commit 1–3 cards in order/);
+  assert.match(pageSource, /Lane 1 fights Lane 1, Lane 2 fights Lane 2, and Lane 3 fights Lane 3/);
+  assert.match(pageSource, /Collect 2 Fire \+ 2 Gust \+ 2 Water trophies/);
 });
 
-test("Escape and Return both leave the preview, using existing button audio", () => {
-  assert.match(gameSource, /fourLaneReturnButton\.addEventListener\("click", leaveFourLanePreview\)/);
-  assert.match(gameSource, /fourLanePreviewScreen\.addEventListener\("keydown", \(event\) => \{[\s\S]*?event\.key !== "Escape"[\s\S]*?leaveFourLanePreview\(\)/);
-  assert.match(gameSource, /document\.addEventListener\("click",[\s\S]*?audio\.buttonPress\(\)/);
+test("Rally remains available in the main archive and both in-game references", () => {
+  assert.match(pageSource, /id="tactic-icon-banner"/);
+  assert.match(pageSource, /Rally · gives \+1 to the card directly before it/);
+  assert.match(pageSource, /<h3>Rally support \+1<\/h3>/);
+  assert.match(pageSource, /<b>Rally support \+1<\/b>/);
+  assert.match(pageSource, /60 cards across 36 characters/);
+  assert.match(pageSource, /Power \+ Element Edge \+ Role \+ Rally received = Clash Total/);
+});
+
+test("the tutorial menu exposes Rally separately and retains continuous section numbering", () => {
+  const menu = pageSource.match(/id="tutorialMenuOptions">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(menu);
+  assert.match(menu, /data-tutorial-lesson="2"[\s\S]*?<strong>Rally Support<\/strong>/);
+  assert.match(menu, /data-tutorial-lesson="3"[\s\S]*?<strong>Round Points<\/strong>/);
+  assert.match(menu, /data-tutorial-lesson="6"[\s\S]*?<strong>Trophies &amp; Card Flow<\/strong>/);
+  assert.match(menu, /data-tutorial-lesson="7"[\s\S]*?<strong>Instinct Practice<\/strong>/);
+  assert.match(menu, /Tour plus all eight scenarios/);
+  const numbers = [...menu.matchAll(/class="tutorial-menu-icon" aria-hidden="true">([1-7])<\/span>/g)].map(match => match[1]);
+  assert.deepEqual(numbers, ["1", "2", "3", "4", "5", "6", "7"]);
 });

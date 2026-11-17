@@ -54,6 +54,7 @@ test("an elemental counter is strong but not an automatic win", () => {
         edge: 2,
         tactic: 0,
         tacticName: "Link",
+        rally: 0,
         total: 5,
       },
       ai: {
@@ -61,6 +62,7 @@ test("an elemental counter is strong but not an automatic win", () => {
         edge: 0,
         tactic: 0,
         tacticName: "Link",
+        rally: 0,
         total: 9,
       },
     },

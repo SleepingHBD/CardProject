@@ -25,6 +25,11 @@ const TACTICS = Object.freeze({
     label: "Finisher",
     description: "Finisher: Commit it last in a 2- or 3-card formation to gain +1.",
   }),
+  rally: Object.freeze({
+    icon: "banner",
+    label: "Rally",
+    description: "Rally: Gives +1 Power to your card directly before it. Rally in Lane 1 gives no bonus.",
+  }),
 });
 const DIFFICULTY_MODES = Object.freeze(["guided", "instinct", "blind"]);
 const AI_MOTIVE_TRAITS = Object.freeze([
@@ -189,10 +194,22 @@ function getTacticBonus(cards, index) {
       ? TACTIC_BONUS
       : 0;
   }
-  return cards.length > 1
-    && index === cards.length - 1
-    ? TACTIC_BONUS
-    : 0;
+  if (card.tactic === "finisher") {
+    return cards.length > 1
+      && index === cards.length - 1
+      ? TACTIC_BONUS
+      : 0;
+  }
+  // Rally supports another card; it never earns a bonus for itself.
+  return 0;
+}
+
+function getRallyBonus(cards, index) {
+  // A boosted Rally still passes only +1. Support is determined by placement,
+  // not whether the supporting card has an opponent in its own lane.
+  return index >= 0 && index + 1 < MAX_COMMITMENT
+    && cards[index] && cards[index + 1]?.tactic === "rally"
+    ? TACTIC_BONUS : 0;
 }
 
 function scoreClash(
@@ -200,6 +217,8 @@ function scoreClash(
   aiCard,
   playerTactic = 0,
   aiTactic = 0,
+  playerRally = 0,
+  aiRally = 0,
 ) {
   const playerEdge = ELEMENTS[playerCard.element].beats === aiCard.element
     ? ELEMENT_EDGE_BONUS
@@ -214,18 +233,22 @@ function scoreClash(
       edge: playerEdge,
       tactic: playerTactic,
       tacticName: TACTICS[playerCard.tactic]?.label || "Role",
+      rally: playerRally,
       total: playerCard.power
         + playerEdge
-        + playerTactic,
+        + playerTactic
+        + playerRally,
     },
     ai: {
       base: aiCard.power,
       edge: aiEdge,
       tactic: aiTactic,
       tacticName: TACTICS[aiCard.tactic]?.label || "Role",
+      rally: aiRally,
       total: aiCard.power
         + aiEdge
-        + aiTactic,
+        + aiTactic
+        + aiRally,
     },
   };
 }
@@ -235,12 +258,16 @@ function compareCards(
   aiCard,
   playerTactic = 0,
   aiTactic = 0,
+  playerRally = 0,
+  aiRally = 0,
 ) {
   const scoring = scoreClash(
     playerCard,
     aiCard,
     playerTactic,
     aiTactic,
+    playerRally,
+    aiRally,
   );
   if (scoring.player.total === scoring.ai.total) return "draw";
   return scoring.player.total > scoring.ai.total ? "player" : "ai";
@@ -338,6 +365,12 @@ function chooseAiCard(
       score += 1.25;
       if (hasAiTrait(traits, "tactic-planner")) score += 2.25;
     }
+    if (previousCard && card.tactic === "rally") {
+      // The current selection can use this support even if Rally ends up
+      // unopposed. The ordering pass evaluates the complete partnership.
+      score += 1.25;
+      if (hasAiTrait(traits, "tactic-planner")) score += 2.25;
+    }
     if (hasAiTrait(traits, "power-seeker")) score += card.power * 0.5;
 
     const loyalist = traits.find((trait) => trait.id === "element-loyalist");
@@ -380,7 +413,7 @@ function orderAiFormation(cards, random = Math.random, traits = []) {
     .map((formation) => {
       const tacticScore = formation.reduce(
         (total, _, index) =>
-          total + getTacticBonus(formation, index),
+          total + getTacticBonus(formation, index) + getRallyBonus(formation, index),
         0,
       );
       let score = tacticScore * tacticWeight + random() * 1.2;
@@ -507,6 +540,8 @@ function resolveClashes(playerCards, aiCards) {
       aiCard,
       playerTactic,
       aiTactic,
+      getRallyBonus(playerCards, index),
+      getRallyBonus(aiCards, index),
     );
     const winner = scoring.player.total === scoring.ai.total
       ? "draw"
@@ -627,6 +662,7 @@ global.ClawRules = Object.freeze({
   compareCards,
   forecastMatchup,
   getTacticBonus,
+  getRallyBonus,
   getPowerTier,
   getFormationReward,
   getFormationRewardOptions,

@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 
-const artworkFolder = new URL("../assets/cards/four-lane/", import.meta.url);
+const artworkFolder = new URL("../assets/cards/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("uncommon-expansion-artwork.json", artworkFolder), "utf8"));
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 
@@ -127,22 +127,25 @@ test("Isai's right-facing head edit retains the exact previous wave-rider master
   assert.deepEqual(isai.intendedStats, { rarity: "uncommon", role: "finisher", power: 5 });
 });
 
-test("the three framed previews fill the missing non-Rally role per element without changing normal gameplay", () => {
+test("the three live Uncommon characters complete the non-Rally role distribution per element", () => {
   const context = {};
   const librarySource = gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE ="));
   runInNewContext(librarySource + "\nglobalThis.library = CARD_LIBRARY;", context);
-  assert.equal(context.library.length, 24);
-  assert.match(manifest.status, /Framed in the Four-Lane Mode card preview/);
-  assert.match(manifest.status, /not registered in the live three-lane game/);
+  assert.equal(context.library.length, 36);
+  assert.match(manifest.status, /Live in Normal Play's 36-character, 60-card collection/);
   assert.match(gameSource, /const MAX_PLAY_SIZE = 3;/);
   for (const card of manifest.cards) {
-    assert.ok(!librarySource.includes(card.name));
-    assert.ok(!librarySource.includes(card.asset.replace(/\.png$/, "")));
+    const live = context.library.find(candidate => candidate.name === card.name);
+    assert.ok(live, `${card.name} must be playable`);
+    assert.equal(live.art, card.asset.replace(/\.png$/, ""));
+    assert.equal(live.element, card.element);
+    assert.equal(live.tactic, card.intendedStats.role);
+    assert.equal(live.power, card.intendedStats.power);
+    assert.equal(live.rarity, card.intendedStats.rarity);
   }
-  const proposed = [...context.library, ...manifest.cards.map(card => ({ element: card.element, tactic: card.intendedStats.role }))];
   for (const element of ["ember", "gust", "tide"]) {
-    for (const role of ["vanguard", "link", "finisher"]) {
-      assert.equal(proposed.filter(card => card.element === element && card.tactic === role).length, 3);
+    for (const role of ["vanguard", "link", "finisher", "rally"]) {
+      assert.equal(context.library.filter(card => card.element === element && card.tactic === role).length, 3);
     }
   }
 });

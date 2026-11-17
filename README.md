@@ -11,78 +11,51 @@ npm run dev
 
 ## Rules
 
-- Fire beats Gust.
-- Gust beats Water.
-- Water beats Fire.
-- Matching elements compare power.
-- Win by collecting two Fire trophies, two Gust trophies, and two Water trophies.
-- Non-trophy cards enter the discard pile and reshuffle into the draw pile when needed.
+- Commit one to three cards into consecutive lanes, starting with Lane 1. Lane 1 fights Lane 1, Lane 2 fights Lane 2, and Lane 3 fights Lane 3.
+- Fire beats Gust, Gust beats Water, and Water beats Fire. Element Edge adds 2 Power; it is not an automatic victory.
+- Clash Total is printed Power + active role bonus + received Rally support + Element Edge. Higher total wins the lane; equal totals draw.
+- Each won lane earns 2 Round Points. Each extra card with no opposing card earns 1 Round Point. Higher Round Points wins the round; equal points draw.
+- A round victory awards one trophy. Collect two Fire, two Gust and two Water trophies to win the match.
+- Cards not claimed as trophies enter the shared discard pile. Hands refill to six, and the discard pile reshuffles when the draw pile is empty.
 
-### Super Secret Stuff WIP
+### Four formation roles
 
-- Each player has a separate 24-card deck and discard pile, chosen from a 36-card collection.
-- Start with 7 cards and commit 1–4 cards per round.
-- Between rounds, draw up to 2 cards, without exceeding 7 cards in hand.
-- Two-card formations maintain hand size; three- and four-card formations spend reserves. One-card formations rebuild reserves when below the hand limit.
-- Win by collecting **6 Fire, 6 Gust and 6 Water trophies**. Completing one element does not replace another.
-- Each lane win earns 2 trophies of the winning card's own element. Tied or lost lanes earn nothing.
-- The first two cards with no opposing card each earn 1 trophy of their own element. The third extra earns nothing, even if an earlier extra's element was already complete.
-- Both sides keep their trophies after every round. Each element stops at 6, including partial gains when only one trophy is needed.
-- Resolve all lanes before checking victory. If both sides finish their goals in the same round, the duel is drawn.
-- Rally gives +1 Power to the card committed directly before it. Rally in Lane 1 gives no bonus; the supported card can also earn its own role bonus.
-- Unlike Normal Play, trophies are awarded automatically for individual lanes and are counters, not claimed cards. Every committed card returns to its owner's discard pile, including winning cards. No cards are removed from the deck cycle as trophies.
-- Normal Play retains its three lanes, six-card hands and shared-deck refill rules.
+- **Vanguard:** gains +1 Power in Lane 1.
+- **Link:** gains +1 Power when the card committed directly before it has a different element from the Link card.
+- **Finisher:** gains +1 Power when it is the final card in a two- or three-card formation.
+- **Rally:** gives +1 Power to the card committed directly before it, not itself. Rally in Lane 2 supports Lane 1; Rally in Lane 3 supports Lane 2. Rally in Lane 1 provides no support.
 
-#### Deckbuilding — editor and constructed duels
+A card can be committed in any available lane regardless of role. The card receiving Rally can also earn its own active role bonus and Element Edge. Rally support works even when no opponent faces the Rally card. A boosted Rally still gives only +1 to the card before it; received bonuses do not cascade.
 
-Open **Super Secret Stuff WIP** from the main menu, choose a starter or saved deck, or select **Build a Deck**. The editor includes live validation, search and element/role/rarity filters. Save a valid deck to select it for your next duel. Starting from a starter list creates your own copy; the original starter cannot be changed or deleted. Normal Play stays unchanged.
+### Card collection and shuffle
 
-- Exactly 24 cards, with a maximum deck cost of 120.
-- At least 4 Fire, 4 Gust and 4 Water cards; equal element counts are not required.
-- Up to 2 copies of each Common/Uncommon card, and 1 of each Rare/Epic/Legendary.
-- Cost is printed Power plus a rarity surcharge: Common/Uncommon +0, Rare +1, Epic +4, Legendary +6. Cost is for deck construction only and never changes combat Power.
-- No role quotas. A deck can omit Link, Rally, Vanguard or Finisher entirely.
-- Four legal starter lists: Balanced Formation, Rally Company, Element Weavers and Last Light. Each uses 24 cards, but focuses on a different mix of roles.
-- Deck definitions store stable card identifiers, not editable Power values or image paths. Validation and runtime instances use the canonical game card library.
-- Up to 12 custom decks are saved in this browser's local storage, not on an account or server. Clearing site data removes them. If storage is blocked/full, decks remain usable for the session and the interface reports that they could not be persisted.
-- Restarting a duel or changing its difficulty keeps its selected deck, rival deck and habit set. Enter a new duel from the lobby to choose another rival or roll new habits.
+All **36 characters** are available in Normal Play, including Hareth, Megwyn, Deshone, Charmae, Aakith, Sajrin, Lucan, Jyawaye, Siewen, Shazmir, Hidayn and Isai.
 
-#### Phase 3 — rival decks and playstyles
+The shared shuffle contains **60 cards**:
 
-The lobby now offers **Random Rival** (the default) or four specific opponents. Each follows the same 24-card, 120-cost, element-minimum and copy-limit rules as the player. These initial rivals use the corresponding legal starter lists, not stronger exclusive cards:
+- Two copies of each Common and Uncommon character.
+- One copy of each Rare, Epic and Legendary character.
+- Twenty cards of each element and fifteen cards of each role.
 
-- **Versatile Duelist** — Balanced Formation: an even role mix and the full habit pool.
-- **Banner Captain** — Rally Company: Vanguards supported by Rally, with opener/role-planning habits and measured, push or trophy-responsive commitments.
-- **Cycle Weaver** — Element Weavers: a Link-heavy deck, Role Planner and measured, echo or changing formation sizes.
-- **Twilight Duelist** — Last Light: a Finisher-heavy deck, late-strike/role-planning habits and recovery, measured or trophy-responsive commitments.
+Both players draw from the same pile. There is no deck editor, custom-deck mode, or separate experimental mode.
 
-Each rival rolls one motive, one formation habit and one commitment habit from deck-appropriate pools. All three remain fixed during a duel. The opponent uses these habits in every difficulty; Guided reveals live clues, Instinct reveals habits, and Blind hides both plus the in-game rival identity. Choosing a specific rival still tells you its deck theme; use Random Rival for a mystery matchup.
+### Difficulty and learning
 
-The AI's deck preference rewards *active* Rally, Link or Finisher bonuses only when strategic choices are close. It does not force a bad formation to fit a theme. Its decisions use its own hand, public trophy counts, completed rounds and the public collection—not the player's custom deck, hidden hand or current selection. It avoids wasting gains on completed elements, considers denial and simultaneous completion, and weighs hand recovery against a push. Goal Hunter, Goal Denier, Momentum Rider, Counter Scholar and Score Reader use automatically earned trophies rather than card claims; Normal Play and its randomized habits are unchanged.
+- **Guided:** reveals live information about the opponent's planned cards.
+- **Instinct:** hides the current formation and reveals persistent opponent habits.
+- **Blind:** hides the current formation and habits. Use Previous Rounds History to infer patterns.
+- **Tutorial Mode:** offers a complete walkthrough or individual sections. The Duel Codex and Rulebook explain scoring, roles and trophy collection during play.
 
-#### Phase 4 — balance audit and interface polish
+Difficulty changes available information, not card strength or scoring. Previous Rounds History is available in every difficulty. Illustrated artwork is the active card style.
 
-The lobby uses separate deck and rival pages. The deck page presents four ready-to-play starters with short playstyle descriptions, alongside a distinct build-your-own path and saved-deck selector. Confirm Deck snapshots the selected list and opens the rival page; Back to Your Deck allows changes before launching. Returning from difficulty selection resumes the rival page without clearing the confirmed deck. The rules overview and 12-card showcase stay collapsed until requested.
-
-The editor shows remaining cost and optional tips for unused budget, scarce goal elements and Finisher-heavy decks. Tips never make a legal deck invalid; omitted roles and unequal element counts remain permitted.
-
-All four starter/rival decks were rebuilt for lane-earned trophies. Each has eight cards of every element and all four roles; specialized starters include support alternatives rather than a rigid single-role lineup. Their costs are Balanced 119, Rally 119, Link 120 and Finisher 120. Existing saved custom decks, card stats, role bonuses and construction costs are unchanged.
-
-Run the reproducible audit separately from the regression suite:
+## Verification
 
 ```bash
 npm test
-npm run audit:deckbuilding -- 8 48103
-node scripts/audit-four-lane-ai.js 128 99123
+npm run build
 ```
 
-The elemental-progress audit ran 4,896 simulated matches: 17 legal deck lists × four rivals × nine strategy probes × eight paired seeds. Lists included the starters, low-budget and premium-heavy builds, 16/4/4 element concentrations, omission of each role, and seeded random builds. Probes included adaptive play, fixed 1/2/3/4-card commitments (limited by the actual hand), push/recovery cycles, a strong first card with cheap support, and cheap pushes against single-card play. All matches finished within 31 rounds; card ownership/counts, complete recycling, draw limits, habit persistence, goal clipping and the two-extra-card cap were checked throughout.
-
-In this cohort, repeated singles won 0%, repeated two-card play 14.9%, adaptive play 29.4%, and the 3/1 cycle 18.2%. These probe policies include intentionally weak decks and are not estimates of human win rates. No tested fixed rhythm dominated all matchups. A separate 2,048-match neutral-planner comparison tested starters in both seats: match scores including half a point for draws were Balanced 51.0%, Rally 52.4%, Link 46.2%, Finisher 50.3%. All finished within 23 rounds. Link remains slightly weaker in this sample; there is no claim of perfect balance or exhaustive exploit coverage.
-
-Regression tests cover constructed decks and storage, all 108 habit combinations, all four roles, actual goal clipping, simultaneous completion, history snapshots and recycling. An independent oracle checks 10,000 randomized formations against production trophy scoring and side reversal. Normal Play remains isolated from constructed decks and these changes.
-
-Deckbuilding's four initial implementation phases are complete. Construction limits remain provisional and Super Secret Stuff WIP remains work in progress, ready for human playtesting rather than progression/unlock systems.
+Regression coverage includes lane scoring, role and Rally interactions, opponent decisions, trophy selection and recycling, tutorial behavior, artwork framing, history, board themes and responsive controls.
 
 ## Deploy to GitHub Pages
 

@@ -1,14 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 
 const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
 const pageSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
-test("the tutorial curriculum covers all seven lessons in teaching order", () => {
+test("the tutorial curriculum covers all eight lessons in teaching order", () => {
   const expectedOrder = [
     "TUTORIAL_LESSON_LIBRARY[0]",
     "TUTORIAL_LESSON_LIBRARY[3]",
+    "TUTORIAL_LESSON_LIBRARY[7]",
     "TUTORIAL_LESSON_LIBRARY[1]",
     "TUTORIAL_LESSON_LIBRARY[2]",
     "TUTORIAL_LESSON_LIBRARY[4]",
@@ -27,7 +29,7 @@ test("the tutorial curriculum covers all seven lessons in teaching order", () =>
     previousPosition = position;
   });
 
-  assert.match(pageSource, /id="tutorialProgress">Lesson 1 of 7</);
+  assert.match(pageSource, /id="tutorialProgress">Lesson 1 of 8</);
   assert.match(gameSource, /`Lesson \$\{tutorial\.lessonIndex \+ 1\} of \$\{TUTORIAL_LESSONS\.length\}`/);
   assert.match(gameSource, /concept: "Round Points · Scenario 1 of 3"/);
 });
@@ -47,9 +49,9 @@ test("the tutorial menu exposes every section with consecutive numbers", () => {
     /<span class="tutorial-menu-icon" aria-hidden="true">(\d)<\/span>/g,
   )].map((match) => Number(match[1]));
 
-  assert.deepEqual(numberedOptions, [1, 2, 3, 4, 5, 6]);
-  assert.match(pageSource, /data-tutorial-lesson="5"[\s\S]*Trophies &amp; Card Flow/);
-  assert.match(pageSource, /data-tutorial-lesson="6"[\s\S]*Instinct Practice/);
+  assert.deepEqual(numberedOptions, [1, 2, 3, 4, 5, 6, 7]);
+  assert.match(pageSource, /data-tutorial-lesson="6"[\s\S]*Trophies &amp; Card Flow/);
+  assert.match(pageSource, /data-tutorial-lesson="7"[\s\S]*Instinct Practice/);
 });
 
 test("tutorial navigation exposes keyboard focus and movable-panel controls", () => {
@@ -95,19 +97,8 @@ test("Previous Rounds History uses an aligned tactical lane table instead of ful
 });
 
 test("the shared deck repeats Common and Uncommon cards while premium cards are singletons", () => {
-  const librarySource = gameSource.match(
-    /const CARD_LIBRARY = \[([\s\S]*?)\]\.map/,
-  )?.[1];
-  const cards = [...(librarySource || "").matchAll(
-    /^\s*\["(ember|gust|tide)",\s*(\d+),\s*"([^"]+)",\s*"[^"]+",\s*"[^"]+",\s*"(common|uncommon|rare|epic|legendary)",\s*"(vanguard|link|finisher)",\s*"([^"]+)"\],?$/gm,
-  )].map((match) => ({
-    element: match[1],
-    power: Number(match[2]),
-    name: match[3],
-    rarity: match[4],
-    tactic: match[5],
-    art: match[6],
-  }));
+  const librarySource = gameSource.slice(gameSource.indexOf("const CARD_LIBRARY ="), gameSource.indexOf("const HAND_SIZE ="));
+  const cards = JSON.parse(runInNewContext(librarySource + "\nJSON.stringify(CARD_LIBRARY)"));
   const copies = { common: 2, uncommon: 2, rare: 1, epic: 1, legendary: 1 };
   const physicalDeck = cards.flatMap((card) =>
     Array.from({ length: copies[card.rarity] }, () => card));
@@ -116,20 +107,20 @@ test("the shared deck repeats Common and Uncommon cards while premium cards are 
     [card[property]]: (counts[card[property]] || 0) + 1,
   }), {});
 
-  assert.equal(cards.length, 24);
-  assert.equal(physicalDeck.length, 39);
-  assert.deepEqual(countBy("element"), { ember: 13, gust: 13, tide: 13 });
-  assert.deepEqual(countBy("tactic"), { link: 13, vanguard: 13, finisher: 13 });
+  assert.equal(cards.length, 36);
+  assert.equal(physicalDeck.length, 60);
+  assert.deepEqual(countBy("element"), { ember: 20, gust: 20, tide: 20 });
+  assert.deepEqual(countBy("tactic"), { link: 15, vanguard: 15, finisher: 15, rally: 15 });
   assert.deepEqual(countBy("rarity"), {
     epic: 3,
-    rare: 3,
-    uncommon: 12,
+    rare: 6,
+    uncommon: 24,
     legendary: 3,
-    common: 18,
+    common: 24,
   });
   cards.forEach((card) => {
     assert.ok(
-      existsSync(new URL(`../assets/cards/${card.art}.webp`, import.meta.url)),
+      existsSync(new URL(`../${card.artworkSource || "assets/cards/" + card.art + ".webp"}`, import.meta.url)),
       `${card.name} should have card art`,
     );
   });
@@ -141,20 +132,19 @@ test("the shared deck repeats Common and Uncommon cards while premium cards are 
   assert.match(gameSource, /CARD_LIBRARY\.flatMap\(\(card\) =>/);
   assert.match(
     pageSource,
-    /shared draw pile contains 39 cards[\s\S]*two copies of every Common and Uncommon card[\s\S]*one copy of every Rare, Epic, and Legendary card/,
+    /shared draw pile contains 60 cards[\s\S]*two copies of every Common and Uncommon card[\s\S]*one copy of every Rare, Epic, and Legendary card/,
   );
 });
 
-test("Normal Play Blind retains hidden habits while WIP generates none", () => {
+test("Blind retains hidden habits while Instinct reveals them", () => {
   assert.match(
     gameSource,
     /const concealsOpponentFormation[\s\S]*difficulty === "instinct" \|\| difficulty === "blind"/,
   );
   assert.match(
     gameSource,
-    /state\.aiTraits = isFourLaneMode\(\) \? \[\]\s*: usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
+    /state\.aiTraits = usesPersistentAiHabits\(\) \? createAiTraits\(\) : \[\]/,
   );
   assert.match(gameSource, /const usesPersistentAiHabits[\s\S]*?difficulty === "instinct" \|\| difficulty === "blind"/);
-  assert.doesNotMatch(gameSource, /state\.aiTraits = isFourLaneMode\(\) \? \[\.\.\.matchFourLaneOpponent\.traits\]/);
   assert.match(pageSource, /Blind[\s\S]*Identify the opponent's patterns through <b>Previous Rounds History<\/b>/);
 });

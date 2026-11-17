@@ -24,7 +24,7 @@ test("Riptide Rook replaces the Water Epic Vanguard without changing its library
     `${libraryDeclaration}\nJSON.stringify(CARD_LIBRARY)`,
   ));
 
-  assert.equal(cards.length, 24);
+  assert.equal(cards.length, 36);
   assert.deepEqual(cards[16], {
     id: "card-16",
     element: "tide",

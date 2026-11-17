@@ -1,12 +1,12 @@
 {
   "version": 2,
   "namingNote": "Current card names use first names only. Historical artwork prompts and revision names retain their original wording as provenance; asset filenames and stats are unchanged.",
-  "status": "Framed card previews in the separate four-lane mode; not added to the live three-lane card pool. Rally gameplay is not active yet.",
+  "status": "Live in Normal Play's 36-character, 60-card collection. Rally gives +1 Power to the card directly before it in the three-lane formation.",
   "generator": "Built-in ImageGen; no CLI/API fallback used.",
   "revisionNote": "Original prompts and anatomy corrections are retained as provenance. Where present, latestRevisionPrompt describes the current artwork and overrides the original costume/breed brief.",
   "imageDimensions": { "width": 1254, "height": 1254 },
   "recommendedArtObjectPosition": "center 25%",
-  "cropNote": "Use the higher crop position when these assets are integrated into shallow hand-card windows. Full square masters are preserved without cropping.",
+  "cropNote": "Full square masters are preserved without cropping. Normal Play uses image-only framing in its existing card windows; card and frame dimensions are unchanged.",
   "styleReferences": [
     "assets/cards/sizzle-mittens.webp",
     "assets/cards/whisker-whirl.webp",

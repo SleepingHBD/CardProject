@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const folder = new URL("../assets/cards/four-lane/", import.meta.url);
+const folder = new URL("../assets/cards/", import.meta.url);
 const polish = JSON.parse(readFileSync(new URL("background-and-framing-polish.json", folder), "utf8"));
-const css = readFileSync(new URL("../four-lane-preview.css", import.meta.url), "utf8");
+const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 
 test("Isai and Sajrin use artwork-only framing without regenerating their illustrations", () => {
@@ -13,15 +13,14 @@ test("Isai and Sajrin use artwork-only framing without regenerating their illust
     assert.equal(sha256(readFileSync(new URL(`${adjustment.template}.png`, folder))), adjustment.imageSha256);
   }
   const isai = css.match(/\.game-card\[data-card-template="isai-tidebind"\] \.card-art img \{\s*transform:([^}]+)\}/);
-  assert.ok(isai, "Isai's offset must apply to previews, deckbuilding and gameplay");
+  assert.ok(isai, "Isai's offset must apply to the archive and Normal Play");
   assert.match(isai[1], /translateX\(-3%\) scale\(1\.06\)/);
   assert.doesNotMatch(isai[1], /(?:width|height):/);
   const sajrin = css.match(/\.game-card\[data-card-template="sajrin-shellwright"\] \.card-art img \{([^}]+)\}/);
-  assert.ok(sajrin, "Sajrin's crop must apply to previews, deckbuilding and gameplay");
+  assert.ok(sajrin, "Sajrin's crop must apply to the archive and Normal Play");
   assert.match(sajrin[1], /object-position: center top/);
   assert.doesNotMatch(sajrin[1], /(?:width|height):/);
-  assert.doesNotMatch(css, /body\[data-duel-mode="four-lane"\] \.game-card\[data-card-template="sajrin-shellwright"\]/,
-    "The gameplay default must not override Sajrin's adjusted crop");
+  assert.match(polish.status, /Normal Play's live 36-character, 60-card collection/);
 });
 
 test("Fire background edits preserve exact original masters and square asset dimensions", () => {

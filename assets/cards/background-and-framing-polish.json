@@ -1,6 +1,7 @@
 {
   "version": 1,
   "date": "2026-10-07",
+  "status": "Approved artwork and image-only framing retained in Normal Play's live 36-character, 60-card collection. Production files and preserved artwork-history masters are stored in assets/cards/.",
   "generator": "Built-in ImageGen",
   "purpose": "Warm the near-white outer backgrounds of three Fire illustrations to match the existing collection; keep their character designs and red circles.",
   "imageDimensions": {

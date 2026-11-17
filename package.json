@@ -8,8 +8,7 @@
     "dev": "vite",
     "build": "vite build --base=./ && node scripts/copy-static.js",
     "preview": "vite preview",
-    "test": "node --test",
-    "audit:deckbuilding": "node scripts/audit-deckbuilding.js"
+    "test": "node --test test/*.test.js"
   },
   "devDependencies": {
     "vite": "^7.0.0"

@@ -29,8 +29,6 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./four-lane-preview.css" />
-    <link rel="stylesheet" href="./deckbuilding.css" />
   </head>
   <body>
     <svg class="tactic-symbol-library" aria-hidden="true">
@@ -49,26 +47,6 @@
       </symbol>
       <symbol id="tactic-icon-banner" viewBox="0 0 24 24">
         <path d="M4 2h2v20H4V2Zm4 1h13l-4 4 4 4H8V3Z" />
-      </symbol>
-      <symbol id="lobby-icon-cards" viewBox="0 0 24 24">
-        <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-          <path d="M6 5H3v16h12v-3" /><rect x="8" y="2" width="13" height="16" rx="1.5" />
-        </g>
-        <path d="m14.5 6-3 4 3 4 3-4-3-4Z" />
-      </symbol>
-      <symbol id="lobby-icon-coins" viewBox="0 0 24 24">
-        <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-          <ellipse cx="8" cy="6" rx="6" ry="3" /><path d="M2 6v5c0 1.7 2.7 3 6 3m-6-3v5c0 1.7 2.7 3 6 3" />
-          <ellipse cx="16" cy="13" rx="6" ry="3" /><path d="M10 13v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />
-        </g>
-      </symbol>
-      <symbol id="lobby-icon-shuffle" viewBox="0 0 24 24">
-        <path d="M3 6h3c5 0 7 12 12 12h2M3 18h3c2 0 4-3 6-6s4-6 6-6h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        <path d="m17 2 5 4-5 4V2Zm0 12 5 4-5 4v-8Z" />
-      </symbol>
-      <symbol id="lobby-icon-trophy" viewBox="0 0 24 24">
-        <path d="M7 3h10v6c0 4-2 6-5 6s-5-2-5-6V3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-        <path d="M7 5H3v3c0 3 2 5 5 5m9-8h4v3c0 3-2 5-5 5m-4 2v5m-5 1h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
       </symbol>
     </svg>
     <div class="sky-confetti" aria-hidden="true"></div>
@@ -149,7 +127,7 @@
           >
             <span>TRAINING GROUNDS</span>
             <span class="tutorial-drag-hint" aria-hidden="true">Drag to move</span>
-            <b id="tutorialProgress">Lesson 1 of 7</b>
+            <b id="tutorialProgress">Lesson 1 of 8</b>
           </div>
           <div class="tutorial-coach-copy" aria-live="polite">
             <p class="tutorial-concept" id="tutorialConcept">The elemental cycle</p>
@@ -235,16 +213,11 @@
                 <span class="scout-seal" aria-hidden="true">&#10022;</span>
                 <div>
                   <p id="tacticsTitle">Opponent's Plan</p>
-                  <small class="four-lane-rival-info" id="fourLaneRivalInfo" hidden></small>
                   <small id="commitmentHint">Opponent's formation is ready.</small>
                   <div class="opponent-habits" id="opponentHabits" aria-label="Opponent's known habits" aria-live="polite" hidden></div>
                 </div>
               </div>
               <div class="opponent-tells" id="opponentTells" aria-label="Opponent's planned lanes"></div>
-              <div class="public-hand-toolbar"><button id="publicDeckButton" type="button" hidden>View Both Decks</button></div>
-              <div class="opponent-public-hand" id="opponentPublicHand" aria-label="Opponent's available cards; not their committed formation" hidden></div>
-              <div class="battle-lane-notice" id="battleLaneNotice" hidden></div>
-              <span class="match-score-details" id="matchScoreDetails" hidden></span>
               <div class="matchup-forecast" id="matchupForecast" aria-live="polite">
                 Place a card to preview its bonuses and total.
               </div>
@@ -322,15 +295,6 @@
           Tutorial Mode
         </button>
         <button
-          class="main-menu-option-button main-menu-four-lane-button"
-          id="mainMenuFourLaneButton"
-          type="button"
-          aria-label="Super Secret Stuff WIP"
-          aria-controls="fourLanePreviewScreen"
-        >
-          <span>Super Secret Stuff</span><span class="four-lane-menu-badge" aria-hidden="true">WIP</span>
-        </button>
-        <button
           class="main-menu-option-button"
           id="mainMenuRulebookButton"
           type="button"
@@ -370,192 +334,6 @@
         (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)
       </p>
     </section>
-
-    <section
-      class="four-lane-preview-screen"
-      id="fourLanePreviewScreen"
-      aria-labelledby="fourLanePreviewTitle"
-      hidden
-    >
-      <div class="four-lane-preview-content">
-        <header class="four-lane-preview-header">
-          <div>
-            <p class="four-lane-preview-eyebrow">Project: Prowl <span>Work in progress</span></p>
-            <h1 id="fourLanePreviewTitle" tabindex="-1">Super Secret Stuff WIP</h1>
-            <p>Build a deck. Choose a rival. Duel.</p>
-          </div>
-          <button class="main-menu-option-button four-lane-return-button" id="fourLaneReturnButton" type="button" aria-label="Return to Main Menu">
-            <span aria-hidden="true">←</span> Main Menu
-          </button>
-        </header>
-
-        <ol class="four-lane-lobby-steps" aria-label="Duel setup">
-          <li id="fourLaneDeckStep" aria-current="step"><span aria-hidden="true">1</span> Your deck</li>
-          <li id="fourLaneRivalStep"><span aria-hidden="true">2</span> Your rival</li>
-        </ol>
-
-        <div class="four-lane-lobby-page" id="fourLaneDeckPage">
-          <section class="four-lane-deck-choice" aria-labelledby="fourLaneDeckChoiceTitle">
-            <div class="four-lane-page-heading">
-              <h2 id="fourLaneDeckChoiceTitle" tabindex="-1">Your deck</h2>
-              <p>Choose a starter or make your own.</p>
-            </div>
-            <div class="four-lane-deck-paths">
-              <fieldset class="four-lane-starter-choice">
-                <legend>Starter decks <span class="lobby-ready-tag">Ready to play</span></legend>
-                <p>Four playstyles. Every element included.</p>
-                <div class="four-lane-starter-options" id="fourLaneStarterOptions"></div>
-              </fieldset>
-              <section class="four-lane-custom-choice" aria-labelledby="fourLaneCustomTitle">
-                <p class="four-lane-path-label">Or customise</p>
-                <h3 id="fourLaneCustomTitle"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg> Build your own</h3>
-                <p>Edit a starter or begin from scratch.</p>
-                <button class="main-menu-option-button" id="fourLaneDeckEditorButton" type="button" aria-controls="deckEditorScreen"><span aria-hidden="true">+</span> Build a Deck</button>
-                <div class="four-lane-saved-choice">
-                  <label for="fourLaneDeckSelect">Your saved decks</label>
-                  <select id="fourLaneDeckSelect" aria-describedby="fourLaneSavedHelp"></select>
-                  <p id="fourLaneSavedHelp">Saved decks stay in this browser.</p>
-                </div>
-              </section>
-            </div>
-            <p class="deck-storage-notice" id="fourLaneDeckStorageNotice" hidden></p>
-            <div class="four-lane-deck-confirm">
-              <div role="status" aria-live="polite" aria-atomic="true">
-                <span class="four-lane-path-label">Selected deck</span>
-                <h3 id="fourLaneSelectedDeckName"></h3>
-                <div id="fourLaneDeckSummary"></div>
-              </div>
-              <button class="main-menu-option-button" id="fourLaneConfirmDeckButton" type="button" aria-controls="fourLaneRivalPage">Confirm Deck <span aria-hidden="true">→</span></button>
-            </div>
-          </section>
-
-          <details class="four-lane-basics">
-            <summary><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-trophy"></use></svg> Mode basics</summary>
-            <div class="lobby-basics-grid">
-              <section><h3>Formation</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg><b>1–4</b> cards</p><p>Fill the marked battle lane. Other lanes are optional; same-numbered lanes fight.</p></section>
-              <section><h3>Hand</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg><b>7</b> cards</p><p>Draw up to 3 each round. Max. 7.</p></section>
-              <section><h3>Win the duel</h3><p class="lobby-fact"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-trophy"></use></svg><b>8</b> rounds</p><p>Highest match score wins: trophies + 2 for every complete Fire, Gust and Water set.</p></section>
-            </div>
-            <dl class="lobby-scoring-notes">
-              <div><dt>Won lane</dt><dd><b>+2</b> trophies of your card's element</dd></div>
-              <div><dt>Unopposed card</dt><dd><b>+1</b> trophy of that card's element · one unlock per lane win · max. 2</dd></div>
-            </dl>
-            <p>Win one lane to unlock one unopposed card, or two lanes to unlock two. With no lane wins, unopposed cards earn nothing.</p>
-            <p>Both sides keep earned trophies. Unlike Normal Play, there is no trophy choice; all committed cards stay in their owner's deck cycle.</p>
-            <p><b>Both hands are visible.</b> Card choices and lane placements stay secret until both formations are committed. The required battle lane alternates between Lane 2 and Lane 3.</p>
-            <div class="four-lane-preview-layout">
-              <figure class="four-lane-preview-board" aria-labelledby="fourLaneBoardCaption">
-                <div class="four-lane-preview-side">Opponent</div>
-                <div class="four-lane-preview-row" aria-label="Opponent’s four lanes">
-                  <span class="four-lane-preview-slot" aria-label="Opponent Lane 1"><span aria-hidden="true">◆</span></span>
-                  <span class="four-lane-preview-slot" aria-label="Opponent Lane 2"><span aria-hidden="true">◆</span></span>
-                  <span class="four-lane-preview-slot" aria-label="Opponent Lane 3"><span aria-hidden="true">◆</span></span>
-                  <span class="four-lane-preview-slot is-new-lane" aria-label="Opponent Lane 4"><span aria-hidden="true">◆</span></span>
-                </div>
-                <div class="four-lane-preview-lane-labels" aria-hidden="true">
-                  <span>Lane 1</span><span>Lane 2</span><span>Lane 3</span><span>Lane 4</span>
-                </div>
-                <div class="four-lane-preview-row" aria-label="Your four lanes">
-                  <span class="four-lane-preview-slot" aria-label="Your Lane 1"><span aria-hidden="true">◆</span></span>
-                  <span class="four-lane-preview-slot" aria-label="Your Lane 2"><span aria-hidden="true">◆</span></span>
-                  <span class="four-lane-preview-slot" aria-label="Your Lane 3"><span aria-hidden="true">◆</span></span>
-                  <span class="four-lane-preview-slot is-new-lane" aria-label="Your Lane 4"><span aria-hidden="true">◆</span></span>
-                </div>
-                <div class="four-lane-preview-side">You</div>
-                <figcaption id="fourLaneBoardCaption">One shared battle lane. Three optional lanes for support and flanking.</figcaption>
-              </figure>
-              <aside class="four-lane-preview-roadmap" aria-labelledby="fourLaneRoadmapTitle">
-                <h2 id="fourLaneRoadmapTitle">Role bonuses</h2>
-                <ol>
-                  <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-shield"></use></svg> Vanguard</h3><p>Commit at least two cards. If your leftmost committed card is a Vanguard, it gains +1 Power.</p></li>
-                  <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-chain"></use></svg> Link</h3><p>Gets +1 Power if the card in the neighbouring lane to its left has a different element. A gap breaks the bonus.</p></li>
-                  <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-sword"></use></svg> Finisher</h3><p>Gets +1 Power as your rightmost card, with at least two cards committed.</p></li>
-                  <li><h3><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#tactic-icon-banner"></use></svg> Rally</h3><p>Gives +1 Power to the card in the neighbouring lane to its left. A gap breaks support.</p></li>
-                </ol>
-              </aside>
-            </div>
-          </details>
-          <section class="four-lane-card-showcase" aria-labelledby="fourLaneCardsTitle">
-            <details class="four-lane-card-disclosure">
-              <summary id="fourLaneCardsTitle"><svg class="lobby-icon" aria-hidden="true" focusable="false"><use href="#lobby-icon-cards"></use></svg> New cards <span class="lobby-disclosure-count">12</span></summary>
-              <p>9 Rally cards + <span aria-hidden="true">🔥</span> Fire Link, <span aria-hidden="true">🍃</span> Gust Vanguard and <span aria-hidden="true">💧</span> Water Finisher.</p>
-              <div class="four-lane-card-gallery" id="fourLaneCardGallery" role="list" aria-label="Super Secret Stuff WIP card previews"></div>
-              <p class="four-lane-card-showcase-note">All 12 cards are playable in this mode.</p>
-            </details>
-          </section>
-        </div>
-
-        <div class="four-lane-lobby-page" id="fourLaneRivalPage" hidden>
-          <div class="four-lane-page-heading four-lane-rival-heading">
-            <div><h2 id="fourLaneRivalTitle" tabindex="-1">Choose your rival</h2><p>Each rival has a different playstyle.</p></div>
-            <button class="main-menu-option-button" id="fourLaneChangeDeckButton" type="button" aria-controls="fourLaneDeckPage" aria-label="Back to Your Deck"><span aria-hidden="true">←</span> Your Deck</button>
-          </div>
-          <div class="four-lane-confirmed-deck">
-            <span class="four-lane-path-label">Your deck</span>
-            <strong id="fourLaneConfirmedDeckName"></strong>
-            <span id="fourLaneConfirmedDeckSummary"></span>
-          </div>
-          <fieldset class="four-lane-rival-choice" id="fourLaneRivalChoice" aria-describedby="fourLaneRivalHelp">
-            <legend>Rivals</legend>
-            <p id="fourLaneRivalHelp">Different decks, the same information: both hands visible, formations secret. Choose a rival or let Random Rival pick one.</p>
-            <div class="four-lane-rival-options" id="fourLaneRivalOptions"></div>
-          </fieldset>
-          <section class="four-lane-launch" aria-labelledby="fourLaneLaunchTitle">
-            <div><h2 id="fourLaneLaunchTitle">Ready to duel?</h2><p>Open hands · Shared battle lane · 8 rounds</p></div>
-            <button class="main-menu-option-button" id="fourLaneStartButton" type="button">Start Duel <span aria-hidden="true">→</span></button>
-          </section>
-        </div>
-
-        <p class="four-lane-preview-notice"><strong>WIP · Balance testing in progress.</strong> Normal Play is unchanged.</p>
-      </div>
-    </section>
-
-    <section class="deck-editor-screen" id="deckEditorScreen" aria-labelledby="deckEditorTitle" hidden>
-      <div class="deck-editor-content">
-        <header class="deck-editor-header">
-          <div><p class="four-lane-preview-eyebrow">Super Secret Stuff WIP · Deckbuilding</p><h1 id="deckEditorTitle" tabindex="-1">Build your deck</h1><p>Choose your cards. Their order here is not their lane order in battle.</p></div>
-          <button class="main-menu-option-button" id="deckEditorReturnButton" type="button">Return to Your Deck</button>
-        </header>
-        <div class="deck-editor-toolbar">
-          <label>Deck name<input id="deckEditorName" maxlength="48" autocomplete="off" /></label>
-          <label>Start from<select id="deckEditorLoad"></select></label>
-          <button class="main-menu-option-button" id="deckEditorNewButton" type="button">New Empty Deck</button>
-        </div>
-        <div class="deck-editor-layout">
-          <section class="deck-collection-panel" aria-labelledby="deckCollectionTitle">
-            <div class="deck-collection-heading"><h2 id="deckCollectionTitle">Card collection</h2><span id="deckEditorResults"></span></div>
-            <div class="deck-editor-filters">
-              <label class="deck-search">Search<input id="deckEditorSearch" type="search" placeholder="Find a card…" autocomplete="off" /></label>
-              <label>Element<select id="deckEditorElement"><option value="">All elements</option><option value="ember">Fire</option><option value="gust">Gust</option><option value="tide">Water</option></select></label>
-              <label>Role<select id="deckEditorRole"><option value="">All roles</option><option value="vanguard">Vanguard</option><option value="link">Link</option><option value="finisher">Finisher</option><option value="rally">Rally</option></select></label>
-              <label>Rarity<select id="deckEditorRarity"><option value="">All rarities</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option><option value="legendary">Legendary</option></select></label>
-              <button id="deckEditorResetFilters" type="button">Reset filters</button>
-            </div>
-            <p class="deck-collection-help">Use + and − to choose copies. To swap a card in a full deck, remove one first. Cost only limits deckbuilding—it does not change Power.</p>
-            <div class="deck-editor-collection" id="deckEditorCollection"></div>
-          </section>
-          <aside class="deck-composition-panel" aria-labelledby="deckCompositionTitle">
-            <h2 id="deckCompositionTitle">Your deck</h2>
-            <div id="deckEditorStats"></div>
-            <p class="deck-construction-rules">24 cards · 120 cost maximum<br />2 copies of each Common/Uncommon; 1 of each higher rarity. No required roles.</p>
-            <ul class="deck-editor-errors" id="deckEditorErrors"></ul>
-            <aside class="deck-editor-tips" aria-labelledby="deckEditorTipsTitle" hidden><h3 id="deckEditorTipsTitle">Deck tips (optional)</h3><ul id="deckEditorTips"></ul></aside>
-            <div class="deck-save-actions">
-              <button class="main-menu-option-button" id="deckEditorSaveButton" type="button">Save &amp; Select Deck</button>
-              <button id="deckEditorSaveCopyButton" type="button" hidden>Save as New Deck</button>
-              <button id="deckEditorDeleteButton" type="button" hidden>Delete Saved Deck</button>
-            </div>
-            <p class="deck-editor-status" id="deckEditorStatus" role="status" aria-live="polite"></p>
-            <details class="deck-selected-details" id="deckEditorSelectedDetails" open><summary>Your cards <span id="deckEditorSelectedCount">0</span></summary><div class="deck-selected-list" id="deckEditorSelected"></div></details>
-            <p class="deck-storage-help">Saved on this browser only. Clearing site data removes your saved decks. All cards are available; nothing needs unlocking.</p>
-          </aside>
-        </div>
-      </div>
-    </section>
-    <dialog class="game-dialog deck-editor-confirm" id="deckEditorConfirm" aria-labelledby="deckEditorConfirmTitle" aria-describedby="deckEditorConfirmText">
-      <h2 id="deckEditorConfirmTitle">Discard unsaved changes?</h2><p id="deckEditorConfirmText"></p>
-      <div><button id="deckEditorConfirmCancel" type="button">Cancel</button><button class="primary-button" id="deckEditorConfirmProceed" type="button">Discard changes</button></div>
-    </dialog>
 
     <div class="game-menu-overlay" id="gameMenuOverlay" hidden>
       <section
@@ -808,7 +586,7 @@
           <span class="tutorial-menu-icon" aria-hidden="true">ALL</span>
           <span>
             <strong>Complete Training</strong>
-            <small>Tour plus all seven scenarios.</small>
+            <small>Tour plus all eight scenarios.</small>
             <em>Recommended for first-time players</em>
           </span>
         </button>
@@ -830,25 +608,32 @@
           <span class="tutorial-menu-icon" aria-hidden="true">3</span>
           <span>
             <strong>Formation Roles</strong>
-            <small>Learn every Role +1.</small>
+            <small>Learn Vanguard, Link and Finisher.</small>
           </span>
         </button>
         <button class="tutorial-menu-option" data-tutorial-lesson="2" type="button">
           <span class="tutorial-menu-icon" aria-hidden="true">4</span>
           <span>
+            <strong>Rally Support</strong>
+            <small>Strengthen the card before the Rally.</small>
+          </span>
+        </button>
+        <button class="tutorial-menu-option" data-tutorial-lesson="3" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">5</span>
+          <span>
             <strong>Round Points</strong>
             <small>Score lanes and extra cards.</small>
           </span>
         </button>
-        <button class="tutorial-menu-option" data-tutorial-lesson="5" type="button">
-          <span class="tutorial-menu-icon" aria-hidden="true">5</span>
+        <button class="tutorial-menu-option" data-tutorial-lesson="6" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">6</span>
           <span>
             <strong>Trophies &amp; Card Flow</strong>
             <small>Claim trophies; recycle cards.</small>
           </span>
         </button>
-        <button class="tutorial-menu-option" data-tutorial-lesson="6" type="button">
-          <span class="tutorial-menu-icon" aria-hidden="true">6</span>
+        <button class="tutorial-menu-option" data-tutorial-lesson="7" type="button">
+          <span class="tutorial-menu-icon" aria-hidden="true">7</span>
           <span>
             <strong>Instinct Practice</strong>
             <small>Read habits; choose freely.</small>
@@ -944,6 +729,7 @@
         <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-shield"></use></svg></b> Vanguard · +1 in Lane 1</span>
         <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-chain"></use></svg></b> Link · +1 when the card before the Link has a different element from the Link card</span>
         <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-sword"></use></svg></b> Finisher · +1 when last in a 2–3 card formation</span>
+        <span><b aria-hidden="true"><svg class="tactic-icon"><use href="#tactic-icon-banner"></use></svg></b> Rally · gives +1 to the card directly before it</span>
       </div>
       <div class="archive-toolbar">
         <label class="archive-sort-field" for="archiveSort">
@@ -1038,7 +824,7 @@
         <section class="codex-card codex-card-wide">
           <span class="codex-number">3</span>
           <h3>Calculate Clash Total</h3>
-          <p class="codex-formula">Power + Element Edge + Role = Clash Total</p>
+          <p class="codex-formula">Power + Element Edge + Role + Rally received = Clash Total</p>
           <div class="codex-cycle" aria-label="Element cycle">
             <span class="element-ember">🔥 Fire</span><i>beats</i>
             <span class="element-gust">🍃 Gust</span><i>beats</i>
@@ -1062,7 +848,12 @@
           <h3>Finisher +1</h3>
           <p>Commit it as the final card in a 2–3 card formation.</p>
         </section>
-        <p class="codex-role-note"><b>Roles do not restrict placement.</b> A card that misses its condition still clashes normally; it simply receives no Role +1.</p>
+        <section class="codex-card codex-role-card">
+          <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-banner"></use></svg>
+          <h3>Rally support +1</h3>
+          <p>Gives +1 Power to your card directly before it: Lane 2 boosts Lane 1; Lane 3 boosts Lane 2. No support from Lane 1.</p>
+        </section>
+        <p class="codex-role-note"><b>Roles do not restrict placement.</b> A card that misses its condition still clashes normally. Rally supports another card rather than giving itself Role +1; its support still works when no opponent faces the Rally.</p>
         <section class="codex-card">
           <span class="codex-number">4</span>
           <h3>Count Round Points</h3>
@@ -1125,7 +916,7 @@
         <section class="rulebook-section" aria-labelledby="rulebookDifficulty">
           <span class="rulebook-number" aria-hidden="true">2</span>
           <h3 id="rulebookDifficulty">Deck, hand, and difficulty</h3>
-          <p>The shared draw pile contains 39 cards: two copies of every Common and Uncommon card, and one copy of every Rare, Epic, and Legendary card. Both duelists draw up to six cards.</p>
+          <p>The shared draw pile contains 60 cards across 36 characters: two copies of every Common and Uncommon card, and one copy of every Rare, Epic, and Legendary card. Both duelists draw up to six cards.</p>
           <dl class="rulebook-definitions">
             <div><dt>Guided</dt><dd>Shows every planned card's element and power range.</dd></div>
             <div><dt>Instinct</dt><dd>Hides the opponent's current cards and formation size, but reveals one motive, one formation habit, and one commitment habit that persist for the match.</dd></div>
@@ -1140,7 +931,7 @@
           <div class="rulebook-card-facts">
             <p><b>Power</b><span>The printed number and starting value of its Clash Total.</span></p>
             <p><b>Element</b><span>Fire, Gust, or Water. It determines Element Edge and the trophy's element.</span></p>
-            <p><b>Formation Role</b><span>Vanguard, Link, or Finisher. Meeting its condition adds Role +1.</span></p>
+            <p><b>Formation Role</b><span>Vanguard, Link, Finisher, or Rally. The first three can gain Role +1; Rally gives +1 Power to the card directly before it.</span></p>
             <p><b>Rarity</b><span>Common through Legendary. It changes the card frame and how many copies enter the shared deck, but never the clash rules or scoring.</span></p>
             <p><b>Move and lore</b><span>Character flavor only. Cards have no unlisted abilities or hidden effects.</span></p>
           </div>
@@ -1170,11 +961,12 @@
         <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookScoring">
           <span class="rulebook-number" aria-hidden="true">5</span>
           <h3 id="rulebookScoring">Calculate a card's Clash Total</h3>
-          <p class="score-formula">Power + Element Edge + Role = Clash Total</p>
+          <p class="score-formula">Power + Element Edge + Role + Rally received = Clash Total</p>
           <div class="rulebook-score-keys">
             <p><b>Power</b><span>Begin with the printed number.</span></p>
             <p><b>Element Edge +2</b><span>Add 2 when the card's element beats the opposing card's element.</span></p>
-            <p><b>Role +1</b><span>Add 1 when the card meets its Formation Role condition.</span></p>
+            <p><b>Role +1</b><span>Add 1 when a Vanguard, Link, or Finisher meets its condition.</span></p>
+            <p><b>Rally received +1</b><span>Add 1 if a Rally is committed directly after this card. This can stack with its own Role +1 and Element Edge.</span></p>
             <p><b>Lane result</b><span>Higher Clash Total wins. Equal Clash Totals draw that lane.</span></p>
           </div>
           <p class="rulebook-callout"><b>Element Edge is a bonus, not an automatic win.</b> A high-Power card can still defeat a card that has Element Edge.</p>
@@ -1196,8 +988,13 @@
               <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-sword"></use></svg>
               <div><b>Finisher +1</b><p>Activate it by committing the Finisher as the final card in a 2–3 card formation.</p></div>
             </article>
+            <article>
+              <svg class="tactic-icon" aria-hidden="true"><use href="#tactic-icon-banner"></use></svg>
+              <div><b>Rally support +1</b><p>Gives +1 Power to your card directly before it. Rally in Lane 2 boosts Lane 1; Rally in Lane 3 boosts Lane 2. Rally in Lane 1 gives no support.</p></div>
+            </article>
           </div>
           <p class="rulebook-callout"><b>Roles never restrict placement.</b> You may commit any card in any available lane. If its Role condition is not met, the card still clashes normally but receives no Role +1.</p>
+          <p>Rally supports another card, not itself. The receiving card can also gain its own Role +1 and Element Edge. Support still works if the Rally has no opposing card. A boosted Rally still gives only +1 to the card before it.</p>
         </section>
 
         <section class="rulebook-section rulebook-section-wide" aria-labelledby="rulebookRoundWinner">
@@ -1294,7 +1091,7 @@
           <h3 id="rulebookStrategy">Subtle strategy</h3>
           <div class="strategy-grid">
             <p><b>Choose size with a purpose.</b><span>One card conserves resources. More cards cover more lanes and may score as extra cards, but every committed card is spent.</span></p>
-            <p><b>Order before committing.</b><span>Formation order determines lanes and can activate or disable Vanguard, Link, and Finisher bonuses.</span></p>
+            <p><b>Order before committing.</b><span>Formation order determines lanes and can activate or disable Vanguard, Link, Finisher, and Rally bonuses.</span></p>
             <p><b>Plan the trophy element.</b><span>When several cards win lanes, arrange to give yourself a useful trophy choice. For an extra-card win, the first extra card is fixed.</span></p>
             <p><b>Respect printed Power.</b><span>Element Edge helps, but a two-point bonus does not always overcome a much stronger card.</span></p>
             <p><b>Read hidden information.</b><span>In Guided, use the live plan clues. In Instinct, combine all three visible habits. In Blind, compare several entries in Previous Rounds History to infer those hidden habits yourself.</span></p>
@@ -1304,38 +1101,6 @@
       </div>
 
       <button class="primary-button rulebook-finish" data-close-rulebook type="button">Return</button>
-    </dialog>
-
-    <dialog class="game-dialog four-lane-rules-dialog" id="fourLaneRulesDialog" aria-labelledby="fourLaneRulesTitle">
-      <button class="dialog-close" data-close-four-lane-rules type="button" aria-label="Close Super Secret Stuff WIP rules">×</button>
-      <p class="eyebrow">SUPER SECRET STUFF WIP</p>
-      <h2 id="fourLaneRulesTitle">Mode Rules</h2>
-      <div class="four-lane-rules-content">
-        <section><h3>Open hands, secret formations</h3><p><b>Both players can see each other's available hand</b>, including every card's element, printed Power and role. Both deck lists are public too. Neither player can see the other's chosen cards or positions until both commit. The opponent locks a plan before you start placing cards; it never reacts to your current selection. There are no opponent habits or difficulty choices in this mode.</p></section>
-        <section><h3>Fill the shared battle lane</h3><p>Commit 1–4 cards, one per lane. <b>Both players must place a card in the marked battle lane.</b> This is Lane 2 in odd-numbered rounds and Lane 3 in even-numbered rounds. The other three lanes are optional, and gaps are allowed.</p><p>Lane 1 faces Lane 1, Lane 2 faces Lane 2, and so on. Positions—not the order you click cards—determine who fights and which role bonuses activate. Every role can be placed in any lane. You may move or return your cards before committing.</p></section>
-        <section><h3>Win lanes to earn trophies</h3><p>Clash Total = printed Power + Element Edge + your card's role bonus + received Rally bonus. The higher total wins the lane; equal totals draw.</p><p>Fire beats Gust, Gust beats Water, and Water beats Fire. The element with the advantage gains +2 Power.</p><p>A lane win earns <b>2 trophies of the winning card's element</b>. A drawn or lost lane earns 0.</p><p><b>Both sides keep the trophies they earn.</b> There is no overall round winner or trophy choice. For example, if your Fire card wins Lane 1 and the opponent's Water card wins Lane 2, you earn 2 Fire trophies and the opponent earns 2 Water trophies.</p></section>
-        <section><h3>Unlock unopposed trophies</h3><p>An unopposed card has no opposing card in its lane. <b>Each lane you win unlocks one of your unopposed cards</b> to earn 1 trophy of its own element, up to <b>two unopposed trophies per round</b>. One lane win unlocks one card, not every unopposed card. Rewards go from Lane 1 to Lane 4.</p><p><b>No lane wins means no unopposed trophies.</b> Drawn lanes do not unlock rewards. Power and role bonuses never increase an unopposed card's 1 trophy.</p></section>
-        <section><h3>Four formation roles</h3><ul>
-          <li><b>Vanguard:</b> Commit at least two cards. If your leftmost committed card is a Vanguard, it gains +1 Power. Empty lanes do not matter; the other card can be anywhere to its right. A lone Vanguard gets no bonus, and a card of any role to its left prevents activation. Placement order does not matter.</li>
-          <li><b>Link:</b> +1 when the card in the neighbouring lane to its left has a different element. An empty lane to its left gives no bonus.</li>
-          <li><b>Finisher:</b> +1 when it is your rightmost card and you commit at least two cards. It does not have to occupy Lane 4. A lone Finisher gets no bonus.</li>
-          <li><b>Rally:</b> Gives +1 Power to the card in the neighbouring lane to its left—not itself. For example, Rally in Lane 3 boosts Lane 2, but cannot reach Lane 1 if Lane 2 is empty. Rally in Lane 1 gives no bonus. The receiving card can also earn its own role bonus. Each Rally gives only +1, even if it receives a boost.</li>
-        </ul></section>
-        <section><h3>Highest score after eight rounds wins</h3><p><b>Every duel lasts 8 rounds.</b> Trophies have no per-element limit. Your match score is your total trophies, plus <b>2 bonus points for each complete set of one Fire, one Gust and one Water trophy</b>.</p><p>For example, 5 Fire + 3 Gust + 2 Water means 10 trophies and 2 complete sets. Your match score is <b>10 + 4 = 14</b>. Only your least-collected element limits the number of complete sets. Collecting all three elements is rewarded, but not required.</p><p>Finish every lane in Round 8, then compare match scores. The higher score wins; equal scores draw. Reaching 6 of every element does not end the duel early.</p><p><b>Unlike Normal Play, trophies are counters, not claimed cards.</b> They are awarded automatically. All committed cards go to their owner's discard pile and stay in that owner's deck cycle.</p></section>
-        <section><h3>Manage your own hand</h3><p>Both players start with 7 cards. Between rounds, each draws up to 3 without exceeding 7 cards in hand.</p><p>Commit 3 cards to maintain your hand size, or 4 to spend 1 card from your reserves. Commit 1 or 2 to rebuild your hand by up to 2 or 1 cards, subject to the 7-card limit.</p><p>You and your opponent have separate decks and discard piles. <b>All committed cards</b> go into their owner's discard pile, including winning cards. Only that owner's empty draw pile can trigger a reshuffle. All 24 cards stay in circulation.</p></section>
-        <section><h3>Build your deck</h3><p>Each deck contains 24 cards and costs no more than 120. Include at least 4 cards of each element. You may use up to 2 copies of each Common or Uncommon card, and 1 of each Rare, Epic or Legendary. No role is required.</p><p>Deck cost is Power plus a rarity surcharge: Common/Uncommon +0, Rare +1, Epic +4, Legendary +6. It never changes combat Power. Choose a starter deck or build and save your own before the duel. Every rival follows these same deck limits.</p></section>
-        <section><h3>Choose a rival</h3><p>Confirm your deck to choose a rival. Versatile Duelist uses Balanced Formation. Banner Captain uses Rally Company. Cycle Weaver uses Element Weavers. Twilight Duelist uses Last Light. Their available cards—not persistent habits—shape their options. Choose one or let Random Rival pick for you.</p><p>Restarting keeps the same rival and deck, but deals fresh hands. Return to the lobby to choose another matchup. Normal Play and its difficulties are unchanged.</p></section>
-        <section><h3>Review previous rounds</h3><p>Previous Rounds History records all four revealed lanes, Power bonuses, trophies earned and the match score after each round. Use it to review earlier decisions and spent cards. It does not reveal the current secret formation or future draws.</p></section>
-      </div>
-      <button class="primary-button" data-close-four-lane-rules type="button">Return</button>
-    </dialog>
-
-    <dialog class="game-dialog public-deck-dialog" id="publicDeckDialog" aria-labelledby="publicDeckTitle">
-      <button class="dialog-close" data-close-public-decks type="button" aria-label="Close deck lists">×</button>
-      <p class="eyebrow">SUPER SECRET STUFF WIP</p><h2 id="publicDeckTitle">Both Decks</h2>
-      <p>Full deck lists are public. These are not the remaining draw order or this round's formations.</p>
-      <div class="public-deck-lists" id="publicDeckLists"></div>
-      <button class="primary-button" data-close-public-decks type="button">Return</button>
     </dialog>
 
     <dialog class="game-dialog result-dialog" id="resultDialog">
@@ -1352,11 +1117,6 @@
 
     <script defer src="./src/viewport.js"></script>
     <script defer src="./src/rules.js"></script>
-    <script defer src="./src/four-lane-rules.js"></script>
-    <script defer src="./src/four-lane-ai.js"></script>
-    <script defer src="./src/deckbuilding.js"></script>
-    <script defer src="./src/opponents.js"></script>
-    <script defer src="./src/deck-editor.js"></script>
     <script defer src="./src/audio.js"></script>
     <script defer src="./src/game.js"></script>
   </body>

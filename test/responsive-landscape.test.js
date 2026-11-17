@@ -88,3 +88,20 @@ test("short landscape menus anchor music credits to the bottom-left", () => {
     /\.main-menu-music-credit \{[\s\S]*?position: absolute;[\s\S]*?bottom: max\(8px, env\(safe-area-inset-bottom\)\);[\s\S]*?left: max\(10px, env\(safe-area-inset-left\)\);/,
   );
 });
+
+test("landscape archive columns fit the existing card width instead of overflowing narrow tracks", () => {
+  const base = styleSource.match(/\.card-gallery \{([^}]+)\}/)?.[1];
+  assert.match(base, /--archive-card-width: 178px;/);
+  const medium = styleSource.slice(styleSource.indexOf("@media (max-width: 820px)"));
+  assert.match(medium, /\.card-gallery \{\s*--archive-card-width: 138px;/);
+  assert.match(styleSource, /\.card-gallery \{\s*--archive-card-width: 126px;/);
+  const landscapeRules = styleSource.slice(styleSource.indexOf("   Landscape play surfaces"));
+  assert.match(landscapeRules, /\.card-gallery \{[^}]*grid-template-columns: repeat\(auto-fit, var\(--archive-card-width\)\);/);
+  assert.doesNotMatch(landscapeRules, /repeat\(auto-fit, minmax\(104px, 126px\)\)/);
+  const columns = (available, width, gap) => Math.floor((available + gap) / (width + gap));
+  for (const [available, width, gap] of [[740, 178, 22], [592, 138, 16], [520, 126, 10]]) {
+    const count = columns(available, width, gap);
+    assert.ok(count * width + (count - 1) * gap <= available);
+    assert.ok((count + 1) * width + count * gap > available);
+  }
+});

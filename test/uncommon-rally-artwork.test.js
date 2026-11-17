@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const artworkFolder = new URL("../assets/cards/four-lane/", import.meta.url);
+const artworkFolder = new URL("../assets/cards/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("uncommon-rally-artwork.json", artworkFolder), "utf8"));
 const rareManifest = JSON.parse(readFileSync(new URL("rare-rally-artwork.json", artworkFolder), "utf8"));
 
@@ -51,14 +51,13 @@ test("Uncommon Rally masters are separate square PNGs matching the Rare master d
   }
 });
 
-test("Uncommon Rally artwork is framed without changing the live three-lane gameplay", () => {
-  assert.match(manifest.status, /Framed card previews/);
+test("Uncommon Rally artwork is framed in the live three-lane collection", () => {
+  assert.match(manifest.status, /Live in Normal Play's 36-character, 60-card collection/);
   const gameSource = readFileSync(new URL("../src/game.js", import.meta.url), "utf8");
   const liveLibrary = gameSource.match(/const CARD_LIBRARY = \[([\s\S]*?)\]\.map/)[1];
   for (const card of manifest.cards) {
-    assert.ok(!liveLibrary.includes(card.name));
-    assert.ok(!liveLibrary.includes(card.asset.replace(/\.png$/, "")));
-    assert.ok(gameSource.includes(card.name));
+    assert.ok(liveLibrary.includes(`"${card.name}"`));
+    assert.ok(liveLibrary.includes(`"${card.asset.replace(/\.png$/, "")}"`));
   }
   assert.match(gameSource, /const MAX_PLAY_SIZE = 3;/);
 });
